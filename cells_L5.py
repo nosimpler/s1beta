@@ -1,4 +1,10 @@
 from neuron import h
+
+# change the backend for matplotlib
+import matplotlib as mpl
+mpl.use('Agg')
+
+# import plt and fig_std
 import matplotlib.pyplot as plt
 from plottools import fig_std
 

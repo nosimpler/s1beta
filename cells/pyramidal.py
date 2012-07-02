@@ -63,6 +63,11 @@ class Pyr(Cell):
 
         # now deal with dend 4
         h.pt3dclear(sec=self.list_dend[4])
+        print h.n3d(sec=self.list_dend[0])
+
+        self.list_dend[0].push()
+        print type(h.x3d(1.0))
+        h.pop_section()
         # h.pt3dadd(x_distal, y_distal)
         # dend 5-7 are proximal
 
