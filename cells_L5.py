@@ -13,8 +13,8 @@ from class_net import Network
 # from neuron import gui
 h.load_file("stdrun.hoc")
 
-def run_ping(A_input):
-# if __name__ == "__main__":
+# def run_ping(A_input):
+if __name__ == "__main__":
     # Create network from class_net's Network class
     net = Network()
 
@@ -27,8 +27,8 @@ def run_ping(A_input):
     stim = h.IClamp(seg_e)
     stim.delay = 1
     stim.dur = 100
-    # stim.amp = 100
-    stim.amp = A_input
+    stim.amp = 100
+    # stim.amp = A_input
     h.tstop = 200
 
     v_e = h.Vector()
@@ -60,7 +60,7 @@ def run_ping(A_input):
     plt.savefig('test_ping.eps')
     testfig.close()
 
-    return h
+    # return h
 
     # # way to graph in hoc/nrn
     # # for this we need nrngui above
@@ -71,5 +71,5 @@ def run_ping(A_input):
     # h('objref p')
     # h('p = new PythonObject()')
 
-if __name__ == "__main__":
-    run_ping(100)
+# if __name__ == "__main__":
+#     run_ping(100)

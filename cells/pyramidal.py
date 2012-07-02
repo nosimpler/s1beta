@@ -11,7 +11,7 @@ class Pyr(Cell):
         self.list_dend_prox = []
         self.list_dend_dist = []
         self.create_sections(8)
-        # self.shape_change()
+        self.shape_change()
         self.connect_sections()
 
         # synapse on THIS cell needs to be RECEIVING FROM Inh
@@ -39,27 +39,36 @@ class Pyr(Cell):
 
         h.pt3dclear(sec=self.soma)
         h.pt3dadd(x_prox, y_prox, 0, 1, sec=self.soma)
-        h.pt3dadd(x_dist, y_dist, 0, 1, sec=self.soma)
+        h.pt3dadd(x_distal, y_distal, 0, 1, sec=self.soma)
 
         # changes in x and y pt3d coords
         dend_dx = [60,    0, 400, 400, 250, -50, -106, -106]
         dend_dy = [ 0, -150,   0,   0,   0,   0, -106, -106]
 
-        # deal with distal first
-        for i in range(0, 5):
+        # dend 0-3 are major axis, dend 4 is branch
+        # deal with distal first along major cable axis
+        for i in range(0, 4):
             h.pt3dclear(sec=self.list_dend[i])
-            if i == 0:
-                h.pt3dadd(x_distal, y_distal, 0, 1, sec=self.list_dend[0])
-                h.pt3dadd(x_distal+dend_dx[i], y_distal+dend_dy[i], 0, 1, sec=self.list_dend[0])
-            else:
-                h.pt3dadd(dend, ysoma_distal, 0, 1, sec=self.list_dend[0])
-                h.pt3dadd(xsoma_distal+dend_dx[i], ysoma_distal+dend_dy[i], 0, 1, sec=self.list_dend[0])
-                 
-            
 
-        h.pt3dclear(sec=self.list_dend[0])
-        h.pt3dadd(0, 23, 0, 1, sec=self.list_dend[0])
-        h.pt3dadd(0, 83, 0, 1, sec=self.list_dend[0])
+            # x_distal and y_distal are the starting points for each segment
+            # these are updated at the end of the loop
+            h.pt3dadd(x_distal, y_distal, 0, 1, sec=self.list_dend[i])
+
+            # update x_distal and y_distal after setting them
+            x_distal += dend_dx[i]
+            y_distal += dend_dy[i]
+
+            # add next point
+            h.pt3dadd(x_distal, y_distal, 0, 1, sec=self.list_dend[i])
+
+        # now deal with dend 4
+        h.pt3dclear(sec=self.list_dend[4])
+        # h.pt3dadd(x_distal, y_distal)
+        # dend 5-7 are proximal
+
+        # h.pt3dclear(sec=self.list_dend[0])
+        # h.pt3dadd(0, 23, 0, 1, sec=self.list_dend[0])
+        # h.pt3dadd(0, 83, 0, 1, sec=self.list_dend[0])
 
         print "testing"
 
