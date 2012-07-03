@@ -52,7 +52,7 @@ class Pyr(Cell):
         for i in range(0, 4):
             h.pt3dclear(sec=self.list_dend[i])
 
-            print x_distal, y_distal
+            # print x_distal, y_distal
             # x_distal and y_distal are the starting points for each segment
             # these are updated at the end of the loop
             h.pt3dadd(x_distal, y_distal, 0, 1, sec=self.list_dend[i])
@@ -61,8 +61,7 @@ class Pyr(Cell):
             x_distal += dend_dx[i]
             y_distal += dend_dy[i]
 
-            print x_distal, y_distal
-
+            # print x_distal, y_distal
             # add next point
             h.pt3dadd(x_distal, y_distal, 0, 1, sec=self.list_dend[i])
 
@@ -95,7 +94,6 @@ class Pyr(Cell):
         for i in range(6, 8):
             h.pt3dadd(x_prox, y_prox, 0, 1, sec=self.list_dend[i])
             h.pt3dadd(x_prox+dend_dx[i], y_prox+dend_dy[i], 0, 1, sec=self.list_dend[i])
-        
 
         # print type(h.x3d(1.0))
         # h.pop_section()

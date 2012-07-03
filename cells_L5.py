@@ -2,6 +2,7 @@ from neuron import h
 
 # change the backend for matplotlib
 import matplotlib as mpl
+# print mpl.get_backend()
 mpl.use('Agg')
 
 # import plt and fig_std
@@ -75,7 +76,8 @@ if __name__ == "__main__":
     # testfig.ax0.plot(t_vec, v_t)
     testfig.ax0.plot(t_vec, v_i)
     testfig.ax0.set_ylim(-80, 50)
-    plt.savefig('test_ping.png')
+    plt.savefig('test_ping.eps')
+    # plt.savefig('test_ping.png')
     testfig.close()
 
     # return h
