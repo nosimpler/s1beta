@@ -1,3 +1,4 @@
+# Eventual function to query properties
 from neuron import h
 
 # assumes that something is in h already.
