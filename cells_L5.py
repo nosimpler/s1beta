@@ -6,7 +6,7 @@ mpl.use('Agg')
 
 # import plt and fig_std
 import matplotlib.pyplot as plt
-from plottools import fig_std
+from plottools.axes_create import fig_std
 
 # Cells are defined in './cells'
 from cells.basket import Inh
@@ -26,7 +26,7 @@ if __name__ == "__main__":
 
     # name compartments
     seg_e = net.cell_list_e[0].soma(0.5)
-    seg_t = net.cell_list_e[0].list_dend[0](0.5)
+    # seg_t = net.cell_list_e[0].list_dend[0](0.5)
     seg_i = net.cell_list_i[0].soma(0.5)
 
     # Stimulation params
@@ -40,8 +40,8 @@ if __name__ == "__main__":
     v_e = h.Vector()
     v_e.record(seg_e._ref_v)
 
-    v_t = h.Vector()
-    v_t.record(seg_t._ref_v)
+    # v_t = h.Vector()
+    # v_t.record(seg_t._ref_v)
 
     v_i = h.Vector()
     v_i.record(seg_i._ref_v)
@@ -49,9 +49,21 @@ if __name__ == "__main__":
     t_vec = h.Vector()
     t_vec.record(h._ref_t)
 
+    h.run()
+
+    # attempt at pythonic-ly creating a file
+    data_file = h.File()
+    data_file.wopen("testing.dat")
+
+    for tpoint, vval in zip(t_vec, v_e):
+        # print item
+        data_file.printf("%03.3f\t%5.4f\n", tpoint, vval)
+
+    # v_e.printf(data_file)
+    data_file.close()
+
     # h.cvode_active(1)
 
-    h.run()
     # plt.plot(v_e)
     # print v_e
 
@@ -60,10 +72,10 @@ if __name__ == "__main__":
     testfig.ax0.hold(True)
 
     testfig.ax0.plot(t_vec, v_e)
-    testfig.ax0.plot(t_vec, v_t)
+    # testfig.ax0.plot(t_vec, v_t)
     testfig.ax0.plot(t_vec, v_i)
     testfig.ax0.set_ylim(-80, 50)
-    plt.savefig('test_ping.eps')
+    plt.savefig('test_ping.png')
     testfig.close()
 
     # return h

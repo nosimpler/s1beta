@@ -28,6 +28,7 @@ class Pyr(Cell):
             self.list_dend[i].insert('hh')
             # print self.list_dend[i]
 
+    # h.pt3dadd(x, y, z, 1, {sec=section})
     def shape_change(self):
         # soma proximal coords
         x_prox = 0
@@ -37,19 +38,21 @@ class Pyr(Cell):
         x_distal = 0
         y_distal = 23
 
-        h.pt3dclear(sec=self.soma)
-        h.pt3dadd(x_prox, y_prox, 0, 1, sec=self.soma)
-        h.pt3dadd(x_distal, y_distal, 0, 1, sec=self.soma)
+        # h.pt3dclear(sec=self.soma)
+        # h.pt3dadd(x_prox, y_prox, 0, 1, sec=self.soma)
+        # h.pt3dadd(x_distal, y_distal, 0, 1, sec=self.soma)
 
         # changes in x and y pt3d coords
-        dend_dx = [60,    0, 400, 400, 250, -50, -106, -106]
-        dend_dy = [ 0, -150,   0,   0,   0,   0, -106, -106]
+        dend_dx = [ 0,    0,   0,   0,-150,   0, -106,  106]
+        dend_dy = [60,  250, 400, 400,   0, -50, -106, -106]
 
         # dend 0-3 are major axis, dend 4 is branch
         # deal with distal first along major cable axis
+        # the way this is assigning variables is ugly/lazy right now
         for i in range(0, 4):
             h.pt3dclear(sec=self.list_dend[i])
 
+            print x_distal, y_distal
             # x_distal and y_distal are the starting points for each segment
             # these are updated at the end of the loop
             h.pt3dadd(x_distal, y_distal, 0, 1, sec=self.list_dend[i])
@@ -58,38 +61,63 @@ class Pyr(Cell):
             x_distal += dend_dx[i]
             y_distal += dend_dy[i]
 
+            print x_distal, y_distal
+
             # add next point
             h.pt3dadd(x_distal, y_distal, 0, 1, sec=self.list_dend[i])
 
         # now deal with dend 4
+        # dend 4 will ALWAYS be positioned at the end of dend[0]
         h.pt3dclear(sec=self.list_dend[4])
-        print h.n3d(sec=self.list_dend[0])
 
+        # activate this section
         self.list_dend[0].push()
-        print type(h.x3d(1.0))
+        x_start = h.x3d(1)
+        y_start = h.y3d(1)
         h.pop_section()
+
+        h.pt3dadd(x_start, y_start, 0, 1, sec=self.list_dend[4])
+        h.pt3dadd(x_start-150., y_start+0, 0, 1, sec=self.list_dend[4])
+        # print h.n3d(sec=self.list_dend[0])
+
+        # now deal with proximal dends
+        for i in range(5, 8):
+            h.pt3dclear(sec=self.list_dend[i])
+
+        # deal with dend 5, ugly. sorry.
+        h.pt3dadd(x_prox, y_prox, 0, 1, sec=self.list_dend[5])
+        x_prox += dend_dx[5]
+        y_prox += dend_dy[5]
+
+        h.pt3dadd(x_prox, y_prox, 0, 1, sec=self.list_dend[5])
+
+        # x_prox, y_prox are now the starting points for BOTH of the last 2 sections
+        for i in range(6, 8):
+            h.pt3dadd(x_prox, y_prox, 0, 1, sec=self.list_dend[i])
+            h.pt3dadd(x_prox+dend_dx[i], y_prox+dend_dy[i], 0, 1, sec=self.list_dend[i])
+        
+
+        # print type(h.x3d(1.0))
+        # h.pop_section()
         # h.pt3dadd(x_distal, y_distal)
-        # dend 5-7 are proximal
 
         # h.pt3dclear(sec=self.list_dend[0])
         # h.pt3dadd(0, 23, 0, 1, sec=self.list_dend[0])
         # h.pt3dadd(0, 83, 0, 1, sec=self.list_dend[0])
 
-        print "testing"
-
     def connect_sections(self):
-        # connect(parent, parent_end, child_start)
+        # connect(parent, parent_end, {child_start=0})
         # Distal
         self.list_dend[0].connect(self.soma, 1, 0)
         self.list_dend[1].connect(self.list_dend[0], 1, 0)
 
-        self.list_dend[2].connect(self.list_dend[0], 1, 0)
+        self.list_dend[2].connect(self.list_dend[1], 1, 0)
         self.list_dend[3].connect(self.list_dend[2], 1, 0)
-        self.list_dend[4].connect(self.list_dend[3], 1, 0)
+
+        # dend[4] comes off of dend[0](1)
+        self.list_dend[4].connect(self.list_dend[0], 1, 0)
 
         # Proximal
         self.list_dend[5].connect(self.soma, 1, 1)
         self.list_dend[6].connect(self.list_dend[5], 1, 0)
-        self.list_dend[7].connect(self.list_dend[0], 1, 0)
-
-        # for dend in self.list_dend:
+        self.list_dend[7].connect(self.list_dend[5], 1, 0)

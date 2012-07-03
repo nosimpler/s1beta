@@ -16,7 +16,6 @@ class Network():
 
     def create_cells(self):
         self.cell_list_e.append(Pyr())
-        # self.cell_list_e.append(Pyr())
         self.cell_list_i.append(Inh())
 
     def connect(self):

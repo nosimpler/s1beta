@@ -6,20 +6,23 @@ class Cell():
         self.soma = h.Section()
         self.soma.insert('hh')
         self.soma.diam = diam_soma
-        self.soma.L = L_soma
-        # self.soma.diam = 10
-        # self.soma.L = 10
+        # self.soma.L = L_soma
+        self.shape_soma(L_soma)
 
-    def connect_to_target(self, synapse):
-        # event generated, to where delivered
-        nc = h.NetCon(self.soma(0.5)._ref_v, synapse, sec = self.soma)
+    # this connects an instance of Cell() to a postsynaptic target
+    def connect_to_target(self, postsyn):
+        # event generated at _ref_v, to postsyn where delivered
+        nc = h.NetCon(self.soma(0.5)._ref_v, postsyn, sec=self.soma)
+
+        # event threshold, arbitrarily chosen for now
         nc.threshold = -10
         return nc
 
-    def shape_soma(self):
-        self.soma.push()
-        h.pt3dclear()
-        h.pt3dadd(0, 0, 0, 1)
-        h.pt3dadd(0, 23, 0, 1)
-        h.pop_section()
-        # self.soma.pop()
+    # define shape of soma
+    # need to find out whether or not we need to call h.define_shape() explicitly!!
+    def shape_soma(self, L_soma):
+        # self.soma.push()
+        h.pt3dclear(sec=self.soma)
+        h.pt3dadd(0, 0, 0, 1, sec=self.soma)
+        h.pt3dadd(0, L_soma, 0, 1, sec=self.soma)
+        # h.pop_section()
