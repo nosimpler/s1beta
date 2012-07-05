@@ -1,5 +1,5 @@
 from neuron import h
-from cells.pyramidal import Pyr
+from cells.L5_pyramidal import Pyr
 from cells.basket import Inh
 
 # create Network class

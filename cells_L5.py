@@ -11,7 +11,7 @@ from plottools.axes_create import fig_std
 
 # Cells are defined in './cells'
 from cells.basket import Inh
-from cells.pyramidal import Pyr
+from cells.L5_pyramidal import Pyr
 
 # Network is defined in 'class_net.py'
 from class_net import Network
