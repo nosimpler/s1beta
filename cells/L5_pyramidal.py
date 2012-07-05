@@ -1,6 +1,3 @@
-# there is a bug in the connection here (dend[5] to soma) that won't be fixed in the current iteration of this file.
-# will be fixed on the 'real' file
-
 from neuron import h
 from class_cell import Cell
 
@@ -119,6 +116,6 @@ class Pyr(Cell):
         self.list_dend[4].connect(self.list_dend[0], 1, 0)
 
         # Proximal
-        self.list_dend[5].connect(self.soma, 1, 1)
+        self.list_dend[5].connect(self.soma, 0, 0)
         self.list_dend[6].connect(self.list_dend[5], 1, 0)
         self.list_dend[7].connect(self.list_dend[5], 1, 0)
