@@ -1,3 +1,6 @@
+# there is a bug in the connection here (dend[5] to soma) that won't be fixed in the current iteration of this file.
+# will be fixed on the 'real' file
+
 from neuron import h
 from class_cell import Cell
 
