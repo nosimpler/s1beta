@@ -1,5 +1,13 @@
+# L5_pyramidal.py - est class def for layer 5 pyramidal cells
+#
+# v 0.1
+# rev 2012-07-06 (attempt at testing mechanism insertion to soma)
+# last rev: (created)
+#
+
 from neuron import h
 from class_cell import Cell
+# from topol import L5_pyr_shape
 
 class Pyr(Cell):
     def __init__(self):
@@ -11,14 +19,29 @@ class Pyr(Cell):
         self.list_dend_prox = []
         self.list_dend_dist = []
         self.create_sections(8)
+        self.biophys_soma()
         self.shape_change()
         self.connect_sections()
 
         # synapse on THIS cell needs to be RECEIVING FROM Inh
+        # this probably should be done in a fn
+        # but best way is unclear unless other synapses are done
         self.syn = h.Exp2Syn(self.soma(0.5))
         self.syn.e = -80
         self.syn.tau1 = 1
         self.syn.tau2 = 20
+
+    # adding biophysics to soma
+    def biophys_soma(self):
+        # insert 'ca' mechanism
+        self.soma.insert('ca')
+
+        # this is new, pythonic syntax, I believe
+        # equivalent to gbar_ca = 60
+        # having trouble testing the effect of this
+        for sec in self.soma:
+            sec.ca.gbar = 60
+            # print sec
 
     # this replicates topol
     def create_sections(self, N_dend):
@@ -27,6 +50,27 @@ class Pyr(Cell):
             self.list_dend.append(h.Section())
             self.list_dend[i].insert('hh')
             # print self.list_dend[i]
+
+    # this will set the geometry, including the nseg
+    def geom_set(self):
+        pass
+
+    def connect_sections(self):
+        # connect(parent, parent_end, {child_start=0})
+        # Distal
+        self.list_dend[0].connect(self.soma, 1, 0)
+        self.list_dend[1].connect(self.list_dend[0], 1, 0)
+
+        self.list_dend[2].connect(self.list_dend[1], 1, 0)
+        self.list_dend[3].connect(self.list_dend[2], 1, 0)
+
+        # dend[4] comes off of dend[0](1)
+        self.list_dend[4].connect(self.list_dend[0], 1, 0)
+
+        # Proximal
+        self.list_dend[5].connect(self.soma, 0, 0)
+        self.list_dend[6].connect(self.list_dend[5], 1, 0)
+        self.list_dend[7].connect(self.list_dend[5], 1, 0)
 
     # h.pt3dadd(x, y, z, 1, {sec=section})
     def shape_change(self):
@@ -102,20 +146,3 @@ class Pyr(Cell):
         # h.pt3dclear(sec=self.list_dend[0])
         # h.pt3dadd(0, 23, 0, 1, sec=self.list_dend[0])
         # h.pt3dadd(0, 83, 0, 1, sec=self.list_dend[0])
-
-    def connect_sections(self):
-        # connect(parent, parent_end, {child_start=0})
-        # Distal
-        self.list_dend[0].connect(self.soma, 1, 0)
-        self.list_dend[1].connect(self.list_dend[0], 1, 0)
-
-        self.list_dend[2].connect(self.list_dend[1], 1, 0)
-        self.list_dend[3].connect(self.list_dend[2], 1, 0)
-
-        # dend[4] comes off of dend[0](1)
-        self.list_dend[4].connect(self.list_dend[0], 1, 0)
-
-        # Proximal
-        self.list_dend[5].connect(self.soma, 0, 0)
-        self.list_dend[6].connect(self.list_dend[5], 1, 0)
-        self.list_dend[7].connect(self.list_dend[5], 1, 0)

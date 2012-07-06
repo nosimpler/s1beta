@@ -1,3 +1,10 @@
+# s1run.py - primary run function for s1 project
+#
+# v 0.1
+# rev 2012-07-06 (testing output)
+# last major: (created)
+#
+
 from neuron import h
 
 # change the backend for matplotlib
@@ -34,7 +41,7 @@ if __name__ == "__main__":
     stim = h.IClamp(seg_e)
     stim.delay = 1
     stim.dur = 100
-    stim.amp = 100
+    stim.amp = 1.
     # stim.amp = A_input
     h.tstop = 200
 
@@ -72,12 +79,17 @@ if __name__ == "__main__":
     testfig = fig_std()
     testfig.ax0.hold(True)
 
+    # plot various bits of data
     testfig.ax0.plot(t_vec, v_e)
     # testfig.ax0.plot(t_vec, v_t)
     testfig.ax0.plot(t_vec, v_i)
+
+    # set some axes properties
     testfig.ax0.set_ylim(-80, 50)
-    plt.savefig('test_ping.eps')
-    # plt.savefig('test_ping.png')
+
+    # save figure as 2 different formats
+    # plt.savefig('outputspikes.eps')
+    plt.savefig('outputspikes.png')
     testfig.close()
 
     # return h
