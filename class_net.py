@@ -23,6 +23,9 @@ class Network():
 
     def create_cells(self):
         self.cell_list_e.append(Pyr())
+        # for i in range(0, N_cells):
+        #     self.cell_list_e.append(Pyr())
+
         self.cell_list_i.append(Inh())
 
     def connect(self):

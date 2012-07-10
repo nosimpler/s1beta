@@ -32,6 +32,8 @@ if __name__ == "__main__":
     # Create network from class_net's Network class
     net = Network()
 
+    # net.cell_list_e[0].shape_change()
+
     # name compartments
     seg_e = net.cell_list_e[0].soma(0.5)
     # seg_t = net.cell_list_e[0].list_dend[0](0.5)
