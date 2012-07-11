@@ -49,6 +49,7 @@ class Pyr(Cell):
         self.syn.tau1 = 1
         self.syn.tau2 = 20
 
+    # just a dummy test
     # adding biophysics to soma
     def biophys_soma(self):
         # insert 'ca' mechanism
@@ -59,7 +60,7 @@ class Pyr(Cell):
         # having trouble testing the effect of this
         for sec in self.soma:
             sec.ca.gbar = 60
-            # print sec
+            # print sec.ca.gbar
 
     # this replicates topol
     # this function will be deprecated in favor of create_sections2 below
