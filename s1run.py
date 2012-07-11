@@ -23,9 +23,9 @@ from cells.L5_pyramidal import Pyr
 # Network is defined in 'class_net.py'
 from class_net import Network
 
+from neuron import gui
+# h.load_file("stdrun.hoc")
 # h.load_file("nrngui.hoc")
-# from neuron import gui
-h.load_file("stdrun.hoc")
 
 # def run_ping(A_input):
 if __name__ == "__main__":
@@ -43,7 +43,7 @@ if __name__ == "__main__":
     stim = h.IClamp(seg_e)
     stim.delay = 1
     stim.dur = 100
-    stim.amp = 1.
+    stim.amp = 5.
     # stim.amp = A_input
     h.tstop = 200
 
@@ -93,6 +93,19 @@ if __name__ == "__main__":
     # plt.savefig('outputspikes.eps')
     plt.savefig('outputspikes.png')
     testfig.close()
+
+    net.cell_list_e[0].print_params()
+    
+    # print "Soma length:", net.cell_list_e[0].soma.L
+    # print "Soma diam:", net.cell_list_e[0].soma.diam
+
+    # print "\ndendritic lengths:"
+    # for i in range(0, 8):
+    #     print net.cell_list_e[0].list_dend[i].L
+
+    # print "\ndendritic diameters:"
+    # for i in range(0, 8):
+    #     print net.cell_list_e[0].list_dend[i].diam
 
     # return h
 

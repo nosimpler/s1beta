@@ -1,12 +1,14 @@
 # L5_pyramidal.py - est class def for layer 5 pyramidal cells
 #
 # v 0.1
-# rev 2012-07-06 (attempt at testing mechanism insertion to soma)
+# rev 2012-10-06 (setting geometry of L5 PN)
 # last rev: (created)
 #
 
 from neuron import h
 from class_cell import Cell
+from sys import exit
+from math import sqrt
 # from topol import L5_pyr_shape
 
 class Pyr(Cell):
@@ -24,10 +26,16 @@ class Pyr(Cell):
         self.dend_L = []
         self.dend_diam = []
 
+        # N_dend is an int
+        # we expect this will be overwritten!!
+        # SL doesn't like this necessarily
+        self.N_dend = 0
+
         # geometry
-        self.create_sections(8)
-        # self.create_sections()
-        self.shape_change()
+        # self.create_sections(8)
+        self.create_dends()
+        # self.shape_change()
+        self.geom_set()
         self.connect_sections()
 
         # biophysics
@@ -55,41 +63,48 @@ class Pyr(Cell):
 
     # this replicates topol
     # this function will be deprecated in favor of create_sections2 below
-    def create_sections(self, N_dend):
+    # def create_sections(self, N_dend):
         # Trying to create sections directly
-        for i in range(0, N_dend):
-            self.list_dend.append(h.Section())
-            self.list_dend[i].insert('hh')
+        # for i in range(0, N_dend):
+            # self.list_dend.append(h.Section())
+            # self.list_dend[i].insert('hh')
             # print self.list_dend[i]
 
-    # LENGTHS AND DIAMS ARE WRONG. PLEASE FIX.
-    def create_sections2(self):
+    # Creates dendritic sections and sets lengths and diameters for each section
+    # dend lengths and dend diams are hardcoded here
+    def create_dends(self):
     # def create_sections(self, N_dend):
         # hard code dend lengths and diams
-        self.dend_L = [100, 400, 200, 300, 200, 300, 400, 100]
-        self.dend_diam = [3, 2, 4, 5, 2, 3, 4, 5]
+        self.dend_L = [102, 680, 680, 425, 255, 85, 255, 255]
+        self.dend_diam = [10.2, 7.48, 4.93, 3.4, 5.1, 6.8, 8.5, 8.5]
 
         # check lengths for congruity
         # this needs to be figured out
         if len(self.dend_L) == len(self.dend_diam):
-            N_dend = len(self.dend_L)
+            self.N_dend = len(self.dend_L)
         else:
-            N_dend = 8
-            print "trying to default here. might break. see L5_pyramidal.py"
-        # else:
-            # Complain somehow.
+            print "self.dend_L and self.dend_diam are not the same length. Please fix in L5_pyramidal.py"
+            exit()
 
         # Trying to create sections directly
-        for i in range(0, N_dend):
+        for i in range(0, self.N_dend):
             self.list_dend.append(h.Section())
-            # self.list_dend.append(h.Section(L=dend_L[i], diam=dend_diam[i]))
+            # self.list_dend[i].L = self.dend_L[i]
+            # self.list_dend[i].diam = self.dend_diam[i]
+            
+            # move to a new function that specifies biophysics for dends
             self.list_dend[i].insert('hh')
             # print self.list_dend[i]
-
-    # this will set the geometry, including the nseg
+            
+    # set the geometry, including the nseg.
+    # geom_set separate for future and to get around shape_change
     def geom_set(self):
-        pass
-
+        # set length and diameter of dends
+        for i in range (0, len(self.dend_L)):
+            self.list_dend[i].L = self.dend_L[i]
+            self.list_dend[i].diam = self.dend_diam[i]
+         
+            
     def connect_sections(self):
         # connect(parent, parent_end, {child_start=0})
         # Distal
@@ -107,23 +122,39 @@ class Pyr(Cell):
         self.list_dend[6].connect(self.list_dend[5], 1, 0)
         self.list_dend[7].connect(self.list_dend[5], 1, 0)
 
-    # h.pt3dadd(x, y, z, 1, {sec=section})
+    def print_params(self):
+        print "Soma length:", self.soma.L
+        print "Soma diam:", self.soma.diam
+
+        print "\ndendritic lengths:"
+        for i in range(0, self.N_dend):
+            print self.list_dend[i].L
+
+        print "\ndendritic diameters:"
+        for i in range(0, self.N_dend):
+            print self.list_dend[i].diam
+
     def shape_change(self):
+        # set 3d shape of soma by calling shape_soma from class Cell
+        print "Warning: you are using 3d shape to set geom. You better be doing"
+        print "gui analysis and not numerical analysis!!"
+        self.shape_soma(28.9,39.0)
+        
         # soma proximal coords
         x_prox = 0
         y_prox = 0
 
         # soma distal coords
         x_distal = 0
-        y_distal = 23
+        y_distal = self.soma.L
 
         # h.pt3dclear(sec=self.soma)
         # h.pt3dadd(x_prox, y_prox, 0, 1, sec=self.soma)
         # h.pt3dadd(x_distal, y_distal, 0, 1, sec=self.soma)
 
         # changes in x and y pt3d coords
-        dend_dx = [ 0,    0,   0,   0,-150,   0, -106,  106]
-        dend_dy = [60,  250, 400, 400,   0, -50, -106, -106]
+        # dend_dx = [ 0,    0,   0,   0,-150,   0, -106,  106]
+        # dend_dy = [60,  250, 400, 400,   0, -50, -106, -106]
 
         # dend 0-3 are major axis, dend 4 is branch
         # deal with distal first along major cable axis
@@ -134,15 +165,15 @@ class Pyr(Cell):
             # print x_distal, y_distal
             # x_distal and y_distal are the starting points for each segment
             # these are updated at the end of the loop
-            h.pt3dadd(x_distal, y_distal, 0, 1, sec=self.list_dend[i])
+            h.pt3dadd(0, y_distal, 0, self.dend_diam[i], sec=self.list_dend[i])
 
             # update x_distal and y_distal after setting them
-            x_distal += dend_dx[i]
-            y_distal += dend_dy[i]
+            # x_distal += dend_dx[i]
+            y_distal += self.dend_L[i]
 
             # print x_distal, y_distal
             # add next point
-            h.pt3dadd(x_distal, y_distal, 0, 1, sec=self.list_dend[i])
+            h.pt3dadd(0, y_distal, 0, self.dend_diam[i], sec=self.list_dend[i])
 
         # now deal with dend 4
         # dend 4 will ALWAYS be positioned at the end of dend[0]
@@ -154,8 +185,10 @@ class Pyr(Cell):
         y_start = h.y3d(1)
         h.pop_section()
 
-        h.pt3dadd(x_start, y_start, 0, 1, sec=self.list_dend[4])
-        h.pt3dadd(x_start-150., y_start+0, 0, 1, sec=self.list_dend[4])
+        h.pt3dadd(x_start, y_start, 0, self.dend_diam[4], sec=self.list_dend[4])
+        # self.dend_L[4] is subtracted because lengths always positive, 
+        # and this goes to negative x
+        h.pt3dadd(x_start-self.dend_L[4], y_start, 0, self.dend_diam[4], sec=self.list_dend[4])
         # print h.n3d(sec=self.list_dend[0])
 
         # now deal with proximal dends
@@ -163,21 +196,24 @@ class Pyr(Cell):
             h.pt3dclear(sec=self.list_dend[i])
 
         # deal with dend 5, ugly. sorry.
-        h.pt3dadd(x_prox, y_prox, 0, 1, sec=self.list_dend[5])
-        x_prox += dend_dx[5]
-        y_prox += dend_dy[5]
+        h.pt3dadd(x_prox, y_prox, 0, self.dend_diam[i], sec=self.list_dend[5])
+        # x_prox += dend_dx[5]
+        y_prox += -self.dend_L[5]
 
-        h.pt3dadd(x_prox, y_prox, 0, 1, sec=self.list_dend[5])
+        h.pt3dadd(x_prox, y_prox, 0, self.dend_diam[5],sec=self.list_dend[5])
 
         # x_prox, y_prox are now the starting points for BOTH of the last 2 sections
-        for i in range(6, 8):
-            h.pt3dadd(x_prox, y_prox, 0, 1, sec=self.list_dend[i])
-            h.pt3dadd(x_prox+dend_dx[i], y_prox+dend_dy[i], 0, 1, sec=self.list_dend[i])
+        # dend 6
+        h.pt3dadd(0, y_prox, 0, self.dend_diam[6], sec=self.list_dend[6])
+        h.pt3dadd(-self.dend_L[6]*sqrt(2)/2, y_prox-self.dend_L[6]*sqrt(2)/2, 0, self.dend_diam[6], sec=self.list_dend[6])
 
-            print "before L: ", self.list_dend[i].L
+        # dend 7
+        h.pt3dadd(0, y_prox, 0, self.dend_diam[7], sec=self.list_dend[7])
+        h.pt3dadd(self.dend_L[7]*sqrt(2)/2, y_prox-self.dend_L[7]*sqrt(2)/2, 0, self.dend_diam[7], sec=self.list_dend[7])
 
-            # self.list_dend[i].L = 150
-            # print "after L: ", self.list_dend[i].L
+        # print "before L: ", self.list_dend[i].L
+        # self.list_dend[i].L = 150
+        # print "after L: ", self.list_dend[i].L
 
         # print type(h.x3d(1.0))
         # h.pop_section()

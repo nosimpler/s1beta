@@ -5,10 +5,9 @@ class Cell():
     def __init__(self, diam_soma, L_soma):
         self.soma = h.Section()
         self.soma.insert('hh')
+        # self.shape_soma(diam_soma, L_soma)
         self.soma.diam = diam_soma
-        # self.soma.L = L_soma
-        self.shape_soma(diam_soma, L_soma)
-
+        self.soma.L = L_soma
     # this connects an instance of Cell() to a postsynaptic target
     def connect_to_target(self, postsyn):
         # event generated at _ref_v, to postsyn where delivered
@@ -26,12 +25,12 @@ class Cell():
         h.pt3dclear(sec=self.soma)
 
         # h.ptdadd(x, y, z, diam) -- if this function is run, clobbers self.soma.diam set above
-        print "diam_soma is: ", diam_soma
-        h.pt3dadd(0, 0, 0, 10.1, sec=self.soma)
-        h.pt3dadd(0, L_soma, 0, 28.90, sec=self.soma)
-        # h.pt3dadd(0, 0, 0, diam_soma, sec=self.soma)
-        # h.pt3dadd(0, L_soma, 0, diam_soma, sec=self.soma)
+        # print "diam_soma is: ", diam_soma
+        # h.pt3dadd(0, 0, 0, 10.1, sec=self.soma)
+        # h.pt3dadd(0, L_soma, 0, 28.90, sec=self.soma)
+        h.pt3dadd(0, 0, 0, diam_soma, sec=self.soma)
+        h.pt3dadd(0, L_soma, 0, diam_soma, sec=self.soma)
 
-        self.soma.push()
-        print h.diam3d(0), h.diam3d(1)
-        h.pop_section()
+        # self.soma.push()
+        # print h.diam3d(0), h.diam3d(1)
+        # h.pop_section()
