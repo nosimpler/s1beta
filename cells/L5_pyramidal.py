@@ -1,8 +1,8 @@
 # L5_pyramidal.py - est class def for layer 5 pyramidal cells
 #
-# v 0.1
-# rev 2012-10-06 (setting geometry of L5 PN)
-# last rev: (created)
+# v 0.1.1
+# rev 2012-07-12 (added geom_set routine to be tested)
+# last rev: (setting geometry of L5 PN)
 #
 
 from neuron import h
@@ -104,8 +104,13 @@ class Pyr(Cell):
         for i in range (0, len(self.dend_L)):
             self.list_dend[i].L = self.dend_L[i]
             self.list_dend[i].diam = self.dend_diam[i]
-         
-            
+
+        # Check its accuracy
+        # yet another way:
+        # for dend, L, diam in zip(self.list_dend, self.dend_L, self.dend_diam):
+        #     dend.L = L
+        #     dend.diam = diam
+
     def connect_sections(self):
         # connect(parent, parent_end, {child_start=0})
         # Distal
