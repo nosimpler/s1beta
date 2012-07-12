@@ -1,8 +1,8 @@
 # s1run.py - primary run function for s1 project
 #
 # v 0.1
-# rev 2012-07-06 (testing output)
-# last major: (created)
+# rev 2012-07-12 (Class Pyr renamed L5Pyr. Calls changed appropriately)
+# last major: (testing output)
 #
 
 from neuron import h
@@ -18,14 +18,14 @@ from plottools.axes_create import fig_std
 
 # Cells are defined in './cells'
 from cells.basket import Inh
-from cells.L5_pyramidal import Pyr
+from cells.L5_pyramidal import L5Pyr
 
 # Network is defined in 'class_net.py'
 from class_net import Network
 
-from neuron import gui
-# h.load_file("stdrun.hoc")
+h.load_file("stdrun.hoc")
 # h.load_file("nrngui.hoc")
+# from neuron import gui
 
 # def run_ping(A_input):
 if __name__ == "__main__":

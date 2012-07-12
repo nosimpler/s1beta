@@ -11,10 +11,10 @@ from sys import exit
 from math import sqrt
 # from topol import L5_pyr_shape
 
-class Pyr(Cell):
+class L5Pyr(Cell):
     def __init__(self):
         Cell.__init__(self, 28.9, 39)
-        # super(Inherit_Pyr, self).__init__()
+        # super(Inherit_L5Pyr, self).__init__()
 
         # sections of these cells
         self.list_dend = []
@@ -100,16 +100,16 @@ class Pyr(Cell):
     # set the geometry, including the nseg.
     # geom_set separate for future and to get around shape_change
     def geom_set(self):
+        # The pythonic way of setting length and diameter 
+        for dend, L, diam in zip(self.list_dend, self.dend_L, self.dend_diam):
+            dend.L = L
+            dend.diam = diam
+        
         # set length and diameter of dends
-        for i in range (0, len(self.dend_L)):
-            self.list_dend[i].L = self.dend_L[i]
-            self.list_dend[i].diam = self.dend_diam[i]
+        # for i in range (0, len(self.dend_L)):
+        #     self.list_dend[i].L = self.dend_L[i]
+        #     self.list_dend[i].diam = self.dend_diam[i]
 
-        # Check its accuracy
-        # yet another way:
-        # for dend, L, diam in zip(self.list_dend, self.dend_L, self.dend_diam):
-        #     dend.L = L
-        #     dend.diam = diam
 
     def connect_sections(self):
         # connect(parent, parent_end, {child_start=0})

@@ -1,12 +1,12 @@
 # class_net.py - establishes the Network class and related methods
 #
-# v 0.1
-# rev 2012-07-06 (Adding netCon objects directly to the nc_list instead of creating intermed var)
-# last major: (created)
+# v 0.1.1
+# rev 2012-07-12 (Class Pyr change to L5Pyr. Calls changed appropriately)
+# last major: (Adding netCon objects directly to the nc_list instead of creating intermed var)
 #
 
 from neuron import h
-from cells.L5_pyramidal import Pyr
+from cells.L5_pyramidal import L5Pyr
 from cells.basket import Inh
 
 # create Network class
@@ -22,9 +22,9 @@ class Network():
         self.connect()
 
     def create_cells(self):
-        self.cell_list_e.append(Pyr())
+        self.cell_list_e.append(L5Pyr())
         # for i in range(0, N_cells):
-        #     self.cell_list_e.append(Pyr())
+        #     self.cell_list_e.append(L5Pyr())
 
         self.cell_list_i.append(Inh())
 
