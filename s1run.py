@@ -1,10 +1,9 @@
 # s1run.py - primary run function for s1 project
 #
-# v 0.1.1
-# rev 2012-07-12: (cell_list__e and cell_list_i renamed cells_L5Pyr and
+# v 0.1.2
+# rev 2012-07-12: (MS: cell_list_e and cell_list_i renamed cells_L5Pyr and
 # cells_L5Basket respectively. Added cells_L2Pry). 
-# last major: (Class Pyr renamed L5Pyr. Calls changed appropriately)
-#
+# last major: (MS: Class Pyr renamed L5Pyr. Calls changed appropriately)
 
 from neuron import h
 
@@ -33,19 +32,18 @@ if __name__ == "__main__":
     # Create network from class_net's Network class
     net = Network()
 
-    # net.cells_L5Pyr[0].shape_change()
-
-    # name compartments
+    # name compartments internally for this function
     seg_e = net.cells_L5Pyr[0].soma(0.5)
-    # seg_t = net.cells_L5Pyr[0].list_dend[0](0.5)
     seg_i = net.cells_L5Basket[0].soma(0.5)
+
+    # seg_e = net.cell_list_e[0].soma(0.5)
+    # seg_i = net.cell_list_i[0].soma(0.5)
 
     # Stimulation params
     stim = h.IClamp(seg_e)
     stim.delay = 1
     stim.dur = 100
     stim.amp = 5.
-    # stim.amp = A_input
     h.tstop = 200
 
     v_e = h.Vector()
@@ -84,7 +82,6 @@ if __name__ == "__main__":
 
     # plot various bits of data
     testfig.ax0.plot(t_vec, v_e)
-    # testfig.ax0.plot(t_vec, v_t)
     testfig.ax0.plot(t_vec, v_i)
 
     # set some axes properties
@@ -123,5 +120,6 @@ if __name__ == "__main__":
     # h('objref p')
     # h('p = new PythonObject()')
 
+# not doing this at the moment in order to see output at the post-run prompt
 # if __name__ == "__main__":
 #     run_ping(100)

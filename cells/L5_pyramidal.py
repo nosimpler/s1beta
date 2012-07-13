@@ -3,13 +3,11 @@
 # v 0.1.1
 # rev 2012-07-12 (explicitly set Ra and cm for all sections including soma)
 # last rev: (added geom_set routine to be tested)
-#
 
 from neuron import h
 from class_cell import Cell
 from sys import exit
 from math import sqrt
-# from topol import L5_pyr_shape
 
 class L5Pyr(Cell):
     def __init__(self):
