@@ -1,8 +1,9 @@
 # s1run.py - primary run function for s1 project
 #
-# v 0.1
-# rev 2012-07-12 (Class Pyr renamed L5Pyr. Calls changed appropriately)
-# last major: (testing output)
+# v 0.1.1
+# rev 2012-07-12: (cell_list__e and cell_list_i renamed cells_L5Pyr and
+# cells_L5Basket respectively. Added cells_L2Pry). 
+# last major: (Class Pyr renamed L5Pyr. Calls changed appropriately)
 #
 
 from neuron import h
@@ -17,7 +18,7 @@ import matplotlib.pyplot as plt
 from plottools.axes_create import fig_std
 
 # Cells are defined in './cells'
-from cells.basket import Inh
+from cells.basket import Basket
 from cells.L5_pyramidal import L5Pyr
 
 # Network is defined in 'class_net.py'
@@ -32,12 +33,12 @@ if __name__ == "__main__":
     # Create network from class_net's Network class
     net = Network()
 
-    # net.cell_list_e[0].shape_change()
+    # net.cells_L5Pyr[0].shape_change()
 
     # name compartments
-    seg_e = net.cell_list_e[0].soma(0.5)
-    # seg_t = net.cell_list_e[0].list_dend[0](0.5)
-    seg_i = net.cell_list_i[0].soma(0.5)
+    seg_e = net.cells_L5Pyr[0].soma(0.5)
+    # seg_t = net.cells_L5Pyr[0].list_dend[0](0.5)
+    seg_i = net.cells_L5Basket[0].soma(0.5)
 
     # Stimulation params
     stim = h.IClamp(seg_e)
@@ -94,18 +95,22 @@ if __name__ == "__main__":
     plt.savefig('outputspikes.png')
     testfig.close()
 
-    net.cell_list_e[0].print_params()
+    # net.cells_L5Pyr[0].print_params()
+    # print '\n'
+    # net.cells_L2Pyr[0].print_params()
+    # print '\n'
+    # net.cells_L5Basket[0].print_params()
     
-    # print "Soma length:", net.cell_list_e[0].soma.L
-    # print "Soma diam:", net.cell_list_e[0].soma.diam
+    # print "Soma length:", net.cells_L5Pyr[0].soma.L
+    # print "Soma diam:", net.cells_L5Pyr[0].soma.diam
 
     # print "\ndendritic lengths:"
     # for i in range(0, 8):
-    #     print net.cell_list_e[0].list_dend[i].L
+    #     print net.cells_L5Pyr[0].list_dend[i].L
 
     # print "\ndendritic diameters:"
     # for i in range(0, 8):
-    #     print net.cell_list_e[0].list_dend[i].diam
+    #     print net.cells_L5Pyr[0].list_dend[i].diam
 
     # return h
 

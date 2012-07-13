@@ -1,8 +1,8 @@
-# L5_pyramidal.py - est class def for layer 5 pyramidal cells
+# L2_pyramidal.py - est class def for layer 2 pyramidal cells
 #
-# v 0.1.1
-# rev 2012-07-12 (explicitly set Ra and cm for all sections including soma)
-# last rev: (added geom_set routine to be tested)
+# v 0.1.0
+# rev 2012-07-13 (Created) 
+# last rev:
 #
 
 from neuron import h
@@ -11,11 +11,11 @@ from sys import exit
 from math import sqrt
 # from topol import L5_pyr_shape
 
-class L5Pyr(Cell):
+class L2Pyr(Cell):
     def __init__(self):
         # Cell.__init__(self, L, diam, Ra, cm)
-        Cell.__init__(self, 39, 28.9, 0.85)
-        # super(Inherit_L5Pyr, self).__init__()
+        Cell.__init__(self, 22.1, 23.4, 0.6195)
+        # super(Inherit_L2Pyr, self).__init__()
 
         # sections of these cells
         self.list_dend = []
@@ -40,7 +40,7 @@ class L5Pyr(Cell):
         self.geom_set()
 
         # biophysics
-        self.biophys_soma()
+        # self.biophys_soma()
 
         # synapse on THIS cell needs to be RECEIVING FROM Inh
         # this probably should be done in a fn
@@ -63,22 +63,14 @@ class L5Pyr(Cell):
             sec.ca.gbar = 60
             # print sec.ca.gbar
 
-    # this replicates topol
-    # this function will be deprecated in favor of create_sections2 below
-    # def create_sections(self, N_dend):
-        # Trying to create sections directly
-        # for i in range(0, N_dend):
-            # self.list_dend.append(h.Section())
-            # self.list_dend[i].insert('hh')
-            # print self.list_dend[i]
-
     # Creates dendritic sections and sets lengths and diameters for each section
     # dend lengths and dend diams are hardcoded here
     def create_dends(self):
     # def create_sections(self, N_dend):
         # hard code dend lengths and diams
-        self.dend_L = [102, 680, 680, 425, 255, 85, 255, 255]
-        self.dend_diam = [10.2, 7.48, 4.93, 3.4, 5.1, 6.8, 8.5, 8.5]
+        # dend order: [ap trunk, ap #1, ap tuft, obliq, bas trunk, bas, bas]
+        self.dend_L = [59.5, 306, 238, 340, 85, 255, 255]
+        self.dend_diam = [4.25, 4.08, 3.40, 3.91, 4.25, 2.72, 2.72]
 
         # check lengths for congruity
         # this needs to be figured out
@@ -101,12 +93,13 @@ class L5Pyr(Cell):
     # set the geometry, including the nseg.
     # geom_set separate for future and to get around shape_change
     def geom_set(self):
+        # Check with SL: set soma geom here too?
         # The pythonic way of setting length and diameter 
         for dend, L, diam in zip(self.list_dend, self.dend_L, self.dend_diam):
             dend.L = L
             dend.diam = diam
             dend.Ra = 200
-            dend.cm = 0.85
+            dend.cm = 0.6195
         
         # set length and diameter of dends
         # for i in range (0, len(self.dend_L)):
@@ -120,18 +113,17 @@ class L5Pyr(Cell):
         self.list_dend[1].connect(self.list_dend[0], 1, 0)
 
         self.list_dend[2].connect(self.list_dend[1], 1, 0)
-        self.list_dend[3].connect(self.list_dend[2], 1, 0)
 
         # dend[4] comes off of dend[0](1)
-        self.list_dend[4].connect(self.list_dend[0], 1, 0)
+        self.list_dend[3].connect(self.list_dend[0], 1, 0)
 
         # Proximal
-        self.list_dend[5].connect(self.soma, 0, 0)
-        self.list_dend[6].connect(self.list_dend[5], 1, 0)
-        self.list_dend[7].connect(self.list_dend[5], 1, 0)
+        self.list_dend[4].connect(self.soma, 0, 0)
+        self.list_dend[5].connect(self.list_dend[4], 1, 0)
+        self.list_dend[6].connect(self.list_dend[4], 1, 0)
 
     def print_params(self):
-        print "L5 PN Params:"
+        print "L2 PN Params:"
         print "Soma length:", self.soma.L
         print "Soma diam:", self.soma.diam
         print "Soma Ra:", self.soma.Ra
@@ -155,10 +147,10 @@ class L5Pyr(Cell):
 
     def shape_change(self):
         # set 3d shape of soma by calling shape_soma from class Cell
-        print "Warning: You are setting 3d shape geom. You better be doing"
+        print "Warning: You are setiing 3d shape geom. You better be doing"
         print "gui analysis and not numerical analysis!!"
         self.shape_soma()
-
+        
         # soma proximal coords
         x_prox = 0
         y_prox = 0
@@ -175,10 +167,10 @@ class L5Pyr(Cell):
         # dend_dx = [ 0,    0,   0,   0,-150,   0, -106,  106]
         # dend_dy = [60,  250, 400, 400,   0, -50, -106, -106]
 
-        # dend 0-3 are major axis, dend 4 is branch
+        # dend 0-2 are major axis, dend 3 is branch
         # deal with distal first along major cable axis
         # the way this is assigning variables is ugly/lazy right now
-        for i in range(0, 4):
+        for i in range(0, 3):
             h.pt3dclear(sec=self.list_dend[i])
 
             # print x_distal, y_distal
@@ -196,7 +188,7 @@ class L5Pyr(Cell):
 
         # now deal with dend 4
         # dend 4 will ALWAYS be positioned at the end of dend[0]
-        h.pt3dclear(sec=self.list_dend[4])
+        h.pt3dclear(sec=self.list_dend[3])
 
         # activate this section
         self.list_dend[0].push()
@@ -204,31 +196,31 @@ class L5Pyr(Cell):
         y_start = h.y3d(1)
         h.pop_section()
 
-        h.pt3dadd(x_start, y_start, 0, self.dend_diam[4], sec=self.list_dend[4])
-        # self.dend_L[4] is subtracted because lengths always positive, 
+        h.pt3dadd(x_start, y_start, 0, self.dend_diam[3], sec=self.list_dend[3])
+        # self.dend_L[3] is subtracted because lengths always positive, 
         # and this goes to negative x
-        h.pt3dadd(x_start-self.dend_L[4], y_start, 0, self.dend_diam[4], sec=self.list_dend[4])
+        h.pt3dadd(x_start-self.dend_L[3], y_start, 0, self.dend_diam[3], sec=self.list_dend[3])
         # print h.n3d(sec=self.list_dend[0])
 
         # now deal with proximal dends
-        for i in range(5, 8):
+        for i in range(4, 7):
             h.pt3dclear(sec=self.list_dend[i])
 
         # deal with dend 5, ugly. sorry.
-        h.pt3dadd(x_prox, y_prox, 0, self.dend_diam[i], sec=self.list_dend[5])
-        # x_prox += dend_dx[5]
-        y_prox += -self.dend_L[5]
+        h.pt3dadd(x_prox, y_prox, 0, self.dend_diam[i], sec=self.list_dend[4])
+        # x_prox += dend_dx[4]
+        y_prox += -self.dend_L[4]
 
-        h.pt3dadd(x_prox, y_prox, 0, self.dend_diam[5],sec=self.list_dend[5])
+        h.pt3dadd(x_prox, y_prox, 0, self.dend_diam[4],sec=self.list_dend[4])
 
         # x_prox, y_prox are now the starting points for BOTH of the last 2 sections
         # dend 6
-        h.pt3dadd(0, y_prox, 0, self.dend_diam[6], sec=self.list_dend[6])
-        h.pt3dadd(-self.dend_L[6]*sqrt(2)/2, y_prox-self.dend_L[6]*sqrt(2)/2, 0, self.dend_diam[6], sec=self.list_dend[6])
+        h.pt3dadd(0, y_prox, 0, self.dend_diam[5], sec=self.list_dend[5])
+        h.pt3dadd(-self.dend_L[5]*sqrt(2)/2, y_prox-self.dend_L[5]*sqrt(2)/2, 0, self.dend_diam[5], sec=self.list_dend[5])
 
         # dend 7
-        h.pt3dadd(0, y_prox, 0, self.dend_diam[7], sec=self.list_dend[7])
-        h.pt3dadd(self.dend_L[7]*sqrt(2)/2, y_prox-self.dend_L[7]*sqrt(2)/2, 0, self.dend_diam[7], sec=self.list_dend[7])
+        h.pt3dadd(0, y_prox, 0, self.dend_diam[6], sec=self.list_dend[6])
+        h.pt3dadd(self.dend_L[6]*sqrt(2)/2, y_prox-self.dend_L[6]*sqrt(2)/2, 0, self.dend_diam[6], sec=self.list_dend[6])
 
         # print "before L: ", self.list_dend[i].L
         # self.list_dend[i].L = 150
