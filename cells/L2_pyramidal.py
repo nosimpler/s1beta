@@ -1,11 +1,11 @@
 # L2_pyramidal.py - est class def for layer 2 pyramidal cells
 #
-# v 0.1.0
-# rev 2012-07-13 (Created) 
-# last rev:
-#
+# v 0.2.2
+# rev 2012-07-17 (SL: h/nrn switch)
+# last rev: (Created) 
 
-from neuron import h
+from neuron import h as nrn
+# from neuron import h
 from class_cell import Cell
 from sys import exit
 from math import sqrt
@@ -45,7 +45,7 @@ class L2Pyr(Cell):
         # synapse on THIS cell needs to be RECEIVING FROM Inh
         # this probably should be done in a fn
         # but best way is unclear unless other synapses are done
-        self.syn = h.Exp2Syn(self.soma(0.5))
+        self.syn = nrn.Exp2Syn(self.soma(0.5))
         self.syn.e = -80
         self.syn.tau1 = 1
         self.syn.tau2 = 20
@@ -82,7 +82,7 @@ class L2Pyr(Cell):
 
         # Trying to create sections directly
         for i in range(0, self.N_dend):
-            self.list_dend.append(h.Section())
+            self.list_dend.append(nrn.Section())
             # self.list_dend[i].L = self.dend_L[i]
             # self.list_dend[i].diam = self.dend_diam[i]
             
@@ -159,9 +159,9 @@ class L2Pyr(Cell):
         x_distal = 0
         y_distal = self.soma.L
 
-        # h.pt3dclear(sec=self.soma)
-        # h.pt3dadd(x_prox, y_prox, 0, 1, sec=self.soma)
-        # h.pt3dadd(x_distal, y_distal, 0, 1, sec=self.soma)
+        # nrn.pt3dclear(sec=self.soma)
+        # nrn.pt3dadd(x_prox, y_prox, 0, 1, sec=self.soma)
+        # nrn.pt3dadd(x_distal, y_distal, 0, 1, sec=self.soma)
 
         # changes in x and y pt3d coords
         # dend_dx = [ 0,    0,   0,   0,-150,   0, -106,  106]
@@ -171,12 +171,12 @@ class L2Pyr(Cell):
         # deal with distal first along major cable axis
         # the way this is assigning variables is ugly/lazy right now
         for i in range(0, 3):
-            h.pt3dclear(sec=self.list_dend[i])
+            nrn.pt3dclear(sec=self.list_dend[i])
 
             # print x_distal, y_distal
             # x_distal and y_distal are the starting points for each segment
             # these are updated at the end of the loop
-            h.pt3dadd(0, y_distal, 0, self.dend_diam[i], sec=self.list_dend[i])
+            nrn.pt3dadd(0, y_distal, 0, self.dend_diam[i], sec=self.list_dend[i])
 
             # update x_distal and y_distal after setting them
             # x_distal += dend_dx[i]
@@ -184,52 +184,52 @@ class L2Pyr(Cell):
 
             # print x_distal, y_distal
             # add next point
-            h.pt3dadd(0, y_distal, 0, self.dend_diam[i], sec=self.list_dend[i])
+            nrn.pt3dadd(0, y_distal, 0, self.dend_diam[i], sec=self.list_dend[i])
 
         # now deal with dend 4
         # dend 4 will ALWAYS be positioned at the end of dend[0]
-        h.pt3dclear(sec=self.list_dend[3])
+        nrn.pt3dclear(sec=self.list_dend[3])
 
         # activate this section
         self.list_dend[0].push()
-        x_start = h.x3d(1)
-        y_start = h.y3d(1)
-        h.pop_section()
+        x_start = nrn.x3d(1)
+        y_start = nrn.y3d(1)
+        nrn.pop_section()
 
-        h.pt3dadd(x_start, y_start, 0, self.dend_diam[3], sec=self.list_dend[3])
+        nrn.pt3dadd(x_start, y_start, 0, self.dend_diam[3], sec=self.list_dend[3])
         # self.dend_L[3] is subtracted because lengths always positive, 
         # and this goes to negative x
-        h.pt3dadd(x_start-self.dend_L[3], y_start, 0, self.dend_diam[3], sec=self.list_dend[3])
-        # print h.n3d(sec=self.list_dend[0])
+        nrn.pt3dadd(x_start-self.dend_L[3], y_start, 0, self.dend_diam[3], sec=self.list_dend[3])
+        # print nrn.n3d(sec=self.list_dend[0])
 
         # now deal with proximal dends
         for i in range(4, 7):
-            h.pt3dclear(sec=self.list_dend[i])
+            nrn.pt3dclear(sec=self.list_dend[i])
 
         # deal with dend 5, ugly. sorry.
-        h.pt3dadd(x_prox, y_prox, 0, self.dend_diam[i], sec=self.list_dend[4])
+        nrn.pt3dadd(x_prox, y_prox, 0, self.dend_diam[i], sec=self.list_dend[4])
         # x_prox += dend_dx[4]
         y_prox += -self.dend_L[4]
 
-        h.pt3dadd(x_prox, y_prox, 0, self.dend_diam[4],sec=self.list_dend[4])
+        nrn.pt3dadd(x_prox, y_prox, 0, self.dend_diam[4],sec=self.list_dend[4])
 
         # x_prox, y_prox are now the starting points for BOTH of the last 2 sections
         # dend 6
-        h.pt3dadd(0, y_prox, 0, self.dend_diam[5], sec=self.list_dend[5])
-        h.pt3dadd(-self.dend_L[5]*sqrt(2)/2, y_prox-self.dend_L[5]*sqrt(2)/2, 0, self.dend_diam[5], sec=self.list_dend[5])
+        nrn.pt3dadd(0, y_prox, 0, self.dend_diam[5], sec=self.list_dend[5])
+        nrn.pt3dadd(-self.dend_L[5]*sqrt(2)/2, y_prox-self.dend_L[5]*sqrt(2)/2, 0, self.dend_diam[5], sec=self.list_dend[5])
 
         # dend 7
-        h.pt3dadd(0, y_prox, 0, self.dend_diam[6], sec=self.list_dend[6])
-        h.pt3dadd(self.dend_L[6]*sqrt(2)/2, y_prox-self.dend_L[6]*sqrt(2)/2, 0, self.dend_diam[6], sec=self.list_dend[6])
+        nrn.pt3dadd(0, y_prox, 0, self.dend_diam[6], sec=self.list_dend[6])
+        nrn.pt3dadd(self.dend_L[6]*sqrt(2)/2, y_prox-self.dend_L[6]*sqrt(2)/2, 0, self.dend_diam[6], sec=self.list_dend[6])
 
         # print "before L: ", self.list_dend[i].L
         # self.list_dend[i].L = 150
         # print "after L: ", self.list_dend[i].L
 
-        # print type(h.x3d(1.0))
-        # h.pop_section()
-        # h.pt3dadd(x_distal, y_distal)
+        # print type(nrn.x3d(1.0))
+        # nrn.pop_section()
+        # nrn.pt3dadd(x_distal, y_distal)
 
-        # h.pt3dclear(sec=self.list_dend[0])
-        # h.pt3dadd(0, 23, 0, 1, sec=self.list_dend[0])
-        # h.pt3dadd(0, 83, 0, 1, sec=self.list_dend[0])
+        # nrn.pt3dclear(sec=self.list_dend[0])
+        # nrn.pt3dadd(0, 23, 0, 1, sec=self.list_dend[0])
+        # nrn.pt3dadd(0, 83, 0, 1, sec=self.list_dend[0])

@@ -1,10 +1,10 @@
 # Basket.py - est class def for inhibitory basket cell used in all layers
 #
-# v. 0.2.1
-# rev 2012-07-17 (SL: Changed synapse functions)
-# last rev: (expicitly set Ra and cm)
+# v. 0.2.2
+# rev 2012-07-17 (SL: using nrn instead of h)
+# last rev: (SL: Changed synapse functions)
 
-from neuron import h
+# from neuron import h as nrn
 from class_cell import Cell
 
 # Inhibitory cell class

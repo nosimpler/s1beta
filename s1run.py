@@ -1,11 +1,11 @@
 # s1run.py - primary run function for s1 project
 #
-# v 0.1.2
-# rev 2012-07-12: (MS: cell_list_e and cell_list_i renamed cells_L5Pyr and
-# cells_L5Basket respectively. Added cells_L2Pry). 
-# last major: (MS: Class Pyr renamed L5Pyr. Calls changed appropriately)
+# v 0.2.2
+# rev 2012-07-12 (SL: replaced h calls with nrn calls)
+# last major: (MS: renamed cell lists)
 
-from neuron import h
+from neuron import h as nrn
+# from neuron import h
 
 # change the backend for matplotlib
 import matplotlib as mpl
@@ -23,8 +23,8 @@ from cells.L5_pyramidal import L5Pyr
 # Network is defined in 'class_net.py'
 from class_net import Network
 
-h.load_file("stdrun.hoc")
-# h.load_file("nrngui.hoc")
+nrn.load_file("stdrun.hoc")
+# nrn.load_file("nrngui.hoc")
 # from neuron import gui
 
 # def run_ping(A_input):
@@ -40,28 +40,28 @@ if __name__ == "__main__":
     # seg_i = net.cell_list_i[0].soma(0.5)
 
     # Stimulation params
-    stim = h.IClamp(seg_e)
+    stim = nrn.IClamp(seg_e)
     stim.delay = 1
     stim.dur = 100
     stim.amp = 5.
-    h.tstop = 200
+    nrn.tstop = 200
 
-    v_e = h.Vector()
+    v_e = nrn.Vector()
     v_e.record(seg_e._ref_v)
 
-    # v_t = h.Vector()
+    # v_t = nrn.Vector()
     # v_t.record(seg_t._ref_v)
 
-    v_i = h.Vector()
+    v_i = nrn.Vector()
     v_i.record(seg_i._ref_v)
 
-    t_vec = h.Vector()
-    t_vec.record(h._ref_t)
+    t_vec = nrn.Vector()
+    t_vec.record(nrn._ref_t)
 
-    h.run()
+    nrn.run()
 
     # attempt at pythonic-ly creating a file
-    data_file = h.File()
+    data_file = nrn.File()
     data_file.wopen("testing.dat")
 
     for tpoint, vval in zip(t_vec, v_e):
@@ -71,7 +71,7 @@ if __name__ == "__main__":
     # v_e.printf(data_file)
     data_file.close()
 
-    # h.cvode_active(1)
+    # nrn.cvode_active(1)
 
     # plt.plot(v_e)
     # print v_e
@@ -113,7 +113,7 @@ if __name__ == "__main__":
 
     # # way to graph in hoc/nrn
     # # for this we need nrngui above
-    # G = h.Graph()
+    # G = nrn.Graph()
     # v_e.line(G, t_vec)
     # v_i.line(G, t_vec)
 

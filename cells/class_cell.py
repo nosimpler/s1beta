@@ -1,10 +1,11 @@
 # class_cell.py - establish class def for general cell features
 #
-# v 0.2.1
-# rev 2012-07-17 (SL: general synapse prototypes)
-# last rev: (added Ra and cm as parameters passed to and set by class Cell())
+# v 0.2.2
+# rev 2012-07-17 (SL: using nrn instead of h)
+# last rev: (SL: general synapse prototypes)
 
-from neuron import h
+from neuron import h as nrn
+# from neuron import h
 
 # create a cell class
 class Cell():
@@ -14,7 +15,7 @@ class Cell():
         self.diam = diam_soma
 
         # create soma and set geometry
-        self.soma = h.Section()
+        self.soma = nrn.Section()
         self.soma.insert('hh')
         self.soma.L = self.L
         self.soma.diam = self.diam
@@ -23,14 +24,14 @@ class Cell():
 
     # creates a receiving inhibitory synapse ONTO secloc
     def syn_gabaa_create(self, secloc):
-        self.syn_gabaa = h.Exp2Syn(secloc)
+        self.syn_gabaa = nrn.Exp2Syn(secloc)
         self.syn_gabaa.e = -80
         self.syn_gabaa.tau1 = 1
         self.syn_gabaa.tau2 = 20
 
     # creates a receiving excitatory synapse ONTO secloc
     def syn_ampa_create(self, secloc):
-        self.syn_ampa = h.ExpSyn(secloc)
+        self.syn_ampa = nrn.ExpSyn(secloc)
         self.syn_ampa.e = 0
         self.syn_ampa.tau = 2
 
@@ -41,24 +42,24 @@ class Cell():
         # event generated at _ref_v, to postsyn where delivered
         # netconobj = new NetCon(source section, target section,
         # [threshold, delay, weight])
-        nc = h.NetCon(self.soma(r)._ref_v, postsyn, sec=self.soma)
-        # nc = h.NetCon(self.soma(0.5)._ref_v, postsyn, sec=self.soma)
+        nc = nrn.NetCon(self.soma(r)._ref_v, postsyn, sec=self.soma)
+        # nc = nrn.NetCon(self.soma(0.5)._ref_v, postsyn, sec=self.soma)
 
         # event threshold, arbitrarily chosen for now (default is +10)
         nc.threshold = 0
         return nc
 
     # define 3d shape of soma -- is needed for gui representation of cell
-    # DO NOT need to call h.define_shape() explicitly!!
+    # DO NOT need to call nrn.define_shape() explicitly!!
     def shape_soma(self):
         # self.soma.push()
-        h.pt3dclear(sec=self.soma)
+        nrn.pt3dclear(sec=self.soma)
 
-        # h.ptdadd(x, y, z, diam) -- if this function is run, clobbers 
+        # nrn.ptdadd(x, y, z, diam) -- if this function is run, clobbers 
         # self.soma.diam set above
-        h.pt3dadd(0, 0, 0, self.diam, sec=self.soma)
-        h.pt3dadd(0, self.L, 0, self.diam, sec=self.soma)
+        nrn.pt3dadd(0, 0, 0, self.diam, sec=self.soma)
+        nrn.pt3dadd(0, self.L, 0, self.diam, sec=self.soma)
 
         # self.soma.push()
-        # print h.diam3d(0), h.diam3d(1)
-        # h.pop_section()
+        # print nrn.diam3d(0), nrn.diam3d(1)
+        # nrn.pop_section()

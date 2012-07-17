@@ -1,10 +1,10 @@
 # class_net.py - establishes the Network class and related methods
 #
-# v 0.2.1
-# rev 2012-07-17 (SL: changes to net_connect)
-# last major: (SL: added new netconnect lists)
+# v 0.2.2
+# rev 2012-07-17 (SL: removed unnecessary module (for now))
+# last major: (SL: changes to net_connect)
 
-from neuron import h
+# from neuron import h as nrn
 from cells.L5_pyramidal import L5Pyr
 from cells.L2_pyramidal import L2Pyr
 from cells.basket import Basket
