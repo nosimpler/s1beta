@@ -1,8 +1,8 @@
 # L5_pyramidal.py - est class def for layer 5 pyramidal cells
 #
-# v 0.1.1
-# rev 2012-07-12 (explicitly set Ra and cm for all sections including soma)
-# last rev: (added geom_set routine to be tested)
+# v 0.2.1
+# rev 2012-07-17 (SL: changes to synapse creation and connect)
+# last rev: (explicitly set Ra and cm for all sections including soma)
 
 from neuron import h
 from class_cell import Cell
@@ -13,12 +13,9 @@ class L5Pyr(Cell):
     def __init__(self):
         # Cell.__init__(self, L, diam, Ra, cm)
         Cell.__init__(self, 39, 28.9, 0.85)
-        # super(Inherit_L5Pyr, self).__init__()
 
         # sections of these cells
         self.list_dend = []
-        # self.list_dend_prox = []
-        # self.list_dend_dist = []
 
         # prealloc namespace for dend properties
         # props be set in create_dends()
@@ -31,44 +28,18 @@ class L5Pyr(Cell):
         self.N_dend = 0
 
         # geometry
-        # self.create_sections(8)
         self.create_dends()
         self.connect_sections()
-        # self.shape_change()
         self.geom_set()
 
         # biophysics
         self.biophys_soma()
 
+        # creation of synapses inherited method from Cell()
         # synapse on THIS cell needs to be RECEIVING FROM Inh
-        # this probably should be done in a fn
-        # but best way is unclear unless other synapses are done
-        self.syn = h.Exp2Syn(self.soma(0.5))
-        self.syn.e = -80
-        self.syn.tau1 = 1
-        self.syn.tau2 = 20
-
-    # just a dummy test
-    # adding biophysics to soma
-    def biophys_soma(self):
-        # insert 'ca' mechanism
-        self.soma.insert('ca')
-
-        # this is new, pythonic syntax, I believe
-        # equivalent to gbar_ca = 60
-        # having trouble testing the effect of this
-        for sec in self.soma:
-            sec.ca.gbar = 60
-            # print sec.ca.gbar
-
-    # this replicates topol
-    # this function will be deprecated in favor of create_sections2 below
-    # def create_sections(self, N_dend):
-        # Trying to create sections directly
-        # for i in range(0, N_dend):
-            # self.list_dend.append(h.Section())
-            # self.list_dend[i].insert('hh')
-            # print self.list_dend[i]
+        # segment on soma specified here
+        self.syn_gabaa_create(self.soma(0.5))
+        # self.synapses_create()
 
     # Creates dendritic sections and sets lengths and diameters for each section
     # dend lengths and dend diams are hardcoded here
@@ -80,6 +51,7 @@ class L5Pyr(Cell):
 
         # check lengths for congruity
         # this needs to be figured out
+        # should probably be try/except
         if len(self.dend_L) == len(self.dend_diam):
             self.N_dend = len(self.dend_L)
         else:
@@ -95,21 +67,6 @@ class L5Pyr(Cell):
             # move to a new function that specifies biophysics for dends
             self.list_dend[i].insert('hh')
             # print self.list_dend[i]
-            
-    # set the geometry, including the nseg.
-    # geom_set separate for future and to get around shape_change
-    def geom_set(self):
-        # The pythonic way of setting length and diameter 
-        for dend, L, diam in zip(self.list_dend, self.dend_L, self.dend_diam):
-            dend.L = L
-            dend.diam = diam
-            dend.Ra = 200
-            dend.cm = 0.85
-        
-        # set length and diameter of dends
-        # for i in range (0, len(self.dend_L)):
-        #     self.list_dend[i].L = self.dend_L[i]
-        #     self.list_dend[i].diam = self.dend_diam[i]
 
     def connect_sections(self):
         # connect(parent, parent_end, {child_start=0})
@@ -127,7 +84,44 @@ class L5Pyr(Cell):
         self.list_dend[5].connect(self.soma, 0, 0)
         self.list_dend[6].connect(self.list_dend[5], 1, 0)
         self.list_dend[7].connect(self.list_dend[5], 1, 0)
+            
+    # set the geometry, including the nseg.
+    # geom_set separate for future and to get around shape_change
+    def geom_set(self):
+        # The pythonic way of setting length and diameter 
+        for dend, L, diam in zip(self.list_dend, self.dend_L, self.dend_diam):
+            dend.L = L
+            dend.diam = diam
+            dend.Ra = 200
+            dend.cm = 0.85
+        
+        # set length and diameter of dends
+        # for i in range (0, len(self.dend_L)):
+        #     self.list_dend[i].L = self.dend_L[i]
+        #     self.list_dend[i].diam = self.dend_diam[i]
 
+    # just a dummy test
+    # adding biophysics to soma
+    def biophys_soma(self):
+        # insert 'ca' mechanism
+        self.soma.insert('ca')
+
+        # this is new, pythonic syntax, I believe
+        # equivalent to gbar_ca = 60
+        # having trouble testing the effect of this
+        for sec in self.soma:
+            sec.ca.gbar = 60
+
+    # Creates a list of all of the synapses that will exist on this cell
+    # Best way is unclear unless other synapses are done
+    # def synapses_create(self):
+    #     # self.syn defines inhibitory synapse(s)
+    #     self.syn_inh = h.Exp2Syn(self.soma(0.5))
+    #     self.syn_inh.e = -80
+    #     self.syn_inh.tau1 = 1
+    #     self.syn_inh.tau2 = 20
+
+    # At some point, a function like this should be a property of a class and then generalized
     def print_params(self):
         print "L5 PN Params:"
         print "Soma length:", self.soma.L
@@ -239,3 +233,15 @@ class L5Pyr(Cell):
         # h.pt3dclear(sec=self.list_dend[0])
         # h.pt3dadd(0, 23, 0, 1, sec=self.list_dend[0])
         # h.pt3dadd(0, 83, 0, 1, sec=self.list_dend[0])
+
+##############################
+# Old code below
+
+# this replicates topol
+# this function will be deprecated in favor of create_sections2 below
+# def create_sections(self, N_dend):
+    # Trying to create sections directly
+    # for i in range(0, N_dend):
+        # self.list_dend.append(h.Section())
+        # self.list_dend[i].insert('hh')
+        # print self.list_dend[i]

@@ -1,9 +1,8 @@
 # Basket.py - est class def for inhibitory basket cell used in all layers
 #
-# v. 0.1.1
-# rev 2012-07-12 (expicitly set Ra and cm)
-# last rev: (created)
-#
+# v. 0.2.1
+# rev 2012-07-17 (SL: Changed synapse functions)
+# last rev: (expicitly set Ra and cm)
 
 from neuron import h
 from class_cell import Cell
@@ -15,11 +14,13 @@ class Basket(Cell):
         Cell.__init__(self, 39, 20, 0.85)
 
         # excitatory synapse onto this cell
-        self.syn = h.ExpSyn(self.soma(0.5))
-        self.syn.e = 0
+        self.syn_ampa_create(self.soma(0.5))
+        # # or something in the future like syn_ampa, etc.
+        # self.syn_L5pyr = h.ExpSyn(self.soma(0.5))
+        # self.syn_L5pyr.e = 0
 
-        # tau2 is decay
-        self.syn.tau = 2
+        # # tau is decay
+        # self.syn_L5pyr.tau = 2
 
     def print_params(self):
         print "Basket cell params:"
