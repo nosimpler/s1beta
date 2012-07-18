@@ -1,8 +1,8 @@
 # L5_pyramidal.py - est class def for layer 5 pyramidal cells
 #
-# v 0.2.2
-# rev 2012-07-1 (SL: using nrn to replace h)
-# last rev: (SL: changes to synapse creation and connect)
+# v 0.2.3
+# rev 2012-07-18 (SL: added a list of connections here)
+# last rev: (SL: using nrn to replace h)
 
 from neuron import h as nrn
 # from neuron import h
@@ -22,6 +22,11 @@ class L5Pyr(Cell):
         # props be set in create_dends()
         self.dend_L = []
         self.dend_diam = []
+
+        # create lists of connections FROM this cell TO target
+        self.ncto_L5Basket = []
+        self.ncto_L2Pyr = []
+        self.ncto_L2Basket = []
 
         # N_dend is an int
         # we expect this will be overwritten!!

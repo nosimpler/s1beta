@@ -1,8 +1,8 @@
 # Basket.py - est class def for inhibitory basket cell used in all layers
 #
-# v. 0.2.2
-# rev 2012-07-17 (SL: using nrn instead of h)
-# last rev: (SL: Changed synapse functions)
+# v. 0.2.3
+# rev 2012-07-18 (added list of connections here)
+# last rev: (SL: using nrn instead of h)
 
 # from neuron import h as nrn
 from class_cell import Cell
@@ -18,6 +18,15 @@ class Basket(Cell):
         # # or something in the future like syn_ampa, etc.
         # self.syn_L5pyr = h.ExpSyn(self.soma(0.5))
         # self.syn_L5pyr.e = 0
+
+        # create lists of connections FROM this cell TO target
+        # not all of these will be used necessarily in each cell
+        self.ncto_L5Pyr = []
+        self.ncto_L2Pyr = []
+
+        # No autapses, right?
+        # self.ncto_L5Basket = []
+        # self.ncto_L2Basket = []
 
         # # tau is decay
         # self.syn_L5pyr.tau = 2
