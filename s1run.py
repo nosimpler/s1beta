@@ -1,11 +1,10 @@
 # s1run.py - primary run function for s1 project
 #
-# v 0.2.2
-# rev 2012-07-12 (SL: replaced h calls with nrn calls)
-# last major: (MS: renamed cell lists)
+# v 0.2.5
+# rev 2012-07-18 (SL: clean up)
+# last major: (SL: replaced h calls with nrn calls)
 
 from neuron import h as nrn
-# from neuron import h
 
 # change the backend for matplotlib
 import matplotlib as mpl
@@ -27,7 +26,7 @@ nrn.load_file("stdrun.hoc")
 # nrn.load_file("nrngui.hoc")
 # from neuron import gui
 
-# def run_ping(A_input):
+# this will end up being a function that is called by main
 if __name__ == "__main__":
     # Create network from class_net's Network class
     net = Network()
@@ -35,9 +34,6 @@ if __name__ == "__main__":
     # name compartments internally for this function
     seg_e = net.cells_L5Pyr[0].soma(0.5)
     seg_i = net.cells_L5Basket[0].soma(0.5)
-
-    # seg_e = net.cell_list_e[0].soma(0.5)
-    # seg_i = net.cell_list_i[0].soma(0.5)
 
     # Stimulation params
     stim = nrn.IClamp(seg_e)
@@ -119,7 +115,3 @@ if __name__ == "__main__":
 
     # h('objref p')
     # h('p = new PythonObject()')
-
-# not doing this at the moment in order to see output at the post-run prompt
-# if __name__ == "__main__":
-#     run_ping(100)

@@ -1,26 +1,21 @@
 # L2_pyramidal.py - est class def for layer 2 pyramidal cells
 #
-# v 0.2.0
-# rev 2012-07-18 (correct biophysics and mechanisms added
-# last rev:(created)
-#
+# v 0.2.5
+# rev 2012-07-18 (SL: clean up)
+# last rev: (correct biophysics and mechanisms added)
 
 from neuron import h as nrn
 from class_cell import Cell
 from sys import exit
 from math import sqrt
-# from topol import L5_pyr_shape
 
 class L2Pyr(Cell):
     def __init__(self):
         # Cell.__init__(self, L, diam, Ra, cm)
         Cell.__init__(self, 22.1, 23.4, 0.6195)
-        # super(Inherit_L2Pyr, self).__init__()
 
         # sections of these cells
         self.list_dend = []
-        # self.list_dend_prox = []
-        # self.list_dend_dist = []
 
         # prealloc namespace for dend properties
         # props be set in create_dends()
@@ -41,7 +36,7 @@ class L2Pyr(Cell):
 
         # biophysics
         self.biophys_soma()
-        self.biophysics_dends()
+        self.biophys_dends()
        
         # creation of synapses inherited method from Cell()
         # synapse on THIS cell needs to be RECEIVING FROM Inh
@@ -49,7 +44,6 @@ class L2Pyr(Cell):
         self.syn_gabaa_create(self.soma(0.5))
         # self.synapses_create()
 
-    # just a dummy test
     # adding biophysics to soma
     def biophys_soma(self):
         # set 'hh' mechanism values
@@ -62,24 +56,9 @@ class L2Pyr(Cell):
         # insert 'km' mechanism
         self.soma.insert('km')
         self.soma.gbar_km = 250
-        # units pS/um^2
 
-        # insert 'cat' mechanism
-        # self.soma.insert('cat')
-        # self.soma.gbar_cat = 0.0
-        
-        # insert 'ar' mechanism
-        # self.soma.insert('ar')
-        # self.soma.gbar_ar= 0.0
-       
-        # this is new, pythonic syntax, I believe
-        # equivalent to gbar_ca = 60
-        # having trouble testing the effect of this
-        # for sec in self.soma:
-        #     sec.ca.gbar = 60
-        #     # print sec.ca.gbar
-
-    def biophysics_dends(self):
+    # Defining biophysics for dendrites
+    def biophys_dends(self):
         for sec in self.list_dend:
             # nueron syntax is used to set values for mechanisms
             # sec.gbar_mech = x sets value of gbar for mech to x for all segs
@@ -98,14 +77,6 @@ class L2Pyr(Cell):
             sec.insert('km')
             sec.gbar_km = 250
             # units pS/um^2
-
-            # # insert 'cat' mechansim
-            # sec.insert('cat')
-            # sec.gbar_cat = 0.0
-
-            # # insert 'ar' mechanism
-            # sec.insert('ar')
-            # sec.gbar_ar = 0.0            
 
     # Create dendritic sections and sets lengths and diameters for each section
     # dend lengths and dend diams are hardcoded here
@@ -127,18 +98,12 @@ class L2Pyr(Cell):
         # Trying to create sections directly
         for i in range(0, self.N_dend):
             self.list_dend.append(nrn.Section())
-            # self.list_dend[i].L = self.dend_L[i]
-            # self.list_dend[i].diam = self.dend_diam[i]
-            
-            # move to a new function that specifies biophysics for dends
-            # self.list_dend[i].insert('hh')
-            # print self.list_dend[i]
             
     # set the geometry, including the nseg.
     # geom_set separate for future and to get around shape_change
     def geom_set(self):
         # Check with SL: set soma geom here too?
-        # The pythonic way of setting length and diameter 
+        # pythonic way of setting length and diameter 
         for dend, L, diam in zip(self.list_dend, self.dend_L, self.dend_diam):
             dend.L = L
             dend.diam = diam
@@ -149,12 +114,6 @@ class L2Pyr(Cell):
         for dend in self.list_dend:
             if dend.L>50:
                 dend.nseg = int(dend.L/50)
-            # print dend.nseg
- 
-        # set length and diameter of dends
-        # for i in range (0, len(self.dend_L)):
-        #     self.list_dend[i].L = self.dend_L[i]
-        #     self.list_dend[i].diam = self.dend_diam[i]
 
     def connect_sections(self):
         # connect(parent, parent_end, {child_start=0})
@@ -208,14 +167,6 @@ class L2Pyr(Cell):
         # soma distal coords
         x_distal = 0
         y_distal = self.soma.L
-
-        # nrn.pt3dclear(sec=self.soma)
-        # nrn.pt3dadd(x_prox, y_prox, 0, 1, sec=self.soma)
-        # nrn.pt3dadd(x_distal, y_distal, 0, 1, sec=self.soma)
-
-        # changes in x and y pt3d coords
-        # dend_dx = [ 0,    0,   0,   0,-150,   0, -106,  106]
-        # dend_dy = [60,  250, 400, 400,   0, -50, -106, -106]
 
         # dend 0-2 are major axis, dend 3 is branch
         # deal with distal first along major cable axis
@@ -271,15 +222,3 @@ class L2Pyr(Cell):
         # dend 7
         nrn.pt3dadd(0, y_prox, 0, self.dend_diam[6], sec=self.list_dend[6])
         nrn.pt3dadd(self.dend_L[6]*sqrt(2)/2, y_prox-self.dend_L[6]*sqrt(2)/2, 0, self.dend_diam[6], sec=self.list_dend[6])
-
-        # print "before L: ", self.list_dend[i].L
-        # self.list_dend[i].L = 150
-        # print "after L: ", self.list_dend[i].L
-
-        # print type(nrn.x3d(1.0))
-        # nrn.pop_section()
-        # nrn.pt3dadd(x_distal, y_distal)
-
-        # nrn.pt3dclear(sec=self.list_dend[0])
-        # nrn.pt3dadd(0, 23, 0, 1, sec=self.list_dend[0])
-        # nrn.pt3dadd(0, 83, 0, 1, sec=self.list_dend[0])

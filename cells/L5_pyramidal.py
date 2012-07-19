@@ -1,11 +1,10 @@
-# L5_pyramidal.py - est class def for layer 5 pyramidal cells
+# L5_pyramidal.py - establish class def for layer 5 pyramidal cells
 #
-# v 0.2.4
-# rev 2012-07-18 (MS: Correct biophysics and mechanisms added)
-# last rev: (SL: added a list of connections here)
+# v 0.2.5
+# rev 2012-07-18 (SL: Clean up)
+# last rev: (MS: Correct biophysics and mechanisms added)
 
 from neuron import h as nrn
-# from neuron import h
 from class_cell import Cell
 from sys import exit
 from math import sqrt, exp
@@ -68,12 +67,6 @@ class L5Pyr(Cell):
         # Trying to create sections directly
         for i in range(0, self.N_dend):
             self.list_dend.append(nrn.Section())
-            # self.list_dend[i].L = self.dend_L[i]
-            # self.list_dend[i].diam = self.dend_diam[i]
-            
-            # moved to biophys_dends()
-            # self.list_dend[i].insert('hh')
-            # print self.list_dend[i]
 
     def connect_sections(self):
         # connect(parent, parent_end, {child_start=0})
@@ -104,14 +97,8 @@ class L5Pyr(Cell):
 
         # set nseg for each dendritic section (soma.nseg = 1 by default)
         for dend in self.list_dend:
-            if dend.L>50:
-                dend.nseg = int(dend.L/50)
-            # print dend.nseg
-
-        # set length and diameter of dends
-        # for i in range (0, len(self.dend_L)):
-        #     self.list_dend[i].L = self.dend_L[i]
-        #     self.list_dend[i].diam = self.dend_diam[i]
+            if dend.L > 50:
+                dend.nseg = int(dend.L / 50)
 
     # adding biophysics to soma
     def biophys_soma(self):
@@ -121,47 +108,39 @@ class L5Pyr(Cell):
         self.soma.gl_hh = 0.0000426
         # units for above are S/cm^2?
         self.soma.el_hh = -65 
-        # by defualt: ena = 50, ek = -77
+        # by default: ena = 50, ek = -77
 
         # insert 'ca' mechanism
         self.soma.insert('ca')
         self.soma.gbar_ca = 60
         # units are pS/um^2?????? CHECK WITH SJ!!!
 
-        #insert 'cad' mechanism
+        # insert 'cad' mechanism
+        # units of tau are ms
         self.soma.insert('cad')
         self.soma.taur_cad = 20
-        # units are ms
 
-        #insert 'kca' mechanism
+        # insert 'kca' mechanism
+        # units are S/cm^2?
         self.soma.insert('kca')
         self.soma.gbar_kca = 0.0002
-        # units are S/cm^2?
 
-        #insert 'km' mechanism
+        # insert 'km' mechanism
+        # units are pS/um^2
         self.soma.insert('km')
         self.soma.gbar_km = 200 
-        # units are pS/um^2
 
-        #insert 'cat' mechanism
+        # insert 'cat' mechanism
         self.soma.insert('cat')
-        self.soma.gbar_cat = 0.0002
+        self.soma.gbar_cat = 2e-4
+        # self.soma.gbar_cat = 0.0002
         # units S/cm^2?
 
-        #insert 'ar' mechanism
+        # insert 'ar' mechanism
         self.soma.insert('ar')
-        self.soma.gbar_ar = 0.000001
+        self.soma.gbar_ar = 1e-6
+        # self.soma.gbar_ar = 0.000001
         
-        # units S/cm^2?        
-        # this is new, pythonic syntax, I believe
-        # equivalent to gbar_ca = 60
-        # having trouble testing the effect of this
-        # for sec in self.soma:
-        #     sec.ca.gbar = 60
-            # print sec.ca.gbar
-    # Creates dendritic sections
-    # dend lengths and dend diams are hardcoded here
-
     def biophys_dends(self):
         for sec in self.list_dend:
             # insert 'hh' mechanism
@@ -169,28 +148,29 @@ class L5Pyr(Cell):
             sec.gnabar_hh = 0.14
             sec.gkbar_hh = 0.01
             sec.gl_hh = 0.0000426
-            # units S/cm^2
+
+            # units: mV
             sec.el_hh = -71
 
-            # insert 'ca' mechanims
+            # Insert 'ca' mechanims
+            # units pS/um^2
             sec.insert('ca')
             sec.gbar_ca = 60
-            # units pS/um^2
 
-            # insert 'cad' mechanism
+            # Insert 'cad' mechanism
+            # units ms
             sec.insert('cad')
             sec.taur_cad = 20
-            # units ms
 
-            # insert 'kca' mechanism
+            # Insert 'kca' mechanism
+            # units S/cm^2
             sec.insert('kca')
             sec.gbar_kca = 0.0002
-            # units S/cm^2
 
-            # insrt 'km' mechansim
+            # Insert 'km' mechansim
+            # units pS/cm^2
             sec.insert('km')
             sec.gbar_km = 200
-            # units pS/cm^2
 
             # insert 'cat' and 'ar' mechanisms
             sec.insert('cat')
@@ -198,13 +178,14 @@ class L5Pyr(Cell):
             sec.insert('ar')
 
         # set gbar_ar
-        # value depends on distance from the soma. The soma is set as the
-        # origin by passin self.soma as a sec arguement to nrn.distance()
-        # We then iterate over the segment nodes of the dendiritic sections 
-        # and set gbar_ar depending on nrn.distance(seg.x), which returns the 
+        # Value depends on distance from the soma. Soma is set as 
+        # origin by passing self.soma as a sec argument to nrn.distance()
+        # Then iterate over segment nodes of dendritic sections 
+        # and set gbar_ar depending on nrn.distance(seg.x), which returns
         # distance from the soma to this point on the CURRENTLY ACCESSED
         # SECTION!!!
         nrn.distance(sec=self.soma)
+
         for sec in self.list_dend:
             sec.push()
             for seg in sec:
@@ -213,15 +194,6 @@ class L5Pyr(Cell):
                 seg.gbar_ar = 0.000001*exp(0.003*nrn.distance(seg.x))
                 # print nrn.distance(seg.x), seg.gbar_ar 
             nrn.pop_section()
-
-    # Creates a list of all of the synapses that will exist on this cell
-    # Best way is unclear unless other synapses are done
-    # def synapses_create(self):
-    #     # self.syn defines inhibitory synapse(s)
-    #     self.syn_inh = nrn.Exp2Syn(self.soma(0.5))
-    #     self.syn_inh.e = -80
-    #     self.syn_inh.tau1 = 1
-    #     self.syn_inh.tau2 = 20
 
     # At some point, a function like this should be a property of a class and then generalized
     def print_params(self):
@@ -323,27 +295,3 @@ class L5Pyr(Cell):
         # dend 7
         nrn.pt3dadd(0, y_prox, 0, self.dend_diam[7], sec=self.list_dend[7])
         nrn.pt3dadd(self.dend_L[7]*sqrt(2)/2, y_prox-self.dend_L[7]*sqrt(2)/2, 0, self.dend_diam[7], sec=self.list_dend[7])
-
-        # print "before L: ", self.list_dend[i].L
-        # self.list_dend[i].L = 150
-        # print "after L: ", self.list_dend[i].L
-
-        # print type(nrn.x3d(1.0))
-        # nrn.pop_section()
-        # nrn.pt3dadd(x_distal, y_distal)
-
-        # nrn.pt3dclear(sec=self.list_dend[0])
-        # nrn.pt3dadd(0, 23, 0, 1, sec=self.list_dend[0])
-        # nrn.pt3dadd(0, 83, 0, 1, sec=self.list_dend[0])
-
-##############################
-# Old code below
-
-# this replicates topol
-# this function will be deprecated in favor of create_sections2 below
-# def create_sections(self, N_dend):
-    # Trying to create sections directly
-    # for i in range(0, N_dend):
-        # self.list_dend.append(nrn.Section())
-        # self.list_dend[i].insert('hh')
-        # print self.list_dend[i]
