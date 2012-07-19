@@ -1,14 +1,14 @@
 # L5_pyramidal.py - est class def for layer 5 pyramidal cells
 #
-# v 0.2.3
-# rev 2012-07-18 (SL: added a list of connections here)
-# last rev: (SL: using nrn to replace h)
+# v 0.2.4
+# rev 2012-07-18 (MS: Correct biophysics and mechanisms added)
+# last rev: (SL: added a list of connections here)
 
 from neuron import h as nrn
 # from neuron import h
 from class_cell import Cell
 from sys import exit
-from math import sqrt
+from math import sqrt, exp
 
 class L5Pyr(Cell):
     def __init__(self):
@@ -40,6 +40,7 @@ class L5Pyr(Cell):
 
         # biophysics
         self.biophys_soma()
+        self.biophys_dends()
 
         # creation of synapses inherited method from Cell()
         # synapse on THIS cell needs to be RECEIVING FROM Inh
@@ -70,8 +71,8 @@ class L5Pyr(Cell):
             # self.list_dend[i].L = self.dend_L[i]
             # self.list_dend[i].diam = self.dend_diam[i]
             
-            # move to a new function that specifies biophysics for dends
-            self.list_dend[i].insert('hh')
+            # moved to biophys_dends()
+            # self.list_dend[i].insert('hh')
             # print self.list_dend[i]
 
     def connect_sections(self):
@@ -100,23 +101,118 @@ class L5Pyr(Cell):
             dend.diam = diam
             dend.Ra = 200
             dend.cm = 0.85
-        
+
+        # set nseg for each dendritic section (soma.nseg = 1 by default)
+        for dend in self.list_dend:
+            if dend.L>50:
+                dend.nseg = int(dend.L/50)
+            # print dend.nseg
+
         # set length and diameter of dends
         # for i in range (0, len(self.dend_L)):
         #     self.list_dend[i].L = self.dend_L[i]
         #     self.list_dend[i].diam = self.dend_diam[i]
 
-    # just a dummy test
     # adding biophysics to soma
     def biophys_soma(self):
+        # set hh params
+        self.soma.gnabar_hh = 0.16
+        self.soma.gkbar_hh = 0.01
+        self.soma.gl_hh = 0.0000426
+        # units for above are S/cm^2?
+        self.soma.el_hh = -65 
+        # by defualt: ena = 50, ek = -77
+
         # insert 'ca' mechanism
         self.soma.insert('ca')
+        self.soma.gbar_ca = 60
+        # units are pS/um^2?????? CHECK WITH SJ!!!
 
+        #insert 'cad' mechanism
+        self.soma.insert('cad')
+        self.soma.taur_cad = 20
+        # units are ms
+
+        #insert 'kca' mechanism
+        self.soma.insert('kca')
+        self.soma.gbar_kca = 0.0002
+        # units are S/cm^2?
+
+        #insert 'km' mechanism
+        self.soma.insert('km')
+        self.soma.gbar_km = 200 
+        # units are pS/um^2
+
+        #insert 'cat' mechanism
+        self.soma.insert('cat')
+        self.soma.gbar_cat = 0.0002
+        # units S/cm^2?
+
+        #insert 'ar' mechanism
+        self.soma.insert('ar')
+        self.soma.gbar_ar = 0.000001
+        
+        # units S/cm^2?        
         # this is new, pythonic syntax, I believe
         # equivalent to gbar_ca = 60
         # having trouble testing the effect of this
-        for sec in self.soma:
-            sec.ca.gbar = 60
+        # for sec in self.soma:
+        #     sec.ca.gbar = 60
+            # print sec.ca.gbar
+    # Creates dendritic sections
+    # dend lengths and dend diams are hardcoded here
+
+    def biophys_dends(self):
+        for sec in self.list_dend:
+            # insert 'hh' mechanism
+            sec.insert('hh')
+            sec.gnabar_hh = 0.14
+            sec.gkbar_hh = 0.01
+            sec.gl_hh = 0.0000426
+            # units S/cm^2
+            sec.el_hh = -71
+
+            # insert 'ca' mechanims
+            sec.insert('ca')
+            sec.gbar_ca = 60
+            # units pS/um^2
+
+            # insert 'cad' mechanism
+            sec.insert('cad')
+            sec.taur_cad = 20
+            # units ms
+
+            # insert 'kca' mechanism
+            sec.insert('kca')
+            sec.gbar_kca = 0.0002
+            # units S/cm^2
+
+            # insrt 'km' mechansim
+            sec.insert('km')
+            sec.gbar_km = 200
+            # units pS/cm^2
+
+            # insert 'cat' and 'ar' mechanisms
+            sec.insert('cat')
+            sec.gbar_cat = 0.0002
+            sec.insert('ar')
+
+        # set gbar_ar
+        # value depends on distance from the soma. The soma is set as the
+        # origin by passin self.soma as a sec arguement to nrn.distance()
+        # We then iterate over the segment nodes of the dendiritic sections 
+        # and set gbar_ar depending on nrn.distance(seg.x), which returns the 
+        # distance from the soma to this point on the CURRENTLY ACCESSED
+        # SECTION!!!
+        nrn.distance(sec=self.soma)
+        for sec in self.list_dend:
+            sec.push()
+            for seg in sec:
+                # print nrn.distance(seg.x)
+                # seg.gbar_cat = 0.0002*exp(0.0*nrn.distance(seg.x))
+                seg.gbar_ar = 0.000001*exp(0.003*nrn.distance(seg.x))
+                # print nrn.distance(seg.x), seg.gbar_ar 
+            nrn.pop_section()
 
     # Creates a list of all of the synapses that will exist on this cell
     # Best way is unclear unless other synapses are done

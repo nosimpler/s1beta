@@ -1,11 +1,11 @@
 # L2_pyramidal.py - est class def for layer 2 pyramidal cells
 #
-# v 0.2.2
-# rev 2012-07-17 (SL: h/nrn switch)
-# last rev: (Created) 
+# v 0.2.0
+# rev 2012-07-18 (correct biophysics and mechanisms added
+# last rev:(created)
+#
 
 from neuron import h as nrn
-# from neuron import h
 from class_cell import Cell
 from sys import exit
 from math import sqrt
@@ -40,30 +40,74 @@ class L2Pyr(Cell):
         self.geom_set()
 
         # biophysics
-        # self.biophys_soma()
-
+        self.biophys_soma()
+        self.biophysics_dends()
+       
+        # creation of synapses inherited method from Cell()
         # synapse on THIS cell needs to be RECEIVING FROM Inh
-        # this probably should be done in a fn
-        # but best way is unclear unless other synapses are done
-        self.syn = nrn.Exp2Syn(self.soma(0.5))
-        self.syn.e = -80
-        self.syn.tau1 = 1
-        self.syn.tau2 = 20
+        # segment on soma specified here
+        self.syn_gabaa_create(self.soma(0.5))
+        # self.synapses_create()
 
     # just a dummy test
     # adding biophysics to soma
     def biophys_soma(self):
-        # insert 'ca' mechanism
-        self.soma.insert('ca')
+        # set 'hh' mechanism values
+        self.soma.gnabar_hh = 0.18
+        self.soma.gkbar_hh = 0.01
+        self.soma.gl_hh = 0.0000426
+        #units: S/cm^2?
+        self.soma.el_hh = -65
+                
+        # insert 'km' mechanism
+        self.soma.insert('km')
+        self.soma.gbar_km = 250
+        # units pS/um^2
 
+        # insert 'cat' mechanism
+        # self.soma.insert('cat')
+        # self.soma.gbar_cat = 0.0
+        
+        # insert 'ar' mechanism
+        # self.soma.insert('ar')
+        # self.soma.gbar_ar= 0.0
+       
         # this is new, pythonic syntax, I believe
         # equivalent to gbar_ca = 60
         # having trouble testing the effect of this
-        for sec in self.soma:
-            sec.ca.gbar = 60
-            # print sec.ca.gbar
+        # for sec in self.soma:
+        #     sec.ca.gbar = 60
+        #     # print sec.ca.gbar
 
-    # Creates dendritic sections and sets lengths and diameters for each section
+    def biophysics_dends(self):
+        for sec in self.list_dend:
+            # nueron syntax is used to set values for mechanisms
+            # sec.gbar_mech = x sets value of gbar for mech to x for all segs
+            # in a section. This method is significantlt faster than using
+            # a for loop to iterate over all segments to set mech values
+
+            # insert 'hh' mechanism    
+            sec.insert('hh')    
+            sec.gnabar_hh = 0.15
+            sec.gkbar_hh = 0.01 
+            sec.gl_hh = 0.0000426
+            # units S/cm^2?
+            sec.el_hh = -65
+
+            # insert 'km' mechanism
+            sec.insert('km')
+            sec.gbar_km = 250
+            # units pS/um^2
+
+            # # insert 'cat' mechansim
+            # sec.insert('cat')
+            # sec.gbar_cat = 0.0
+
+            # # insert 'ar' mechanism
+            # sec.insert('ar')
+            # sec.gbar_ar = 0.0            
+
+    # Create dendritic sections and sets lengths and diameters for each section
     # dend lengths and dend diams are hardcoded here
     def create_dends(self):
     # def create_sections(self, N_dend):
@@ -87,7 +131,7 @@ class L2Pyr(Cell):
             # self.list_dend[i].diam = self.dend_diam[i]
             
             # move to a new function that specifies biophysics for dends
-            self.list_dend[i].insert('hh')
+            # self.list_dend[i].insert('hh')
             # print self.list_dend[i]
             
     # set the geometry, including the nseg.
@@ -101,6 +145,12 @@ class L2Pyr(Cell):
             dend.Ra = 200
             dend.cm = 0.6195
         
+        # set nseg for each dendritic section (soma.nseg = 1 by default)
+        for dend in self.list_dend:
+            if dend.L>50:
+                dend.nseg = int(dend.L/50)
+            # print dend.nseg
+ 
         # set length and diameter of dends
         # for i in range (0, len(self.dend_L)):
         #     self.list_dend[i].L = self.dend_L[i]

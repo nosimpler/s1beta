@@ -43,7 +43,7 @@ if __name__ == "__main__":
     stim = nrn.IClamp(seg_e)
     stim.delay = 1
     stim.dur = 100
-    stim.amp = 5.
+    stim.amp = 1.
     nrn.tstop = 200
 
     v_e = nrn.Vector()
