@@ -1,119 +1,56 @@
 # L2_pyramidal.py - est class def for layer 2 pyramidal cells
 #
-# v 0.2.5
-# rev 2012-07-18 (SL: clean up)
-# last rev: (correct biophysics and mechanisms added)
+# v 0.2.6
+# rev 2012-07-19 (MS: L2Pyr inherits from Pyr()) 
+# last rev: (SL: clean up)
 
 from neuron import h as nrn
-from class_cell import Cell
+from class_cell import Pyr
 from sys import exit
 from math import sqrt
 
-class L2Pyr(Cell):
+class L2Pyr(Pyr):
     def __init__(self):
-        # Cell.__init__(self, L, diam, Ra, cm)
-        Cell.__init__(self, 22.1, 23.4, 0.6195)
+        # Pyr.__init__(self, L, diam, Ra, cm)
+        Pyr.__init__(self, 22.1, 23.4, 0.6195, 'L2_')
 
         # sections of these cells
-        self.list_dend = []
+        # self.list_dend = []
 
         # prealloc namespace for dend properties
-        # props be set in create_dends()
+        # set in dend_props()
+        self.dend_names = []
         self.dend_L = []
         self.dend_diam = []
+        self.cm = 0.6195
+        # self.N_dend = 0
 
-        # N_dend is an int
-        # we expect this will be overwritten!!
-        # SL doesn't like this necessarily
-        self.N_dend = 0
+        # create lists of connections FROM this cell TO target
+        self.ncto_L5Basket = []
+        self.ncto_L5Pyr = []
+        self.ncto_L2Basket = []
 
         # geometry
-        # self.create_sections(8)
-        self.create_dends()
+        self.dend_props()
+        self.create_dends(self.dend_L, self.dend_diam, self.dend_names)
         self.connect_sections()
         # self.shape_change()
-        self.geom_set()
+        self.geom_set(self.cm)
 
         # biophysics
         self.biophys_soma()
         self.biophys_dends()
        
-        # creation of synapses inherited method from Cell()
-        # synapse on THIS cell needs to be RECEIVING FROM Inh
-        # segment on soma specified here
-        self.syn_gabaa_create(self.soma(0.5))
-        # self.synapses_create()
+        # moved to Pyr()
+        # self.syn_gabaa_create(self.soma(0.5))
 
-    # adding biophysics to soma
-    def biophys_soma(self):
-        # set 'hh' mechanism values
-        self.soma.gnabar_hh = 0.18
-        self.soma.gkbar_hh = 0.01
-        self.soma.gl_hh = 0.0000426
-        #units: S/cm^2?
-        self.soma.el_hh = -65
-                
-        # insert 'km' mechanism
-        self.soma.insert('km')
-        self.soma.gbar_km = 250
-
-    # Defining biophysics for dendrites
-    def biophys_dends(self):
-        for sec in self.list_dend:
-            # nueron syntax is used to set values for mechanisms
-            # sec.gbar_mech = x sets value of gbar for mech to x for all segs
-            # in a section. This method is significantlt faster than using
-            # a for loop to iterate over all segments to set mech values
-
-            # insert 'hh' mechanism    
-            sec.insert('hh')    
-            sec.gnabar_hh = 0.15
-            sec.gkbar_hh = 0.01 
-            sec.gl_hh = 0.0000426
-            # units S/cm^2?
-            sec.el_hh = -65
-
-            # insert 'km' mechanism
-            sec.insert('km')
-            sec.gbar_km = 250
-            # units pS/um^2
-
-    # Create dendritic sections and sets lengths and diameters for each section
-    # dend lengths and dend diams are hardcoded here
-    def create_dends(self):
-    # def create_sections(self, N_dend):
-        # hard code dend lengths and diams
-        # dend order: [ap trunk, ap #1, ap tuft, obliq, bas trunk, bas, bas]
+    def dend_props(self):
+        # Hardcode dend properties
+        # eventually these will be lumped into a tuple
+        self.dend_names = ['apical_trunk', 'apical_1', 'apical_tuft',
+                           'apical_obliq', 'basal_1', 'basal_2', 'basal_3']
         self.dend_L = [59.5, 306, 238, 340, 85, 255, 255]
         self.dend_diam = [4.25, 4.08, 3.40, 3.91, 4.25, 2.72, 2.72]
-
-        # check lengths for congruity
-        # this needs to be figured out
-        if len(self.dend_L) == len(self.dend_diam):
-            self.N_dend = len(self.dend_L)
-        else:
-            print "self.dend_L and self.dend_diam are not the same length. Please fix in L5_pyramidal.py"
-            exit()
-
-        # Trying to create sections directly
-        for i in range(0, self.N_dend):
-            self.list_dend.append(nrn.Section())
-            
-    # set the geometry, including the nseg.
-    # geom_set separate for future and to get around shape_change
-    def geom_set(self):
-        # Check with SL: set soma geom here too?
-        # pythonic way of setting length and diameter 
-        for dend, L, diam in zip(self.list_dend, self.dend_L, self.dend_diam):
-            dend.L = L
-            dend.diam = diam
-            dend.Ra = 200
-            dend.cm = 0.6195
-        
-        # set nseg for each dendritic section (soma.nseg = 1 by default)
-        for dend in self.list_dend:
-            if dend.L>50:
-                dend.nseg = int(dend.L/50)
 
     def connect_sections(self):
         # connect(parent, parent_end, {child_start=0})
@@ -131,28 +68,35 @@ class L2Pyr(Cell):
         self.list_dend[5].connect(self.list_dend[4], 1, 0)
         self.list_dend[6].connect(self.list_dend[4], 1, 0)
 
-    def print_params(self):
-        print "L2 PN Params:"
-        print "Soma length:", self.soma.L
-        print "Soma diam:", self.soma.diam
-        print "Soma Ra:", self.soma.Ra
-        print "Soma cm:", self.soma.cm
+    # adding biophysics to soma
+    def biophys_soma(self):
+        # set soma biophysics specified in Pyr
+        self.Pyrbiophys_soma()
 
-        print "\ndendritic lengths:"
-        for i in range(0, self.N_dend):
-            print self.list_dend[i].L
+        # set 'hh' mechanism values not specified in Pyr
+        self.soma.gnabar_hh = 0.18
+                
+        # set gbar_km
+        self.soma.gbar_km = 250
 
-        print "\ndendritic diameters:"
-        for i in range(0, self.N_dend):
-            print self.list_dend[i].diam
+    # Defining biophysics for dendrites
+    def biophys_dends(self):
+        # set dend biophysics specified in Pyr
+        self.Pyrbiophys_dends()
 
-        print "\ndendritic axial resistance:"
-        for i in range(0, self.N_dend):
-            print self.list_dend[i].Ra
+        # set dend biophysics not specidied in Pyr        
+        for sec in self.list_dend:
+            # neuron syntax is used to set values for mechanisms
+            # sec.gbar_mech = x sets value of gbar for mech to x for all segs
+            # in a section. This method is significantlt faster than using
+            # a for loop to iterate over all segments to set mech values
 
-        print "\ndendritic capitance:"
-        for i in range(0, self.N_dend):
-            print self.list_dend[i].cm
+            # set 'hh' mechanisms not set in Pyr
+            sec.gnabar_hh = 0.15
+            sec.el_hh = -65
+
+            # set gbar_km 
+            sec.gbar_km = 250
 
     def shape_change(self):
         # set 3d shape of soma by calling shape_soma from class Cell
@@ -222,3 +166,71 @@ class L2Pyr(Cell):
         # dend 7
         nrn.pt3dadd(0, y_prox, 0, self.dend_diam[6], sec=self.list_dend[6])
         nrn.pt3dadd(self.dend_L[6]*sqrt(2)/2, y_prox-self.dend_L[6]*sqrt(2)/2, 0, self.dend_diam[6], sec=self.list_dend[6])
+    
+
+    # Create dendritic sections and sets lengths and diameters for each section
+    # dend lengths and dend diams are hardcoded here
+    # def create_dends(self):
+    # def create_sections(self, N_dend):
+        # hard code dend lengths and diams
+        # dend order: [ap trunk, ap #1, ap tuft, obliq, bas trunk, bas, bas]
+        # self.dend_names = ['apical_trunk', 'apical_1', 'apical_tuft',
+        #                    'apical_obliq', 'basal_1', 'basal_2', 'basal_3']
+        # self.dend_L = [59.5, 306, 238, 340, 85, 255, 255]
+        # self.dend_diam = [4.25, 4.08, 3.40, 3.91, 4.25, 2.72, 2.72]
+
+        # check lengths for congruity
+        # this needs to be figured out
+        # if len(self.dend_L) == len(self.dend_diam):
+        #     self.N_dend = len(self.dend_L)
+        # else:
+        #     print "self.dend_L and self.dend_diam are not the same length."
+        #     print " Please fix in L5_pyramidal.py."
+        #     exit()
+
+        # # Trying to create sections directly
+        # for i in range(0, self.N_dend):
+        #     self.list_dend.append(nrn.Section(name = 'L2_'+self.dend_names[i]))
+            
+    # set the geometry, including the nseg.
+    # geom_set separate for future and to get around shape_change
+    # def geom_set(self):
+    #     # Check with SL: set soma geom here too?
+    #     # pythonic way of setting length and diameter 
+    #     for dend, L, diam in zip(self.list_dend, self.dend_L, self.dend_diam):
+    #         dend.L = L
+    #         dend.diam = diam
+    #         dend.Ra = 200
+    #         dend.cm = 0.6195
+    #     
+    #     # set nseg for each dendritic section (soma.nseg = 1 by default)
+    #     for dend in self.list_dend:
+    #         if dend.L>50:
+    #             dend.nseg = int(dend.L/50)
+
+            # make dend.nseg odd for all sections
+            # if dend.nseg % 2 == 0:
+            #     dend.nseg = dend.nseg + 1
+    
+    # def print_params(self):
+    #     print "L2 PN Params:"
+    #     print "Soma length:", self.soma.L
+    #     print "Soma diam:", self.soma.diam
+    #     print "Soma Ra:", self.soma.Ra
+    #     print "Soma cm:", self.soma.cm
+
+    #     print "\ndendritic lengths:"
+    #     for i in range(0, self.N_dend):
+    #         print self.list_dend[i].L
+
+    #     print "\ndendritic diameters:"
+    #     for i in range(0, self.N_dend):
+    #         print self.list_dend[i].diam
+
+    #     print "\ndendritic axial resistance:"
+    #     for i in range(0, self.N_dend):
+    #         print self.list_dend[i].Ra
+
+    #     print "\ndendritic capitance:"
+    #     for i in range(0, self.N_dend):
+    #         print self.list_dend[i].cm
