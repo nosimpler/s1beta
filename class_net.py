@@ -1,13 +1,13 @@
 # class_net.py - establishes the Network class and related methods
 #
-# v 0.2.3
-# rev 2012-07-18 (SL: Moved nc lists to cell classes)
-# last major: (SL: removed unnecessary module (for now))
+# v 0.2.4
+# rev 2012-07-19 (MS: import Basket from class_cell) 
+# last major: (SL: Moved nc lists to cell classes)
 
 # from neuron import h as nrn
 from cells.L5_pyramidal import L5Pyr
 from cells.L2_pyramidal import L2Pyr
-from cells.basket import Basket
+from cells.class_cell import Basket
 
 # create Network class
 class Network():
