@@ -1,8 +1,8 @@
 # s1run.py - primary run function for s1 project
 #
-# v 0.2.8
-# rev 2012-07-23 (MS: Added units
-# last major: (SL: clean up)
+# v 0.2.9
+# rev 2012-07-23 (MS: use nrn.fadvance instead of nrn.run())
+# last major: (MS: Added units)
 
 from neuron import h as nrn
 
@@ -45,29 +45,41 @@ if __name__ == "__main__":
     nrn.tstop = 200
 
     v_e = nrn.Vector()
-    v_e.record(seg_e._ref_v)
+    # v_e.record(seg_e._ref_v)
 
     # v_t = nrn.Vector()
     # v_t.record(seg_t._ref_v)
 
     v_i = nrn.Vector()
-    v_i.record(seg_i._ref_v)
+    # v_i.record(seg_i._ref_v)
 
     t_vec = nrn.Vector()
-    t_vec.record(nrn._ref_t)
+    # t_vec.record(nrn._ref_t)
 
-    nrn.run()
+    # nrn.run()
 
-    # attempt at pythonic-ly creating a file
     data_file = nrn.File()
     data_file.wopen("testing.dat")
+   
+    nrn.finitialize(-65)
+    nrn.fcurrent()
 
-    for tpoint, vval in zip(t_vec, v_e):
-        # print item
-        data_file.printf("%03.3f\t%5.4f\n", tpoint, vval)
+    while (nrn.t<nrn.tstop):
+        data_file.printf("%03.3f\t%5.4f\n", nrn.t, seg_e.v)
+        v_e.append(seg_e.v)
+        v_i.append(seg_i.v)
+        t_vec.append(nrn.t)
+        nrn.fadvance()
+
+    data_file.close()
+
+    # # attempt at pythonic-ly creating a file
+
+    # for tpoint, vval in zip(t_vec, v_e):
+    #     # print item
+    #     data_file.printf("%03.3f\t%5.4f\n", tpoint, vval)
 
     # v_e.printf(data_file)
-    data_file.close()
 
     # nrn.cvode_active(1)
 
