@@ -1,8 +1,8 @@
 # s1run.py - primary run function for s1 project
 #
-# v 0.2.9
-# rev 2012-07-23 (MS: use nrn.fadvance instead of nrn.run())
-# last major: (MS: Added units)
+# v 0.2.10
+# rev 2012-07-23 (SL: Clean up)
+# last major: (MS: use nrn.fadvance instead of nrn.run())
 
 from neuron import h as nrn
 
@@ -47,16 +47,11 @@ if __name__ == "__main__":
     v_e = nrn.Vector()
     # v_e.record(seg_e._ref_v)
 
-    # v_t = nrn.Vector()
-    # v_t.record(seg_t._ref_v)
-
     v_i = nrn.Vector()
     # v_i.record(seg_i._ref_v)
 
     t_vec = nrn.Vector()
     # t_vec.record(nrn._ref_t)
-
-    # nrn.run()
 
     data_file = nrn.File()
     data_file.wopen("testing.dat")
@@ -64,7 +59,7 @@ if __name__ == "__main__":
     nrn.finitialize(-65)
     nrn.fcurrent()
 
-    while (nrn.t<nrn.tstop):
+    while (nrn.t < nrn.tstop):
         data_file.printf("%03.3f\t%5.4f\n", nrn.t, seg_e.v)
         v_e.append(seg_e.v)
         v_i.append(seg_i.v)
@@ -101,31 +96,3 @@ if __name__ == "__main__":
     # plt.savefig('outputspikes.eps')
     plt.savefig('outputspikes.png')
     testfig.close()
-
-    # net.cells_L5Pyr[0].print_params()
-    # print '\n'
-    # net.cells_L2Pyr[0].print_params()
-    # print '\n'
-    # net.cells_L5Basket[0].print_params()
-    
-    # print "Soma length:", net.cells_L5Pyr[0].soma.L
-    # print "Soma diam:", net.cells_L5Pyr[0].soma.diam
-
-    # print "\ndendritic lengths:"
-    # for i in range(0, 8):
-    #     print net.cells_L5Pyr[0].list_dend[i].L
-
-    # print "\ndendritic diameters:"
-    # for i in range(0, 8):
-    #     print net.cells_L5Pyr[0].list_dend[i].diam
-
-    # return h
-
-    # # way to graph in hoc/nrn
-    # # for this we need nrngui above
-    # G = nrn.Graph()
-    # v_e.line(G, t_vec)
-    # v_i.line(G, t_vec)
-
-    # h('objref p')
-    # h('p = new PythonObject()')
