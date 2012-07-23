@@ -1,8 +1,8 @@
 # cell_tuning.py - tune individual cell types
 #
-# v 0.2.7
-# rev 2012-07-20 (SL: cleaned up)
-# last major: (MS: created)
+# v 0.2.8
+# rev 2012-07-23 (MS: Added units)
+# last major: (SL: cleaned up)
 
 from neuron import h
 # from neuron import gui
@@ -20,6 +20,8 @@ from cells.L2_pyramidal import L2Pyr
 # from time import clock
 
 h.load_file("stdrun.hoc")
+
+# All units for time: ms
 
 def stimulus(seg, file_prefix):
 # def stimulus(seg, filename, figname):

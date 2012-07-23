@@ -1,13 +1,17 @@
 # L5_pyramidal.py - establish class def for layer 5 pyramidal cells
 #
-# v 0.2.6
-# rev 2012-07-19 (MS: L5Pyr inherits props from Pyr())
-# last rev: (SL: Clean up)
+# v 0.2.8
+# rev 2012-07_23 (MS: added units
+# last rev: (MS: L5Pyr inherits props from Pyr())
 
 from neuron import h as nrn
 from class_cell import Pyr
 from sys import exit
 from math import sqrt, exp
+
+# Units for e: mV
+# Units for gbar: S/cm^2 unless otherwise noted
+# units for taur: ms
 
 class L5Pyr(Pyr):
     def __init__(self):
@@ -73,9 +77,9 @@ class L5Pyr(Pyr):
         self.soma.gnabar_hh = 0.16
 
         # insert 'ca' mechanism
+        # Units: pS/um^2
         self.soma.insert('ca')
         self.soma.gbar_ca = 60
-        # units are pS/um^2?????? CHECK WITH SJ!!!
 
         # insert 'cad' mechanism
         # units of tau are ms
@@ -88,12 +92,12 @@ class L5Pyr(Pyr):
         self.soma.gbar_kca = 2e-4
 
         # set gbar_km
+        # Units: pS/um^2
         self.soma.gbar_km = 200 
 
         # insert 'cat' mechanism
         self.soma.insert('cat')
         self.soma.gbar_cat = 2e-4
-        # units S/cm^2?
 
         # insert 'ar' mechanism
         self.soma.insert('ar')
@@ -110,21 +114,20 @@ class L5Pyr(Pyr):
             sec.el_hh = -71
 
             # Insert 'ca' mechanims
-            # units pS/um^2
+            # Units: pS/um^2
             sec.insert('ca')
             sec.gbar_ca = 60
 
             # Insert 'cad' mechanism
-            # units ms
             sec.insert('cad')
             sec.taur_cad = 20
 
             # Insert 'kca' mechanism
-            # units S/cm^2
             sec.insert('kca')
             sec.gbar_kca = 2e-4
 
             # set gbar_km
+            # Units: pS/um^2
             sec.gbar_km = 200
 
             # insert 'cat' and 'ar' mechanisms

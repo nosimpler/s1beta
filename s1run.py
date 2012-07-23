@@ -1,8 +1,8 @@
 # s1run.py - primary run function for s1 project
 #
-# v 0.2.5
-# rev 2012-07-18 (SL: clean up)
-# last major: (SL: replaced h calls with nrn calls)
+# v 0.2.8
+# rev 2012-07-23 (MS: Added units
+# last major: (SL: clean up)
 
 from neuron import h as nrn
 
@@ -25,6 +25,8 @@ from class_net import Network
 nrn.load_file("stdrun.hoc")
 # nrn.load_file("nrngui.hoc")
 # from neuron import gui
+
+# All units for time: ms
 
 # this will end up being a function that is called by main
 if __name__ == "__main__":

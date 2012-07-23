@@ -1,11 +1,14 @@
 # class_cell.py - establish class def for general cell features
 #
-# v 0.2.3
-# rev 2012-07-17 (MS: Added Basket and Pry classes)
-# last rev: (SL: using nrn instead of h)
+# v 0.2.8
+# rev 2012-07-17 (MS: added units)
+# last rev: (MS: Added Basket and Pry classes)
 
 from neuron import h as nrn
 # from neuron import h
+
+# Units for e: mV
+# Units for gbar: S/cm^2
 
 # create a cell class
 class Cell():

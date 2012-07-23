@@ -1,13 +1,16 @@
 # L2_pyramidal.py - est class def for layer 2 pyramidal cells
 #
-# v 0.2.6
-# rev 2012-07-19 (MS: L2Pyr inherits from Pyr()) 
-# last rev: (SL: clean up)
+# v 0.2.8
+# rev 2012-07-23 (MS: added units)
+# last rev: (MS: L2Pyr inherits from Pyr()) 
 
 from neuron import h as nrn
 from class_cell import Pyr
 from sys import exit
 from math import sqrt
+
+# Units for e: mV
+# Units for gbar: S/cm^2 unless otherwise noted
 
 class L2Pyr(Pyr):
     def __init__(self):
@@ -77,6 +80,7 @@ class L2Pyr(Pyr):
         self.soma.gnabar_hh = 0.18
                 
         # set gbar_km
+        # Units: pS/um^2
         self.soma.gbar_km = 250
 
     # Defining biophysics for dendrites
@@ -96,6 +100,7 @@ class L2Pyr(Pyr):
             sec.el_hh = -65
 
             # set gbar_km 
+            # Units: pS/um^2
             sec.gbar_km = 250
 
     def shape_change(self):
