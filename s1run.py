@@ -1,8 +1,8 @@
 # s1run.py - primary run function for s1 project
 #
-# v 0.2.10
-# rev 2012-07-23 (SL: Clean up)
-# last major: (MS: use nrn.fadvance instead of nrn.run())
+# v 0.2.11
+# rev 2012-07-23 (MS: comments added to nrn.fadvacne procedure)
+# last major: (SL: Clean up)
 
 from neuron import h as nrn
 
@@ -53,19 +53,27 @@ if __name__ == "__main__":
     t_vec = nrn.Vector()
     # t_vec.record(nrn._ref_t)
 
+    # open data file
     data_file = nrn.File()
     data_file.wopen("testing.dat")
    
+    # initialize cells to -65 mv and compile code
     nrn.finitialize(-65)
+    # set state variables if they have been changed since nrn.finitialize
     nrn.fcurrent()
 
+    # run the simulation
     while (nrn.t < nrn.tstop):
+        # write time and voltage to data file
         data_file.printf("%03.3f\t%5.4f\n", nrn.t, seg_e.v)
+        # write voltages to vectors. Can be accomplished with _ref_ outside of while loop
         v_e.append(seg_e.v)
         v_i.append(seg_i.v)
         t_vec.append(nrn.t)
+        # advance integration by one tstep
         nrn.fadvance()
 
+    #close data file
     data_file.close()
 
     # # attempt at pythonic-ly creating a file
