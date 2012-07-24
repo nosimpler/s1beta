@@ -2,7 +2,7 @@
 #
 # v 0.2.11.1
 # rev 2012-07-24 (SL: cosmetic cleanup)
-# last major: (MS: comments added to nrn.fadvacne procedure)
+# last major: (MS: comments added to nrn.fadvance procedure)
 
 from neuron import h as nrn
 
