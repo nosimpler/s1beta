@@ -1,8 +1,8 @@
 # s1run.py - primary run function for s1 project
 #
-# v 0.2.11.1
-# rev 2012-07-24 (SL: cosmetic cleanup)
-# last major: (MS: comments added to nrn.fadvance procedure)
+# v 0.2.13
+# rev 2012-07-25 (MS: Added benchmarking around core runtime function)
+# last major: (SL: cosmetic cleanup)
 
 from neuron import h as nrn
 
@@ -21,6 +21,9 @@ from cells.L5_pyramidal import L5Pyr
 
 # Network is defined in 'class_net.py'
 from class_net import Network
+
+# Import benchmarking function
+from time import clock
 
 nrn.load_file("stdrun.hoc")
 # nrn.load_file("nrngui.hoc")
@@ -57,6 +60,8 @@ if __name__ == "__main__":
     data_file = nrn.File()
     data_file.wopen("testing.dat")
    
+    t0 = clock()
+
     # initialize cells to -65 mv and compile code
     nrn.finitialize(-65)
 
@@ -69,12 +74,15 @@ if __name__ == "__main__":
         data_file.printf("%03.3f\t%5.4f\n", nrn.t, seg_e.v)
 
         # write voltages to vectors. Can be accomplished with _ref_ outside of while loop
-        v_e.append(seg_e.v)
-        v_i.append(seg_i.v)
-        t_vec.append(nrn.t)
+        # v_e.append(seg_e.v)
+        # v_i.append(seg_i.v)
+        # t_vec.append(nrn.t)
 
         # advance integration by one tstep
         nrn.fadvance()
+
+    t1 = clock()
+    print "time of integration:", t1-t0
 
     # close data file
     data_file.close()
