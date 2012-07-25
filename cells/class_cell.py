@@ -1,8 +1,8 @@
 # class_cell.py - establish class def for general cell features
 #
-# v 0.2.8
-# rev 2012-07-17 (MS: added units)
-# last rev: (MS: Added Basket and Pry classes)
+# v 0.2.12
+# rev 2012-07-17 (MS: Added comment explaining redundancy of L_soma, diam_soma)
+# last rev: (MS: added units)
 
 from neuron import h as nrn
 # from neuron import h
@@ -14,14 +14,15 @@ from neuron import h as nrn
 class Cell():
     def __init__(self, L_soma, diam_soma, cm, cell_name='cell_'):
         # make L_soma and diam_soma elements of self
+        # Used in shape_change() b/c func clobbers self.soma.L, self.soma.diam 
         self.L = L_soma
         self.diam = diam_soma
 
         # create soma and set geometry
         self.soma = nrn.Section(name = cell_name + 'soma')
         self.soma.insert('hh')
-        self.soma.L = self.L
-        self.soma.diam = self.diam
+        self.soma.L = L_soma
+        self.soma.diam = diam_soma
         self.soma.Ra = 200
         self.soma.cm = cm
 
