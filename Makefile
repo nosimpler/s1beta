@@ -1,7 +1,7 @@
 # Makefile for nrn
-# v 0.1
-# rev 2012-07-10
-# last rev:
+# v 0.2.14
+# rev 2012-07-26 (SL: added vecevent.mod)
+# last rev: (SL: created)
 
 # macros
 ECHO = /bin/echo
@@ -10,7 +10,7 @@ UNAME := $(shell uname)
 
 PROJ = nrntest
 
-MOD = ar.mod ca.mod cad.mod cat.mod kca.mod km.mod
+MOD = ar.mod ca.mod cad.mod cat.mod kca.mod km.mod vecevent.mod
 
 vpath %.mod mod/
 
@@ -26,5 +26,4 @@ x86_64/special : mod
 # clean
 .PHONY: clean
 clean :
-	rm -f *.o
-	rm -f obj/*.o
+	rm -f x86_64/*

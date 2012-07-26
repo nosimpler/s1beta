@@ -8,18 +8,14 @@ from neuron import h as nrn
 
 # change the backend for matplotlib
 import matplotlib as mpl
+mpl.use("Agg")
 # print mpl.get_backend()
-mpl.use('Agg')
-
-# import plt and fig_std
 import matplotlib.pyplot as plt
 from plottools.axes_create import fig_std
 
 # Cells are defined in './cells'
-from cells.basket import Basket
+# from cells.basket import Basket
 from cells.L5_pyramidal import L5Pyr
-
-# Network is defined in 'class_net.py'
 from class_net import Network
 
 # Import benchmarking function
@@ -47,19 +43,21 @@ if __name__ == "__main__":
     stim.amp = 1.
     nrn.tstop = 200
 
+    # Create new vecs
     v_e = nrn.Vector()
-    # v_e.record(seg_e._ref_v)
-
     v_i = nrn.Vector()
-    # v_i.record(seg_i._ref_v)
-
     t_vec = nrn.Vector()
-    # t_vec.record(nrn._ref_t)
+
+    # Set to record
+    v_e.record(seg_e._ref_v)
+    v_i.record(seg_i._ref_v)
+    t_vec.record(nrn._ref_t)
 
     # open data file
     data_file = nrn.File()
     data_file.wopen("testing.dat")
    
+    # clock start time
     t0 = clock()
 
     # initialize cells to -65 mv and compile code
@@ -67,6 +65,8 @@ if __name__ == "__main__":
 
     # set state variables if they have been changed since nrn.finitialize
     nrn.fcurrent()
+
+    # nrn.cvode_active(1)
 
     # run the simulation
     while (nrn.t < nrn.tstop):
@@ -81,23 +81,22 @@ if __name__ == "__main__":
         # advance integration by one tstep
         nrn.fadvance()
 
+    # end clock time
     t1 = clock()
     print "time of integration:", t1-t0
-
-    # close data file
-    data_file.close()
 
     # # attempt at pythonic-ly creating a file
     # for tpoint, vval in zip(t_vec, v_e):
     #     # print item
     #     data_file.printf("%03.3f\t%5.4f\n", tpoint, vval)
+    # for t, g in zip(t_vec, g_ampa):
+    #     test_file.printf("%03.3f\t%5.4f\n", t, g)
 
     # v_e.printf(data_file)
 
-    # nrn.cvode_active(1)
-
-    # plt.plot(v_e)
-    # print v_e
+    # close data file
+    data_file.close()
+    # test_file.close()
 
     # create a figure
     testfig = fig_std()
@@ -106,9 +105,10 @@ if __name__ == "__main__":
     # plot various bits of data
     testfig.ax0.plot(t_vec, v_e)
     testfig.ax0.plot(t_vec, v_i)
+    # testfig.ax0.plot(t_vec, g_ampa)
 
     # set some axes properties
-    testfig.ax0.set_ylim(-80, 50)
+    # testfig.ax0.set_ylim(-80, 50)
 
     # save figure as 2 different formats
     # plt.savefig('outputspikes.eps')

@@ -1,10 +1,10 @@
 # class_net.py - establishes the Network class and related methods
 #
-# v 0.2.10
-# rev 2012-07-23 (SL: clean up)
-# last major: (MS: import Basket from class_cell) 
+# v 0.2.14
+# rev 2012-07-26 (SL: synaptic connections in L5)
+# last major: (SL: clean up)
 
-# from neuron import h as nrn
+import itertools as it
 from cells.L5_pyramidal import L5Pyr
 from cells.L2_pyramidal import L2Pyr
 from cells.class_cell import Basket
@@ -13,35 +13,49 @@ from cells.class_cell import Basket
 class Network():
     def __init__(self):
         # allocate namespace for lists containing all cells in network
-        self.cells_L5Pyr = []
-        self.cells_L5Basket = []
         self.cells_L2Pyr = []
         self.cells_L2Basket = []
 
-        self.create_cells(1, 1)
+        self.cells_L5Pyr = []
+        self.cells_L5Basket = []
+
+        self.create_cells(1, 1, 1, 1)
         self.net_connect()
 
-    # Creates cells
-    def create_cells(self, N_L5Pyr, N_L5Basket):
+    # Create cells
+    def create_cells(self, N_L2Pyr, N_L2Basket, N_L5Pyr, N_L5Basket):
+        self.cells_L2Pyr = [L2Pyr() for i in range(0, N_L2Pyr)]
+        self.cells_L2Basket = [Basket() for i in range(0, N_L2Basket)]
+
         self.cells_L5Pyr = [L5Pyr() for i in range(0, N_L5Pyr)]
         self.cells_L5Basket = [Basket() for i in range(0, N_L5Basket)]
 
-    # Creates synaptic connections
+    # Create synaptic connections
     def net_connect(self):
-        # for now these loops ONLY work because n = 1 for both cells.
-        # otherwise, list index changes as you iterate through the loop
-        for L5Pyr in self.cells_L5Pyr:
-            for L5Basket in self.cells_L5Basket:
-                # from e to i
-                L5Pyr.ncto_L5Basket.append(L5Pyr.soma_to_target(0.5, L5Basket.syn_ampa))
+        # 'product' returns an iterable list of tuples of all pairs of cells 
+        # in these 2 lists
+        # ONE LIST performs all connections between L5Pyr and L5Basket cells
+        for L5Pyr, L5Basket in it.product(self.cells_L5Pyr, self.cells_L5Basket):
+            # from L5Pyr to L5Basket
+            L5Pyr.connect_to_L5Basket(L5Basket)
+            # L5Pyr.ncto_L5Basket.append(L5Pyr.soma_to_target(0.5, L5Basket.soma_ampa))
 
-                # depends on synapse being connected to (mS)
-                # only for this ExpSyn and Exp2Syn cases!
-                # delay in ms
-                L5Pyr.ncto_L5Basket[0].weight[0] = 0.01
-                L5Pyr.ncto_L5Basket[0].delay = 1
-                
-                # from i to e
-                L5Basket.ncto_L5Pyr.append(L5Basket.soma_to_target(0.5, L5Pyr.syn_gabaa))
-                L5Basket.ncto_L5Pyr[0].weight[0] = 0
-                L5Basket.ncto_L5Pyr[0].delay = 1
+            # from L5Basket to L5Pyr
+            L5Basket.connect_to_L5Pyr(L5Pyr)
+            # L5Basket.ncto_L5Pyr_gabaa.append(L5Basket.soma_to_target(0.5, L5Pyr.soma_gabaa))
+            # L5Basket.ncto_L5Pyr_gabab.append(L5Basket.soma_to_target(0.5, L5Pyr.soma_gabab))
+
+            # Properties are another story entirely! Oy.
+            # depends on synapse being connected to (mS)
+            # delay in ms
+            # L5Pyr.ncto_L5Basket[0].weight[0] = 0.01
+            # L5Pyr.ncto_L5Basket[0].delay = 1
+
+            # L5Basket.ncto_L5Pyr_gabaa[0].weight[0] = 0.01
+            # L5Basket.ncto_L5Pyr_gabaa[0].delay = 1
+
+        # for L2Pyr, L2Basket in it.product(self.cells_L2Pyr, self.cells_L2Basket):
+        # for L2Pyr, L5Basket in it.product(self.cells_L2Pyr, self.cells_L5Basket):
+        # for L2Pyr, L5Pyr in it.product(self.cells_L2Pyr, self.cells_L5Pyr):
+        # for L2Pyr, L2Basket in it.product(self.cells_L2Pyr, self.cells_L2Basket):
+        # etc.
