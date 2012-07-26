@@ -1,6 +1,6 @@
 # class_cell.py - establish class def for general cell features
 #
-# v 0.2.14
+# v 0.2.14a
 # rev 2012-07-26 (SL: new synapses created)
 # last rev: (MS: added units)
 
@@ -9,7 +9,7 @@ from neuron import h as nrn
 # Units for e: mV
 # Units for gbar: S/cm^2
 
-# create a cell class
+# Create a cell class
 class Cell():
     def __init__(self, L_soma, diam_soma, cm, cell_name='cell'):
         # make L_soma and diam_soma elements of self
@@ -72,7 +72,6 @@ class Cell():
         # netconobj = new NetCon(source section, target section,
         # [threshold, delay, weight])
         nc = nrn.NetCon(sec_presyn(r_sec)._ref_v, postsyn, sec=sec_presyn)
-        # nc = nrn.NetCon(self.soma(r_soma)._ref_v, postsyn, sec=self.soma)
 
         # event threshold, arbitrarily chosen for now (default is +10)
         nc.threshold = 0
@@ -103,12 +102,9 @@ class Basket(Cell):
 
         # Create lists of connections FROM this cell TO target
         # not all of these will be used necessarily in each cell
-        # self.ncto_L5Pyr = []
         self.ncto_L5Pyr_gabaa = []
         self.ncto_L5Pyr_gabab = []
         self.ncto_L2Pyr = []
-
-        # No autapses, right?
         # self.ncto_L5Basket = []
         # self.ncto_L2Basket = []
 
@@ -148,7 +144,6 @@ class Pyr(Cell):
 
         # check lengths for congruity
         # this needs to be figured out
-        # should probably be try/except
         if len(self.dend_L) == len(self.dend_diam):
             self.N_dend = len(self.dend_L)
             self.dend_L = dend_L

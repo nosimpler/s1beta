@@ -1,6 +1,6 @@
 # L5_pyramidal.py - establish class def for layer 5 pyramidal cells
 #
-# v 0.2.14
+# v 0.2.14a
 # rev 2012-07-26 (SL: synapses with L5Basket)
 # last rev: (MS: added units)
 
@@ -179,14 +179,6 @@ class L5Pyr(Pyr):
         x_distal = 0
         y_distal = self.soma.L
 
-        # nrn.pt3dclear(sec=self.soma)
-        # nrn.pt3dadd(x_prox, y_prox, 0, 1, sec=self.soma)
-        # nrn.pt3dadd(x_distal, y_distal, 0, 1, sec=self.soma)
-
-        # changes in x and y pt3d coords
-        # dend_dx = [ 0,    0,   0,   0,-150,   0, -106,  106]
-        # dend_dy = [60,  250, 400, 400,   0, -50, -106, -106]
-
         # dend 0-3 are major axis, dend 4 is branch
         # deal with distal first along major cable axis
         # the way this is assigning variables is ugly/lazy right now
@@ -236,8 +228,8 @@ class L5Pyr(Pyr):
         # x_prox, y_prox are now the starting points for BOTH of the last 2 sections
         # dend 6
         nrn.pt3dadd(0, y_prox, 0, self.dend_diam[6], sec=self.list_dend[6])
-        nrn.pt3dadd(-self.dend_L[6]*sqrt(2)/2, y_prox-self.dend_L[6]*sqrt(2)/2, 0, self.dend_diam[6], sec=self.list_dend[6])
+        nrn.pt3dadd(-self.dend_L[6] * sqrt(2)/2, y_prox-self.dend_L[6] * sqrt(2)/2, 0, self.dend_diam[6], sec=self.list_dend[6])
 
         # dend 7
         nrn.pt3dadd(0, y_prox, 0, self.dend_diam[7], sec=self.list_dend[7])
-        nrn.pt3dadd(self.dend_L[7]*sqrt(2)/2, y_prox-self.dend_L[7]*sqrt(2)/2, 0, self.dend_diam[7], sec=self.list_dend[7])
+        nrn.pt3dadd(self.dend_L[7] * sqrt(2)/2, y_prox-self.dend_L[7] * sqrt(2)/2, 0, self.dend_diam[7], sec=self.list_dend[7])

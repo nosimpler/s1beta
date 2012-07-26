@@ -1,20 +1,17 @@
 # s1run.py - primary run function for s1 project
 #
-# v 0.2.13
-# rev 2012-07-25 (MS: Added benchmarking around core runtime function)
-# last major: (SL: cosmetic cleanup)
+# v 0.2.14a
+# rev 2012-07-26 (SL: cleanup)
+# last major: (MS: Added benchmarking around core runtime function)
 
 from neuron import h as nrn
-
-# change the backend for matplotlib
 import matplotlib as mpl
 mpl.use("Agg")
-# print mpl.get_backend()
 import matplotlib.pyplot as plt
+# print mpl.get_backend()
 from plottools.axes_create import fig_std
 
 # Cells are defined in './cells'
-# from cells.basket import Basket
 from cells.L5_pyramidal import L5Pyr
 from class_net import Network
 
@@ -26,7 +23,6 @@ nrn.load_file("stdrun.hoc")
 # from neuron import gui
 
 # All units for time: ms
-
 # this will end up being a function that is called by main
 if __name__ == "__main__":
     # Create network from class_net's Network class
@@ -73,30 +69,22 @@ if __name__ == "__main__":
         # write time and voltage to data file
         data_file.printf("%03.3f\t%5.4f\n", nrn.t, seg_e.v)
 
-        # write voltages to vectors. Can be accomplished with _ref_ outside of while loop
-        # v_e.append(seg_e.v)
-        # v_i.append(seg_i.v)
-        # t_vec.append(nrn.t)
-
         # advance integration by one tstep
         nrn.fadvance()
 
     # end clock time
     t1 = clock()
-    print "time of integration:", t1-t0
+    print "Simulation run time: %4.4f s" % (t1-t0)
 
     # # attempt at pythonic-ly creating a file
     # for tpoint, vval in zip(t_vec, v_e):
     #     # print item
     #     data_file.printf("%03.3f\t%5.4f\n", tpoint, vval)
-    # for t, g in zip(t_vec, g_ampa):
-    #     test_file.printf("%03.3f\t%5.4f\n", t, g)
 
     # v_e.printf(data_file)
 
     # close data file
     data_file.close()
-    # test_file.close()
 
     # create a figure
     testfig = fig_std()
@@ -108,7 +96,7 @@ if __name__ == "__main__":
     # testfig.ax0.plot(t_vec, g_ampa)
 
     # set some axes properties
-    # testfig.ax0.set_ylim(-80, 50)
+    testfig.ax0.set_ylim(-80, 50)
 
     # save figure as 2 different formats
     # plt.savefig('outputspikes.eps')

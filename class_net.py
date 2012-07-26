@@ -1,6 +1,6 @@
 # class_net.py - establishes the Network class and related methods
 #
-# v 0.2.14
+# v 0.2.14a
 # rev 2012-07-26 (SL: synaptic connections in L5)
 # last major: (SL: clean up)
 
@@ -38,21 +38,9 @@ class Network():
         for L5Pyr, L5Basket in it.product(self.cells_L5Pyr, self.cells_L5Basket):
             # from L5Pyr to L5Basket
             L5Pyr.connect_to_L5Basket(L5Basket)
-            # L5Pyr.ncto_L5Basket.append(L5Pyr.soma_to_target(0.5, L5Basket.soma_ampa))
 
             # from L5Basket to L5Pyr
             L5Basket.connect_to_L5Pyr(L5Pyr)
-            # L5Basket.ncto_L5Pyr_gabaa.append(L5Basket.soma_to_target(0.5, L5Pyr.soma_gabaa))
-            # L5Basket.ncto_L5Pyr_gabab.append(L5Basket.soma_to_target(0.5, L5Pyr.soma_gabab))
-
-            # Properties are another story entirely! Oy.
-            # depends on synapse being connected to (mS)
-            # delay in ms
-            # L5Pyr.ncto_L5Basket[0].weight[0] = 0.01
-            # L5Pyr.ncto_L5Basket[0].delay = 1
-
-            # L5Basket.ncto_L5Pyr_gabaa[0].weight[0] = 0.01
-            # L5Basket.ncto_L5Pyr_gabaa[0].delay = 1
 
         # for L2Pyr, L2Basket in it.product(self.cells_L2Pyr, self.cells_L2Basket):
         # for L2Pyr, L5Basket in it.product(self.cells_L2Pyr, self.cells_L5Basket):
