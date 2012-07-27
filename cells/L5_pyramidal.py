@@ -1,8 +1,8 @@
 # L5_pyramidal.py - establish class def for layer 5 pyramidal cells
 #
-# v 0.2.8
-# rev 2012-07_23 (MS: added units
-# last rev: (MS: L5Pyr inherits props from Pyr())
+# v 0.2.15
+# rev 2012-07-26 (MS: Dend props moved into tuple, removed geom_set())
+# last rev: (SL: synapses with L5Basket)
 
 from neuron import h as nrn
 from class_cell import Pyr
@@ -16,8 +16,8 @@ import itertools as it
 
 class L5Pyr(Pyr):
     def __init__(self):
-        # Pyr.__init__(self, L, diam, Ra, cm)
-        Pyr.__init__(self, 39, 28.9, 0.85, 'L5_')
+        # Pyr.__init__(self, L, diam, Ra, cm, {prefix})
+        Pyr.__init__(self, 39, 28.9, 0.85, 'L5')
 
         # preallocate namespaces for dend properties
         # set in dend_props()
@@ -43,14 +43,24 @@ class L5Pyr(Pyr):
         self.biophys_soma()
         self.biophys_dends()
 
+    # Connects this cell to a synapse 'soma_ampa' on the supplied L5Basket cell
+    # uses 'soma_to_target' from class 'Cell()' inheritance
+    # Doing this here gives us easy access to position properties
+    def connect_to_L5Basket(self, L5Basket):
+        self.ncto_L5Basket.append(self.sec_to_target(self.soma, 0.5, L5Basket.soma_ampa))
+
+        # change props
+        self.ncto_L5Basket[-1].weight[0] = 0.01
+        self.ncto_L5Basket[-1].delay = 1
+
     def set_dend_props(self):
         # Hardcode dend properties
         self.dend_names = ['apical_trunk', 'apical_1', 'apical_2',
                            'apical_tuft', 'apical_obliq', 'basal_1', 
                            'basal_2', 'basal_3']
+
         self.dend_L = [102, 680, 680, 425, 255, 85, 255, 255]
         self.dend_diam = [10.2, 7.48, 4.93, 3.4, 5.1, 6.8, 8.5, 8.5]
-        # self.cm = 0.85
 
         # check lengths for congruity
         if len(self.dend_L) == len(self.dend_diam):
@@ -61,6 +71,7 @@ class L5Pyr(Pyr):
             print "please fix in L5_pyramidal.py"
             sys.exit()
 
+    # connects sections of this cell together
     def connect_sections(self):
         # connect(parent, parent_end, {child_start=0})
         # Distal
@@ -78,10 +89,10 @@ class L5Pyr(Pyr):
         self.list_dend[6].connect(self.list_dend[5], 1, 0)
         self.list_dend[7].connect(self.list_dend[5], 1, 0)
             
-    # adding biophysics to soma
+    # adds biophysics to soma
     def biophys_soma(self):
         # set soma biophysics specified in Pyr
-        self.Pyrbiophys_soma()
+        self.pyr_biophys_soma()
 
         # set hh params not set in Pyr()
         self.soma.gnabar_hh = 0.16
@@ -114,12 +125,12 @@ class L5Pyr(Pyr):
         self.soma.gbar_ar = 1e-6
         
     def biophys_dends(self):
-        # set dend biophysics specified in Pyr
-        self.Pyrbiophys_dends()
+        # set dend biophysics specified in Pyr()
+        self.pyr_biophys_dends()
 
-        # set dend biophysics not specified in Pyr
+        # set dend biophysics not specified in Pyr()
         for sec in self.list_dend:
-            # set hh params not set in Pyr
+            # set hh params not set in Pyr()
             sec.gnabar_hh = 0.14
             sec.el_hh = -71
 
@@ -159,13 +170,14 @@ class L5Pyr(Pyr):
             for seg in sec:
                 # print nrn.distance(seg.x)
                 # seg.gbar_cat = 0.0002*exp(0.0*nrn.distance(seg.x))
-                seg.gbar_ar = 0.000001*exp(0.003*nrn.distance(seg.x))
+                seg.gbar_ar = 0.000001 * exp(0.003 * nrn.distance(seg.x))
                 # print nrn.distance(seg.x), seg.gbar_ar 
+
             nrn.pop_section()
 
     def shape_change(self):
-        # set 3d shape of soma by calling shape_soma from class Cell
-        print "Warning: You are setting 3d shape geom. You better be doing"
+        # set 3D shape of soma by calling shape_soma from class Cell
+        print "WARNING: You are setting 3d shape geom. You better be doing"
         print "gui analysis and not numerical analysis!!"
         self.shape_soma()
 
@@ -176,14 +188,6 @@ class L5Pyr(Pyr):
         # soma distal coords
         x_distal = 0
         y_distal = self.soma.L
-
-        # nrn.pt3dclear(sec=self.soma)
-        # nrn.pt3dadd(x_prox, y_prox, 0, 1, sec=self.soma)
-        # nrn.pt3dadd(x_distal, y_distal, 0, 1, sec=self.soma)
-
-        # changes in x and y pt3d coords
-        # dend_dx = [ 0,    0,   0,   0,-150,   0, -106,  106]
-        # dend_dy = [60,  250, 400, 400,   0, -50, -106, -106]
 
         # dend 0-3 are major axis, dend 4 is branch
         # deal with distal first along major cable axis
@@ -234,8 +238,8 @@ class L5Pyr(Pyr):
         # x_prox, y_prox are now the starting points for BOTH of the last 2 sections
         # dend 6
         nrn.pt3dadd(0, y_prox, 0, self.dend_diam[6], sec=self.list_dend[6])
-        nrn.pt3dadd(-self.dend_L[6]*sqrt(2)/2, y_prox-self.dend_L[6]*sqrt(2)/2, 0, self.dend_diam[6], sec=self.list_dend[6])
+        nrn.pt3dadd(-self.dend_L[6] * sqrt(2)/2, y_prox-self.dend_L[6] * sqrt(2)/2, 0, self.dend_diam[6], sec=self.list_dend[6])
 
         # dend 7
         nrn.pt3dadd(0, y_prox, 0, self.dend_diam[7], sec=self.list_dend[7])
-        nrn.pt3dadd(self.dend_L[7]*sqrt(2)/2, y_prox-self.dend_L[7]*sqrt(2)/2, 0, self.dend_diam[7], sec=self.list_dend[7])
+        nrn.pt3dadd(self.dend_L[7] * sqrt(2)/2, y_prox-self.dend_L[7] * sqrt(2)/2, 0, self.dend_diam[7], sec=self.list_dend[7])

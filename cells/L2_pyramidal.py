@@ -1,8 +1,8 @@
 # L2_pyramidal.py - est class def for layer 2 pyramidal cells
 #
-# v 0.2.8
-# rev 2012-07-23 (MS: added units)
-# last rev: (MS: L2Pyr inherits from Pyr()) 
+# v 0.2.15
+# rev 2012-07-23 (MS: Dend props moved into tuple, removed geom_set())
+# last rev: (MS: added units)
 
 from neuron import h as nrn
 from class_cell import Pyr
@@ -16,7 +16,7 @@ from math import sqrt
 class L2Pyr(Pyr):
     def __init__(self):
         # Pyr.__init__(self, L, diam, Ra, cm)
-        Pyr.__init__(self, 22.1, 23.4, 0.6195, 'L2_')
+        Pyr.__init__(self, 22.1, 23.4, 0.6195, 'L2')
 
         # prealloc namespace for dend properties
         # set in dend_props()
@@ -42,6 +42,7 @@ class L2Pyr(Pyr):
         self.biophys_soma()
         self.biophys_dends()
        
+    # Sets dendritic properties
     def set_dend_props(self):
         # Hardcode dend properties
         self.dend_names = ['apical_trunk', 'apical_1', 'apical_tuft',
@@ -58,7 +59,7 @@ class L2Pyr(Pyr):
             print "please fix in L5_pyramidal.py"
             sys.exit()
 
-
+    # Connects sections of THIS cell together
     def connect_sections(self):
         # connect(parent, parent_end, {child_start=0})
         # Distal
@@ -75,10 +76,10 @@ class L2Pyr(Pyr):
         self.list_dend[5].connect(self.list_dend[4], 1, 0)
         self.list_dend[6].connect(self.list_dend[4], 1, 0)
 
-    # adding biophysics to soma
+    # Adds biophysics to soma
     def biophys_soma(self):
         # set soma biophysics specified in Pyr
-        self.Pyrbiophys_soma()
+        self.pyr_biophys_soma()
 
         # set 'hh' mechanism values not specified in Pyr
         self.soma.gnabar_hh = 0.18
@@ -89,17 +90,17 @@ class L2Pyr(Pyr):
 
     # Defining biophysics for dendrites
     def biophys_dends(self):
-        # set dend biophysics specified in Pyr
-        self.Pyrbiophys_dends()
+        # set dend biophysics specified in Pyr()
+        self.pyr_biophys_dends()
 
-        # set dend biophysics not specidied in Pyr        
+        # set dend biophysics not specidied in Pyr()
         for sec in self.list_dend:
             # neuron syntax is used to set values for mechanisms
             # sec.gbar_mech = x sets value of gbar for mech to x for all segs
             # in a section. This method is significantlt faster than using
             # a for loop to iterate over all segments to set mech values
 
-            # set 'hh' mechanisms not set in Pyr
+            # set 'hh' mechanisms not set in Pyr()
             sec.gnabar_hh = 0.15
             sec.el_hh = -65
 
