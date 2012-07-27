@@ -6,7 +6,8 @@
 
 from neuron import h as nrn
 from class_cell import Pyr
-from sys import exit
+import sys
+import itertools as it
 from math import sqrt
 
 # Units for e: mV
@@ -17,16 +18,12 @@ class L2Pyr(Pyr):
         # Pyr.__init__(self, L, diam, Ra, cm)
         Pyr.__init__(self, 22.1, 23.4, 0.6195, 'L2_')
 
-        # sections of these cells
-        # self.list_dend = []
-
         # prealloc namespace for dend properties
         # set in dend_props()
         self.dend_names = []
         self.dend_L = []
         self.dend_diam = []
         self.cm = 0.6195
-        # self.N_dend = 0
 
         # create lists of connections FROM this cell TO target
         self.ncto_L5Basket = []
@@ -34,26 +31,33 @@ class L2Pyr(Pyr):
         self.ncto_L2Basket = []
 
         # geometry
-        self.dend_props()
-        self.create_dends(self.dend_L, self.dend_diam, self.dend_names)
+        self.set_dend_props()
+        self.create_dends(self.dend_props, self.cm)
+        #self.create_dends(self.dend_L, self.dend_diam, self.dend_names)
         self.connect_sections()
         # self.shape_change()
-        self.geom_set(self.cm)
+        # self.geom_set(self.cm)
 
         # biophysics
         self.biophys_soma()
         self.biophys_dends()
        
-        # moved to Pyr()
-        # self.syn_gabaa_create(self.soma(0.5))
-
-    def dend_props(self):
+    def set_dend_props(self):
         # Hardcode dend properties
-        # eventually these will be lumped into a tuple
         self.dend_names = ['apical_trunk', 'apical_1', 'apical_tuft',
                            'apical_obliq', 'basal_1', 'basal_2', 'basal_3']
         self.dend_L = [59.5, 306, 238, 340, 85, 255, 255]
         self.dend_diam = [4.25, 4.08, 3.40, 3.91, 4.25, 2.72, 2.72]
+        
+        # check lengths for congruity
+        if len(self.dend_L) == len(self.dend_diam):
+            # Zip above lists together
+            self.dend_props = it.izip(self.dend_names, self.dend_L, self.dend_diam)        
+        else:   
+            print "self.dend_L and self.dend_diam are not the same length"
+            print "please fix in L5_pyramidal.py"
+            sys.exit()
+
 
     def connect_sections(self):
         # connect(parent, parent_end, {child_start=0})

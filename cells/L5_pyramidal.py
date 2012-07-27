@@ -6,8 +6,9 @@
 
 from neuron import h as nrn
 from class_cell import Pyr
-from sys import exit
+import sys 
 from math import sqrt, exp
+import itertools as it
 
 # Units for e: mV
 # Units for gbar: S/cm^2 unless otherwise noted
@@ -31,25 +32,34 @@ class L5Pyr(Pyr):
         self.ncto_L2Basket = []
 
         # geometry
-        self.dend_props()
-        self.create_dends(self.dend_L, self.dend_diam, self.dend_names)
+        self.set_dend_props()
+        self.create_dends(self.dend_props, self.cm)
+        # self.create_dends(self.dend_L, self.dend_diam, self.dend_names)
         self.connect_sections()
         # self.shape_change()
-        self.geom_set(self.cm)
+        # self.geom_set(self.cm)
 
         # biophysics
         self.biophys_soma()
         self.biophys_dends()
 
-    def dend_props(self):
-        # dend properties hardcoded here
-        # eventually these will be lumped into a tuple
+    def set_dend_props(self):
+        # Hardcode dend properties
         self.dend_names = ['apical_trunk', 'apical_1', 'apical_2',
                            'apical_tuft', 'apical_obliq', 'basal_1', 
                            'basal_2', 'basal_3']
         self.dend_L = [102, 680, 680, 425, 255, 85, 255, 255]
         self.dend_diam = [10.2, 7.48, 4.93, 3.4, 5.1, 6.8, 8.5, 8.5]
         # self.cm = 0.85
+
+        # check lengths for congruity
+        if len(self.dend_L) == len(self.dend_diam):
+            # Zip above lists together
+            self.dend_props = it.izip(self.dend_names, self.dend_L, self.dend_diam) 
+        else:
+            print "self.dend_L and self.dend_diam are not the same length"
+            print "please fix in L5_pyramidal.py"
+            sys.exit()
 
     def connect_sections(self):
         # connect(parent, parent_end, {child_start=0})

@@ -48,13 +48,12 @@ if __name__ == "__main__":
     nrn.tstop = 200
 
     v_e = nrn.Vector()
-    # v_e.record(seg_e._ref_v)
-
     v_i = nrn.Vector()
-    # v_i.record(seg_i._ref_v)
-
     t_vec = nrn.Vector()
-    # t_vec.record(nrn._ref_t)
+
+    v_e.record(seg_e._ref_v)
+    v_i.record(seg_i._ref_v)
+    t_vec.record(nrn._ref_t)
 
     # open data file
     data_file = nrn.File()

@@ -109,42 +109,54 @@ class Pyr(Cell):
         self.syn_gabaa_create(self.soma(0.5))
 
     # Creates dendritic sections
-    def create_dends(self, dend_L, dend_diam, dend_names,):
+    # def create_dends(self, dend_L, dend_diam, dend_names)
+    def create_dends(self, dend_props, cm):
         # N_dends: number of dends to be create
         # dend_names: list of strings used as names for sections
 
         # check lengths for congruity
         # this needs to be figured out
         # should probably be try/except
-        if len(self.dend_L) == len(self.dend_diam):
-            self.N_dend = len(self.dend_L)
-            self.dend_L = dend_L
-            self.dend_diam = dend_diam
-        else:
-            print "self.dend_L and self.dend_diam are not the same length."
-            print "Please fix in L5_pyramidal.py"
-            exit()
+        # if len(dend_L) == len(dend_diam):
+        #     self.N_dend = len(self.dend_L)
+        #     self.dend_L = dend_L
+        #     self.dend_diam = dend_diam
+        # else:
+        #     print "self.dend_L and self.dend_diam are not the same length."
+        #     print "Please fix in L5_pyramidal.py"
+        #     exit()
+        
+        # for  in range(0, self.N_dend):
+        #     self.list_dend.append(nrn.Section(name=self.name+dend_names[i]))
 
-        for i in range(0, self.N_dend):
-            self.list_dend.append(nrn.Section(name=self.name+dend_names[i]))
+        for sec_name, L, diam in dend_props:
+            self.list_dend.append(nrn.Section(name=self.name+sec_name))
+            self.list_dend[-1].L = L
+            self.list_dend[-1].diam = diam
+            self.list_dend[-1].Ra = 200
+            self.list_dend[-1].cm = cm
+
+            # set nseg for each dend
+            if L > 100:
+                self.list_dend[-1].nseg = int(L / 50)
 
     # set geometry, including nseg
-    def geom_set(self, cm):
-        # cm: membrane capacitance
-        for dend, L, diam in zip(self.list_dend, self.dend_L, self.dend_diam):
-            dend.L = L
-            dend.diam = diam
-            dend.Ra = 200
-            dend.cm = cm
+    # def geom_set(self, cm):
+    #     # cm: membrane capacitance
+    #     for dend, L, diam in zip(self.list_dend, self.dend_L, self.dend_diam):
+    #         dend.L = L
+    #         dend.diam = diam
+    #         dend.Ra = 200
+    #         dend.cm = cm
 
-        # set nseg for each dendritic section (soma.nseg = 1 by default)
-        for dend in self.list_dend:
-            if dend.L>100:
-                dend.nseg = int(dend.L/50)
+    #     # set nseg for each dendritic section (soma.nseg = 1 by default)
+    #     for dend in self.list_dend:
+    #         if dend.L>100:
+    #             dend.nseg = int(dend.L/50)
 
-            # make dend.nseg odd for all sections
-            # if dend.nseg % 2 == 0:
-            #     dend.nseg = dend.nseg + 1
+    #         # make dend.nseg odd for all sections
+    #         # if dend.nseg % 2 == 0:
+    #         #     dend.nseg = dend.nseg + 1
 
     # set biophysics for soma
     def Pyrbiophys_soma(self):
