@@ -33,13 +33,11 @@ class Network():
         # create cells
         self.create_cells_pyr()
         self.create_cells_basket()
-        # self.create_cells(1, 1, 1, 1)
 
         self.net_connect()
 
     # Creates cells and grid
     def create_cells_pyr(self):
-    # def create_cells(self, N_L2Pyr, N_L2Basket, N_L5Pyr, N_L5Basket):
         xrange = 100 * np.arange(self.gridpyr['x'])
         yrange = 100 * np.arange(self.gridpyr['y'])
 
@@ -71,9 +69,6 @@ class Network():
         # create basket cells (and assign at origin for now ... )
         self.cells_L2Basket = [Basket(pos) for pos in L2_basket_pos]
         self.cells_L5Basket = [Basket(pos) for pos in L5_basket_pos]
-
-        # self.cells_L2Basket = [Basket((0,0,0)) for i in range(0, self.N_Basket)]
-        # self.cells_L5Basket = [Basket((0,0,0)) for i in range(0, self.N_Basket)]
 
     # Create synaptic connections
     def net_connect(self):
