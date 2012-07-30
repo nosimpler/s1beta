@@ -1,8 +1,8 @@
 # L5_pyramidal.py - establish class def for layer 5 pyramidal cells
 #
-# v 0.2.15
-# rev 2012-07-26 (MS: Dend props moved into tuple, removed geom_set())
-# last rev: (SL: synapses with L5Basket)
+# v 0.2.16
+# rev 2012-07-30 (SL: passing pos to Cell())
+# last rev: (MS: Dend props moved into tuple, removed geom_set())
 
 from neuron import h as nrn
 from class_cell import Pyr
@@ -15,9 +15,9 @@ import itertools as it
 # units for taur: ms
 
 class L5Pyr(Pyr):
-    def __init__(self):
-        # Pyr.__init__(self, L, diam, Ra, cm, {prefix})
-        Pyr.__init__(self, 39, 28.9, 0.85, 'L5')
+    def __init__(self, pos):
+        # Pyr.__init__(self, pos, L, diam, Ra, cm, {prefix})
+        Pyr.__init__(self, pos, 39, 28.9, 0.85, 'L5')
 
         # preallocate namespaces for dend properties
         # set in dend_props()

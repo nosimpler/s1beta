@@ -1,8 +1,8 @@
 # class_cell.py - establish class def for general cell features
 #
-# v 0.2.15
-# rev 2012-07-26 (MS: new method for creating dends, setting dend props)
-# last rev: (SL: new synapses created)
+# v 0.2.16
+# rev 2012-07-30 (passing pos to Cell())
+# last rev: (MS: new method for creating dends, setting dend props)
 
 from neuron import h as nrn
 
@@ -11,11 +11,13 @@ from neuron import h as nrn
 
 # Create a cell class
 class Cell():
-    def __init__(self, L_soma, diam_soma, cm, cell_name='cell'):
+    def __init__(self, pos, L_soma, diam_soma, cm, cell_name='cell'):
+    # def __init__(self, L_soma, diam_soma, cm, cell_name='cell'):
         # make L_soma and diam_soma elements of self
         # Used in shape_change() b/c func clobbers self.soma.L, self.soma.diam 
         self.L = L_soma
         self.diam = diam_soma
+        self.pos = pos
 
         # create soma and set geometry
         self.soma = nrn.Section(name = cell_name + '_soma')
@@ -92,9 +94,10 @@ class Cell():
 
 # Inhibitory cell class
 class Basket(Cell):
-    def __init__(self):
+    def __init__(self, pos):
         # Cell.__init__(self, L, diam, Cm, {name_prefix})
-        Cell.__init__(self, 39, 20, 0.85, 'basket_')
+        # self.soma_props = {'name_prefix': 'basket_', 'L': 39, 'diam': 20, 'cm': 0.85}
+        Cell.__init__(self, pos, 39, 20, 0.85, 'basket_')
 
         # Creating synapses onto this cell
         self.soma_ampa = self.syn_ampa_create(self.soma(0.5))
@@ -122,8 +125,8 @@ class Basket(Cell):
 
 # General Pyramidal cell class
 class Pyr(Cell):
-    def __init__(self, L, diam, cm, cell_name='Pyr'):
-        Cell.__init__(self, L, diam, cm, cell_name)
+    def __init__(self, pos, L, diam, cm, cell_name='Pyr'):
+        Cell.__init__(self, pos, L, diam, cm, cell_name)
 
         # store cell_name as self variable for later use
         self.name = cell_name

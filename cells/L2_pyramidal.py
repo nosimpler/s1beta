@@ -1,8 +1,8 @@
 # L2_pyramidal.py - est class def for layer 2 pyramidal cells
 #
-# v 0.2.15
-# rev 2012-07-23 (MS: Dend props moved into tuple, removed geom_set())
-# last rev: (MS: added units)
+# v 0.2.16
+# rev 2012-07-30 (SL: passing pos input to Cell())
+# last rev: (MS: Dend props moved into tuple, removed geom_set())
 
 from neuron import h as nrn
 from class_cell import Pyr
@@ -14,9 +14,9 @@ from math import sqrt
 # Units for gbar: S/cm^2 unless otherwise noted
 
 class L2Pyr(Pyr):
-    def __init__(self):
-        # Pyr.__init__(self, L, diam, Ra, cm)
-        Pyr.__init__(self, 22.1, 23.4, 0.6195, 'L2')
+    def __init__(self, pos):
+        # Pyr.__init__(self, pos, L, diam, Ra, cm)
+        Pyr.__init__(self, pos, 22.1, 23.4, 0.6195, 'L2')
 
         # prealloc namespace for dend properties
         # set in dend_props()
