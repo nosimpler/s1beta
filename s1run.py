@@ -1,8 +1,8 @@
 # s1run.py - primary run function for s1 project
 #
-# v 0.2.16
-# rev 2012-07-30 (SL: passing pyramidal grid dimensions to Network())
-# last major: (MS: Added benchmarking around core runtime function)
+# v 0.2.17
+# rev 2012-07-30 (SL: basket cell grid in place)
+# last major: (SL: passing pyramidal grid dimensions to Network())
 
 from neuron import h as nrn
 import matplotlib as mpl
@@ -26,8 +26,8 @@ nrn.load_file("stdrun.hoc")
 # this will end up being a function that is called by main
 if __name__ == "__main__":
     # Create network from class_net's Network class
+    # Network(gridpyr_x, gridpyr_y)
     net = Network(1, 1)
-    # net = Network()
 
     # name compartments internally for this function
     seg_e = net.cells_L5Pyr[0].soma(0.5)
