@@ -1,8 +1,8 @@
 # L5_pyramidal.py - establish class def for layer 5 pyramidal cells
 #
-# v 0.2.16
-# rev 2012-07-30 (SL: passing pos to Cell())
-# last rev: (MS: Dend props moved into tuple, removed geom_set())
+# v 0.2.18
+# rev 2012-08-01 (SL: minor)
+# last rev: (SL: passing pos to Cell())
 
 from neuron import h as nrn
 from class_cell import Pyr
@@ -34,7 +34,6 @@ class L5Pyr(Pyr):
         # geometry
         self.set_dend_props()
         self.create_dends(self.dend_props, self.cm)
-        # self.create_dends(self.dend_L, self.dend_diam, self.dend_names)
         self.connect_sections()
         # self.shape_change()
         # self.geom_set(self.cm)
