@@ -1,8 +1,8 @@
 # class_net.py - establishes the Network class and related methods
 #
-# v 0.2.17
-# rev 2012-07-30 (SL: basket cell grid in place)
-# last major: (SL: automatic pos creation)
+# v 0.2.19
+# rev 2012-07-30 (MS: Removed scaling factor of 100 on cell positions)
+# last major: (SL: basket cell grid in place)
 
 import itertools as it
 import numpy as np
@@ -38,12 +38,12 @@ class Network():
 
     # Creates cells and grid
     def create_cells_pyr(self):
-        xrange = 100 * np.arange(self.gridpyr['x'])
-        yrange = 100 * np.arange(self.gridpyr['y'])
+        xrange = np.arange(self.gridpyr['x'])
+        yrange = np.arange(self.gridpyr['y'])
 
         # create list of tuples/coords, (x, y, z)
-        L2_pyr_pos = it.product(xrange, yrange, [0])
-        L5_pyr_pos = it.product(xrange, yrange, [self.zdiff])
+        L2_pyr_pos = it.product(xrange, yrange, [self.zdiff])
+        L5_pyr_pos = it.product(xrange, yrange, [0])
 
         # create pyramidal cells and assign pos
         self.cells_L2Pyr = [L2Pyr(pos) for pos in L2_pyr_pos]
@@ -51,12 +51,12 @@ class Network():
 
     def create_cells_basket(self):
         # define relevant x spacings for basket cells
-        xzero = 100 * np.arange(0, self.gridpyr['x'], 3)
-        xone = 100 * np.arange(1, self.gridpyr['x'], 3)
+        xzero = np.arange(0, self.gridpyr['x'], 3)
+        xone = np.arange(1, self.gridpyr['x'], 3)
 
         # split even and odd y vals
-        yeven = 100 * np.arange(0, self.gridpyr['y'], 2)
-        yodd = 100 * np.arange(1, self.gridpyr['y'], 2)
+        yeven = np.arange(0, self.gridpyr['y'], 2)
+        yodd = np.arange(1, self.gridpyr['y'], 2)
 
         # create general list of x,y coords and sort it
         coords = [pos for pos in it.product(xzero, yeven)] + [pos for pos in it.product(xone, yodd)]

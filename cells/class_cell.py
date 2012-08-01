@@ -1,7 +1,7 @@
 # class_cell.py - establish class def for general cell features
 #
-# v 0.2.17c
-# rev 2012-07-30 (MS: minor clean up)
+# v 0.2.19
+# rev 2012-08-01 (MS: added shape_change() to Basket() to set 3D shape, position)
 # last rev: (passing pos to Cell())
 
 from neuron import h as nrn
@@ -82,7 +82,9 @@ class Cell():
         return nc
 
     # Define 3D shape of soma -- is needed for gui representation of cell
-    # DO NOT need to call nrn.define_shape() explicitly!!
+    # By default neuron uses xy plane for height and xz plane for depth. This
+    # is counter to model, but convention is followed in this function for ease
+    # of gui use
     def shape_soma(self):
         # self.soma.push()
         nrn.pt3dclear(sec=self.soma)
@@ -98,6 +100,7 @@ class Basket(Cell):
         # Cell.__init__(self, L, diam, Cm, {name_prefix})
         # self.soma_props = {'name_prefix': 'basket_', 'L': 39, 'diam': 20, 'cm': 0.85}
         Cell.__init__(self, pos, 39, 20, 0.85, 'basket_')
+        # self.shape_change()
 
         # Creating synapses onto this cell
         self.soma_ampa = self.syn_ampa_create(self.soma(0.5))
@@ -122,6 +125,19 @@ class Basket(Cell):
         # delay in ms
         self.ncto_L5Pyr_gabaa[-1].delay = 1
         self.ncto_L5Pyr_gabab[-1].delay = 1
+
+    # Define 3D shape and position of cell. By default neuron uses xy plane for
+    # height and xz plane for depth. This is opposite for model as a whole, but
+    # convention is followed in this function ease use of gui. 
+    def shape_change(self):
+        self.shape_soma()
+        
+        self.soma.push()
+        for i in range(0, int(nrn.n3d())):
+            nrn.pt3dchange(i, self.pos[0]*100 + nrn.x3d(i), self.pos[2] + nrn.y3d(i), self.pos[1] * 100 + nrn.z3d(i), nrn.diam3d(i))
+
+        nrn.pop_section()
+
 
 # General Pyramidal cell class
 class Pyr(Cell):
