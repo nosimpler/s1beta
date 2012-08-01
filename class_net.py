@@ -2,7 +2,7 @@
 #
 # v 0.2.19
 # rev 2012-07-30 (MS: Removed scaling factor of 100 on cell positions)
-# last major: (SL: basket cell grid in place)
+# last major: (SL: removed 100x scaling on grid spacing)
 
 import itertools as it
 import numpy as np
@@ -66,7 +66,7 @@ class Network():
         L2_basket_pos = [pos_xy + (self.zdiff,) for pos_xy in coords_sorted]
         L5_basket_pos = [pos_xy + (0,) for pos_xy in coords_sorted]
 
-        # create basket cells (and assign at origin for now ... )
+        # create basket cells
         self.cells_L2Basket = [Basket(pos) for pos in L2_basket_pos]
         self.cells_L5Basket = [Basket(pos) for pos in L5_basket_pos]
 

@@ -2,8 +2,9 @@
 #
 # v 0.2.19
 # rev 2012-08-01 (MS: added shape_change() to Basket() to set 3D shape, position)
-# last rev: (passing pos to Cell())
+# last rev: (SL: added distance, weight, delay to Cell())
 
+import numpy as np
 from neuron import h as nrn
 
 # Units for e: mV
@@ -81,6 +82,27 @@ class Cell():
         # returns nc object
         return nc
 
+    # general distance function calculates from pos of post_cell
+    def distance(self, post_cell):
+        # print "positions:", self.pos, post_cell.pos
+        dx = abs(self.pos[0] - post_cell.pos[0])
+        dy = abs(self.pos[1] - post_cell.pos[1])
+        dz = abs(self.pos[2] - post_cell.pos[2])
+
+        return np.sqrt(dx**2 + dy**2)
+
+    # calculate synaptic weight
+    # inputs: NetCon() object 'nc', amplitude 'A', distance 'd', time const 'tau'
+    def syn_weight(self, nc, A, d, tau):
+        nc.weight[0] = A * np.exp(-(d**2) / (tau**2))
+        # print "in syn_weight:", nc, nc.weight[0]
+
+    # calculate synaptic delay
+    # inputs: NetCon() object 'nc', amplitude 'A', distance 'd', time const 'tau'
+    def syn_delay(self, nc, A, d, tau):
+        nc.delay = A / (np.exp(-(d**2) / (tau**2)))
+        # print "in syn_delay:", nc, nc.delay
+
     # Define 3D shape of soma -- is needed for gui representation of cell
     # By default neuron uses xy plane for height and xz plane for depth. This
     # is counter to model, but convention is followed in this function for ease
@@ -119,12 +141,20 @@ class Basket(Cell):
         self.ncto_L5Pyr_gabaa.append(self.sec_to_target(self.soma, 0.5, L5Pyr.soma_gabaa))
         self.ncto_L5Pyr_gabab.append(self.sec_to_target(self.soma, 0.5, L5Pyr.soma_gabab))
 
-        self.ncto_L5Pyr_gabaa[-1].weight[0] = 0.01
-        self.ncto_L5Pyr_gabab[-1].weight[0] = 0.01
+        # get distance and calculate weight
+        d = self.distance(L5Pyr)
+        tau = 70.
+
+        # set the weights
+        self.syn_weight(self.ncto_L5Pyr_gabaa[-1], 0.025, d, tau)
+        self.syn_weight(self.ncto_L5Pyr_gabab[-1], 0.025, d, tau)
+        # self.ncto_L5Pyr_gabab[-1].weight[0] = 0.025 * exp(-(d**2) / (70**2))
 
         # delay in ms
-        self.ncto_L5Pyr_gabaa[-1].delay = 1
-        self.ncto_L5Pyr_gabab[-1].delay = 1
+        self.syn_delay(self.ncto_L5Pyr_gabaa[-1], 1, d, tau)
+        self.syn_delay(self.ncto_L5Pyr_gabab[-1], 1, d, tau)
+        # self.ncto_L5Pyr_gabaa[-1].delay = 1
+        # self.ncto_L5Pyr_gabab[-1].delay = 1
 
     # Define 3D shape and position of cell. By default neuron uses xy plane for
     # height and xz plane for depth. This is opposite for model as a whole, but
@@ -204,8 +234,3 @@ class Pyr(Cell):
     #         dend.diam = diam
     #         dend.Ra = 200
     #         dend.cm = cm
-
-    #     # set nseg for each dendritic section (soma.nseg = 1 by default)
-    #     for dend in self.list_dend:
-    #         if dend.L>100:
-    #             dend.nseg = int(dend.L/50)

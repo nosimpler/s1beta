@@ -39,7 +39,6 @@ class L5Pyr(Pyr):
         # geometry
         self.set_dend_props()
         self.create_dends(self.dend_props, self.cm)
-        # self.create_dends(self.dend_L, self.dend_diam, self.dend_names)
         self.connect_sections()
         # self.shape_change()
         # self.geom_set(self.cm)
