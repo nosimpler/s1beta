@@ -1,8 +1,8 @@
 # class_cell.py - establish class def for general cell features
 #
-# v 0.2.16
-# rev 2012-07-30 (passing pos to Cell())
-# last rev: (MS: new method for creating dends, setting dend props)
+# v 0.2.17c
+# rev 2012-07-30 (MS: minor clean up)
+# last rev: (passing pos to Cell())
 
 from neuron import h as nrn
 
@@ -159,36 +159,6 @@ class Pyr(Cell):
                 # if dend.nseg % 2 == 0:
                 #     dend.nseg = dend.nseg + 1
 
-        # check lengths for congruity
-        # this needs to be figured out
-        # should probably be try/except
-        # if len(dend_L) == len(dend_diam):
-        #     self.N_dend = len(self.dend_L)
-        #     self.dend_L = dend_L
-        #     self.dend_diam = dend_diam
-        # else:
-        #     print "self.dend_L and self.dend_diam are not the same length."
-        #     print "Please fix in L5_pyramidal.py"
-        #     exit()
-        
-        # for  in range(0, self.N_dend):
-        #     self.list_dend.append(nrn.Section(name=self.name+dend_names[i]))
-    
-    # set geometry, including nseg
-    # def geom_set(self, cm):
-    #     # cm: membrane capacitance
-    #     for dend, L, diam in zip(self.list_dend, self.dend_L, self.dend_diam):
-    #         dend.L = L
-    #         dend.diam = diam
-    #         dend.Ra = 200
-    #         dend.cm = cm
-
-    #     # set nseg for each dendritic section (soma.nseg = 1 by default)
-    #     for dend in self.list_dend:
-    #         if dend.L>100:
-    #             dend.nseg = int(dend.L/50)
-
-
     # set biophysics for soma
     def pyr_biophys_soma(self):
         # set some 'hh' mechanism values
@@ -209,3 +179,17 @@ class Pyr(Cell):
 
             # insert 'km' mechanism
             sec.insert('km')
+    
+    # set geometry, including nseg
+    # def geom_set(self, cm):
+    #     # cm: membrane capacitance
+    #     for dend, L, diam in zip(self.list_dend, self.dend_L, self.dend_diam):
+    #         dend.L = L
+    #         dend.diam = diam
+    #         dend.Ra = 200
+    #         dend.cm = cm
+
+    #     # set nseg for each dendritic section (soma.nseg = 1 by default)
+    #     for dend in self.list_dend:
+    #         if dend.L>100:
+    #             dend.nseg = int(dend.L/50)
