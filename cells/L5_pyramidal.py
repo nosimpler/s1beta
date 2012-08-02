@@ -1,7 +1,7 @@
 # L5_pyramidal.py - establish class def for layer 5 pyramidal cells
 #
-# v 0.2.19
-# rev 2012-08-01 (MS: Set 3D position in shape_change())
+# v 0.2.18
+# rev 2012-08-01 (SL: minor)
 # last rev: (SL: passing pos to Cell())
 
 from neuron import h as nrn
@@ -16,11 +16,6 @@ import itertools as it
 
 class L5Pyr(Pyr):
     def __init__(self, pos):
-        # Initialize self.x, y, z for use in shape_change()
-        self.x = 0
-        self.y = 0
-        self.z = 0
-
         # Pyr.__init__(self, pos, L, diam, Ra, cm, {prefix})
         Pyr.__init__(self, pos, 39, 28.9, 0.85, 'L5')
 
@@ -179,9 +174,6 @@ class L5Pyr(Pyr):
 
             nrn.pop_section()
 
-    # Define 3D shape and position of cell. By default neuron uses xy plane for
-    # height and xz plane for depth. This is opposite for model as a whole, but
-    # convention is followed in this function ease use of gui. 
     def shape_change(self):
         # set 3D shape of soma by calling shape_soma from class Cell
         print "WARNING: You are setting 3d shape geom. You better be doing"
@@ -250,14 +242,3 @@ class L5Pyr(Pyr):
         # dend 7
         nrn.pt3dadd(0, y_prox, 0, self.dend_diam[7], sec=self.list_dend[7])
         nrn.pt3dadd(self.dend_L[7] * sqrt(2)/2, y_prox-self.dend_L[7] * sqrt(2)/2, 0, self.dend_diam[7], sec=self.list_dend[7])
-
-        # set 3D position:
-        self.soma.push()
-        for i in range(0, int(nrn.n3d())):
-            nrn.pt3dchange(i, self.pos[0]*100 + nrn.x3d(i), self.pos[2] + nrn.y3d(i), self.pos[1] * 100 + nrn.z3d(i), nrn.diam3d(i))
-        
-        # self.x = self.pos[0]*100
-        # self.y = self.pos[1]*100
-        # self.z = self.pos[2]*100
-
-        nrn.pop_section()

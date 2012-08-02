@@ -1,8 +1,8 @@
 # class_net.py - establishes the Network class and related methods
 #
-# v 0.2.19
-# rev 2012-07-30 (MS: Removed scaling factor of 100 on cell positions)
-# last major: (SL: removed 100x scaling on grid spacing)
+# v 0.2.18
+# rev 2012-08-01 (SL: removed 100x scaling on grid spacing)
+# last major: (SL: basket cell grid in place)
 
 import itertools as it
 import numpy as np
@@ -42,8 +42,8 @@ class Network():
         yrange = np.arange(self.gridpyr['y'])
 
         # create list of tuples/coords, (x, y, z)
-        L2_pyr_pos = it.product(xrange, yrange, [self.zdiff])
-        L5_pyr_pos = it.product(xrange, yrange, [0])
+        L2_pyr_pos = it.product(xrange, yrange, [0])
+        L5_pyr_pos = it.product(xrange, yrange, [self.zdiff])
 
         # create pyramidal cells and assign pos
         self.cells_L2Pyr = [L2Pyr(pos) for pos in L2_pyr_pos]
