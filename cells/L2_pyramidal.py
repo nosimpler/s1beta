@@ -1,8 +1,8 @@
 # L2_pyramidal.py - est class def for layer 2 pyramidal cells
 #
-# v 0.2.21
-# rev 2012-08-07 (SL: minor name change)
-# last rev: (SL: added connections to L2Basket)
+# v 0.2.22
+# rev 2012-08-07 (SL: Added connection to L5Basket cells)
+# last rev: (SL: minor name change)
 
 from neuron import h as nrn
 from class_cell import Pyr
@@ -26,9 +26,9 @@ class L2Pyr(Pyr):
         self.cm = 0.6195
 
         # create lists of connections FROM this cell TO target
+        self.ncto_L2Basket = []
         self.ncto_L5Basket = []
         self.ncto_L5Pyr = []
-        self.ncto_L2Basket = []
 
         # geometry
         self.set_dend_props()
@@ -54,6 +54,18 @@ class L2Pyr(Pyr):
 
         # set the delay using syn_delay() from Cell()
         self.syn_delay(self.ncto_L2Basket[-1], 1, d, tau)
+
+    def connect_to_L5Basket(self, L5Basket):
+        self.ncto_L5Basket.append(self.sec_to_target(self.soma, 0.5, L5Basket.soma_ampa))
+
+        d = self.distance(L5Basket)
+        tau = 3.
+
+        # set the weights using syn_weight() from Cell()
+        self.syn_weight(self.ncto_L5Basket[-1], 2.5e-4, d, tau)
+
+        # set the delay using syn_delay() from Cell()
+        self.syn_delay(self.ncto_L5Basket[-1], 1, d, tau)
 
     # Sets dendritic properties
     def set_dend_props(self):
