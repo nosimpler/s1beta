@@ -1,8 +1,8 @@
 # class_net.py - establishes the Network class and related methods
 #
-# v 0.2.28
-# rev 2012-08-07 (SL: Added new connections from L2Pyr to L2Pyr)
-# last major: (SL: Added new connections from L5Pyr to L5Pyr)
+# v 0.2.29
+# rev 2012-08-07 (MS: corrected discrepancy in Basket positions)
+# last major: (SL: Added new connections from L2Pyr to L2Pyr)
 
 import itertools as it
 import numpy as np
@@ -21,7 +21,7 @@ class Network():
         # zdiff is expressed as a positive DEPTH of L5 relative to L2
         # this is a deviation from the original, where L5 was defined at 0
         # this should not change interlaminar weight/delay calculations
-        self.zdiff = 535
+        self.zdiff = 1307.4 
 
         # allocate namespace for lists containing all cells in network
         self.cells_L2Pyr = []
@@ -64,8 +64,8 @@ class Network():
         coords_sorted = sorted(coords, key=lambda pos: pos[1])
 
         # append the z value for position for L2 and L5
-        L2_basket_pos = [pos_xy + (self.zdiff,) for pos_xy in coords_sorted]
-        L5_basket_pos = [pos_xy + (0,) for pos_xy in coords_sorted]
+        L2_basket_pos = [pos_xy + (0,) for pos_xy in coords_sorted]
+        L5_basket_pos = [pos_xy + (self.zdiff,) for pos_xy in coords_sorted]
 
         # create basket cells
         self.cells_L2Basket = [L2Basket(pos) for pos in L2_basket_pos]

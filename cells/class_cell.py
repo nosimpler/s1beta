@@ -1,8 +1,8 @@
 # class_cell.py - establish class def for general cell features
 #
-# v 0.2.21
-# rev 2012-08-07 (SL: Moved basket cells to new specific classes)
-# last rev: (SL: Added Basket connections to L2Pyr and weight/delay functions)
+# v 0.2.29
+# rev 2012-08-07 (MS: Added 3d position function to class Basket())
+# last rev: (SL: Moved basket cells to new specific classes)
 
 import numpy as np
 from neuron import h as nrn
@@ -122,9 +122,26 @@ class Basket(Cell):
         # store cell name for later
         self.name = cell_name
 
+        # set 3D shape
+        # self.shape_change()        
+
         # Creating synapses onto this cell
         self.soma_ampa = self.syn_ampa_create(self.soma(0.5))
         self.soma_gabaa = self.syn_gabaa_create(self.soma(0.5))
+
+    # Define 3D shape and position of cell. By default neuron uses xy plane for
+    # height and xz plane for depth. This is opposite for model as a whole, but
+    # convention is followed in this function ease use of gui. 
+    def shape_change(self):
+        self.shape_soma()
+        
+        self.soma.push()
+        for i in range(0, int(nrn.n3d())):
+            nrn.pt3dchange(i, self.pos[0]*100 + nrn.x3d(i), -self.pos[2] + 
+                           nrn.y3d(i), self.pos[1] * 100 + nrn.z3d(i), 
+                           nrn.diam3d(i))
+
+        nrn.pop_section()
 
 # General Pyramidal cell class
 class Pyr(Cell):

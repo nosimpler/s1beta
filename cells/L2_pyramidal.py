@@ -1,8 +1,8 @@
 # L2_pyramidal.py - est class def for layer 2 pyramidal cells
 #
-# v 0.2.28
-# rev 2012-08-07 (SL: Added connections to relevant sections of L2Pyr)
-# last rev: (SL: Added connections to relevant apical sections of L5Pyr)
+# v 0.2.29
+# rev 2012-08-07 (MS: Added 3d position function to shape_change())
+# last rev: (SL: Added connections to relevant sections of L2Pyr)
 
 from neuron import h as nrn
 from class_cell import Pyr
@@ -165,7 +165,8 @@ class L2Pyr(Pyr):
         # check lengths for congruity
         if len(self.dend_L) == len(self.dend_diam):
             # Zip above lists together
-            self.dend_props = it.izip(self.dend_names, self.dend_L, self.dend_diam)        
+            self.dend_props = it.izip(self.dend_names, self.dend_L, 
+                                      self.dend_diam)        
         else:   
             print "self.dend_L and self.dend_diam are not the same length"
             print "please fix in L5_pyramidal.py"
@@ -220,6 +221,9 @@ class L2Pyr(Pyr):
             # Units: pS/um^2
             sec.gbar_km = 250
 
+    # Define 3D shape and position of cell. By default neuron uses xy plane for
+    # height and xz plane for depth. This is opposite for model as a whole, but
+    # convention is followed in this function for ease use of gui. 
     def shape_change(self):
         # set 3d shape of soma by calling shape_soma from class Cell
         print "Warning: You are setiing 3d shape geom. You better be doing"
@@ -263,10 +267,12 @@ class L2Pyr(Pyr):
         y_start = nrn.y3d(1)
         nrn.pop_section()
 
-        nrn.pt3dadd(x_start, y_start, 0, self.dend_diam[3], sec=self.list_dend[3])
+        nrn.pt3dadd(x_start, y_start, 0, self.dend_diam[3], 
+                    sec=self.list_dend[3])
         # self.dend_L[3] is subtracted because lengths always positive, 
         # and this goes to negative x
-        nrn.pt3dadd(x_start-self.dend_L[3], y_start, 0, self.dend_diam[3], sec=self.list_dend[3])
+        nrn.pt3dadd(x_start-self.dend_L[3], y_start, 0, self.dend_diam[3], 
+                    sec=self.list_dend[3])
         # print nrn.n3d(sec=self.list_dend[0])
 
         # now deal with proximal dends
@@ -280,11 +286,26 @@ class L2Pyr(Pyr):
 
         nrn.pt3dadd(x_prox, y_prox, 0, self.dend_diam[4],sec=self.list_dend[4])
 
-        # x_prox, y_prox are now the starting points for BOTH of the last 2 sections
+        # x_prox, y_prox are now the starting points for BOTH last 2 sections
+
         # dend 6
         nrn.pt3dadd(0, y_prox, 0, self.dend_diam[5], sec=self.list_dend[5])
-        nrn.pt3dadd(-self.dend_L[5]*sqrt(2)/2, y_prox-self.dend_L[5]*sqrt(2)/2, 0, self.dend_diam[5], sec=self.list_dend[5])
+        nrn.pt3dadd(-self.dend_L[5]*sqrt(2)/2, y_prox-self.dend_L[5]*sqrt(2)/2, 
+                    0, self.dend_diam[5], sec=self.list_dend[5])
 
         # dend 7
         nrn.pt3dadd(0, y_prox, 0, self.dend_diam[6], sec=self.list_dend[6])
-        nrn.pt3dadd(self.dend_L[6]*sqrt(2)/2, y_prox-self.dend_L[6]*sqrt(2)/2, 0, self.dend_diam[6], sec=self.list_dend[6])
+        nrn.pt3dadd(self.dend_L[6]*sqrt(2)/2, y_prox-self.dend_L[6]*sqrt(2)/2, 
+                    0, self.dend_diam[6], sec=self.list_dend[6])
+    
+        # set 3D position
+        # z grid position used as y coordinate in nrn.pt3dchange() to satisfy
+        # gui convention that y is height and z is depth. In nrn.pt3dchange()
+        # x and z components are scaled by 100 for visualization clarity
+        self.soma.push()
+        for i in range(0, int(nrn.n3d())):
+            nrn.pt3dchange(i, self.pos[0]*100 + nrn.x3d(i), self.pos[2] + 
+                           nrn.y3d(i), self.pos[1] * 100 + nrn.z3d(i), 
+                           nrn.diam3d(i))
+
+        nrn.pop_section()

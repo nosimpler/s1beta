@@ -1,8 +1,8 @@
 # L5_pyramidal.py - establish class def for layer 5 pyramidal cells
 #
-# v 0.2.27
-# rev 2012-08-07 (SL: Added new ampa/nmda synapses and connected)
-# last rev: (SL: Added apical AMPA receptors)
+# v 0.2.29
+# rev 2012-08-07 (MS: Added 3d position function to shape_change)
+# last rev: (SL: Added new ampa/nmda synapses and connected)
 
 from neuron import h as nrn
 from class_cell import Pyr
@@ -75,7 +75,8 @@ class L5Pyr(Pyr):
     # Doing this here gives us easy access to position properties
     # essentially identical to connect_to_L2Basket in L2_pyramidal.py
     def connect_to_L5Basket(self, L5Basket):
-        self.ncto_L5Basket.append(self.sec_to_target(self.soma, 0.5, L5Basket.soma_ampa))
+        self.ncto_L5Basket.append(self.sec_to_target(self.soma, 0.5, 
+                                  L5Basket.soma_ampa))
 
         d = self.distance(L5Basket)
         tau = 3.
@@ -242,6 +243,9 @@ class L5Pyr(Pyr):
 
             nrn.pop_section()
 
+    # Define 3D shape and position of cell. By default neuron uses xy plane for
+    # height and xz plane for depth. This is opposite for model as a whole, but
+    # convention is followed in this function for ease use of gui. 
     def shape_change(self):
         # set 3D shape of soma by calling shape_soma from class Cell
         print "WARNING: You are setting 3d shape geom. You better be doing"
@@ -288,7 +292,8 @@ class L5Pyr(Pyr):
         nrn.pt3dadd(x_start, y_start, 0, self.dend_diam[4], sec=self.list_dend[4])
         # self.dend_L[4] is subtracted because lengths always positive, 
         # and this goes to negative x
-        nrn.pt3dadd(x_start-self.dend_L[4], y_start, 0, self.dend_diam[4], sec=self.list_dend[4])
+        nrn.pt3dadd(x_start-self.dend_L[4], y_start, 0, self.dend_diam[4], 
+                    sec=self.list_dend[4])
         # print nrn.n3d(sec=self.list_dend[0])
 
         # now deal with proximal dends
@@ -302,11 +307,26 @@ class L5Pyr(Pyr):
 
         nrn.pt3dadd(x_prox, y_prox, 0, self.dend_diam[5],sec=self.list_dend[5])
 
-        # x_prox, y_prox are now the starting points for BOTH of the last 2 sections
+        # x_prox, y_prox are now the starting points for BOTH of last 2 sections
         # dend 6
         nrn.pt3dadd(0, y_prox, 0, self.dend_diam[6], sec=self.list_dend[6])
-        nrn.pt3dadd(-self.dend_L[6] * sqrt(2)/2, y_prox-self.dend_L[6] * sqrt(2)/2, 0, self.dend_diam[6], sec=self.list_dend[6])
+        nrn.pt3dadd(-self.dend_L[6] * sqrt(2)/2, y_prox-self.dend_L[6] * 
+                    sqrt(2)/2, 0, self.dend_diam[6], sec=self.list_dend[6])
 
         # dend 7
         nrn.pt3dadd(0, y_prox, 0, self.dend_diam[7], sec=self.list_dend[7])
-        nrn.pt3dadd(self.dend_L[7] * sqrt(2)/2, y_prox-self.dend_L[7] * sqrt(2)/2, 0, self.dend_diam[7], sec=self.list_dend[7])
+        nrn.pt3dadd(self.dend_L[7] * sqrt(2)/2, y_prox-self.dend_L[7] * 
+                    sqrt(2)/2, 0, self.dend_diam[7], sec=self.list_dend[7])
+
+        # set 3D positiond
+        # z grid position used as y coordinate in nrn.pt3dchange() to satisfy
+        # gui convention that y is height and z is depth. In nrn.pt3dchange()
+        # x and z components are scaled by 100 for visualization clarity
+        self.soma.push()
+        for i in range(0, int(nrn.n3d())):
+            nrn.pt3dchange(i, self.pos[0]*100 + nrn.x3d(i), -self.pos[2] +
+                           nrn.y3d(i), self.pos[1] * 100 + nrn.z3d(i), 
+                           nrn.diam3d(i))
+
+        nrn.pop_section()
+
