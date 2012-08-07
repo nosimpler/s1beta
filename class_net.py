@@ -1,14 +1,15 @@
 # class_net.py - establishes the Network class and related methods
 #
-# v 0.2.20
-# rev 2012-08-06 (SL: Added L2 intralaminar connections)
-# last major: (SL: removed 100x scaling on grid spacing)
+# v 0.2.21
+# rev 2012-08-07 (SL: added new connections from L2Basket to L5Pyr)
+# last major: (SL: Added L2 intralaminar connections)
 
 import itertools as it
 import numpy as np
 from cells.L5_pyramidal import L5Pyr
 from cells.L2_pyramidal import L2Pyr
-from cells.class_cell import Basket
+from cells.L2_basket import L2Basket
+from cells.L5_basket import L5Basket
 
 # create Network class
 class Network():
@@ -67,8 +68,8 @@ class Network():
         L5_basket_pos = [pos_xy + (0,) for pos_xy in coords_sorted]
 
         # create basket cells
-        self.cells_L2Basket = [Basket(pos) for pos in L2_basket_pos]
-        self.cells_L5Basket = [Basket(pos) for pos in L5_basket_pos]
+        self.cells_L2Basket = [L2Basket(pos) for pos in L2_basket_pos]
+        self.cells_L5Basket = [L5Basket(pos) for pos in L5_basket_pos]
 
     # Create synaptic connections
     def net_connect(self):
@@ -83,6 +84,9 @@ class Network():
         for L2Pyr, L2Basket in it.product(self.cells_L2Pyr, self.cells_L2Basket):
             L2Pyr.connect_to_L2Basket(L2Basket)
             L2Basket.connect_to_L2Pyr(L2Pyr)
+
+        for L5Pyr, L2Basket in it.product(self.cells_L5Pyr, self.cells_L2Basket):
+            L2Basket.connect_to_L5Pyr(L5Pyr)
 
         # for L2Pyr, L2Basket in it.product(self.cells_L2Pyr, self.cells_L2Basket):
         # for L2Pyr, L5Basket in it.product(self.cells_L2Pyr, self.cells_L5Basket):

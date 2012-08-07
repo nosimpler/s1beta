@@ -1,8 +1,8 @@
 # s1run.py - primary run function for s1 project
 #
-# v 0.2.17
-# rev 2012-07-30 (SL: basket cell grid in place)
-# last major: (SL: passing pyramidal grid dimensions to Network())
+# v 0.2.21
+# rev 2012-08-07 (SL: Minor)
+# last major: (SL: basket cell grid in place)
 
 from neuron import h as nrn
 import matplotlib as mpl
@@ -19,7 +19,6 @@ from class_net import Network
 from time import clock
 
 nrn.load_file("stdrun.hoc")
-# nrn.load_file("nrngui.hoc")
 # from neuron import gui
 
 # All units for time: ms

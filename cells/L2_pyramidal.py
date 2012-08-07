@@ -1,8 +1,8 @@
 # L2_pyramidal.py - est class def for layer 2 pyramidal cells
 #
-# v 0.2.20
-# rev 2012-08-06 (SL: added connections to L2Basket)
-# last rev: (SL: passing pos input to Cell())
+# v 0.2.21
+# rev 2012-08-07 (SL: minor name change)
+# last rev: (SL: added connections to L2Basket)
 
 from neuron import h as nrn
 from class_cell import Pyr
@@ -16,7 +16,7 @@ from math import sqrt
 class L2Pyr(Pyr):
     def __init__(self, pos):
         # Pyr.__init__(self, pos, L, diam, Ra, cm)
-        Pyr.__init__(self, pos, 22.1, 23.4, 0.6195, 'L2')
+        Pyr.__init__(self, pos, 22.1, 23.4, 0.6195, 'L2Pyr')
 
         # prealloc namespace for dend properties
         # set in dend_props()

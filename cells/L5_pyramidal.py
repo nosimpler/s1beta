@@ -1,8 +1,8 @@
 # L5_pyramidal.py - establish class def for layer 5 pyramidal cells
 #
-# v 0.2.20
-# rev 2012-08-06 (SL: Using delay and weight prop functions)
-# last rev: (SL: passing pos to Cell())
+# v 0.2.21
+# rev 2012-08-07 (SL: Added apical tuft inhibitory synapse)
+# last rev: (SL: Using delay and weight prop functions)
 
 from neuron import h as nrn
 from class_cell import Pyr
@@ -17,7 +17,7 @@ import itertools as it
 class L5Pyr(Pyr):
     def __init__(self, pos):
         # Pyr.__init__(self, pos, L, diam, Ra, cm, {prefix})
-        Pyr.__init__(self, pos, 39, 28.9, 0.85, 'L5')
+        Pyr.__init__(self, pos, 39, 28.9, 0.85, 'L5Pyr')
 
         # preallocate namespaces for dend properties
         # set in dend_props()
@@ -31,7 +31,7 @@ class L5Pyr(Pyr):
         self.ncto_L2Pyr = []
         self.ncto_L2Basket = []
 
-        # geometry
+        # Geometry
         self.set_dend_props()
         self.create_dends(self.dend_props, self.cm)
         self.connect_sections()
@@ -41,6 +41,10 @@ class L5Pyr(Pyr):
         # biophysics
         self.biophys_soma()
         self.biophys_dends()
+
+        # creates synapses onto this cell in distal sections unique to this cell type
+        # print self.soma(0.5), self.list_dend[3](0.5)
+        self.apicaltuft_gabaa = self.syn_gabaa_create(self.list_dend[3](0.5))
 
     # Connects this cell to a synapse 'soma_ampa' on the supplied L5Basket cell
     # uses 'soma_to_target' from class 'Cell()' inheritance
@@ -58,6 +62,7 @@ class L5Pyr(Pyr):
         # set the delay using syn_delay() from Cell()
         self.syn_delay(self.ncto_L5Basket[-1], 1., d, tau)
 
+    # writes to self.dend_props list of tuples
     def set_dend_props(self):
         # Hard coded dend properties
         self.dend_names = ['apical_trunk', 'apical_1', 'apical_2',

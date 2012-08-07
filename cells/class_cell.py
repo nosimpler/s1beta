@@ -1,8 +1,8 @@
 # class_cell.py - establish class def for general cell features
 #
-# v 0.2.20
-# rev 2012-08-06 (SL: Added Basket connections to L2Pyr and weight/delay functions)
-# last rev: (SL: added distance, weight, delay to Cell())
+# v 0.2.21
+# rev 2012-08-07 (SL: Moved basket cells to new specific classes)
+# last rev: (SL: Added Basket connections to L2Pyr and weight/delay functions)
 
 import numpy as np
 from neuron import h as nrn
@@ -114,62 +114,17 @@ class Cell():
 
 # Inhibitory cell class
 class Basket(Cell):
-    def __init__(self, pos):
+    def __init__(self, pos, cell_name='Basket'):
         # Cell.__init__(self, L, diam, Cm, {name_prefix})
         # self.soma_props = {'name_prefix': 'basket', 'L': 39, 'diam': 20, 'cm': 0.85}
-        Cell.__init__(self, pos, 39, 20, 0.85, 'basket')
+        Cell.__init__(self, pos, 39, 20, 0.85, cell_name)
+
+        # store cell name for later
+        self.name = cell_name
 
         # Creating synapses onto this cell
         self.soma_ampa = self.syn_ampa_create(self.soma(0.5))
         self.soma_gabaa = self.syn_gabaa_create(self.soma(0.5))
-
-        # Create lists of connections FROM this cell TO target
-        # not all of these will be used necessarily in each cell
-        self.ncto_L5Pyr_gabaa = []
-        self.ncto_L5Pyr_gabab = []
-
-        self.ncto_L2Pyr_gabaa = []
-        self.ncto_L2Pyr_gabab = []
-
-        # self.ncto_L5Basket = []
-        # self.ncto_L2Basket = []
-
-    # connects both the GABAa and GABAb synapses to L5
-    def connect_to_L5Pyr(self, L5Pyr):
-        # add ncs to list using sec_to_target() in Cell()
-        self.ncto_L5Pyr_gabaa.append(self.sec_to_target(self.soma, 0.5, L5Pyr.soma_gabaa))
-        self.ncto_L5Pyr_gabab.append(self.sec_to_target(self.soma, 0.5, L5Pyr.soma_gabab))
-
-        # get distance and calculate weight
-        d = self.distance(L5Pyr)
-        tau = 70.
-
-        # set the weights
-        self.syn_weight(self.ncto_L5Pyr_gabaa[-1], 0.025, d, tau)
-        self.syn_weight(self.ncto_L5Pyr_gabab[-1], 0.025, d, tau)
-
-        # delay in ms
-        self.syn_delay(self.ncto_L5Pyr_gabaa[-1], 1, d, tau)
-        self.syn_delay(self.ncto_L5Pyr_gabab[-1], 1, d, tau)
-
-    # connects both the GABAa and GABAb synapses to L2
-    # this is purposefully redundant with above for now until differences are known
-    def connect_to_L2Pyr(self, L2Pyr):
-        # add ncs to list using sec_to_target() in Cell()
-        self.ncto_L2Pyr_gabaa.append(self.sec_to_target(self.soma, 0.5, L2Pyr.soma_gabaa))
-        self.ncto_L2Pyr_gabab.append(self.sec_to_target(self.soma, 0.5, L2Pyr.soma_gabab))
-
-        # get distance and calculate weight
-        d = self.distance(L2Pyr)
-        tau = 50.
-
-        # set the weights
-        self.syn_weight(self.ncto_L2Pyr_gabaa[-1], 0.05, d, tau)
-        self.syn_weight(self.ncto_L2Pyr_gabab[-1], 0.05, d, tau)
-
-        # delay in ms
-        self.syn_delay(self.ncto_L2Pyr_gabaa[-1], 1, d, tau)
-        self.syn_delay(self.ncto_L2Pyr_gabab[-1], 1, d, tau)
 
 # General Pyramidal cell class
 class Pyr(Cell):
@@ -182,14 +137,13 @@ class Pyr(Cell):
         # preallocate list to store dends
         self.list_dend = []
 
-        # creation of synapses inherited method from Cell()
+        # creates synapses using inherited method from Cell()
         # synapse on THIS cell needs to be RECEIVING from Inh
         # segment on the soma specified here
         self.soma_gabaa = self.syn_gabaa_create(self.soma(0.5))
         self.soma_gabab = self.syn_gabab_create(self.soma(0.5))
 
     # Creates dendritic sections
-    # def create_dends(self, dend_L, dend_diam, dend_names)
     def create_dends(self, dend_props, cm):
         # create dends and set dend props
         for sec_name, L, diam in dend_props:
@@ -227,3 +181,42 @@ class Pyr(Cell):
 
             # insert 'km' mechanism
             sec.insert('km')
+
+# MOVED CODE
+
+# # connects both the GABAa and GABAb synapses to L5
+# def connect_to_L5Pyr(self, L5Pyr):
+#     # add ncs to list using sec_to_target() in Cell()
+#     self.ncto_L5Pyr_gabaa.append(self.sec_to_target(self.soma, 0.5, L5Pyr.soma_gabaa))
+#     self.ncto_L5Pyr_gabab.append(self.sec_to_target(self.soma, 0.5, L5Pyr.soma_gabab))
+
+#     # get distance and calculate weight
+#     d = self.distance(L5Pyr)
+#     tau = 70.
+
+#     # set the weights
+#     self.syn_weight(self.ncto_L5Pyr_gabaa[-1], 0.025, d, tau)
+#     self.syn_weight(self.ncto_L5Pyr_gabab[-1], 0.025, d, tau)
+
+#     # delay in ms
+#     self.syn_delay(self.ncto_L5Pyr_gabaa[-1], 1, d, tau)
+#     self.syn_delay(self.ncto_L5Pyr_gabab[-1], 1, d, tau)
+
+# # connects both the GABAa and GABAb synapses to L2
+# # this is purposefully redundant with above for now until differences are known
+# def connect_to_L2Pyr(self, L2Pyr):
+#     # add ncs to list using sec_to_target() in Cell()
+#     self.ncto_L2Pyr_gabaa.append(self.sec_to_target(self.soma, 0.5, L2Pyr.soma_gabaa))
+#     self.ncto_L2Pyr_gabab.append(self.sec_to_target(self.soma, 0.5, L2Pyr.soma_gabab))
+
+#     # get distance and calculate weight
+#     d = self.distance(L2Pyr)
+#     tau = 50.
+
+#     # set the weights
+#     self.syn_weight(self.ncto_L2Pyr_gabaa[-1], 0.05, d, tau)
+#     self.syn_weight(self.ncto_L2Pyr_gabab[-1], 0.05, d, tau)
+
+#     # delay in ms
+#     self.syn_delay(self.ncto_L2Pyr_gabaa[-1], 1, d, tau)
+#     self.syn_delay(self.ncto_L2Pyr_gabab[-1], 1, d, tau)
