@@ -1,8 +1,8 @@
 # class_net.py - establishes the Network class and related methods
 #
-# v 0.2.26
-# rev 2012-08-07 (SL: Added new connections from L5Basket to L5Basket)
-# last major: (SL: Added new connections from L2Basket to L2Basket)
+# v 0.2.27
+# rev 2012-08-07 (SL: Added new connections from L5Pyr to L5Pyr)
+# last major: (SL: Added new connections from L5Basket to L5Basket)
 
 import itertools as it
 import numpy as np
@@ -99,3 +99,6 @@ class Network():
 
         for L5Basket_pre, L5Basket_post in it.product(self.cells_L5Basket, self.cells_L5Basket):
             L5Basket_pre.connect_to_L5Basket(L5Basket_post)
+
+        for L5Pyr_pre, L5Pyr_post in it.product(self.cells_L5Pyr, self.cells_L5Pyr):
+            L5Pyr_pre.connect_to_L5Pyr(L5Pyr_post)

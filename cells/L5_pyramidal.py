@@ -1,8 +1,8 @@
 # L5_pyramidal.py - establish class def for layer 5 pyramidal cells
 #
-# v 0.2.24
-# rev 2012-08-07 (SL: Added apical AMPA receptors)
-# last rev: (SL: Removed incorrect basilar AMPA receptor)
+# v 0.2.27
+# rev 2012-08-07 (SL: Added new ampa/nmda synapses and connected)
+# last rev: (SL: Added apical AMPA receptors)
 
 from neuron import h as nrn
 from class_cell import Pyr
@@ -27,7 +27,17 @@ class L5Pyr(Pyr):
         self.cm = 0.85
 
         # create lists of connections FROM this cell TO target
+        self.ncto_L5Pyr_apicaloblique_ampa = []
+        self.ncto_L5Pyr_apicaloblique_nmda = []
+
+        self.ncto_L5Pyr_basal2_ampa = []
+        self.ncto_L5Pyr_basal2_nmda = []
+
+        self.ncto_L5Pyr_basal3_ampa = []
+        self.ncto_L5Pyr_basal3_nmda = []
+
         self.ncto_L5Basket = []
+
         self.ncto_L2Pyr = []
         self.ncto_L2Basket = []
 
@@ -42,13 +52,23 @@ class L5Pyr(Pyr):
         self.biophys_soma()
         self.biophys_dends()
 
+        # create synapses
+        self.synapse_create()
+
+    def synapse_create(self):
         # creates synapses onto this cell in distal sections unique to this cell type
         # print self.soma(0.5), self.list_dend[3](0.5)
         self.apicaltuft_gabaa = self.syn_gabaa_create(self.list_dend[3](0.5))
         self.apicaltuft_ampa = self.syn_ampa_create(self.list_dend[3](0.5))
+
         self.apicaloblique_ampa = self.syn_ampa_create(self.list_dend[4](0.5))
+        self.apicaloblique_nmda = self.syn_nmda_create(self.list_dend[4](0.5))
+
         self.basal2_ampa = self.syn_ampa_create(self.list_dend[6](0.5))
+        self.basal2_nmda = self.syn_nmda_create(self.list_dend[6](0.5))
+
         self.basal3_ampa = self.syn_ampa_create(self.list_dend[7](0.5))
+        self.basal3_nmda = self.syn_nmda_create(self.list_dend[7](0.5))
 
     # Connects this cell to a synapse 'soma_ampa' on the supplied L5Basket cell
     # uses 'soma_to_target' from class 'Cell()' inheritance
@@ -65,6 +85,38 @@ class L5Pyr(Pyr):
 
         # set the delay using syn_delay() from Cell()
         self.syn_delay(self.ncto_L5Basket[-1], 1., d, tau)
+
+    def connect_to_L5Pyr(self, L5Pyr_post):
+        # ampa connections
+        self.ncto_L5Pyr_apicaloblique_ampa.append(self.sec_to_target(self.soma, 0.5, L5Pyr_post.apicaloblique_ampa))
+        self.ncto_L5Pyr_basal2_ampa.append(self.sec_to_target(self.soma, 0.5, L5Pyr_post.basal2_ampa))
+        self.ncto_L5Pyr_basal3_ampa.append(self.sec_to_target(self.soma, 0.5, L5Pyr_post.basal3_ampa))
+
+        # nmda connections
+        self.ncto_L5Pyr_apicaloblique_nmda.append(self.sec_to_target(self.soma, 0.5, L5Pyr_post.apicaloblique_nmda))
+        self.ncto_L5Pyr_basal2_nmda.append(self.sec_to_target(self.soma, 0.5, L5Pyr_post.basal2_nmda))
+        self.ncto_L5Pyr_basal3_nmda.append(self.sec_to_target(self.soma, 0.5, L5Pyr_post.basal3_nmda))
+
+        d = self.distance(L5Pyr_post)
+        tau = 3.
+
+        # set the weights using syn_weight() from Cell()
+        self.syn_weight(self.ncto_L5Pyr_apicaloblique_ampa[-1], 5e-4, d, tau)
+        self.syn_weight(self.ncto_L5Pyr_basal2_ampa[-1], 5e-4, d, tau)
+        self.syn_weight(self.ncto_L5Pyr_basal3_ampa[-1], 5e-4, d, tau)
+
+        self.syn_weight(self.ncto_L5Pyr_apicaloblique_nmda[-1], 5e-4, d, tau)
+        self.syn_weight(self.ncto_L5Pyr_basal2_nmda[-1], 5e-4, d, tau)
+        self.syn_weight(self.ncto_L5Pyr_basal3_nmda[-1], 5e-4, d, tau)
+
+        # set the delay using syn_delay() from Cell()
+        self.syn_delay(self.ncto_L5Pyr_apicaloblique_ampa[-1], 1., d, tau)
+        self.syn_delay(self.ncto_L5Pyr_basal2_ampa[-1], 1., d, tau)
+        self.syn_delay(self.ncto_L5Pyr_basal3_ampa[-1], 1., d, tau)
+
+        self.syn_delay(self.ncto_L5Pyr_apicaloblique_nmda[-1], 1., d, tau)
+        self.syn_delay(self.ncto_L5Pyr_basal2_nmda[-1], 1., d, tau)
+        self.syn_delay(self.ncto_L5Pyr_basal3_nmda[-1], 1., d, tau)
 
     # writes to self.dend_props list of tuples
     def set_dend_props(self):
