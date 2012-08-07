@@ -1,8 +1,8 @@
 # L5_pyramidal.py - establish class def for layer 5 pyramidal cells
 #
-# v 0.2.23a
-# rev 2012-08-07 (SL: Removed incorrect basilar AMPA receptor)
-# last rev: (SL: Added basilar AMPA receptors)
+# v 0.2.24
+# rev 2012-08-07 (SL: Added apical AMPA receptors)
+# last rev: (SL: Removed incorrect basilar AMPA receptor)
 
 from neuron import h as nrn
 from class_cell import Pyr
@@ -45,6 +45,8 @@ class L5Pyr(Pyr):
         # creates synapses onto this cell in distal sections unique to this cell type
         # print self.soma(0.5), self.list_dend[3](0.5)
         self.apicaltuft_gabaa = self.syn_gabaa_create(self.list_dend[3](0.5))
+        self.apicaltuft_ampa = self.syn_ampa_create(self.list_dend[3](0.5))
+        self.apicaloblique_ampa = self.syn_ampa_create(self.list_dend[4](0.5))
         self.basal2_ampa = self.syn_ampa_create(self.list_dend[6](0.5))
         self.basal3_ampa = self.syn_ampa_create(self.list_dend[7](0.5))
 
