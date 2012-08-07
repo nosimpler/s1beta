@@ -1,8 +1,8 @@
 # class_cell.py - establish class def for general cell features
 #
-# v 0.2.18
-# rev 2012-08-01 (SL: added distance, weight, delay to Cell())
-# last rev: (SL: passing pos to Cell())
+# v 0.2.20
+# rev 2012-08-06 (SL: Added Basket connections to L2Pyr and weight/delay functions)
+# last rev: (SL: added distance, weight, delay to Cell())
 
 import numpy as np
 from neuron import h as nrn
@@ -95,13 +95,11 @@ class Cell():
     # inputs: NetCon() object 'nc', amplitude 'A', distance 'd', time const 'tau'
     def syn_weight(self, nc, A, d, tau):
         nc.weight[0] = A * np.exp(-(d**2) / (tau**2))
-        # print "in syn_weight:", nc, nc.weight[0]
 
     # calculate synaptic delay
     # inputs: NetCon() object 'nc', amplitude 'A', distance 'd', time const 'tau'
     def syn_delay(self, nc, A, d, tau):
         nc.delay = A / (np.exp(-(d**2) / (tau**2)))
-        # print "in syn_delay:", nc, nc.delay
 
     # Define 3D shape of soma -- is needed for gui representation of cell
     # DO NOT need to call nrn.define_shape() explicitly!!
@@ -118,8 +116,8 @@ class Cell():
 class Basket(Cell):
     def __init__(self, pos):
         # Cell.__init__(self, L, diam, Cm, {name_prefix})
-        # self.soma_props = {'name_prefix': 'basket_', 'L': 39, 'diam': 20, 'cm': 0.85}
-        Cell.__init__(self, pos, 39, 20, 0.85, 'basket_')
+        # self.soma_props = {'name_prefix': 'basket', 'L': 39, 'diam': 20, 'cm': 0.85}
+        Cell.__init__(self, pos, 39, 20, 0.85, 'basket')
 
         # Creating synapses onto this cell
         self.soma_ampa = self.syn_ampa_create(self.soma(0.5))
@@ -129,12 +127,16 @@ class Basket(Cell):
         # not all of these will be used necessarily in each cell
         self.ncto_L5Pyr_gabaa = []
         self.ncto_L5Pyr_gabab = []
-        self.ncto_L2Pyr = []
+
+        self.ncto_L2Pyr_gabaa = []
+        self.ncto_L2Pyr_gabab = []
+
         # self.ncto_L5Basket = []
         # self.ncto_L2Basket = []
 
-    # connects both the GABAa and GABAb synapses
+    # connects both the GABAa and GABAb synapses to L5
     def connect_to_L5Pyr(self, L5Pyr):
+        # add ncs to list using sec_to_target() in Cell()
         self.ncto_L5Pyr_gabaa.append(self.sec_to_target(self.soma, 0.5, L5Pyr.soma_gabaa))
         self.ncto_L5Pyr_gabab.append(self.sec_to_target(self.soma, 0.5, L5Pyr.soma_gabab))
 
@@ -145,13 +147,29 @@ class Basket(Cell):
         # set the weights
         self.syn_weight(self.ncto_L5Pyr_gabaa[-1], 0.025, d, tau)
         self.syn_weight(self.ncto_L5Pyr_gabab[-1], 0.025, d, tau)
-        # self.ncto_L5Pyr_gabab[-1].weight[0] = 0.025 * exp(-(d**2) / (70**2))
 
         # delay in ms
         self.syn_delay(self.ncto_L5Pyr_gabaa[-1], 1, d, tau)
         self.syn_delay(self.ncto_L5Pyr_gabab[-1], 1, d, tau)
-        # self.ncto_L5Pyr_gabaa[-1].delay = 1
-        # self.ncto_L5Pyr_gabab[-1].delay = 1
+
+    # connects both the GABAa and GABAb synapses to L2
+    # this is purposefully redundant with above for now until differences are known
+    def connect_to_L2Pyr(self, L2Pyr):
+        # add ncs to list using sec_to_target() in Cell()
+        self.ncto_L2Pyr_gabaa.append(self.sec_to_target(self.soma, 0.5, L2Pyr.soma_gabaa))
+        self.ncto_L2Pyr_gabab.append(self.sec_to_target(self.soma, 0.5, L2Pyr.soma_gabab))
+
+        # get distance and calculate weight
+        d = self.distance(L2Pyr)
+        tau = 50.
+
+        # set the weights
+        self.syn_weight(self.ncto_L2Pyr_gabaa[-1], 0.05, d, tau)
+        self.syn_weight(self.ncto_L2Pyr_gabab[-1], 0.05, d, tau)
+
+        # delay in ms
+        self.syn_delay(self.ncto_L2Pyr_gabaa[-1], 1, d, tau)
+        self.syn_delay(self.ncto_L2Pyr_gabab[-1], 1, d, tau)
 
 # General Pyramidal cell class
 class Pyr(Cell):
@@ -187,7 +205,7 @@ class Pyr(Cell):
                 
                 # make dend.nseg odd for all sections
                 # if dend.nseg % 2 == 0:
-                #     dend.nseg = dend.nseg + 1
+                #     dend.nseg += 1
 
     # set biophysics for soma
     def pyr_biophys_soma(self):
@@ -209,12 +227,3 @@ class Pyr(Cell):
 
             # insert 'km' mechanism
             sec.insert('km')
-    
-    # set geometry, including nseg
-    # def geom_set(self, cm):
-    #     # cm: membrane capacitance
-    #     for dend, L, diam in zip(self.list_dend, self.dend_L, self.dend_diam):
-    #         dend.L = L
-    #         dend.diam = diam
-    #         dend.Ra = 200
-    #         dend.cm = cm

@@ -1,8 +1,8 @@
 # class_net.py - establishes the Network class and related methods
 #
-# v 0.2.18
-# rev 2012-08-01 (SL: removed 100x scaling on grid spacing)
-# last major: (SL: basket cell grid in place)
+# v 0.2.20
+# rev 2012-08-06 (SL: Added L2 intralaminar connections)
+# last major: (SL: removed 100x scaling on grid spacing)
 
 import itertools as it
 import numpy as np
@@ -75,12 +75,14 @@ class Network():
         # 'product' returns an iterable list of tuples of all pairs of cells 
         # in these 2 lists
         # ONE LIST performs all connections between L5Pyr and L5Basket cells
+        # FROM object cell TO connect_to cell
         for L5Pyr, L5Basket in it.product(self.cells_L5Pyr, self.cells_L5Basket):
-            # from L5Pyr to L5Basket
             L5Pyr.connect_to_L5Basket(L5Basket)
-
-            # from L5Basket to L5Pyr
             L5Basket.connect_to_L5Pyr(L5Pyr)
+
+        for L2Pyr, L2Basket in it.product(self.cells_L2Pyr, self.cells_L2Basket):
+            L2Pyr.connect_to_L2Basket(L2Basket)
+            L2Basket.connect_to_L2Pyr(L2Pyr)
 
         # for L2Pyr, L2Basket in it.product(self.cells_L2Pyr, self.cells_L2Basket):
         # for L2Pyr, L5Basket in it.product(self.cells_L2Pyr, self.cells_L5Basket):

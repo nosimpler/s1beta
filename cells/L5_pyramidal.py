@@ -1,7 +1,7 @@
 # L5_pyramidal.py - establish class def for layer 5 pyramidal cells
 #
-# v 0.2.18
-# rev 2012-08-01 (SL: minor)
+# v 0.2.20
+# rev 2012-08-06 (SL: Using delay and weight prop functions)
 # last rev: (SL: passing pos to Cell())
 
 from neuron import h as nrn
@@ -45,18 +45,25 @@ class L5Pyr(Pyr):
     # Connects this cell to a synapse 'soma_ampa' on the supplied L5Basket cell
     # uses 'soma_to_target' from class 'Cell()' inheritance
     # Doing this here gives us easy access to position properties
+    # essentially identical to connect_to_L2Basket in L2_pyramidal.py
     def connect_to_L5Basket(self, L5Basket):
         self.ncto_L5Basket.append(self.sec_to_target(self.soma, 0.5, L5Basket.soma_ampa))
 
-        # change props
-        self.ncto_L5Basket[-1].weight[0] = 0.01
-        self.ncto_L5Basket[-1].delay = 1
+        d = self.distance(L5Basket)
+        tau = 3.
+
+        # set the weights using syn_weight() from Cell()
+        self.syn_weight(self.ncto_L5Basket[-1], 5e-4, d, tau)
+
+        # set the delay using syn_delay() from Cell()
+        self.syn_delay(self.ncto_L5Basket[-1], 1., d, tau)
 
     def set_dend_props(self):
-        # Hardcode dend properties
+        # Hard coded dend properties
         self.dend_names = ['apical_trunk', 'apical_1', 'apical_2',
                            'apical_tuft', 'apical_obliq', 'basal_1', 
-                           'basal_2', 'basal_3']
+                           'basal_2', 'basal_3'
+        ]
 
         self.dend_L = [102, 680, 680, 425, 255, 85, 255, 255]
         self.dend_diam = [10.2, 7.48, 4.93, 3.4, 5.1, 6.8, 8.5, 8.5]
