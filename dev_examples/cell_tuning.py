@@ -5,7 +5,6 @@
 # last major: (SL: cleaned up)
 
 from neuron import h
-# from neuron import gui
 
 # change the backend for matplotlib
 import matplotlib as mpl 
@@ -13,18 +12,16 @@ mpl.use('Agg')
 
 # import plt and fig_std
 import matplotlib.pyplot as plt 
-from plottools.axes_create import fig_std
+from ..plottools.axes_create import fig_std
 
-from cells.L5_pyramidal import L5Pyr
-from cells.L2_pyramidal import L2Pyr
-# from time import clock
+from ..cells.L5_pyramidal import L5Pyr
+from ..cells.L2_pyramidal import L2Pyr
 
 h.load_file("stdrun.hoc")
 
 # All units for time: ms
 
 def stimulus(seg, file_prefix):
-# def stimulus(seg, filename, figname):
     stim = h.IClamp(seg)
     stim.delay = 50
     stim.dur = 100
@@ -70,5 +67,3 @@ if __name__ == "__main__":
     # give cells stimulus. Record time and voltage. Save to dat file. Plot.
     stimulus(cell_L5.soma(0.5), 'L5PN')
     stimulus(cell_L2.soma(0.5), 'L2PN')
-    # stimulus(segL5, "L5PN.dat", "L5PN_plot.png")
-    # stimulus(segL2, "L2PN.dat", "L2PN_plot.png")    

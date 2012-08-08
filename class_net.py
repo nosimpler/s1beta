@@ -1,8 +1,8 @@
 # class_net.py - establishes the Network class and related methods
 #
-# v 0.2.29
-# rev 2012-08-07 (MS: corrected discrepancy in Basket positions)
-# last major: (SL: Added new connections from L2Pyr to L2Pyr)
+# v 0.3.0
+# rev 2012-08-08 (MS/SL: set origin for feed)
+# last major: (MS: corrected discrepancy in Basket positions)
 
 import itertools as it
 import numpy as np
@@ -31,13 +31,15 @@ class Network():
         self.cells_L2Basket = []
         self.cells_L5Basket = []
 
-        # create cells
+        # create cells (and create self.origin in create_cells_pyr())
         self.create_cells_pyr()
         self.create_cells_basket()
 
+        # Connect the network
         self.net_connect()
 
     # Creates cells and grid
+    # pyr grid is the immutable grid, so we will also calculate origin here
     def create_cells_pyr(self):
         xrange = np.arange(self.gridpyr['x'])
         yrange = np.arange(self.gridpyr['y'])
@@ -49,6 +51,12 @@ class Network():
         # create pyramidal cells and assign pos
         self.cells_L2Pyr = [L2Pyr(pos) for pos in L2_pyr_pos]
         self.cells_L5Pyr = [L5Pyr(pos) for pos in L5_pyr_pos]
+
+        # these must be ints!
+        origin_x = xrange[(len(xrange)-1)/2]
+        origin_y = yrange[(len(yrange)-1)/2]
+        origin_z = np.floor(self.zdiff/2)
+        self.origin = (origin_x, origin_y, origin_z)
 
     def create_cells_basket(self):
         # define relevant x spacings for basket cells
