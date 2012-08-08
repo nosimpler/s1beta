@@ -1,6 +1,6 @@
 # L5_pyramidal.py - establish class def for layer 5 pyramidal cells
 #
-# v 0.2.29
+# v 0.2.29a
 # rev 2012-08-07 (MS: Added 3d position function to shape_change)
 # last rev: (SL: Added new ampa/nmda synapses and connected)
 
@@ -75,8 +75,7 @@ class L5Pyr(Pyr):
     # Doing this here gives us easy access to position properties
     # essentially identical to connect_to_L2Basket in L2_pyramidal.py
     def connect_to_L5Basket(self, L5Basket):
-        self.ncto_L5Basket.append(self.sec_to_target(self.soma, 0.5, 
-                                  L5Basket.soma_ampa))
+        self.ncto_L5Basket.append(self.sec_to_target(self.soma, 0.5, L5Basket.soma_ampa))
 
         d = self.distance(L5Basket)
         tau = 3.
@@ -329,4 +328,3 @@ class L5Pyr(Pyr):
                            nrn.diam3d(i))
 
         nrn.pop_section()
-

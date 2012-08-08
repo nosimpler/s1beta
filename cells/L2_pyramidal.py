@@ -1,6 +1,6 @@
 # L2_pyramidal.py - est class def for layer 2 pyramidal cells
 #
-# v 0.2.29
+# v 0.2.29a
 # rev 2012-08-07 (MS: Added 3d position function to shape_change())
 # last rev: (SL: Added connections to relevant sections of L2Pyr)
 
@@ -165,8 +165,7 @@ class L2Pyr(Pyr):
         # check lengths for congruity
         if len(self.dend_L) == len(self.dend_diam):
             # Zip above lists together
-            self.dend_props = it.izip(self.dend_names, self.dend_L, 
-                                      self.dend_diam)        
+            self.dend_props = it.izip(self.dend_names, self.dend_L, self.dend_diam)        
         else:   
             print "self.dend_L and self.dend_diam are not the same length"
             print "please fix in L5_pyramidal.py"
@@ -267,13 +266,10 @@ class L2Pyr(Pyr):
         y_start = nrn.y3d(1)
         nrn.pop_section()
 
-        nrn.pt3dadd(x_start, y_start, 0, self.dend_diam[3], 
-                    sec=self.list_dend[3])
+        nrn.pt3dadd(x_start, y_start, 0, self.dend_diam[3], sec=self.list_dend[3])
         # self.dend_L[3] is subtracted because lengths always positive, 
         # and this goes to negative x
-        nrn.pt3dadd(x_start-self.dend_L[3], y_start, 0, self.dend_diam[3], 
-                    sec=self.list_dend[3])
-        # print nrn.n3d(sec=self.list_dend[0])
+        nrn.pt3dadd(x_start-self.dend_L[3], y_start, 0, self.dend_diam[3], sec=self.list_dend[3])
 
         # now deal with proximal dends
         for i in range(4, 7):

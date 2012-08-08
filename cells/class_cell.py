@@ -1,6 +1,6 @@
 # class_cell.py - establish class def for general cell features
 #
-# v 0.2.29
+# v 0.2.29a
 # rev 2012-08-07 (MS: Added 3d position function to class Basket())
 # last rev: (SL: Moved basket cells to new specific classes)
 
@@ -122,7 +122,7 @@ class Basket(Cell):
         # store cell name for later
         self.name = cell_name
 
-        # set 3D shape
+        # set 3D shape - unused for now but a prototype
         # self.shape_change()        
 
         # Creating synapses onto this cell
