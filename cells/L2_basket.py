@@ -1,8 +1,8 @@
 # L2_basket.py - establish class def for layer 2 basket cells
 #
-# v 0.2.25
-# rev 2012-08-07 (SL: Added connect_to_L2Basket)
-# last rev: (SL: created from Basket())
+# v 0.2.30
+# rev 2012-08-08 (SL: changed variable name)
+# last rev: (SL: Added connect_to_L2Basket)
 
 from neuron import h as nrn
 from class_cell import Basket
@@ -30,15 +30,15 @@ class L2Basket(Basket):
 
         # get distance and calculate weight
         d = self.distance(L2Pyr)
-        tau = 50.
+        lamtha = 50.
 
         # set the weights
-        self.syn_weight(self.ncto_L2Pyr_gabaa[-1], 0.05, d, tau)
-        self.syn_weight(self.ncto_L2Pyr_gabab[-1], 0.05, d, tau)
+        self.syn_weight(self.ncto_L2Pyr_gabaa[-1], 0.05, d, lamtha)
+        self.syn_weight(self.ncto_L2Pyr_gabab[-1], 0.05, d, lamtha)
 
         # delay in ms
-        self.syn_delay(self.ncto_L2Pyr_gabaa[-1], 1, d, tau)
-        self.syn_delay(self.ncto_L2Pyr_gabab[-1], 1, d, tau)
+        self.syn_delay(self.ncto_L2Pyr_gabaa[-1], 1, d, lamtha)
+        self.syn_delay(self.ncto_L2Pyr_gabab[-1], 1, d, lamtha)
 
     # connects L2Basket to L5Pyr
     def connect_to_L5Pyr(self, L5Pyr):
@@ -47,23 +47,23 @@ class L2Basket(Basket):
 
         # get distance and calculate weight
         d = self.distance(L5Pyr)
-        tau = 50.
+        lamtha = 50.
 
         # set the weights
-        self.syn_weight(self.ncto_L5Pyr_apicaltuft_gabaa[-1], 1e-3, d, tau)
+        self.syn_weight(self.ncto_L5Pyr_apicaltuft_gabaa[-1], 1e-3, d, lamtha)
 
         # delay in ms
-        self.syn_delay(self.ncto_L5Pyr_apicaltuft_gabaa[-1], 1, d, tau)
+        self.syn_delay(self.ncto_L5Pyr_apicaltuft_gabaa[-1], 1, d, lamtha)
 
     # connects L2Basket to other L2Baskets
     def connect_to_L2Basket(self, L2Basket_post):
         self.ncto_L2Basket.append(self.sec_to_target(self.soma, 0.5, L2Basket_post.soma_gabaa))
 
         d = self.distance(L2Basket_post)
-        tau = 20.
+        lamtha = 20.
 
         # set the weights
-        self.syn_weight(self.ncto_L2Basket[-1], 0.02, d, tau)
+        self.syn_weight(self.ncto_L2Basket[-1], 0.02, d, lamtha)
 
         # delay in ms
-        self.syn_delay(self.ncto_L2Basket[-1], 1, d, tau)
+        self.syn_delay(self.ncto_L2Basket[-1], 1, d, lamtha)

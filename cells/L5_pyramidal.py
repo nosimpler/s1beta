@@ -1,8 +1,8 @@
 # L5_pyramidal.py - establish class def for layer 5 pyramidal cells
 #
-# v 0.2.29a
-# rev 2012-08-07 (MS: Added 3d position function to shape_change)
-# last rev: (SL: Added new ampa/nmda synapses and connected)
+# v 0.2.30
+# rev 2012-08-08 (SL: Changed variable name)
+# last rev: (MS: Added 3d position function to shape_change)
 
 from neuron import h as nrn
 from class_cell import Pyr
@@ -78,13 +78,13 @@ class L5Pyr(Pyr):
         self.ncto_L5Basket.append(self.sec_to_target(self.soma, 0.5, L5Basket.soma_ampa))
 
         d = self.distance(L5Basket)
-        tau = 3.
+        lamtha = 3.
 
         # set the weights using syn_weight() from Cell()
-        self.syn_weight(self.ncto_L5Basket[-1], 5e-4, d, tau)
+        self.syn_weight(self.ncto_L5Basket[-1], 5e-4, d, lamtha)
 
         # set the delay using syn_delay() from Cell()
-        self.syn_delay(self.ncto_L5Basket[-1], 1., d, tau)
+        self.syn_delay(self.ncto_L5Basket[-1], 1., d, lamtha)
 
     def connect_to_L5Pyr(self, L5Pyr_post):
         # ampa connections
@@ -98,25 +98,25 @@ class L5Pyr(Pyr):
         self.ncto_L5Pyr_basal3_nmda.append(self.sec_to_target(self.soma, 0.5, L5Pyr_post.basal3_nmda))
 
         d = self.distance(L5Pyr_post)
-        tau = 3.
+        lamtha = 3.
 
         # set the weights using syn_weight() from Cell()
-        self.syn_weight(self.ncto_L5Pyr_apicaloblique_ampa[-1], 5e-4, d, tau)
-        self.syn_weight(self.ncto_L5Pyr_basal2_ampa[-1], 5e-4, d, tau)
-        self.syn_weight(self.ncto_L5Pyr_basal3_ampa[-1], 5e-4, d, tau)
+        self.syn_weight(self.ncto_L5Pyr_apicaloblique_ampa[-1], 5e-4, d, lamtha)
+        self.syn_weight(self.ncto_L5Pyr_basal2_ampa[-1], 5e-4, d, lamtha)
+        self.syn_weight(self.ncto_L5Pyr_basal3_ampa[-1], 5e-4, d, lamtha)
 
-        self.syn_weight(self.ncto_L5Pyr_apicaloblique_nmda[-1], 5e-4, d, tau)
-        self.syn_weight(self.ncto_L5Pyr_basal2_nmda[-1], 5e-4, d, tau)
-        self.syn_weight(self.ncto_L5Pyr_basal3_nmda[-1], 5e-4, d, tau)
+        self.syn_weight(self.ncto_L5Pyr_apicaloblique_nmda[-1], 5e-4, d, lamtha)
+        self.syn_weight(self.ncto_L5Pyr_basal2_nmda[-1], 5e-4, d, lamtha)
+        self.syn_weight(self.ncto_L5Pyr_basal3_nmda[-1], 5e-4, d, lamtha)
 
         # set the delay using syn_delay() from Cell()
-        self.syn_delay(self.ncto_L5Pyr_apicaloblique_ampa[-1], 1., d, tau)
-        self.syn_delay(self.ncto_L5Pyr_basal2_ampa[-1], 1., d, tau)
-        self.syn_delay(self.ncto_L5Pyr_basal3_ampa[-1], 1., d, tau)
+        self.syn_delay(self.ncto_L5Pyr_apicaloblique_ampa[-1], 1., d, lamtha)
+        self.syn_delay(self.ncto_L5Pyr_basal2_ampa[-1], 1., d, lamtha)
+        self.syn_delay(self.ncto_L5Pyr_basal3_ampa[-1], 1., d, lamtha)
 
-        self.syn_delay(self.ncto_L5Pyr_apicaloblique_nmda[-1], 1., d, tau)
-        self.syn_delay(self.ncto_L5Pyr_basal2_nmda[-1], 1., d, tau)
-        self.syn_delay(self.ncto_L5Pyr_basal3_nmda[-1], 1., d, tau)
+        self.syn_delay(self.ncto_L5Pyr_apicaloblique_nmda[-1], 1., d, lamtha)
+        self.syn_delay(self.ncto_L5Pyr_basal2_nmda[-1], 1., d, lamtha)
+        self.syn_delay(self.ncto_L5Pyr_basal3_nmda[-1], 1., d, lamtha)
 
     # writes to self.dend_props list of tuples
     def set_dend_props(self):

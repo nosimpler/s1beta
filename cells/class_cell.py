@@ -1,8 +1,8 @@
 # class_cell.py - establish class def for general cell features
 #
-# v 0.2.29a
-# rev 2012-08-07 (MS: Added 3d position function to class Basket())
-# last rev: (SL: Moved basket cells to new specific classes)
+# v 0.2.30
+# rev 2012-08-08 (SL: changed variable name for space constant to lamtha)
+# last rev: (MS: Added 3d position function to class Basket())
 
 import numpy as np
 from neuron import h as nrn
@@ -92,14 +92,14 @@ class Cell():
         return np.sqrt(dx**2 + dy**2)
 
     # calculate synaptic weight
-    # inputs: NetCon() object 'nc', amplitude 'A', distance 'd', time const 'tau'
-    def syn_weight(self, nc, A, d, tau):
-        nc.weight[0] = A * np.exp(-(d**2) / (tau**2))
+    # inputs: NetCon() object 'nc', amplitude 'A', distance 'd', space const 'lamtha'
+    def syn_weight(self, nc, A, d, lamtha):
+        nc.weight[0] = A * np.exp(-(d**2) / (lamtha**2))
 
     # calculate synaptic delay
-    # inputs: NetCon() object 'nc', amplitude 'A', distance 'd', time const 'tau'
-    def syn_delay(self, nc, A, d, tau):
-        nc.delay = A / (np.exp(-(d**2) / (tau**2)))
+    # inputs: NetCon() object 'nc', amplitude 'A', distance 'd', space const 'lamtha'
+    def syn_delay(self, nc, A, d, lamtha):
+        nc.delay = A / (np.exp(-(d**2) / (lamtha**2)))
 
     # Define 3D shape of soma -- is needed for gui representation of cell
     # DO NOT need to call nrn.define_shape() explicitly!!
@@ -137,9 +137,8 @@ class Basket(Cell):
         
         self.soma.push()
         for i in range(0, int(nrn.n3d())):
-            nrn.pt3dchange(i, self.pos[0]*100 + nrn.x3d(i), -self.pos[2] + 
-                           nrn.y3d(i), self.pos[1] * 100 + nrn.z3d(i), 
-                           nrn.diam3d(i))
+            nrn.pt3dchange(i, self.pos[0]*100 + nrn.x3d(i), -self.pos[2] + nrn.y3d(i), 
+                           self.pos[1] * 100 + nrn.z3d(i), nrn.diam3d(i))
 
         nrn.pop_section()
 
@@ -198,42 +197,3 @@ class Pyr(Cell):
 
             # insert 'km' mechanism
             sec.insert('km')
-
-# MOVED CODE
-
-# # connects both the GABAa and GABAb synapses to L5
-# def connect_to_L5Pyr(self, L5Pyr):
-#     # add ncs to list using sec_to_target() in Cell()
-#     self.ncto_L5Pyr_gabaa.append(self.sec_to_target(self.soma, 0.5, L5Pyr.soma_gabaa))
-#     self.ncto_L5Pyr_gabab.append(self.sec_to_target(self.soma, 0.5, L5Pyr.soma_gabab))
-
-#     # get distance and calculate weight
-#     d = self.distance(L5Pyr)
-#     tau = 70.
-
-#     # set the weights
-#     self.syn_weight(self.ncto_L5Pyr_gabaa[-1], 0.025, d, tau)
-#     self.syn_weight(self.ncto_L5Pyr_gabab[-1], 0.025, d, tau)
-
-#     # delay in ms
-#     self.syn_delay(self.ncto_L5Pyr_gabaa[-1], 1, d, tau)
-#     self.syn_delay(self.ncto_L5Pyr_gabab[-1], 1, d, tau)
-
-# # connects both the GABAa and GABAb synapses to L2
-# # this is purposefully redundant with above for now until differences are known
-# def connect_to_L2Pyr(self, L2Pyr):
-#     # add ncs to list using sec_to_target() in Cell()
-#     self.ncto_L2Pyr_gabaa.append(self.sec_to_target(self.soma, 0.5, L2Pyr.soma_gabaa))
-#     self.ncto_L2Pyr_gabab.append(self.sec_to_target(self.soma, 0.5, L2Pyr.soma_gabab))
-
-#     # get distance and calculate weight
-#     d = self.distance(L2Pyr)
-#     tau = 50.
-
-#     # set the weights
-#     self.syn_weight(self.ncto_L2Pyr_gabaa[-1], 0.05, d, tau)
-#     self.syn_weight(self.ncto_L2Pyr_gabab[-1], 0.05, d, tau)
-
-#     # delay in ms
-#     self.syn_delay(self.ncto_L2Pyr_gabaa[-1], 1, d, tau)
-#     self.syn_delay(self.ncto_L2Pyr_gabab[-1], 1, d, tau)
