@@ -1,8 +1,8 @@
 # L2_pyramidal.py - est class def for layer 2 pyramidal cells
 #
-# v 0.3.0
-# rev 2012-08-08 (MS/SL: Added AMPA receptor to apical tuft)
-# last rev: (SL: changed variable name)
+# v 0.3.2
+# rev 2012-08-15 (MS: added a new NMDA receptor)
+# last rev: (MS/SL: Added AMPA receptor to apical tuft)
 
 from neuron import h as nrn
 from class_cell import Pyr
@@ -74,6 +74,7 @@ class L2Pyr(Pyr):
         self.basal3_nmda = self.syn_nmda_create(self.list_dend[6](0.5))
 
         self.apicaltuft_ampa = self.syn_ampa_create(self.list_dend[2](0.5))
+        self.apicaltuft_nmda = self.syn_nmda_create(self.list_dend[2](0.5))
 
     def connect_to_L2Pyr(self, L2Pyr_post):
         # ampa connections

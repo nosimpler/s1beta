@@ -1,8 +1,8 @@
 # L5_pyramidal.py - establish class def for layer 5 pyramidal cells
 #
-# v 0.2.30
-# rev 2012-08-08 (SL: Changed variable name)
-# last rev: (MS: Added 3d position function to shape_change)
+# v 0.3.2
+# rev 2012-08-15 (MS: Added NMDA receptor to apical tuft)
+# last rev: (SL: Changed variable name)
 
 from neuron import h as nrn
 from class_cell import Pyr
@@ -60,6 +60,7 @@ class L5Pyr(Pyr):
         # print self.soma(0.5), self.list_dend[3](0.5)
         self.apicaltuft_gabaa = self.syn_gabaa_create(self.list_dend[3](0.5))
         self.apicaltuft_ampa = self.syn_ampa_create(self.list_dend[3](0.5))
+        self.apicaltuft_nmda = self.syn_nmda_create(self.list_dend[3](0.5))
 
         self.apicaloblique_ampa = self.syn_ampa_create(self.list_dend[4](0.5))
         self.apicaloblique_nmda = self.syn_nmda_create(self.list_dend[4](0.5))

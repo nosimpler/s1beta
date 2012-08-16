@@ -1,11 +1,13 @@
 # class_net.py - establishes the Network class and related methods
 #
-# v 0.3.0
-# rev 2012-08-08 (MS/SL: set origin for feed)
-# last major: (MS: corrected discrepancy in Basket positions)
+# v 0.3.2
+# rev 2012-08-15 (MS: reads nrn.tstop)
+# last major: (MS/SL: set origin for feed)
 
 import itertools as it
 import numpy as np
+
+from neuron import h as nrn
 from cells.L5_pyramidal import L5Pyr
 from cells.L2_pyramidal import L2Pyr
 from cells.L2_basket import L2Basket
@@ -15,6 +17,10 @@ from cells.L5_basket import L5Basket
 class Network():
     def __init__(self, gridpyr_x, gridpyr_y):
     # def __init__(self):
+        # Store nrn.tstop as variable in Network()
+        # Assumes nrn.tstop set in s1run.py prior to instantiation of Network()
+        self.tstop = nrn.tstop
+
         # int variables for grid of pyramidal cells (for now in both L2 and L5)
         self.gridpyr = {'x': gridpyr_x, 'y': gridpyr_y}
 

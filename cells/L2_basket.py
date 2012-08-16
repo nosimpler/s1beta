@@ -1,8 +1,8 @@
 # L2_basket.py - establish class def for layer 2 basket cells
 #
-# v 0.2.30
-# rev 2012-08-08 (SL: changed variable name)
-# last rev: (SL: Added connect_to_L2Basket)
+# v 0.3.2
+# rev 2012-08-15 (MS: Added NMDA receptor onto soma)
+# last rev: (SL: changed variable name)
 
 from neuron import h as nrn
 from class_cell import Basket
@@ -14,6 +14,9 @@ class L2Basket(Basket):
     def __init__(self, pos):
         # Pyr.__init__(self, pos, L, diam, Ra, cm)
         Basket.__init__(self, pos, 'L2Basket')
+
+        # create nmda synapse
+        self.soma_nmda = self.syn_nmda_create(self.soma(0.5))
 
         # Create lists of connections FROM this cell TO target
         self.ncto_L2Basket = []
