@@ -1,8 +1,8 @@
 # L2_pyramidal.py - est class def for layer 2 pyramidal cells
 #
-# v 0.3.2
-# rev 2012-08-15 (MS: added a new NMDA receptor)
-# last rev: (MS/SL: Added AMPA receptor to apical tuft)
+# v 0.4.0
+# rev 2012-08-22 (SL: Added dipole_insert() call)
+# last rev: (MS: added a new NMDA receptor)
 
 from neuron import h as nrn
 from class_cell import Pyr
@@ -48,6 +48,8 @@ class L2Pyr(Pyr):
 
         # geometry
         self.set_dend_props()
+
+        # creates self.list_dend
         self.create_dends(self.dend_props, self.cm)
         self.connect_sections()
         # self.shape_change()
@@ -56,6 +58,9 @@ class L2Pyr(Pyr):
         # biophysics
         self.biophys_soma()
         self.biophys_dends()
+
+        # dipole_insert() comes from Cell()
+        self.dipole_insert()
 
         # create synapses
         self.synapse_create()
@@ -177,7 +182,7 @@ class L2Pyr(Pyr):
     # Connects sections of THIS cell together
     def connect_sections(self):
         # connect(parent, parent_end, {child_start=0})
-        # Distal
+        # Distal (Apical)
         self.list_dend[0].connect(self.soma, 1, 0)
         self.list_dend[1].connect(self.list_dend[0], 1, 0)
 
@@ -186,7 +191,7 @@ class L2Pyr(Pyr):
         # dend[4] comes off of dend[0](1)
         self.list_dend[3].connect(self.list_dend[0], 1, 0)
 
-        # Proximal
+        # Proximal (Basal)
         self.list_dend[4].connect(self.soma, 0, 0)
         self.list_dend[5].connect(self.list_dend[4], 1, 0)
         self.list_dend[6].connect(self.list_dend[4], 1, 0)
@@ -208,11 +213,11 @@ class L2Pyr(Pyr):
         # set dend biophysics specified in Pyr()
         self.pyr_biophys_dends()
 
-        # set dend biophysics not specidied in Pyr()
+        # set dend biophysics not specified in Pyr()
         for sec in self.list_dend:
             # neuron syntax is used to set values for mechanisms
             # sec.gbar_mech = x sets value of gbar for mech to x for all segs
-            # in a section. This method is significantlt faster than using
+            # in a section. This method is significantly faster than using
             # a for loop to iterate over all segments to set mech values
 
             # set 'hh' mechanisms not set in Pyr()

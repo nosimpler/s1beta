@@ -1,8 +1,8 @@
 # class_feed.py - establishes FeedExt(), FeedProximal() and FeedDistal()
 #
-# v 0.3.2
-# rev 2012-08-15 (MS: Finished, essentially)
-# last major: (MS/SL: created)
+# v 0.4.0
+# rev 2012-08-22 (SL: cleaned up but committed in a major release)
+# last major: (MS: Finished, essentially)
 
 import numpy as np
 import itertools as it
@@ -27,14 +27,8 @@ class FeedExt():
         # create VecStim object
         self.vs = nrn.VecStim()
     
-        # create eventvec that contains times of all stimuli
-        # writes self.eventvec
-        # self.create_eventvec()
-
-        # load eventvec into VecStim object
-        # self.vs.play(self.eventvec)
-
-    # Create nrn vector with ALL stimulus times for an input type (e.g. proximal or distal) and load vector into VecStim object
+    # Create nrn vector with ALL stimulus times for an input type (e.g. proximal or distal) 
+    # and load vector into VecStim object
     def create_eventvec(self):
         # array of mean stimulus times, starts at 150 ms
         array_isi = np.arange(150, self.tstop, 1000/self.f_input)
@@ -65,9 +59,6 @@ class FeedExt():
     def feed_to_target(self, postsyn):
         # netconobj = nrn.NetCon(VecStim object, postsynaptic cell)
         nc = nrn.NetCon(self.vs, postsyn)
-
-        # from 2009 code. All thresholds set for ext stimuli are 0.
-        # self.nc.threshold = 0
 
         # return nc object
         return nc
@@ -104,22 +95,18 @@ class FeedProximal(FeedExt):
         # Creates NetCon() objects and adds to master connect lists
         for L2Pyr in net.cells_L2Pyr:
             self.__connect_to_pyr(L2Pyr, p['synto_L2Pyr'][0], p['synto_L2Pyr'][1], p['lamtha'])
-            # self.connect_to_pyr(L2Pyr, 0.)
 
         # Continues appending to the master connect lists
         for L5Pyr in net.cells_L5Pyr:
             self.__connect_to_pyr(L5Pyr, p['synto_L5Pyr'][0], p['synto_L5Pyr'][1], p['lamtha'])
-            # self.connect_to_pyr(L5Pyr, 1.)
 
         # Connect feed to inhibitory cells
         for L2Basket in net.cells_L2Basket:
             self.__connect_to_basket(L2Basket, p['synto_L2Basket'][0], p['synto_L2Basket'][1], p['lamtha'])
-            # self.connect_to_basket(L2Basket, 0.)
 
         # Continues appending
         for L5Basket in net.cells_L5Basket:
             self.__connect_to_basket(L5Basket, p['synto_L5Basket'][0], p['synto_L5Basket'][1], p['lamtha'])
-            # self.connect_to_basket(L5Basket, 1.)
 
     # General function to L2 and L5 pyramidals
     # Note: functions depend on synapse naming being equivalent in each class!
@@ -131,8 +118,6 @@ class FeedProximal(FeedExt):
 
         # Calculate distance using distance from FeedExt()
         d = self.distance(Pyr)
-        # weight  = 4e-5
-        # lamtha = 100.
 
         # Set weights using syn_weight() from FeedExt()
         self.syn_weight(self.ncto_pyr_basal2_ampa[-1], weight, d, lamtha)
@@ -144,13 +129,12 @@ class FeedProximal(FeedExt):
         self.syn_delay(self.ncto_pyr_basal3_ampa[-1], delay, d, lamtha)
         self.syn_delay(self.ncto_pyr_apicaloblique_ampa[-1], delay, d, lamtha)
 
+    # routine to connect to basket cell
     def __connect_to_basket(self, Basket, weight, delay, lamtha):
         self.ncto_basket_ampa.append(self.feed_to_target(Basket.soma_ampa))
 
         # set distance using distance from FeedExt()
         d = self.distance(Basket)
-        # weight = 8e-5
-        # lamtha = 100.
 
         # Set weight using syn_weight() from FeedExt()
         self.syn_weight(self.ncto_basket_ampa[-1], weight, d, lamtha)
@@ -177,26 +161,20 @@ class FeedDistal(FeedExt):
             self.__connect_to_pyr_ampa(L2Pyr, p['synto_L2Pyr'][0], p['synto_L2Pyr'][1], p['lamtha'])
 
             if p['NMDA'] == 'yes':
-                self.__connect_to_pyr_nmda(L2Pyr, p['synto_L2Pyr'][0],
-                                         p['synto_L2Pyr'][1], p['lamtha'])
-            # self.connect_to_pyr(L2Pyr, 5.)
+                self.__connect_to_pyr_nmda(L2Pyr, p['synto_L2Pyr'][0], p['synto_L2Pyr'][1], p['lamtha'])
 
         for L5Pyr in net.cells_L5Pyr:
             self.__connect_to_pyr_ampa(L5Pyr, p['synto_L5Pyr'][0], p['synto_L5Pyr'][1], p['lamtha'])
 
             if p['NMDA'] == 'yes':
-                self.__connect_to_pyr_nmda(L5Pyr, p['synto_L5Pyr'][0],
-                                         p['synto_L5Pyr'][1], p['lamtha'])
-            # self.connect_to_pyr(L5Pyr, 5.)
+                self.__connect_to_pyr_nmda(L5Pyr, p['synto_L5Pyr'][0], p['synto_L5Pyr'][1], p['lamtha'])
 
         # Connect feed to inhibitory cells
         for L2Basket in net.cells_L2Basket:
             self.__connect_to_basket_ampa(L2Basket, p['synto_L2Basket'][0], p['synto_L2Basket'][1], p['lamtha'])
 
             if p['NMDA'] == 'yes':
-                self.__connect_to_basket_nmda(L2Basket, p['synto_L2Basket'][0],
-                                           p['synto_L2Basket'][1], p['lamtha'])
-            # self.connect_to_basket(L2Basket, 5.)
+                self.__connect_to_basket_nmda(L2Basket, p['synto_L2Basket'][0], p['synto_L2Basket'][1], p['lamtha'])
 
     # Distal connections are different than proximal!
     def __connect_to_pyr_ampa(self, Pyr, weight, delay, lamtha):
@@ -205,8 +183,6 @@ class FeedDistal(FeedExt):
 
         # Calculate distance using distance from FeedExt()
         d = self.distance(Pyr)
-        # weight = 4e-5
-        # lamtha = 100.
 
         # Set weights using syn_weight from FeedExt()
         self.syn_weight(self.ncto_pyr_apicaltuft_ampa[-1], weight, d, lamtha)
@@ -232,8 +208,6 @@ class FeedDistal(FeedExt):
 
         # set distance using distance from FeedExt()
         d = self.distance(Basket)
-        # weight = 4e-5
-        # lamtha = 100
 
         # set weight using syn_weight from FeedExt()
         self.syn_weight(self.ncto_basket_ampa[-1], weight, d, lamtha)
@@ -246,20 +220,9 @@ class FeedDistal(FeedExt):
 
         # set distance using distance from FeedExt()
         d = self.distance(Basket)
-        # weight = 4e-5
-        # lamtha = 100
 
         # set weight using syn_weight from FeedExt()
         self.syn_weight(self.ncto_basket_nmda[-1], weight, d, lamtha)
 
         # set delay using syn_delay from FeedExt()
         self.syn_delay(self.ncto_basket_nmda[-1], delay, d, lamtha)
-
-# if __na__me__ == '__main__':
-#     p_input = {'f_input': 10,
-#                'tstop': 100,
-#                'origin': (4, 4, 0)
-#     }
-# 
-#     feed_prox = FeedProximal(net, p_input)
-#     feed_dist = FeedDistal(net, p_input)

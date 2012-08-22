@@ -1,7 +1,7 @@
 # L5_pyramidal.py - establish class def for layer 5 pyramidal cells
 #
 # v 0.2.8
-# rev 2012-07_23 (MS: added units
+# rev 2012-07_23 (MS: added units)
 # last rev: (MS: L5Pyr inherits props from Pyr())
 
 from neuron import h as nrn
@@ -40,6 +40,14 @@ class L5Pyr(Pyr):
         # biophysics
         self.biophys_soma()
         self.biophys_dends()
+
+        # dipole test
+        self.pp_dipole_list = []
+        self.dipole_test()
+
+    def dipole_test(self):
+        # self.soma.insert('dipole')
+        self.pp_dipole_list = [nrn.Dipole(1) for dend in self.list_dend]
 
     def dend_props(self):
         # dend properties hardcoded here

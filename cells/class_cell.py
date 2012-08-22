@@ -1,10 +1,11 @@
 # class_cell.py - establish class def for general cell features
 #
-# v 0.2.30
-# rev 2012-08-08 (SL: changed variable name for space constant to lamtha)
-# last rev: (MS: Added 3d position function to class Basket())
+# v 0.4.0
+# rev 2012-08-22 (SL: Added dipole_insert(), it is NOT correct right now!)
+# last rev: (SL: changed variable name for space constant to lamtha)
 
 import numpy as np
+import itertools as it
 from neuron import h as nrn
 
 # Units for e: mV
@@ -27,6 +28,74 @@ class Cell():
         self.soma.diam = diam_soma
         self.soma.Ra = 200
         self.soma.cm = cm
+
+    # two things need to happen here for nrn:
+    # 1. dipole needs to be inserted into each section
+    # 2. a list needs to be created with a Dipole (Point Process) in each section at position 1
+    # In Cell() and not Pyr() for future possibilities
+    def dipole_insert(self):
+        # insert dipole into each section of this cell
+        # dends must have already been created!!
+        # it's easier to use wholetree here, this includes soma
+        seclist = nrn.SectionList()
+        seclist.wholetree(self.soma)
+
+        # create a python section list list_all
+        self.list_all = [sec for sec in seclist]
+
+        for sect in self.list_all:
+            sect.insert('dipole')
+
+        # Dipole is defined in dipole_pp.mod
+        self.dipole_pp = [nrn.Dipole(1, sec=sect) for sect in self.list_all]
+
+        # setting pointers and ztan values
+        for sect, dpp in it.izip(self.list_all, self.dipole_pp):
+            # sect.push()
+            # assign internal resistance values to dipole point process
+            dpp.ri = nrn.ri(1, sec=sect)
+
+            # not sure of the python syntax for setpointer
+            nrn.setpointer(sect(0.99)._ref_v, 'pv', dpp)
+
+            # gives INTERNAL segments of the section, non-endpoints
+            # creating this because need multiple values simultaneously
+            loc = np.array([seg.x for seg in sect])
+
+            # these are the positions, including 0 but not L
+            pos = np.insert(loc, 0, 0)
+
+            # diff in yvals, scaled against the pos np.array, initialized to y3d(0)
+            ## FOR NOW: self.L scaling, but this is WRONG
+            # y_long = ((nrn.y3d(1, sec=sect) - nrn.y3d(0, sec=sect)) * pos) + nrn.y3d(0, sec=sect)
+            y_long = sect.L * pos
+            # y_long = (nrn.y3d(1, sec=sect) - nrn.y3d(0, sec=sect)) * pos
+
+            # diff values calculate length between successive section points
+            # some strangeness here
+            y_diff = np.diff(y_long)
+
+            # doing range to index multiple values of the same np.array simultaneously
+            for i in range(len(loc)):
+                # assign the ri value to the dipole
+                sect(loc[i]).dipole.ri = nrn.ri(loc[i], sec=sect)
+
+                # range variable 'dipole'
+                if i:
+                    nrn.setpointer(sect(loc[i-1])._ref_v, 'pv', sect(loc[i]).dipole)
+
+                else:
+                    nrn.setpointer(sect(0)._ref_v, 'pv', sect(loc[i]).dipole)
+
+                nrn.setpointer(dpp._ref_Qsum, 'Qsum', sect(loc[i]).dipole)
+
+                # add ztan values
+                sect(loc[i]).dipole.ztan = y_diff[i]
+
+            # set the pp dipole's ztan value to the last value from y_diff
+            dpp.ztan = y_diff[-1]
+
+            # nrn.pop_section()
 
     ## For all synapses, section location 'secloc' is being explicitly supplied 
     ## for clarity, even though they are (right now) always 0.5. Might change in future
@@ -163,7 +232,7 @@ class Pyr(Cell):
     def create_dends(self, dend_props, cm):
         # create dends and set dend props
         for sec_name, L, diam in dend_props:
-            self.list_dend.append(nrn.Section(name=self.name+sec_name))
+            self.list_dend.append(nrn.Section(name=self.name+'_'+sec_name))
             self.list_dend[-1].L = L
             self.list_dend[-1].diam = diam
             self.list_dend[-1].Ra = 200

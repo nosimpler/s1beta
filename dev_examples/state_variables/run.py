@@ -1,7 +1,7 @@
 # Example of accessing, saving, plotting state variables
 
 import sys
-sys.path.append("/home/max/sandbox/gitrepo/s1beta")
+sys.path.append("/Users/shane/sandbox/s1beta")
 
 from neuron import h
 # from neuron import gui
@@ -15,7 +15,6 @@ import matplotlib.pyplot as plt
 from plottools.axes_create import fig_std
 
 from L5_pyramidal import L5Pyr
-# from time import clock
 
 h.load_file("stdrun.hoc")
 
@@ -67,21 +66,21 @@ def stimulus(seg, file_prefix):
 
     data_file.close()
 
-    # # create a figure
+    # create a figure
     testfig = fig_std()
     testfig.ax0.hold(True)
 
-    # # plot various bits of data
+    # plot various bits of data
     testfig.ax0.plot(t_vec, hh_n_vec)
     testfig.ax0.plot(t_vec, hh_m_vec)
     testfig.ax0.plot(t_vec, hh_h_vec)
 
-    # # set some axes properties
+    # set some axes properties
     # testfig.ax0.set_ylim(-80, 50)
 
-    # # save figure as 2 different formats
+    # save figure as 2 different formats
     plt.savefig(file_prefix+'.png')
-    # # plt.savefig(figname)
+    # plt.savefig(figname)
     testfig.close()
 
 if __name__ == "__main__":

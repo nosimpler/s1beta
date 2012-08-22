@@ -1,12 +1,16 @@
+: dipole.mod - mod file for range variable dipole
+:
+: v 0.4.0
+: rev 2012-08-21 (SL: cleaned up and removed Qtotal, which was not used in earlier vers & redundant)
+: last rev:
+
 NEURON {
     SUFFIX dipole
-    : POINT_PROCESS Dipole
     RANGE ri, ia, Q, ztan
     POINTER pv
 
-    POINTER Qsum : for density. sums into Dipole at section position 1
-    : RANGE Qsum : for POINT_PROCESS. Gets additions from dipole
-    POINTER Qtotal : to allow Vector.record of the total dipole in a process
+    : for density. sums into Dipole at section position 1
+    POINTER Qsum
 }
 
 UNITS {
@@ -28,7 +32,6 @@ ASSIGNED {
 
     : human dipole order of 10nAm
     Qsum (fAm)
-    Qtotal (fAm)
 }
 
 : solve for v's first then use them
@@ -36,20 +39,10 @@ AFTER SOLVE {
     ia = (pv - v) / ri
     Q = ia * ztan
     Qsum = Qsum + Q
-    Qtotal = Qtotal + Q
 }
 
 AFTER INITIAL {
     ia = (pv - v) / ri
     Q = ia * ztan
     Qsum = Qsum + Q
-    Qtotal = Qtotal + Q
 }
-
-: following needed for POINT_PROCESS only but will work if also in SUFFIX
-: BEFORE INITIAL {
-:   Qsum = 0
-: }
-: BEFORE BREAKPOINT {
-:   Qsum = 0
-: }
