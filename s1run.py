@@ -1,8 +1,8 @@
 # s1run.py - primary run function for s1 project
 #
-# v 0.3.2
-# rev 2012-08-15 (MS: added feeds)
-# last major: (MS/SL: Now using external feeds from fn/class_feed.py)
+# v 0.4.1
+# rev 2012-08-22 (MS: removed inputs to *.load_eventtime())
+# last major: (MS: added feeds)
 
 import numpy as np
 import matplotlib as mpl
@@ -87,13 +87,13 @@ if __name__ == "__main__":
 
     # Establish evoked response
     evoked_prox_early = FeedProximal(net, p_evoked_prox_early)
-    evoked_prox_early.load_eventtime(p_evoked_prox_early['tstart'])
+    evoked_prox_early.load_eventtime()
 
     evoked_dist = FeedDistal(net, p_evoked_dist)
-    evoked_dist.load_eventtime(p_evoked_dist['tstart'])
+    evoked_dist.load_eventtime()
 
     evoked_prox_late = FeedProximal(net, p_evoked_prox_late)
-    evoked_prox_late.load_eventtime(p_evoked_prox_late['tstart'])
+    evoked_prox_late.load_eventtime()
 
     # name compartments internally for this function
     seg_e = net.cells_L5Pyr[0].soma(0.5)

@@ -1,8 +1,8 @@
 # class_feed.py - establishes FeedExt(), FeedProximal() and FeedDistal()
 #
-# v 0.4.0
-# rev 2012-08-22 (SL: cleaned up but committed in a major release)
-# last major: (MS: Finished, essentially)
+# v 0.4.1
+# rev 2012-08-22 (MS: small optimizations)
+# last major: (SL: cleaned up but committed in a major release)
 
 import numpy as np
 import itertools as it
@@ -15,11 +15,14 @@ class FeedExt():
     def __init__(self, net, p):
         # store net.orgin and net.tstop as self variables for later use
         self.origin = net.origin
-        self.tstop = net.tstop
+        # self.tstop = net.tstop
 
         # store f_input as self variable for later use if it exists in p
+        # if f_input does not exist, check for presence of tstart and store for later use
         if 'f_input' in p.keys():
             self.f_input = p['f_input']
+        elif 'tstart' in p.keys():
+            self.tstart = p['tstart']
 
         # create nrn vector for later use
         self.eventvec = nrn.Vector()
@@ -31,7 +34,7 @@ class FeedExt():
     # and load vector into VecStim object
     def create_eventvec(self):
         # array of mean stimulus times, starts at 150 ms
-        array_isi = np.arange(150, self.tstop, 1000/self.f_input)
+        array_isi = np.arange(150, nrn.tstop, 1000/self.f_input)
 
         # array of single stimulus times -- no doublets 
         array_times = np.random.normal(np.repeat(array_isi, 10), 20)
@@ -51,8 +54,8 @@ class FeedExt():
         # load eventvec into VecStim object
         self.vs.play(self.eventvec)
 
-    def load_eventtime(self, timevec):
-        self.vs.play(timevec)
+    def load_eventtime(self):
+        self.vs.play(self.tstart)
 
     # Connects instance of FeedExt() to postsynaptic target
     # very similar to sec_to_target() in class_cell
