@@ -1,8 +1,8 @@
 # L2_pyramidal.py - est class def for layer 2 pyramidal cells
 #
-# v 0.4.3
-# rev 2012-08-23 (MS: activate self.shape_change() for 3d shape)
-# last rev: (SL: Added dipole_insert() call)
+# v 0.4.3a
+# rev 2012-08-23 (MS: shape_change() renamed set_3Dshape())
+# last rev: (MS: activate self.set_3Dshape() for 3d shape)
 
 from neuron import h as nrn
 from class_cell import Pyr
@@ -52,7 +52,7 @@ class L2Pyr(Pyr):
         # creates self.list_dend
         self.create_dends(self.dend_props, self.cm)
         self.connect_sections()
-        self.shape_change()
+        self.set_3Dshape()
 
         # biophysics
         self.biophys_soma()
@@ -230,7 +230,7 @@ class L2Pyr(Pyr):
     # Define 3D shape and position of cell. By default neuron uses xy plane for
     # height and xz plane for depth. This is opposite for model as a whole, but
     # convention is followed in this function for ease use of gui. 
-    def shape_change(self):
+    def set_3Dshape(self):
         # set 3d shape of soma by calling shape_soma from class Cell
         # print "Warning: You are setiing 3d shape geom. You better be doing"
         # print "gui analysis and not numerical analysis!!"
@@ -290,16 +290,16 @@ class L2Pyr(Pyr):
 
         # dend 5
         # Calculate x-coordinate for end of dend
-        dend5_x_coor = -self.dend_L[5] * np.sqrt(2)/2
+        dend5_x = -self.dend_L[5] * np.sqrt(2)/2
         nrn.pt3dadd(x_prox, y_prox, 0, self.dend_diam[5], sec=self.list_dend[5])
-        nrn.pt3dadd(dend5_x_coor, y_prox-self.dend_L[5] * np.sqrt(2)/2, 
+        nrn.pt3dadd(dend5_x, y_prox-self.dend_L[5] * np.sqrt(2)/2, 
                     0, self.dend_diam[5], sec=self.list_dend[5])
 
         # dend 6
         # Calculate x-coordinate for end of dend
-        dend6_x_coor = self.dend_L[6] * np.sqrt(2)/2
+        dend6_x = self.dend_L[6] * np.sqrt(2)/2
         nrn.pt3dadd(x_prox, y_prox, 0, self.dend_diam[6], sec=self.list_dend[6])
-        nrn.pt3dadd(dend6_x_coor, y_prox-self.dend_L[6] * np.sqrt(2)/2, 
+        nrn.pt3dadd(dend6_x, y_prox-self.dend_L[6] * np.sqrt(2)/2, 
                     0, self.dend_diam[6], sec=self.list_dend[6])
 
         # set 3D position
