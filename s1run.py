@@ -1,19 +1,16 @@
 # s1run.py - primary run function for s1 project
 #
-# v 0.4.1
-# rev 2012-08-22 (MS: removed inputs to *.load_eventtime())
-# last major: (MS: added feeds)
+# v 0.4.2
+# rev 2012-08-23 (SL: Test plot externalized)
+# last major: (MS: removed inputs to *.load_eventtime())
 
 import numpy as np
-import matplotlib as mpl
-mpl.use("Agg")
-import matplotlib.pyplot as plt
-from plottools.axes_create import fig_std
 
 # Cells are defined in './cells'
 from cells.L5_pyramidal import L5Pyr
 from class_net import Network
 from fn.class_feed import FeedProximal, FeedDistal
+from plottools.ptest import ptest
 
 # Import benchmarking function
 from time import clock
@@ -119,7 +116,7 @@ if __name__ == "__main__":
     # clock start time
     t0 = clock()
 
-    # initialize cells to -65 mv and compile code
+    # initialize cells to -65 mV and compile code
     nrn.finitialize(-65)
 
     # set state variables if they have been changed since nrn.finitialize
@@ -139,29 +136,8 @@ if __name__ == "__main__":
     t1 = clock()
     print "Simulation run time: %4.4f s" % (t1-t0)
 
-    # # attempt at pythonic-ly creating a file
-    # for tpoint, vval in zip(t_vec, v_e):
-    #     # print item
-    #     data_file.printf("%03.3f\t%5.4f\n", tpoint, vval)
-
-    # v_e.printf(data_file)
-
     # close data file
     data_file.close()
 
     # create a figure
-    testfig = fig_std()
-    testfig.ax0.hold(True)
-
-    # plot various bits of data
-    testfig.ax0.plot(t_vec, v_e)
-    testfig.ax0.plot(t_vec, v_i)
-    # testfig.ax0.plot(t_vec, g_ampa)
-
-    # set some axes properties
-    # testfig.ax0.set_ylim(-80, 50)
-
-    # save figure as 2 different formats
-    # plt.savefig('outputspikes.eps')
-    plt.savefig('outputspikes.png')
-    testfig.close()
+    ptest(t_vec, v_e, v_i)
