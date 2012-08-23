@@ -1,6 +1,6 @@
 # L5_pyramidal.py - establish class def for layer 5 pyramidal cells
 #
-# v 0.4.0
+# v 0.4.2a
 # rev 2012-08-22 (SL: Added dipole_insert() call)
 # last rev: (MS: Added NMDA receptor to apical tuft)
 
@@ -144,7 +144,7 @@ class L5Pyr(Pyr):
 
     # connects sections of this cell together
     def connect_sections(self):
-        # connect(parent, parent_end, {child_start=0})
+        # child.connect(parent, parent_end, {child_start=0})
         # Distal
         self.list_dend[0].connect(self.soma, 1, 0)
         self.list_dend[1].connect(self.list_dend[0], 1, 0)
@@ -287,10 +287,8 @@ class L5Pyr(Pyr):
         nrn.pt3dclear(sec=self.list_dend[4])
 
         # activate this section with 'sec=' notation
-        # self.list_dend[0].push()
         x_start = nrn.x3d(1, sec=self.list_dend[0])
         y_start = nrn.y3d(1, sec=self.list_dend[0])
-        # nrn.pop_section()
 
         nrn.pt3dadd(x_start, y_start, 0, self.dend_diam[4], sec=self.list_dend[4])
         # self.dend_L[4] is subtracted because lengths always positive, 
@@ -303,7 +301,6 @@ class L5Pyr(Pyr):
 
         # deal with dend 5, ugly. sorry.
         nrn.pt3dadd(x_prox, y_prox, 0, self.dend_diam[i], sec=self.list_dend[5])
-        # x_prox += dend_dx[5]
         y_prox += -self.dend_L[5]
 
         nrn.pt3dadd(x_prox, y_prox, 0, self.dend_diam[5],sec=self.list_dend[5])

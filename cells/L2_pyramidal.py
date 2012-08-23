@@ -1,6 +1,6 @@
 # L2_pyramidal.py - est class def for layer 2 pyramidal cells
 #
-# v 0.4.0
+# v 0.4.2a
 # rev 2012-08-22 (SL: Added dipole_insert() call)
 # last rev: (MS: added a new NMDA receptor)
 
@@ -181,7 +181,7 @@ class L2Pyr(Pyr):
 
     # Connects sections of THIS cell together
     def connect_sections(self):
-        # connect(parent, parent_end, {child_start=0})
+        # child.connect(parent, parent_end, {child_start=0})
         # Distal (Apical)
         self.list_dend[0].connect(self.soma, 1, 0)
         self.list_dend[1].connect(self.list_dend[0], 1, 0)
