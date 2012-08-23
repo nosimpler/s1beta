@@ -1,7 +1,7 @@
 # class_net.py - establishes the Network class and related methods
 #
-# v 0.3.2
-# rev 2012-08-15 (MS: reads nrn.tstop)
+# v 0.4.3
+# rev 2012-08-23 (MS: remove self.tstop)
 # last major: (MS/SL: set origin for feed)
 
 import itertools as it
@@ -19,7 +19,7 @@ class Network():
     # def __init__(self):
         # Store nrn.tstop as variable in Network()
         # Assumes nrn.tstop set in s1run.py prior to instantiation of Network()
-        self.tstop = nrn.tstop
+        # self.tstop = nrn.tstop
 
         # int variables for grid of pyramidal cells (for now in both L2 and L5)
         self.gridpyr = {'x': gridpyr_x, 'y': gridpyr_y}

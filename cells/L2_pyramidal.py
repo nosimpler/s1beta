@@ -1,14 +1,14 @@
 # L2_pyramidal.py - est class def for layer 2 pyramidal cells
 #
-# v 0.4.2a
-# rev 2012-08-22 (SL: Added dipole_insert() call)
-# last rev: (MS: added a new NMDA receptor)
+# v 0.4.3
+# rev 2012-08-23 (MS: activate self.shape_change() for 3d shape)
+# last rev: (SL: Added dipole_insert() call)
 
 from neuron import h as nrn
 from class_cell import Pyr
 import sys
+import numpy as np
 import itertools as it
-from math import sqrt
 
 # Units for e: mV
 # Units for gbar: S/cm^2 unless otherwise noted
@@ -52,8 +52,7 @@ class L2Pyr(Pyr):
         # creates self.list_dend
         self.create_dends(self.dend_props, self.cm)
         self.connect_sections()
-        # self.shape_change()
-        # self.geom_set(self.cm)
+        self.shape_change()
 
         # biophysics
         self.biophys_soma()
@@ -164,7 +163,7 @@ class L2Pyr(Pyr):
     def set_dend_props(self):
         # Hardcode dend properties
         self.dend_names = ['apical_trunk', 'apical_1', 'apical_tuft',
-                           'apical_obliq', 'basal_1', 'basal_2', 'basal_3'
+                           'apical_oblique', 'basal_1', 'basal_2', 'basal_3'
         ]
 
         self.dend_L = [59.5, 306, 238, 340, 85, 255, 255]
@@ -233,8 +232,8 @@ class L2Pyr(Pyr):
     # convention is followed in this function for ease use of gui. 
     def shape_change(self):
         # set 3d shape of soma by calling shape_soma from class Cell
-        print "Warning: You are setiing 3d shape geom. You better be doing"
-        print "gui analysis and not numerical analysis!!"
+        # print "Warning: You are setiing 3d shape geom. You better be doing"
+        # print "gui analysis and not numerical analysis!!"
         self.shape_soma()
         
         # soma proximal coords
@@ -251,7 +250,6 @@ class L2Pyr(Pyr):
         for i in range(0, 3):
             nrn.pt3dclear(sec=self.list_dend[i])
 
-            # print x_distal, y_distal
             # x_distal and y_distal are the starting points for each segment
             # these are updated at the end of the loop
             nrn.pt3dadd(0, y_distal, 0, self.dend_diam[i], sec=self.list_dend[i])
@@ -260,19 +258,18 @@ class L2Pyr(Pyr):
             # x_distal += dend_dx[i]
             y_distal += self.dend_L[i]
 
-            # print x_distal, y_distal
             # add next point
             nrn.pt3dadd(0, y_distal, 0, self.dend_diam[i], sec=self.list_dend[i])
 
-        # now deal with dend 4
-        # dend 4 will ALWAYS be positioned at the end of dend[0]
+        # now deal with dend 3
+        # dend 3 will ALWAYS be positioned at the end of dend[0]
         nrn.pt3dclear(sec=self.list_dend[3])
 
-        # activate this section
-        self.list_dend[0].push()
-        x_start = nrn.x3d(1)
-        y_start = nrn.y3d(1)
-        nrn.pop_section()
+        # activate this section with 'sec =' notation
+        # self.list_dend[0].push()
+        x_start = nrn.x3d(1, sec = self.list_dend[0])
+        y_start = nrn.y3d(1, sec = self.list_dend[0])
+        # nrn.pop_section()
 
         nrn.pt3dadd(x_start, y_start, 0, self.dend_diam[3], sec=self.list_dend[3])
         # self.dend_L[3] is subtracted because lengths always positive, 
@@ -283,25 +280,28 @@ class L2Pyr(Pyr):
         for i in range(4, 7):
             nrn.pt3dclear(sec=self.list_dend[i])
 
-        # deal with dend 5, ugly. sorry.
+        # deal with dend 4, ugly. sorry.
         nrn.pt3dadd(x_prox, y_prox, 0, self.dend_diam[i], sec=self.list_dend[4])
-        # x_prox += dend_dx[4]
         y_prox += -self.dend_L[4]
 
         nrn.pt3dadd(x_prox, y_prox, 0, self.dend_diam[4],sec=self.list_dend[4])
 
         # x_prox, y_prox are now the starting points for BOTH last 2 sections
 
-        # dend 6
-        nrn.pt3dadd(0, y_prox, 0, self.dend_diam[5], sec=self.list_dend[5])
-        nrn.pt3dadd(-self.dend_L[5]*sqrt(2)/2, y_prox-self.dend_L[5]*sqrt(2)/2, 
+        # dend 5
+        # Calculate x-coordinate for end of dend
+        dend5_x_coor = -self.dend_L[5] * np.sqrt(2)/2
+        nrn.pt3dadd(x_prox, y_prox, 0, self.dend_diam[5], sec=self.list_dend[5])
+        nrn.pt3dadd(dend5_x_coor, y_prox-self.dend_L[5] * np.sqrt(2)/2, 
                     0, self.dend_diam[5], sec=self.list_dend[5])
 
-        # dend 7
-        nrn.pt3dadd(0, y_prox, 0, self.dend_diam[6], sec=self.list_dend[6])
-        nrn.pt3dadd(self.dend_L[6]*sqrt(2)/2, y_prox-self.dend_L[6]*sqrt(2)/2, 
+        # dend 6
+        # Calculate x-coordinate for end of dend
+        dend6_x_coor = self.dend_L[6] * np.sqrt(2)/2
+        nrn.pt3dadd(x_prox, y_prox, 0, self.dend_diam[6], sec=self.list_dend[6])
+        nrn.pt3dadd(dend6_x_coor, y_prox-self.dend_L[6] * np.sqrt(2)/2, 
                     0, self.dend_diam[6], sec=self.list_dend[6])
-    
+
         # set 3D position
         # z grid position used as y coordinate in nrn.pt3dchange() to satisfy
         # gui convention that y is height and z is depth. In nrn.pt3dchange()

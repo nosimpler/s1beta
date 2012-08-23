@@ -1,8 +1,8 @@
 # class_cell.py - establish class def for general cell features
 #
-# v 0.4.0
-# rev 2012-08-22 (SL: Added dipole_insert(), it is NOT correct right now!)
-# last rev: (SL: changed variable name for space constant to lamtha)
+# v 0.4.3
+# rev 2012-08-23 (MS: Activate self.shape_soma() for 3d shape)
+# last rev: (SL: Added dipole_insert(), it is NOT correct right now!)
 
 import numpy as np
 import itertools as it
@@ -173,7 +173,6 @@ class Cell():
     # Define 3D shape of soma -- is needed for gui representation of cell
     # DO NOT need to call nrn.define_shape() explicitly!!
     def shape_soma(self):
-        # self.soma.push()
         nrn.pt3dclear(sec=self.soma)
 
         # nrn.ptdadd(x, y, z, diam) -- if this function is run, clobbers 

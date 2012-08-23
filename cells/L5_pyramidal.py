@@ -1,13 +1,13 @@
 # L5_pyramidal.py - establish class def for layer 5 pyramidal cells
 #
-# v 0.4.2a
-# rev 2012-08-22 (SL: Added dipole_insert() call)
-# last rev: (MS: Added NMDA receptor to apical tuft)
+# v 0.4.3
+# rev 2012-08-22 (MS: Activate self.shape_change() for 3d shape)
+# last rev: (SL: Added dipole_insert() call)
 
 from neuron import h as nrn
 from class_cell import Pyr
 import sys 
-from math import sqrt, exp
+import numpy as np
 import itertools as it
 
 # Units for e: mV
@@ -45,8 +45,7 @@ class L5Pyr(Pyr):
         self.set_dend_props()
         self.create_dends(self.dend_props, self.cm)
         self.connect_sections()
-        # self.shape_change()
-        # self.geom_set(self.cm)
+        self.shape_change()
 
         # biophysics
         self.biophys_soma()
@@ -126,7 +125,7 @@ class L5Pyr(Pyr):
     def set_dend_props(self):
         # Hard coded dend properties
         self.dend_names = ['apical_trunk', 'apical_1', 'apical_2',
-                           'apical_tuft', 'apical_obliq', 'basal_1', 
+                           'apical_tuft', 'apical_oblique', 'basal_1', 
                            'basal_2', 'basal_3'
         ]
 
@@ -241,7 +240,7 @@ class L5Pyr(Pyr):
             for seg in sec:
                 # print nrn.distance(seg.x)
                 # seg.gbar_cat = 0.0002*exp(0.0*nrn.distance(seg.x))
-                seg.gbar_ar = 0.000001 * exp(0.003 * nrn.distance(seg.x))
+                seg.gbar_ar = 0.000001 * np.exp(0.003 * nrn.distance(seg.x))
                 # print nrn.distance(seg.x), seg.gbar_ar 
 
             nrn.pop_section()
@@ -251,8 +250,8 @@ class L5Pyr(Pyr):
     # convention is followed in this function for ease use of gui. 
     def shape_change(self):
         # set 3D shape of soma by calling shape_soma from class Cell
-        print "WARNING: You are setting 3d shape geom. You better be doing"
-        print "gui analysis and not numerical analysis!!"
+        # print "WARNING: You are setting 3d shape geom. You better be doing"
+        # print "gui analysis and not numerical analysis!!"
         self.shape_soma()
 
         # soma proximal coords
@@ -269,7 +268,6 @@ class L5Pyr(Pyr):
         for i in range(0, 4):
             nrn.pt3dclear(sec=self.list_dend[i])
 
-            # print x_distal, y_distal
             # x_distal and y_distal are the starting points for each segment
             # these are updated at the end of the loop
             nrn.pt3dadd(0, y_distal, 0, self.dend_diam[i], sec=self.list_dend[i])
@@ -278,7 +276,6 @@ class L5Pyr(Pyr):
             # x_distal += dend_dx[i]
             y_distal += self.dend_L[i]
 
-            # print x_distal, y_distal
             # add next point
             nrn.pt3dadd(0, y_distal, 0, self.dend_diam[i], sec=self.list_dend[i])
 
@@ -307,13 +304,17 @@ class L5Pyr(Pyr):
 
         # x_prox, y_prox are now the starting points for BOTH of last 2 sections
         # dend 6
-        nrn.pt3dadd(0, y_prox, 0, self.dend_diam[6], sec=self.list_dend[6])
-        nrn.pt3dadd(-self.dend_L[6] * sqrt(2)/2, y_prox-self.dend_L[6] * sqrt(2)/2, 
+        # Calculate x-coordinate for end of dend
+        dend6_x_coor = -self.dend_L[6] * np.sqrt(2)/2
+        nrn.pt3dadd(x_prox, y_prox, 0, self.dend_diam[6], sec=self.list_dend[6])
+        nrn.pt3dadd(dend6_x_coor, y_prox-self.dend_L[6] * np.sqrt(2)/2, 
                     0, self.dend_diam[6], sec=self.list_dend[6])
 
         # dend 7
-        nrn.pt3dadd(0, y_prox, 0, self.dend_diam[7], sec=self.list_dend[7])
-        nrn.pt3dadd(self.dend_L[7] * sqrt(2)/2, y_prox-self.dend_L[7] * sqrt(2)/2, 
+        # Calculate x-coordinate for end of dend
+        dend7_x_coor = self.dend_L[7] * np.sqrt(2)/2
+        nrn.pt3dadd(x_prox, y_prox, 0, self.dend_diam[7], sec=self.list_dend[7])
+        nrn.pt3dadd(dend7_x_coor, y_prox-self.dend_L[7] * np.sqrt(2)/2, 
                     0, self.dend_diam[7], sec=self.list_dend[7])
 
         # set 3D position
