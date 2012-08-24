@@ -1,8 +1,8 @@
 # L5_pyramidal.py - establish class def for layer 5 pyramidal cells
 #
-# v 0.4.3
-# rev 2012-08-22 (MS: shape_change() renamed set_3Dshape())
-# last rev: (MS: Activate self.set_3Dshape() for 3d shape)
+# v 0.4.5
+# rev 2012-08-24 (MS: Functions only used in L5Pyr() made private)
+# last rev: (MS: shape_change() renamed set_3Dshape())
 
 from neuron import h as nrn
 from class_cell import Pyr
@@ -42,22 +42,22 @@ class L5Pyr(Pyr):
         self.ncto_L2Basket = []
 
         # Geometry
-        self.set_dend_props()
+        self.__set_dend_props()
         self.create_dends(self.dend_props, self.cm)
-        self.connect_sections()
-        self.set_3Dshape()
+        self.__connect_sections()
+        self.__set_3Dshape()
 
         # biophysics
-        self.biophys_soma()
-        self.biophys_dends()
+        self.__biophys_soma()
+        self.__biophys_dends()
 
         # dipole_insert() comes from Cell()
         self.dipole_insert()
 
         # create synapses
-        self.synapse_create()
+        self.__synapse_create()
 
-    def synapse_create(self):
+    def __synapse_create(self):
         # creates synapses onto this cell in distal sections unique to this cell type
         # print self.soma(0.5), self.list_dend[3](0.5)
         self.apicaltuft_gabaa = self.syn_gabaa_create(self.list_dend[3](0.5))
@@ -122,7 +122,7 @@ class L5Pyr(Pyr):
         self.syn_delay(self.ncto_L5Pyr_basal3_nmda[-1], 1., d, lamtha)
 
     # writes to self.dend_props list of tuples
-    def set_dend_props(self):
+    def __set_dend_props(self):
         # Hard coded dend properties
         self.dend_names = ['apical_trunk', 'apical_1', 'apical_2',
                            'apical_tuft', 'apical_oblique', 'basal_1', 
@@ -142,7 +142,7 @@ class L5Pyr(Pyr):
             sys.exit()
 
     # connects sections of this cell together
-    def connect_sections(self):
+    def __connect_sections(self):
         # child.connect(parent, parent_end, {child_start=0})
         # Distal
         self.list_dend[0].connect(self.soma, 1, 0)
@@ -160,7 +160,7 @@ class L5Pyr(Pyr):
         self.list_dend[7].connect(self.list_dend[5], 1, 0)
             
     # adds biophysics to soma
-    def biophys_soma(self):
+    def __biophys_soma(self):
         # set soma biophysics specified in Pyr
         self.pyr_biophys_soma()
 
@@ -194,7 +194,7 @@ class L5Pyr(Pyr):
         self.soma.insert('ar')
         self.soma.gbar_ar = 1e-6
         
-    def biophys_dends(self):
+    def __biophys_dends(self):
         # set dend biophysics specified in Pyr()
         self.pyr_biophys_dends()
 
@@ -248,7 +248,7 @@ class L5Pyr(Pyr):
     # Define 3D shape and position of cell. By default neuron uses xy plane for
     # height and xz plane for depth. This is opposite for model as a whole, but
     # convention is followed in this function for ease use of gui. 
-    def set_3Dshape(self):
+    def __set_3Dshape(self):
         # set 3D shape of soma by calling shape_soma from class Cell
         # print "WARNING: You are setting 3d shape geom. You better be doing"
         # print "gui analysis and not numerical analysis!!"

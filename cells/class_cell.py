@@ -1,8 +1,8 @@
 # class_cell.py - establish class def for general cell features
 #
-# v 0.4.3
-# rev 2012-08-23 (MS: Activate self.shape_soma() for 3d shape)
-# last rev: (SL: Added dipole_insert(), it is NOT correct right now!)
+# v 0.4.5
+# rev 2012-08-24 (MS: Functions only used in class_cell.py made private)
+# last rev: (MS: Activate self.shape_soma() for 3d shape)
 
 import numpy as np
 import itertools as it
@@ -191,7 +191,7 @@ class Basket(Cell):
         self.name = cell_name
 
         # set 3D shape - unused for now but a prototype
-        # self.shape_change()        
+        # self.__shape_change()        
 
         # Creating synapses onto this cell
         self.soma_ampa = self.syn_ampa_create(self.soma(0.5))
@@ -200,7 +200,7 @@ class Basket(Cell):
     # Define 3D shape and position of cell. By default neuron uses xy plane for
     # height and xz plane for depth. This is opposite for model as a whole, but
     # convention is followed in this function ease use of gui. 
-    def shape_change(self):
+    def __shape_change(self):
         self.shape_soma()
         
         self.soma.push()

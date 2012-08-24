@@ -1,8 +1,8 @@
 # class_net.py - establishes the Network class and related methods
 #
-# v 0.4.3
-# rev 2012-08-23 (MS: remove self.tstop)
-# last major: (MS/SL: set origin for feed)
+# v 0.4.5
+# rev 2012-08-24 (MS: All functions made private)
+# last major: (MS: remove self.tstop)
 
 import itertools as it
 import numpy as np
@@ -38,15 +38,15 @@ class Network():
         self.cells_L5Basket = []
 
         # create cells (and create self.origin in create_cells_pyr())
-        self.create_cells_pyr()
-        self.create_cells_basket()
+        self.__create_cells_pyr()
+        self.__create_cells_basket()
 
         # Connect the network
-        self.net_connect()
+        self.__net_connect()
 
     # Creates cells and grid
     # pyr grid is the immutable grid, so we will also calculate origin here
-    def create_cells_pyr(self):
+    def __create_cells_pyr(self):
         xrange = np.arange(self.gridpyr['x'])
         yrange = np.arange(self.gridpyr['y'])
 
@@ -64,7 +64,7 @@ class Network():
         origin_z = np.floor(self.zdiff/2)
         self.origin = (origin_x, origin_y, origin_z)
 
-    def create_cells_basket(self):
+    def __create_cells_basket(self):
         # define relevant x spacings for basket cells
         xzero = np.arange(0, self.gridpyr['x'], 3)
         xone = np.arange(1, self.gridpyr['x'], 3)
@@ -86,7 +86,7 @@ class Network():
         self.cells_L5Basket = [L5Basket(pos) for pos in L5_basket_pos]
 
     # Create synaptic connections
-    def net_connect(self):
+    def __net_connect(self):
         # 'product' returns an iterable list of tuples of all pairs of cells 
         # in these 2 lists
         # ONE LIST performs all connections between L5Pyr and L5Basket cells

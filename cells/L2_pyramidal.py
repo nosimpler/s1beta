@@ -1,8 +1,8 @@
 # L2_pyramidal.py - est class def for layer 2 pyramidal cells
 #
-# v 0.4.3a
-# rev 2012-08-23 (MS: shape_change() renamed set_3Dshape())
-# last rev: (MS: activate self.set_3Dshape() for 3d shape)
+# v 0.4.5
+# rev 2012-08-24 (MS: functions only used in L2Pyr() made private)
+# last rev: (MS: shape_change() renamed set_3Dshape())
 
 from neuron import h as nrn
 from class_cell import Pyr
@@ -47,24 +47,24 @@ class L2Pyr(Pyr):
         self.ncto_L5Pyr_basal3 = []
 
         # geometry
-        self.set_dend_props()
+        self.__set_dend_props()
 
         # creates self.list_dend
         self.create_dends(self.dend_props, self.cm)
-        self.connect_sections()
-        self.set_3Dshape()
+        self.__connect_sections()
+        self.__set_3Dshape()
 
         # biophysics
-        self.biophys_soma()
-        self.biophys_dends()
+        self.__biophys_soma()
+        self.__biophys_dends()
 
         # dipole_insert() comes from Cell()
         self.dipole_insert()
 
         # create synapses
-        self.synapse_create()
+        self.__synapse_create()
 
-    def synapse_create(self):
+    def __synapse_create(self):
         # creates synapses onto this cell in distal sections unique to this cell type
         # print self.soma(0.5), self.list_dend[3](0.5)
         # Here list_dend[3] is the oblique apical dendritic section, different from the L5Pyr!
@@ -160,7 +160,7 @@ class L2Pyr(Pyr):
         self.syn_delay(self.ncto_L5Pyr_basal3[-1], 3, d, lamtha)
 
     # Sets dendritic properties
-    def set_dend_props(self):
+    def __set_dend_props(self):
         # Hardcode dend properties
         self.dend_names = ['apical_trunk', 'apical_1', 'apical_tuft',
                            'apical_oblique', 'basal_1', 'basal_2', 'basal_3'
@@ -179,7 +179,7 @@ class L2Pyr(Pyr):
             sys.exit()
 
     # Connects sections of THIS cell together
-    def connect_sections(self):
+    def __connect_sections(self):
         # child.connect(parent, parent_end, {child_start=0})
         # Distal (Apical)
         self.list_dend[0].connect(self.soma, 1, 0)
@@ -196,7 +196,7 @@ class L2Pyr(Pyr):
         self.list_dend[6].connect(self.list_dend[4], 1, 0)
 
     # Adds biophysics to soma
-    def biophys_soma(self):
+    def __biophys_soma(self):
         # set soma biophysics specified in Pyr
         self.pyr_biophys_soma()
 
@@ -208,7 +208,7 @@ class L2Pyr(Pyr):
         self.soma.gbar_km = 250
 
     # Defining biophysics for dendrites
-    def biophys_dends(self):
+    def __biophys_dends(self):
         # set dend biophysics specified in Pyr()
         self.pyr_biophys_dends()
 
@@ -230,7 +230,7 @@ class L2Pyr(Pyr):
     # Define 3D shape and position of cell. By default neuron uses xy plane for
     # height and xz plane for depth. This is opposite for model as a whole, but
     # convention is followed in this function for ease use of gui. 
-    def set_3Dshape(self):
+    def __set_3Dshape(self):
         # set 3d shape of soma by calling shape_soma from class Cell
         # print "Warning: You are setiing 3d shape geom. You better be doing"
         # print "gui analysis and not numerical analysis!!"
