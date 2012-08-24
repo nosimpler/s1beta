@@ -10,7 +10,7 @@ import numpy as np
 from cells.L5_pyramidal import L5Pyr
 from class_net import Network
 from fn.class_feed import FeedProximal, FeedDistal
-from plottools.ptest import ptest
+from plot.ptest import ptest
 
 # Import benchmarking function
 from time import clock
