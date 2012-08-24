@@ -1,8 +1,8 @@
 # class_feed.py - establishes FeedExt(), FeedProximal() and FeedDistal()
 #
-# v 0.4.1
-# rev 2012-08-22 (MS: small optimizations)
-# last major: (SL: cleaned up but committed in a major release)
+# v 0.4.6
+# rev 2012-08-24 (SL: minor)
+# last major: (MS: small optimizations)
 
 import numpy as np
 import itertools as it
@@ -15,7 +15,6 @@ class FeedExt():
     def __init__(self, net, p):
         # store net.orgin and net.tstop as self variables for later use
         self.origin = net.origin
-        # self.tstop = net.tstop
 
         # store f_input as self variable for later use if it exists in p
         # if f_input does not exist, check for presence of tstart and store for later use

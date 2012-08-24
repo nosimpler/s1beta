@@ -1,8 +1,8 @@
 # class_net.py - establishes the Network class and related methods
 #
-# v 0.4.5
-# rev 2012-08-24 (MS: All functions made private)
-# last major: (MS: remove self.tstop)
+# v 0.4.6
+# rev 2012-08-24 (SL: added dipole network calc)
+# last major: (MS: All functions made private)
 
 import itertools as it
 import numpy as np
@@ -16,11 +16,6 @@ from cells.L5_basket import L5Basket
 # create Network class
 class Network():
     def __init__(self, gridpyr_x, gridpyr_y):
-    # def __init__(self):
-        # Store nrn.tstop as variable in Network()
-        # Assumes nrn.tstop set in s1run.py prior to instantiation of Network()
-        # self.tstop = nrn.tstop
-
         # int variables for grid of pyramidal cells (for now in both L2 and L5)
         self.gridpyr = {'x': gridpyr_x, 'y': gridpyr_y}
 
@@ -43,6 +38,19 @@ class Network():
 
         # Connect the network
         self.__net_connect()
+
+    # calculates dipole over ALL L2 and L5 cells
+    # typically run on a cycle-by-cycle basis
+    def dipole_net_calc(self):
+        dp_net = 0
+
+        for cell in self.cells_L2Pyr:
+            dp_net += cell.dipole_calc()
+
+        for cell in self.cells_L5Pyr:
+            dp_net += cell.dipole_calc()
+
+        return dp_net
 
     # Creates cells and grid
     # pyr grid is the immutable grid, so we will also calculate origin here
@@ -87,8 +95,7 @@ class Network():
 
     # Create synaptic connections
     def __net_connect(self):
-        # 'product' returns an iterable list of tuples of all pairs of cells 
-        # in these 2 lists
+        # 'product' returns an iterable list of tuples of all pairs of cells in these 2 lists
         # ONE LIST performs all connections between L5Pyr and L5Basket cells
         # FROM object cell TO connect_to cell
         for L5Pyr, L5Basket in it.product(self.cells_L5Pyr, self.cells_L5Basket):

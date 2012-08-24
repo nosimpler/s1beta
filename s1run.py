@@ -1,8 +1,8 @@
 # s1run.py - primary run function for s1 project
 #
-# v 0.4.4a
-# rev 2012-08-24 (SL: Changed plottools to plot)
-# last major: (SL: Test plot externalized)
+# v 0.4.6
+# rev 2012-08-24
+# last major: (SL: Changed plottools to plot)
 
 import numpy as np
 
@@ -11,6 +11,7 @@ from cells.L5_pyramidal import L5Pyr
 from class_net import Network
 from fn.class_feed import FeedProximal, FeedDistal
 from plot.ptest import ptest
+from plot.pdipole import pdipole
 
 # Import benchmarking function
 from time import clock
@@ -26,10 +27,12 @@ if __name__ == "__main__":
 
     # Set tstop before instantiating any classes
     nrn.tstop = 600.
+    # nrn.tstop = 1500.
 
     # Create network from class_net's Network class
     # Network(gridpyr_x, gridpyr_y)
     net = Network(1, 1)
+    # net = Network(10, 10)
 
     # Create feed parameters
     # p['synto_cellobj'] is a tuple of (weight, delay)
@@ -110,9 +113,10 @@ if __name__ == "__main__":
     v_i.record(seg_i._ref_v)
 
     # open data file
+    file_name = 'testing.dat'
     data_file = nrn.File()
-    data_file.wopen("testing.dat")
-   
+    data_file.wopen(file_name)
+
     # clock start time
     t0 = clock()
 
@@ -126,8 +130,11 @@ if __name__ == "__main__":
 
     # run the simulation
     while (nrn.t < nrn.tstop):
+        # calculate dipole
+        dp_total = net.dipole_net_calc()
+
         # write time and voltage to data file
-        data_file.printf("%03.3f\t%5.4f\n", nrn.t, seg_e.v)
+        data_file.printf("%03.3f\t%5.4f\t%5.4f\n", nrn.t, seg_e.v, dp_total)
 
         # advance integration by one tstep
         nrn.fadvance()
@@ -139,5 +146,7 @@ if __name__ == "__main__":
     # close data file
     data_file.close()
 
-    # create a figure
+    # create a couple of test figs
+    # two ways of doing plots here
     ptest(t_vec, v_e, v_i)
+    pdipole(file_name)

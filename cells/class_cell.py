@@ -1,8 +1,8 @@
 # class_cell.py - establish class def for general cell features
 #
-# v 0.4.5
-# rev 2012-08-24 (MS: Functions only used in class_cell.py made private)
-# last rev: (MS: Activate self.shape_soma() for 3d shape)
+# v 0.4.6
+# rev 2012-08-24 (SL: Fixed dipole based on y3d)
+# last rev: (MS: Functions only used in class_cell.py made private)
 
 import numpy as np
 import itertools as it
@@ -51,8 +51,7 @@ class Cell():
 
         # setting pointers and ztan values
         for sect, dpp in it.izip(self.list_all, self.dipole_pp):
-            # sect.push()
-            # assign internal resistance values to dipole point process
+            # assign internal resistance values to dipole point process (dpp)
             dpp.ri = nrn.ri(1, sec=sect)
 
             # not sure of the python syntax for setpointer
@@ -65,14 +64,10 @@ class Cell():
             # these are the positions, including 0 but not L
             pos = np.insert(loc, 0, 0)
 
-            # diff in yvals, scaled against the pos np.array, initialized to y3d(0)
-            ## FOR NOW: self.L scaling, but this is WRONG
-            # y_long = ((nrn.y3d(1, sec=sect) - nrn.y3d(0, sec=sect)) * pos) + nrn.y3d(0, sec=sect)
-            y_long = sect.L * pos
-            # y_long = (nrn.y3d(1, sec=sect) - nrn.y3d(0, sec=sect)) * pos
+            # diff in yvals, scaled against the pos np.array. y_long as in longitudinal
+            y_long = (nrn.y3d(1, sec=sect) - nrn.y3d(0, sec=sect)) * pos
 
             # diff values calculate length between successive section points
-            # some strangeness here
             y_diff = np.diff(y_long)
 
             # doing range to index multiple values of the same np.array simultaneously
@@ -94,8 +89,6 @@ class Cell():
 
             # set the pp dipole's ztan value to the last value from y_diff
             dpp.ztan = y_diff[-1]
-
-            # nrn.pop_section()
 
     ## For all synapses, section location 'secloc' is being explicitly supplied 
     ## for clarity, even though they are (right now) always 0.5. Might change in future
@@ -226,6 +219,16 @@ class Pyr(Cell):
         # segment on the soma specified here
         self.soma_gabaa = self.syn_gabaa_create(self.soma(0.5))
         self.soma_gabab = self.syn_gabab_create(self.soma(0.5))
+
+    # return a single cell's dipole calc
+    def dipole_calc(self):
+        # internal variable here for the dipole
+        dp = 0
+
+        for sect in self.list_all:
+            dp += sect.Qsum_dipole
+
+        return dp
 
     # Creates dendritic sections
     def create_dends(self, dend_props, cm):
