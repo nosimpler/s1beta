@@ -1,8 +1,8 @@
 # s1run.py - primary run function for s1 project
 #
-# v 0.4.2
-# rev 2012-08-23 (SL: Test plot externalized)
-# last major: (MS: removed inputs to *.load_eventtime())
+# v 0.4.4a
+# rev 2012-08-24 (SL: Changed plottools to plot)
+# last major: (SL: Test plot externalized)
 
 import numpy as np
 
