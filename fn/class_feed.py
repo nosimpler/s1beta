@@ -1,7 +1,7 @@
 # class_feed.py - establishes FeedExt(), FeedProximal() and FeedDistal()
 #
 # v 0.4.6
-# rev 2012-08-24 (SL: minor)
+# rev 2012-09-04 (SL: minor)
 # last major: (MS: small optimizations)
 
 import numpy as np
@@ -20,6 +20,7 @@ class FeedExt():
         # if f_input does not exist, check for presence of tstart and store for later use
         if 'f_input' in p.keys():
             self.f_input = p['f_input']
+
         elif 'tstart' in p.keys():
             self.tstart = p['tstart']
 
@@ -31,6 +32,7 @@ class FeedExt():
     
     # Create nrn vector with ALL stimulus times for an input type (e.g. proximal or distal) 
     # and load vector into VecStim object
+    # only used in feeds
     def create_eventvec(self):
         # array of mean stimulus times, starts at 150 ms
         array_isi = np.arange(150, nrn.tstop, 1000/self.f_input)
@@ -53,6 +55,7 @@ class FeedExt():
         # load eventvec into VecStim object
         self.vs.play(self.eventvec)
 
+    # only used in evoked response
     def load_eventtime(self):
         self.vs.play(self.tstart)
 

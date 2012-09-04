@@ -1,8 +1,8 @@
 # class_cell.py - establish class def for general cell features
 #
-# v 0.4.6
-# rev 2012-08-24 (SL: Fixed dipole based on y3d)
-# last rev: (MS: Functions only used in class_cell.py made private)
+# v 0.4.7
+# rev 2012-09-04 (SL: Fixed wholetree syntax)
+# last rev: (SL: Fixed dipole based on y3d)
 
 import numpy as np
 import itertools as it
@@ -38,7 +38,7 @@ class Cell():
         # dends must have already been created!!
         # it's easier to use wholetree here, this includes soma
         seclist = nrn.SectionList()
-        seclist.wholetree(self.soma)
+        seclist.wholetree(sec=self.soma)
 
         # create a python section list list_all
         self.list_all = [sec for sec in seclist]

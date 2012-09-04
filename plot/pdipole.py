@@ -1,6 +1,6 @@
 # pdipole.py - plot dipole function
 #
-# v 0.4.6
+# v 0.4.7
 # rev 2012-08-24 (SL: created)
 # last major:
 
@@ -19,6 +19,7 @@ def pdipole(file_name):
 
     testfig = fig_std()
     testfig.ax0.plot(t_vec, dp_total)
+    # testfig.ax0.set_ylim(-4e4, 3e4)
 
     plt.savefig('dipoletest.png')
     testfig.close()
