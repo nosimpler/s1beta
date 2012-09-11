@@ -1,9 +1,10 @@
 # L2_basket.py - establish class def for layer 2 basket cells
 #
-# v 0.3.2
-# rev 2012-08-15 (MS: Added NMDA receptor onto soma)
-# last rev: (SL: changed variable name)
+# v 1.0.0
+# rev 2012-09-11 (SL: par routines)
+# last rev: (MS: Added NMDA receptor onto soma)
 
+import itertools as it
 from neuron import h as nrn
 from class_cell import Basket
 
@@ -18,55 +19,53 @@ class L2Basket(Basket):
         # create nmda synapse
         self.soma_nmda = self.syn_nmda_create(self.soma(0.5))
 
-        # Create lists of connections FROM this cell TO target
-        self.ncto_L2Basket = []
-        self.ncto_L2Pyr_gabaa = []
-        self.ncto_L2Pyr_gabab = []
-        self.ncto_L5Pyr_apicaltuft_gabaa = []
+    # par connect between all presynaptic cells
+    # no connections from L5Pyr or L5Basket to L2Baskets
+    def parconnect(self, gid, gid_dict, pos_list):
+        # FROM L2 pyramidals TO this cell
+        for gid_src in gid_dict['L2_pyramidal']:
+            nc_dict = {
+                'pos_src': pos_list[gid_src],
+                'A_weight': 5e-4,
+                'A_delay': 1.,
+                'lamtha': 3.
+            }
 
-    # connects both the GABAa and GABAb synapses to L2
-    # this is purposefully redundant with above for now until differences are known
-    def connect_to_L2Pyr(self, L2Pyr):
-        # add ncs to list using sec_to_target() in Cell()
-        self.ncto_L2Pyr_gabaa.append(self.sec_to_target(self.soma, 0.5, L2Pyr.soma_gabaa))
-        self.ncto_L2Pyr_gabab.append(self.sec_to_target(self.soma, 0.5, L2Pyr.soma_gabab))
+            self.ncfrom_L2Pyr.append(self.parconnect_from_src(gid_src, nc_dict, self.soma_ampa))
 
-        # get distance and calculate weight
-        d = self.distance(L2Pyr)
-        lamtha = 50.
+        # FROM other L2Basket cells
+        for gid_src in gid_dict['L2_basket']:
+            if gid_src != gid:
+                nc_dict = {
+                    'pos_src': pos_list[gid_src],
+                    'A_weight': 2e-2,
+                    'A_delay': 1.,
+                    'lamtha': 20.
+                }
 
-        # set the weights
-        self.syn_weight(self.ncto_L2Pyr_gabaa[-1], 0.05, d, lamtha)
-        self.syn_weight(self.ncto_L2Pyr_gabab[-1], 0.05, d, lamtha)
+                self.ncfrom_L2Basket.append(self.parconnect_from_src(gid_src, nc_dict, self.soma_gabaa))
 
-        # delay in ms
-        self.syn_delay(self.ncto_L2Pyr_gabaa[-1], 1, d, lamtha)
-        self.syn_delay(self.ncto_L2Pyr_gabab[-1], 1, d, lamtha)
+    # this function might make more sense as a method of net?
+    # par: receive from external inputs
+    def parreceive(self, gid, gid_dict, pos_list, p_ext):
+        # for some gid relating to the input feed:
+        for gid_src, p_src in it.izip(gid_dict['extinput'], p_ext):
+            # check if params are defined in the p_src
+            if 'L2Basket' in p_src.keys():
+                # create an nc_dict
+                nc_dict = {
+                    'pos_src': pos_list[gid_src],
+                    'A_weight': p_src['L2Basket'][0],
+                    'A_delay': p_src['L2Basket'][1],
+                    'lamtha': p_src['lamtha']
+                }
 
-    # connects L2Basket to L5Pyr
-    def connect_to_L5Pyr(self, L5Pyr):
-        # add ncs to list using sec_to_target() in Cell()
-        self.ncto_L5Pyr_apicaltuft_gabaa.append(self.sec_to_target(self.soma, 0.5, L5Pyr.apicaltuft_gabaa))
+                # connections depend on location of input
+                if p_src['loc'] is 'proximal':
+                    self.ncfrom_extinput.append(self.parconnect_from_src(gid_src, nc_dict, self.soma_ampa))
 
-        # get distance and calculate weight
-        d = self.distance(L5Pyr)
-        lamtha = 50.
-
-        # set the weights
-        self.syn_weight(self.ncto_L5Pyr_apicaltuft_gabaa[-1], 1e-3, d, lamtha)
-
-        # delay in ms
-        self.syn_delay(self.ncto_L5Pyr_apicaltuft_gabaa[-1], 1, d, lamtha)
-
-    # connects L2Basket to other L2Baskets
-    def connect_to_L2Basket(self, L2Basket_post):
-        self.ncto_L2Basket.append(self.sec_to_target(self.soma, 0.5, L2Basket_post.soma_gabaa))
-
-        d = self.distance(L2Basket_post)
-        lamtha = 20.
-
-        # set the weights
-        self.syn_weight(self.ncto_L2Basket[-1], 0.02, d, lamtha)
-
-        # delay in ms
-        self.syn_delay(self.ncto_L2Basket[-1], 1, d, lamtha)
+                elif p_src['loc'] is 'distal':
+                    self.ncfrom_extinput.append(self.parconnect_from_src(gid_src, nc_dict, self.soma_ampa))
+                    # if f_input is 0, treat as an evoked input
+                    if not p_src['f_input']:
+                        self.ncfrom_extinput.append(self.parconnect_from_src(gid_src, nc_dict, self.soma_nmda))

@@ -1,8 +1,8 @@
 # class_cell.py - establish class def for general cell features
 #
-# v 0.4.7
-# rev 2012-09-04 (SL: Fixed wholetree syntax)
-# last rev: (SL: Fixed dipole based on y3d)
+# v 1.0.0
+# rev 2012-09-04 (SL: all synapses defined by target, dipole changes, par routines)
+# last rev: (SL: Fixed wholetree syntax)
 
 import numpy as np
 import itertools as it
@@ -14,7 +14,9 @@ from neuron import h as nrn
 # Create a cell class
 class Cell():
     def __init__(self, pos, L_soma, diam_soma, cm, cell_name='cell'):
-    # def __init__(self, L_soma, diam_soma, cm, cell_name='cell'):
+        # Parallel methods
+        self.pc = nrn.ParallelContext()
+
         # make L_soma and diam_soma elements of self
         # Used in shape_change() b/c func clobbers self.soma.L, self.soma.diam 
         self.L = L_soma
@@ -22,12 +24,20 @@ class Cell():
         self.pos = pos
 
         # create soma and set geometry
-        self.soma = nrn.Section(name = cell_name + '_soma')
+        self.soma = nrn.Section(cell=self, name=cell_name+'_soma')
         self.soma.insert('hh')
         self.soma.L = L_soma
         self.soma.diam = diam_soma
         self.soma.Ra = 200
         self.soma.cm = cm
+
+        # par: create arbitrary lists of connections FROM other cells TO this cell instantiation
+        # these lists are allowed to be empty
+        self.ncfrom_L2Pyr = []
+        self.ncfrom_L2Basket = []
+        self.ncfrom_L5Pyr = []
+        self.ncfrom_L5Basket = []
+        self.ncfrom_extinput = []
 
     # two things need to happen here for nrn:
     # 1. dipole needs to be inserted into each section
@@ -54,8 +64,10 @@ class Cell():
             # assign internal resistance values to dipole point process (dpp)
             dpp.ri = nrn.ri(1, sec=sect)
 
-            # not sure of the python syntax for setpointer
+            # sets pointers in dipole mod file to the correct locations
+            # nrn.setpointer(ref, ptr, obj)
             nrn.setpointer(sect(0.99)._ref_v, 'pv', dpp)
+            nrn.setpointer(nrn._ref_dp_total, 'Qtotal', dpp)
 
             # gives INTERNAL segments of the section, non-endpoints
             # creating this because need multiple values simultaneously
@@ -76,13 +88,16 @@ class Cell():
                 sect(loc[i]).dipole.ri = nrn.ri(loc[i], sec=sect)
 
                 # range variable 'dipole'
+                # set pointers to previous segment's voltage, with boundary condition
                 if i:
                     nrn.setpointer(sect(loc[i-1])._ref_v, 'pv', sect(loc[i]).dipole)
 
                 else:
                     nrn.setpointer(sect(0)._ref_v, 'pv', sect(loc[i]).dipole)
 
+                # set aggregate pointers
                 nrn.setpointer(dpp._ref_Qsum, 'Qsum', sect(loc[i]).dipole)
+                nrn.setpointer(nrn._ref_dp_total, 'Qtotal', sect(loc[i]).dipole)
 
                 # add ztan values
                 sect(loc[i]).dipole.ztan = y_diff[i]
@@ -129,6 +144,29 @@ class Cell():
 
         return syn_nmda
 
+    # connect_to_target created for pc, used in Network()
+    # these are SOURCES of spikes
+    def connect_to_target(self, target):
+        nc = nrn.NetCon(self.soma(0.5)._ref_v, target, sec=self.soma)
+        nc.threshold = 0
+
+        return nc
+
+    # parallel receptor-centric connect FROM presyn TO this cell, based on GID
+    def parconnect_from_src(self, gid_presyn, p, postsyn):
+        # p keys are: {pos_src, A_weight, A_delay, lamtha}
+        nc = self.pc.gid_connect(gid_presyn, postsyn)
+
+        # calculate distance between cell positions with pardistance()
+        d = self.__pardistance(p['pos_src'])
+
+        # set props here
+        nc.threshold = 0
+        nc.weight[0] = p['A_weight'] * np.exp(-(d**2) / (p['lamtha']**2))
+        nc.delay = p['A_delay'] / (np.exp(-(d**2) / (p['lamtha']**2)))
+
+        return nc
+
     # connects instance of Cell() to a postsynaptic target
     # 'r_soma' is range in [0, 1] for self.soma(r_soma)
     # extremely general function to hide nrn.netCon
@@ -144,24 +182,13 @@ class Cell():
         # returns nc object
         return nc
 
-    # general distance function calculates from pos of post_cell
-    def distance(self, post_cell):
-        # print "positions:", self.pos, post_cell.pos
-        dx = abs(self.pos[0] - post_cell.pos[0])
-        dy = abs(self.pos[1] - post_cell.pos[1])
-        dz = abs(self.pos[2] - post_cell.pos[2])
+    # pardistance function requires pre position, since it is calculated on POST cell
+    def __pardistance(self, pos_pre):
+        dx = abs(self.pos[0] - pos_pre[0])
+        dy = abs(self.pos[1] - pos_pre[1])
+        dz = abs(self.pos[2] - pos_pre[2])
 
         return np.sqrt(dx**2 + dy**2)
-
-    # calculate synaptic weight
-    # inputs: NetCon() object 'nc', amplitude 'A', distance 'd', space const 'lamtha'
-    def syn_weight(self, nc, A, d, lamtha):
-        nc.weight[0] = A * np.exp(-(d**2) / (lamtha**2))
-
-    # calculate synaptic delay
-    # inputs: NetCon() object 'nc', amplitude 'A', distance 'd', space const 'lamtha'
-    def syn_delay(self, nc, A, d, lamtha):
-        nc.delay = A / (np.exp(-(d**2) / (lamtha**2)))
 
     # Define 3D shape of soma -- is needed for gui representation of cell
     # DO NOT need to call nrn.define_shape() explicitly!!
@@ -177,7 +204,6 @@ class Cell():
 class Basket(Cell):
     def __init__(self, pos, cell_name='Basket'):
         # Cell.__init__(self, L, diam, Cm, {name_prefix})
-        # self.soma_props = {'name_prefix': 'basket', 'L': 39, 'diam': 20, 'cm': 0.85}
         Cell.__init__(self, pos, 39, 20, 0.85, cell_name)
 
         # store cell name for later
@@ -199,7 +225,7 @@ class Basket(Cell):
         self.soma.push()
         for i in range(0, int(nrn.n3d())):
             nrn.pt3dchange(i, self.pos[0]*100 + nrn.x3d(i), -self.pos[2] + nrn.y3d(i), 
-                           self.pos[1] * 100 + nrn.z3d(i), nrn.diam3d(i))
+                self.pos[1] * 100 + nrn.z3d(i), nrn.diam3d(i))
 
         nrn.pop_section()
 
@@ -219,16 +245,6 @@ class Pyr(Cell):
         # segment on the soma specified here
         self.soma_gabaa = self.syn_gabaa_create(self.soma(0.5))
         self.soma_gabab = self.syn_gabab_create(self.soma(0.5))
-
-    # return a single cell's dipole calc
-    def dipole_calc(self):
-        # internal variable here for the dipole
-        dp = 0
-
-        for sect in self.list_all:
-            dp += sect.Qsum_dipole
-
-        return dp
 
     # Creates dendritic sections
     def create_dends(self, dend_props, cm):

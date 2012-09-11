@@ -1,8 +1,8 @@
 : dipole.mod - mod file for range variable dipole
 :
-: v 0.4.0
-: rev 2012-08-21 (SL: cleaned up and removed Qtotal, which was not used in earlier vers & redundant)
-: last rev:
+: v 1.0.0
+: rev 2012-09-11 (SL: Added back Qtotal, which WAS used in par version)
+: last rev: (SL: cleaned up and removed Qtotal, which was not used in earlier vers & redundant)
 
 NEURON {
     SUFFIX dipole
@@ -11,6 +11,7 @@ NEURON {
 
     : for density. sums into Dipole at section position 1
     POINTER Qsum
+    POINTER Qtotal
 }
 
 UNITS {
@@ -32,6 +33,7 @@ ASSIGNED {
 
     : human dipole order of 10nAm
     Qsum (fAm)
+    Qtotal (fAm)
 }
 
 : solve for v's first then use them
@@ -39,10 +41,12 @@ AFTER SOLVE {
     ia = (pv - v) / ri
     Q = ia * ztan
     Qsum = Qsum + Q
+    Qtotal = Qtotal + Q
 }
 
 AFTER INITIAL {
     ia = (pv - v) / ri
     Q = ia * ztan
     Qsum = Qsum + Q
+    Qtotal = Qtotal + Q
 }

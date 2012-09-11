@@ -1,9 +1,10 @@
 # L5_basket.py - establish class def for layer 5 basket cells
 #
-# v 0.2.30
-# rev 2012-08-08 (SL: changed variable name)
-# last rev: (SL: Added connections to L5Basket)
+# v 1.0.0
+# rev 2012-09-11 (SL: par routines)
+# last rev: (SL: changed variable name)
 
+import itertools as it
 from neuron import h as nrn
 from class_cell import Basket
 
@@ -15,38 +16,53 @@ class L5Basket(Basket):
         # Pyr.__init__(self, pos, L, diam, Ra, cm)
         Basket.__init__(self, pos, 'L5Basket')
 
-        # Create lists of connections FROM this cell TO target
-        self.ncto_L5Pyr_gabaa = []
-        self.ncto_L5Pyr_gabab = []
-        self.ncto_L5Basket = []
+    # connections FROM other cells TO this cell
+    # there are no connections from the L2Basket cells. congrats! 
+    def parconnect(self, gid, gid_dict, pos_list):
+        # FROM other L5Basket cells TO this cell
+        for gid_src in gid_dict['L5_basket']:
+            if gid_src != gid:
+                nc_dict = {
+                    'pos_src': pos_list[gid_src],
+                    'A_weight': 2e-2,
+                    'A_delay': 1.,
+                    'lamtha': 20.
+                }
 
-    # connects both the GABAa and GABAb synapses to L5
-    def connect_to_L5Pyr(self, L5Pyr):
-        # add ncs to list using sec_to_target() in Cell()
-        self.ncto_L5Pyr_gabaa.append(self.sec_to_target(self.soma, 0.5, L5Pyr.soma_gabaa))
-        self.ncto_L5Pyr_gabab.append(self.sec_to_target(self.soma, 0.5, L5Pyr.soma_gabab))
+                self.ncfrom_L5Basket.append(self.parconnect_from_src(gid_src, nc_dict, self.soma_gabaa))
 
-        # get distance and calculate weight
-        d = self.distance(L5Pyr)
-        lamtha = 70.
+        # FROM other L5Pyr cells TO this cell
+        for gid_src in gid_dict['L5_pyramidal']:
+            nc_dict = {
+                'pos_src': pos_list[gid_src],
+                'A_weight': 5e-4,
+                'A_delay': 1.,
+                'lamtha': 3.
+            }
 
-        # set the weights
-        self.syn_weight(self.ncto_L5Pyr_gabaa[-1], 0.025, d, lamtha)
-        self.syn_weight(self.ncto_L5Pyr_gabab[-1], 0.025, d, lamtha)
+            self.ncfrom_L5Pyr.append(self.parconnect_from_src(gid_src, nc_dict, self.soma_ampa))
 
-        # delay in ms
-        self.syn_delay(self.ncto_L5Pyr_gabaa[-1], 1, d, lamtha)
-        self.syn_delay(self.ncto_L5Pyr_gabab[-1], 1, d, lamtha)
+        # FROM other L2Pyr cells TO this cell
+        for gid_src in gid_dict['L2_pyramidal']:
+            nc_dict = {
+                'pos_src': pos_list[gid_src],
+                'A_weight': 2.5e-4,
+                'A_delay': 1.,
+                'lamtha': 3.
+            }
 
-    # connects L5Basket to other L5Baskets
-    def connect_to_L5Basket(self, L5Basket_post):
-        self.ncto_L5Basket.append(self.sec_to_target(self.soma, 0.5, L5Basket_post.soma_gabaa))
+            self.ncfrom_L2Pyr.append(self.parconnect_from_src(gid_src, nc_dict, self.soma_ampa))
 
-        d = self.distance(L5Basket_post)
-        lamtha = 20.
+    # parallel receive function parreceive()
+    def parreceive(self, gid, gid_dict, pos_list, p_ext):
+        for gid_src, p_src in it.izip(gid_dict['extinput'], p_ext):
+            if 'L5Basket' in p_src.keys():
+                # if p_src['loc'] is 'proximal':
+                nc_dict = {
+                    'pos_src': pos_list[gid_src],
+                    'A_weight': p_src['L5Basket'][0],
+                    'A_delay': p_src['L5Basket'][1],
+                    'lamtha': p_src['lamtha']
+                }
 
-        # set the weights
-        self.syn_weight(self.ncto_L5Basket[-1], 0.02, d, lamtha)
-
-        # delay in ms
-        self.syn_delay(self.ncto_L5Basket[-1], 1, d, lamtha)
+                self.ncfrom_extinput.append(self.parconnect_from_src(gid_src, nc_dict, self.soma_ampa))

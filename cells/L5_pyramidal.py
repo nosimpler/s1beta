@@ -1,8 +1,8 @@
 # L5_pyramidal.py - establish class def for layer 5 pyramidal cells
 #
-# v 0.4.5
-# rev 2012-08-24 (MS: Functions only used in L5Pyr() made private)
-# last rev: (MS: shape_change() renamed set_3Dshape())
+# v 1.0.0
+# rev 2012-09-11 (SL: par routines)
+# last rev: (MS: Functions only used in L5Pyr() made private)
 
 from neuron import h as nrn
 from class_cell import Pyr
@@ -25,21 +25,6 @@ class L5Pyr(Pyr):
         self.dend_L = []
         self.dend_diam = []
         self.cm = 0.85
-
-        # create lists of connections FROM this cell TO target
-        self.ncto_L5Pyr_apicaloblique_ampa = []
-        self.ncto_L5Pyr_apicaloblique_nmda = []
-
-        self.ncto_L5Pyr_basal2_ampa = []
-        self.ncto_L5Pyr_basal2_nmda = []
-
-        self.ncto_L5Pyr_basal3_ampa = []
-        self.ncto_L5Pyr_basal3_nmda = []
-
-        self.ncto_L5Basket = []
-
-        self.ncto_L2Pyr = []
-        self.ncto_L2Basket = []
 
         # Geometry
         self.__set_dend_props()
@@ -73,53 +58,91 @@ class L5Pyr(Pyr):
         self.basal3_ampa = self.syn_ampa_create(self.list_dend[7](0.5))
         self.basal3_nmda = self.syn_nmda_create(self.list_dend[7](0.5))
 
-    # Connects this cell to a synapse 'soma_ampa' on the supplied L5Basket cell
-    # uses 'soma_to_target' from class 'Cell()' inheritance
-    # Doing this here gives us easy access to position properties
-    # essentially identical to connect_to_L2Basket in L2_pyramidal.py
-    def connect_to_L5Basket(self, L5Basket):
-        self.ncto_L5Basket.append(self.sec_to_target(self.soma, 0.5, L5Basket.soma_ampa))
+    # parallel connection function FROM all cell types TO here
+    def parconnect(self, gid, gid_dict, pos_list):
+        for gid_src in gid_dict['L5_pyramidal']:
+            if gid_src != gid:
+                nc_dict = {
+                    'pos_src': pos_list[gid_src],
+                    'A_weight': 5e-4,
+                    'A_delay': 1.,
+                    'lamtha': 3.
+                }
 
-        d = self.distance(L5Basket)
-        lamtha = 3.
+                # ampa connections
+                self.ncfrom_L5Pyr.append(self.parconnect_from_src(gid_src, nc_dict, self.apicaloblique_ampa))
+                self.ncfrom_L5Pyr.append(self.parconnect_from_src(gid_src, nc_dict, self.basal2_ampa))
+                self.ncfrom_L5Pyr.append(self.parconnect_from_src(gid_src, nc_dict, self.basal3_ampa))
 
-        # set the weights using syn_weight() from Cell()
-        self.syn_weight(self.ncto_L5Basket[-1], 5e-4, d, lamtha)
+                # nmda connections
+                self.ncfrom_L5Pyr.append(self.parconnect_from_src(gid_src, nc_dict, self.apicaloblique_nmda))
+                self.ncfrom_L5Pyr.append(self.parconnect_from_src(gid_src, nc_dict, self.basal2_nmda))
+                self.ncfrom_L5Pyr.append(self.parconnect_from_src(gid_src, nc_dict, self.basal3_nmda))
 
-        # set the delay using syn_delay() from Cell()
-        self.syn_delay(self.ncto_L5Basket[-1], 1., d, lamtha)
+        # connections FROM L5Basket TO here
+        for gid_src in gid_dict['L5_basket']:
+            nc_dict = {
+                'pos_src': pos_list[gid_src],
+                'A_weight': 2.5e-2,
+                'A_delay': 1.,
+                'lamtha': 70.
+            }
 
-    def connect_to_L5Pyr(self, L5Pyr_post):
-        # ampa connections
-        self.ncto_L5Pyr_apicaloblique_ampa.append(self.sec_to_target(self.soma, 0.5, L5Pyr_post.apicaloblique_ampa))
-        self.ncto_L5Pyr_basal2_ampa.append(self.sec_to_target(self.soma, 0.5, L5Pyr_post.basal2_ampa))
-        self.ncto_L5Pyr_basal3_ampa.append(self.sec_to_target(self.soma, 0.5, L5Pyr_post.basal3_ampa))
+            # soma synapses are defined in Pyr()
+            self.ncfrom_L5Basket.append(self.parconnect_from_src(gid_src, nc_dict, self.soma_gabaa))
+            self.ncfrom_L5Basket.append(self.parconnect_from_src(gid_src, nc_dict, self.soma_gabab))
 
-        # nmda connections
-        self.ncto_L5Pyr_apicaloblique_nmda.append(self.sec_to_target(self.soma, 0.5, L5Pyr_post.apicaloblique_nmda))
-        self.ncto_L5Pyr_basal2_nmda.append(self.sec_to_target(self.soma, 0.5, L5Pyr_post.basal2_nmda))
-        self.ncto_L5Pyr_basal3_nmda.append(self.sec_to_target(self.soma, 0.5, L5Pyr_post.basal3_nmda))
+        # connections FROM L2Pyr TO here
+        for gid_src in gid_dict['L2_pyramidal']:
+            # this delay is longer than most
+            nc_dict = {
+                'pos_src': pos_list[gid_src],
+                'A_weight': 2.5e-4,
+                'A_delay': 3.,
+                'lamtha': 3.
+            }
 
-        d = self.distance(L5Pyr_post)
-        lamtha = 3.
+            self.ncfrom_L2Pyr.append(self.parconnect_from_src(gid_src, nc_dict, self.basal2_ampa))
+            self.ncfrom_L2Pyr.append(self.parconnect_from_src(gid_src, nc_dict, self.basal3_ampa))
+            self.ncfrom_L2Pyr.append(self.parconnect_from_src(gid_src, nc_dict, self.apicaltuft_ampa))
+            self.ncfrom_L2Pyr.append(self.parconnect_from_src(gid_src, nc_dict, self.apicaloblique_ampa))
 
-        # set the weights using syn_weight() from Cell()
-        self.syn_weight(self.ncto_L5Pyr_apicaloblique_ampa[-1], 5e-4, d, lamtha)
-        self.syn_weight(self.ncto_L5Pyr_basal2_ampa[-1], 5e-4, d, lamtha)
-        self.syn_weight(self.ncto_L5Pyr_basal3_ampa[-1], 5e-4, d, lamtha)
+        # connections FROM L2Basket TO here
+        for gid_src in gid_dict['L2_basket']:
+            nc_dict = {
+                'pos_src': pos_list[gid_src],
+                'A_weight': 1e-3,
+                'A_delay': 1.,
+                'lamtha': 50.
+            }
 
-        self.syn_weight(self.ncto_L5Pyr_apicaloblique_nmda[-1], 5e-4, d, lamtha)
-        self.syn_weight(self.ncto_L5Pyr_basal2_nmda[-1], 5e-4, d, lamtha)
-        self.syn_weight(self.ncto_L5Pyr_basal3_nmda[-1], 5e-4, d, lamtha)
+            self.ncfrom_L2Basket.append(self.parconnect_from_src(gid_src, nc_dict, self.apicaltuft_gabaa))
 
-        # set the delay using syn_delay() from Cell()
-        self.syn_delay(self.ncto_L5Pyr_apicaloblique_ampa[-1], 1., d, lamtha)
-        self.syn_delay(self.ncto_L5Pyr_basal2_ampa[-1], 1., d, lamtha)
-        self.syn_delay(self.ncto_L5Pyr_basal3_ampa[-1], 1., d, lamtha)
+    # receive from external inputs
+    def parreceive(self, gid, gid_dict, pos_list, p_ext):
+        for gid_src, p_src in it.izip(gid_dict['extinput'], p_ext):
+            if 'L5Pyr' in p_src.keys():
+                nc_dict = {
+                    'pos_src': pos_list[gid_src],
+                    'A_weight': p_src['L5Pyr'][0],
+                    'A_delay': p_src['L5Pyr'][1],
+                    'lamtha': p_src['lamtha']
+                }
 
-        self.syn_delay(self.ncto_L5Pyr_apicaloblique_nmda[-1], 1., d, lamtha)
-        self.syn_delay(self.ncto_L5Pyr_basal2_nmda[-1], 1., d, lamtha)
-        self.syn_delay(self.ncto_L5Pyr_basal3_nmda[-1], 1., d, lamtha)
+                if p_src['loc'] is 'proximal':
+                    # print gid_src, nc_dict, self.basal2_ampa
+                    # basal2_ampa, basal3_ampa, apicaloblique_ampa
+                    self.ncfrom_extinput.append(self.parconnect_from_src(gid_src, nc_dict, self.basal2_ampa))
+                    self.ncfrom_extinput.append(self.parconnect_from_src(gid_src, nc_dict, self.basal3_ampa))
+                    self.ncfrom_extinput.append(self.parconnect_from_src(gid_src, nc_dict, self.apicaloblique_ampa))
+
+                elif p_src['loc'] is 'distal':
+                    # apical tuft
+                    self.ncfrom_extinput.append(self.parconnect_from_src(gid_src, nc_dict, self.apicaltuft_ampa))
+
+                    # nmda only if on the evoked input
+                    if not p_src['f_input']:
+                        self.ncfrom_extinput.append(self.parconnect_from_src(gid_src, nc_dict, self.apicaltuft_nmda))
 
     # writes to self.dend_props list of tuples
     def __set_dend_props(self):
