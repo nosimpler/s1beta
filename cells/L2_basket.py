@@ -16,7 +16,8 @@ class L2Basket(Basket):
         # Pyr.__init__(self, pos, L, diam, Ra, cm)
         Basket.__init__(self, pos, 'L2Basket')
 
-        # create nmda synapse
+        # self.soma_ampa and self.soma_gabaa are inherited from Basket()
+        # create nmda synapse unique to L2Basket
         self.soma_nmda = self.syn_nmda_create(self.soma(0.5))
 
     # par connect between all presynaptic cells

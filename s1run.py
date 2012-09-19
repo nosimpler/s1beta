@@ -36,13 +36,13 @@ if __name__ == "__main__":
     np.random.seed(0)
 
     # Set tstop before instantiating any classes
-    nrn.tstop = 1000.
+    nrn.tstop = 100.
     nrn.dt = 0.05
     # nrn.cvode_active(1)
 
     # Create network from class_net's Network class
     # Network(gridpyr_x, gridpyr_y)
-    net = Network(10, 10)
+    net = Network(5, 5)
 
     # open main data file only on one processor
     if rank == 0:

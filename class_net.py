@@ -1,8 +1,8 @@
 # class_net.py - establishes the Network class and related methods
 #
-# v 1.0.0
-# rev 2012-09-11 (SL: network on a node, parallel)
-# last major: (SL: added dipole network calc)
+# v 1.0.1
+# rev 2012-09-18 (SL: lots of clean up)
+# last major: (SL: network on a node, parallel)
 
 import itertools as it
 import numpy as np
@@ -37,12 +37,6 @@ class Network():
         self.p_ext = p_ext
         self.N_extinput = len(self.p_ext)
 
-        # nonpar: allocate namespace for lists containing all cells in network
-        self.cells_L2Pyr = []
-        self.cells_L5Pyr = []
-        self.cells_L2Basket = []
-        self.cells_L5Basket = []
-
         # cell position lists, also will give counts
         # extinput positions are all located at origin. This is sort of a hack bc of redundancy
         self.pos_list = []
@@ -58,7 +52,6 @@ class Network():
         self.__create_coords_extinput()
 
         # ugly for now
-        self.cell_counts = (self.N_L2_pyr, self.N_L5_pyr, self.N_L2_basket, self.N_L5_basket)
         self.src_counts = (self.N_L2_pyr, self.N_L5_pyr, self.N_L2_basket, self.N_L5_basket, self.N_extinput)
 
         # create dictionary of GIDs according to cell type
@@ -104,12 +97,10 @@ class Network():
     # this happens on EACH node
     # creates self.__gid_list for THIS node
     def __gid_assign(self):
-        rank = int(self.pc.id())
-
         # round robin assignment of gids
         # if gids are created here for the inputs, the N_cells will be changed to N_src
-        for gid in range(rank, self.N_src, self.n_hosts):
-            self.pc.set_gid2node(gid, rank)
+        for gid in range(self.rank, self.N_src, self.n_hosts):
+            self.pc.set_gid2node(gid, self.rank)
             self.__gid_list.append(gid)
 
     # reverse lookup of gid to type
@@ -142,13 +133,6 @@ class Network():
 
         self.N_L2_pyr = len(self.L2_pyr_pos)
         self.N_L5_pyr = len(self.L5_pyr_pos)
-
-        # origin's z component isn't really used in calculating distance functions from origin
-        # these must be ints!
-        # origin_x = xrange[(len(xrange)-1)/2]
-        # origin_y = yrange[(len(yrange)-1)/2]
-        # origin_z = np.floor(self.zdiff/2)
-        # self.origin = (origin_x, origin_y, origin_z)
 
     def __create_coords_basket(self):
         # define relevant x spacings for basket cells

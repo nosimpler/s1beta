@@ -1,8 +1,8 @@
 # class_cell.py - establish class def for general cell features
 #
-# v 1.0.0
-# rev 2012-09-04 (SL: all synapses defined by target, dipole changes, par routines)
-# last rev: (SL: Fixed wholetree syntax)
+# v 1.0.1
+# rev 2012-09-18 (SL: Removed sec_to_target)
+# last rev: (SL: all synapses defined by target, dipole changes, par routines)
 
 import numpy as np
 import itertools as it
@@ -165,21 +165,6 @@ class Cell():
         nc.weight[0] = p['A_weight'] * np.exp(-(d**2) / (p['lamtha']**2))
         nc.delay = p['A_delay'] / (np.exp(-(d**2) / (p['lamtha']**2)))
 
-        return nc
-
-    # connects instance of Cell() to a postsynaptic target
-    # 'r_soma' is range in [0, 1] for self.soma(r_soma)
-    # extremely general function to hide nrn.netCon
-    def sec_to_target(self, sec_presyn, r_sec, postsyn):
-        # event generated at _ref_v, to postsyn where delivered
-        # netconobj = new NetCon(source section, target section,
-        # [threshold, delay, weight])
-        nc = nrn.NetCon(sec_presyn(r_sec)._ref_v, postsyn, sec=sec_presyn)
-
-        # event threshold, arbitrarily chosen for now (default is +10)
-        nc.threshold = 0
-
-        # returns nc object
         return nc
 
     # pardistance function requires pre position, since it is calculated on POST cell
