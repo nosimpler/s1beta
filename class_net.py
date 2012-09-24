@@ -1,8 +1,8 @@
 # class_net.py - establishes the Network class and related methods
 #
-# v 1.0.1
-# rev 2012-09-18 (SL: lots of clean up)
-# last major: (SL: network on a node, parallel)
+# v 1.1.0
+# rev 2012-09-24 (SL: Records spikes, also has debug record voltage capability)
+# last major: (SL: lots of clean up)
 
 import itertools as it
 import numpy as np
@@ -70,6 +70,19 @@ class Network():
 
         # parallel network connector
         self.__parnet_connect()
+
+        # set to record spikes
+        self.spiketimes = nrn.Vector()
+        self.spikegids = nrn.Vector()
+        self.__record_spikes()
+
+    # setup spike recording for this node
+    def __record_spikes(self):
+        # iterate through gids on this node and set to record spikes in spike time vec and id vec
+        # agnostic to type of source, will sort that out later
+        for gid in self.__gid_list:
+            if self.pc.gid_exists(gid):
+                self.pc.spike_record(gid, self.spiketimes, self.spikegids)
 
     # creates gid dicts and pos_lists
     def __create_gid_dict(self):
@@ -235,3 +248,16 @@ class Network():
                 # this MUST be defined in EACH class of cell in self.cells_list
                 cell.parconnect(gid, self.gid_dict, self.pos_list)
                 cell.parreceive(gid, self.gid_dict, self.pos_list, self.p_ext)
+
+    # recording debug function
+    def rec_debug(self, rank_exec, gid):
+        # only execute on this rank, make sure called properly
+        if rank_exec == self.rank:
+            # only if the gid exists here
+            # this will break if non-cell source is attempted
+            if gid in self.__gid_list:
+                n = self.__gid_list.index(gid)
+                v = nrn.Vector()
+                v.record(self.cells_list[n].soma(0.5)._ref_v)
+
+                return v
