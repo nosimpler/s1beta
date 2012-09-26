@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 # s1run.py - primary run function for s1 project
 #
-# v 1.1.0
-# rev 2012-09-24 (SL: writes spikes for all nodes along with gids, formalized debug)
-# last major: (SL: parallelized)
+# v 1.1.1
+# rev 2012-09-26 (SL: handles directories and file creation)
+# last major: (SL: writes spikes for all nodes along with gids, formalized debug)
 
+import os
 import numpy as np
 from mpi4py import MPI
 from time import clock
@@ -14,6 +15,8 @@ nrn.load_file("stdrun.hoc")
 # Cells are defined in './cells'
 from cells.L5_pyramidal import L5Pyr
 from class_net import Network
+import fn.fileio as fio
+import fn.paramrw as paramrw
 from plot.ptest import ptest
 from plot.pdipole import pdipole
 
@@ -55,12 +58,19 @@ if __name__ == "__main__":
     # Network(gridpyr_x, gridpyr_y)
     net = Network(1, 1)
 
-    # file name for spikes, everyone needs to know
-    filename_spikes = 'spikes.dat'
+    # create temporary spike file that everyone knows about
+    dproj = '/repo/data/s1'
+    filename_spikes = fio.file_spike_tmp(dproj)
 
-    # open main data file only on one processor
+    # create rotating data files and dirs on ONE central node
     if rank == 0:
-        file_name = 'testing.dat'
+        sim_prefix = 'test'
+        ddir = fio.OutputDataPaths(dproj, sim_prefix)
+        ddir.create_dirs()
+
+        file_name = ddir.create_filename('dipole', sim_prefix)
+        file_param = ddir.create_filename('param', sim_prefix)
+
         data_file = nrn.File()
         data_file.wopen(file_name)
 
@@ -105,7 +115,14 @@ if __name__ == "__main__":
 
         # close the file
         data_file.close()
-        pdipole('testing')
+
+        # write the gid list ...
+        paramrw.write(file_param, net.gid_dict)
+
+        dfig = ddir.fileinfo['fig'][1]
+        dpl_list = fio.file_match(ddir.fileinfo, 'dipole')
+        for file_dpl in dpl_list:
+            pdipole(file_dpl, dfig)
 
         if debug:
             with open(filename_debug, 'w+') as file_debug:
@@ -113,10 +130,14 @@ if __name__ == "__main__":
                     file_debug.write("%03.3f\t%5.4f\n" % (t_vec.x[i], v_debug.x[i]))
 
             # also create a debug plot
-            pdipole(fileprefix_debug)
+            pdipole(filename_debug, os.getcwd())
 
     # write output spikes
     spikes_write(rank, net, filename_spikes)
+
+    # move the spike file to the spike dir
+    if rank == 0:
+        ddir.move_spk(filename_spikes)
 
     if pc.nhost > 1:
         pc.runworker()
