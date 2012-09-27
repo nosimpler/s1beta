@@ -1,8 +1,8 @@
 # fileio.py - general file input/output functions
 #
-# v 1.1.1
-# rev 2012-09-24 (SL: created)
-# last rev:
+# v 1.2.0
+# rev 2012-09-27 (SL: started reading from files)
+# last rev: (SL: created)
 
 import datetime, fnmatch, os, shutil, sys
 
@@ -14,10 +14,19 @@ def clean_lines(file):
 
     return lines
 
+# create gid dict from a file
+def gid_dict_from_file(fparam):
+    l = ['L2_pyramidal', 'L5_pyramidal', 'L2_basket', 'L5_basket', 'extinput']
+    d = dict.fromkeys(l)
+
+    plist = clean_lines(fparam)
+    for param in plist:
+        print param
+
 def file_spike_tmp(dproj):
-    file_spikes = 'spikes_tmp.spk'
-    filepath_spikes = os.path.join(dproj, file_spikes)
-    return filepath_spikes
+    filename_spikes = 'spikes_tmp.spk'
+    file_spikes = os.path.join(dproj, filename_spikes)
+    return file_spikes
 
 # Get the data files matching file_ext in this directory
 def file_match(dict_fileinfo, key):
@@ -72,7 +81,7 @@ class OutputDataPaths():
         # create dict and subdirs
         self.fileinfo = dict.fromkeys(self.__datatypes)
         self.__create_dict()
-        print self.fileinfo
+        # print self.fileinfo
 
     def move_spk(self, filename_spk):
         dspikes = self.fileinfo['spikes'][1]

@@ -1,20 +1,29 @@
 # paramrw.py - routines for reading the param files
 #
-# v 1.1.1
-# rev 2012-09-26 (SL: created)
-# last major:
+# v 1.2.0
+# rev 2012-09-27 (SL: writes more params)
+# last major: (SL: created)
 
 import re
 import fileio as fio
 
 # write the params to a filename
-def write(fparam, gid_list):
+def write(fparam, p, p_ext, gid_list):
     with open(fparam, 'a') as f:
         for key in gid_list.keys():
-            f.write('%13s ' % key)
+            f.write('%13s: ' % key)
             for gid in gid_list[key]:
                 f.write('%4i ' % gid)
             f.write('\n')
+
+        for key in p.keys():
+            f.write('%13s: ' % key)
+
+            if key.startswith('N_'):
+                f.write('%i\n' % p[key])
+            else:
+                f.write(str(p[key])+'\n')
+                # f.write('%d\n' % p[key])
 
 # Searches f_param for any match of p
 def find_param(fparam, p):
