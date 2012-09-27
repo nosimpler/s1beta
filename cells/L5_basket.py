@@ -1,8 +1,8 @@
 # L5_basket.py - establish class def for layer 5 basket cells
 #
-# v 1.0.0
-# rev 2012-09-11 (SL: par routines)
-# last rev: (SL: changed variable name)
+# v 1.2.1
+# rev 2012-09-27 (MS: Autapses allowed)
+# last rev: (SL: par routines)
 
 import itertools as it
 from neuron import h as nrn
@@ -21,15 +21,15 @@ class L5Basket(Basket):
     def parconnect(self, gid, gid_dict, pos_list):
         # FROM other L5Basket cells TO this cell
         for gid_src in gid_dict['L5_basket']:
-            if gid_src != gid:
-                nc_dict = {
-                    'pos_src': pos_list[gid_src],
-                    'A_weight': 2e-2,
-                    'A_delay': 1.,
-                    'lamtha': 20.
-                }
+            # if gid_src != gid:
+            nc_dict = {
+                'pos_src': pos_list[gid_src],
+                'A_weight': 2e-2,
+                'A_delay': 1.,
+                'lamtha': 20.
+            }
 
-                self.ncfrom_L5Basket.append(self.parconnect_from_src(gid_src, nc_dict, self.soma_gabaa))
+            self.ncfrom_L5Basket.append(self.parconnect_from_src(gid_src, nc_dict, self.soma_gabaa))
 
         # FROM other L5Pyr cells TO this cell
         for gid_src in gid_dict['L5_pyramidal']:

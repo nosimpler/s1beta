@@ -1,8 +1,8 @@
 # L2_basket.py - establish class def for layer 2 basket cells
 #
-# v 1.0.0
-# rev 2012-09-11 (SL: par routines)
-# last rev: (MS: Added NMDA receptor onto soma)
+# v 1.2.1
+# rev 2012-09-27 (MS: Autapses allowed)
+# last rev: (SL: par routines)
 
 import itertools as it
 from neuron import h as nrn
@@ -36,15 +36,15 @@ class L2Basket(Basket):
 
         # FROM other L2Basket cells
         for gid_src in gid_dict['L2_basket']:
-            if gid_src != gid:
-                nc_dict = {
-                    'pos_src': pos_list[gid_src],
-                    'A_weight': 2e-2,
-                    'A_delay': 1.,
-                    'lamtha': 20.
-                }
+            # if gid_src != gid:
+            nc_dict = {
+                'pos_src': pos_list[gid_src],
+                'A_weight': 2e-2,
+                'A_delay': 1.,
+                'lamtha': 20.
+            }
 
-                self.ncfrom_L2Basket.append(self.parconnect_from_src(gid_src, nc_dict, self.soma_gabaa))
+            self.ncfrom_L2Basket.append(self.parconnect_from_src(gid_src, nc_dict, self.soma_gabaa))
 
     # this function might make more sense as a method of net?
     # par: receive from external inputs

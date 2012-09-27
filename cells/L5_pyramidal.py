@@ -1,8 +1,8 @@
 # L5_pyramidal.py - establish class def for layer 5 pyramidal cells
 #
-# v 1.0.0
-# rev 2012-09-11 (SL: par routines)
-# last rev: (MS: Functions only used in L5Pyr() made private)
+# v 1.2.1
+# rev 2012-09-27 (MS: Removed 3d shape. Dictionary of lenght scales passed to dipole_insert. Autapses allowed)
+# last rev: (SL: par routines)
 
 from neuron import h as nrn
 from class_cell import Pyr
@@ -30,14 +30,16 @@ class L5Pyr(Pyr):
         self.__set_dend_props()
         self.create_dends(self.dend_props, self.cm)
         self.__connect_sections()
-        self.__set_3Dshape()
+        # self.__set_3Dshape()
 
         # biophysics
         self.__biophys_soma()
         self.__biophys_dends()
 
+        # Dictionary of length scales to calculate dipole without 3d shape. Comes from Pyr().
+        self.yscale = self.get_sectnames()
         # dipole_insert() comes from Cell()
-        self.dipole_insert()
+        self.dipole_insert(self.yscale)
 
         # create synapses
         self.__synapse_create()
@@ -61,23 +63,23 @@ class L5Pyr(Pyr):
     # parallel connection function FROM all cell types TO here
     def parconnect(self, gid, gid_dict, pos_list):
         for gid_src in gid_dict['L5_pyramidal']:
-            if gid_src != gid:
-                nc_dict = {
-                    'pos_src': pos_list[gid_src],
-                    'A_weight': 5e-4,
-                    'A_delay': 1.,
-                    'lamtha': 3.
-                }
+            # if gid_src != gid:
+            nc_dict = {
+                'pos_src': pos_list[gid_src],
+                'A_weight': 5e-4,
+                'A_delay': 1.,
+                'lamtha': 3.
+            }
 
-                # ampa connections
-                self.ncfrom_L5Pyr.append(self.parconnect_from_src(gid_src, nc_dict, self.apicaloblique_ampa))
-                self.ncfrom_L5Pyr.append(self.parconnect_from_src(gid_src, nc_dict, self.basal2_ampa))
-                self.ncfrom_L5Pyr.append(self.parconnect_from_src(gid_src, nc_dict, self.basal3_ampa))
+            # ampa connections
+            self.ncfrom_L5Pyr.append(self.parconnect_from_src(gid_src, nc_dict, self.apicaloblique_ampa))
+            self.ncfrom_L5Pyr.append(self.parconnect_from_src(gid_src, nc_dict, self.basal2_ampa))
+            self.ncfrom_L5Pyr.append(self.parconnect_from_src(gid_src, nc_dict, self.basal3_ampa))
 
-                # nmda connections
-                self.ncfrom_L5Pyr.append(self.parconnect_from_src(gid_src, nc_dict, self.apicaloblique_nmda))
-                self.ncfrom_L5Pyr.append(self.parconnect_from_src(gid_src, nc_dict, self.basal2_nmda))
-                self.ncfrom_L5Pyr.append(self.parconnect_from_src(gid_src, nc_dict, self.basal3_nmda))
+            # nmda connections
+            self.ncfrom_L5Pyr.append(self.parconnect_from_src(gid_src, nc_dict, self.apicaloblique_nmda))
+            self.ncfrom_L5Pyr.append(self.parconnect_from_src(gid_src, nc_dict, self.basal2_nmda))
+            self.ncfrom_L5Pyr.append(self.parconnect_from_src(gid_src, nc_dict, self.basal3_nmda))
 
         # connections FROM L5Basket TO here
         for gid_src in gid_dict['L5_basket']:

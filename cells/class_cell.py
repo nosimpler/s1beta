@@ -1,8 +1,8 @@
 # class_cell.py - establish class def for general cell features
 #
-# v 1.0.1
-# rev 2012-09-18 (SL: Removed sec_to_target)
-# last rev: (SL: all synapses defined by target, dipole changes, par routines)
+# v 1.2.1
+# rev 2012-09-27 (MS: Dipole in Cell() calculated without 3d shape. Function to scale section lengths added to Pyr()) 
+# last rev: (SL: Removed sec_to_target)
 
 import numpy as np
 import itertools as it
@@ -43,7 +43,7 @@ class Cell():
     # 1. dipole needs to be inserted into each section
     # 2. a list needs to be created with a Dipole (Point Process) in each section at position 1
     # In Cell() and not Pyr() for future possibilities
-    def dipole_insert(self):
+    def dipole_insert(self, yscale):
         # insert dipole into each section of this cell
         # dends must have already been created!!
         # it's easier to use wholetree here, this includes soma
@@ -77,10 +77,12 @@ class Cell():
             pos = np.insert(loc, 0, 0)
 
             # diff in yvals, scaled against the pos np.array. y_long as in longitudinal
-            y_long = (nrn.y3d(1, sec=sect) - nrn.y3d(0, sec=sect)) * pos
+            y_scale = (yscale[sect.name()] * sect.L) * pos
+            # y_long = (nrn.y3d(1, sec=sect) - nrn.y3d(0, sec=sect)) * pos
 
             # diff values calculate length between successive section points
-            y_diff = np.diff(y_long)
+            y_diff = np.diff(y_scale)
+            # y_diff = np.diff(y_long)
 
             # doing range to index multiple values of the same np.array simultaneously
             for i in range(len(loc)):
@@ -230,6 +232,31 @@ class Pyr(Cell):
         # segment on the soma specified here
         self.soma_gabaa = self.syn_gabaa_create(self.soma(0.5))
         self.soma_gabab = self.syn_gabab_create(self.soma(0.5))
+
+    # Create dictionary of section names with entries to scale section lenghts to length along z-axis 
+    def get_sectnames(self):
+        seclist = nrn.SectionList()
+        seclist.wholetree(sec=self.soma)
+     
+        d = dict((sect.name(), 1.) for sect in seclist)
+
+        for key in d.keys():
+            # basal_2 and basal_3 at 45 degree angle to z-axis.
+            if 'basal_2' in key:
+                d[key] = np.sqrt(2) / 2 
+ 
+            elif 'basal_3' in key:
+                d[key] = np.sqrt(2) / 2 
+
+            # apical_oblique at 90 perpendicular to z-axis
+            elif 'apical_oblique' in key:
+                d[key] = 0.
+
+            # All basalar dendrites extend along negative z-axis
+            if 'basal' in key:
+                d[key] = -d[key]
+
+        return d
 
     # Creates dendritic sections
     def create_dends(self, dend_props, cm):

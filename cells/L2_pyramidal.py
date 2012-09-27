@@ -1,8 +1,8 @@
 # L2_pyramidal.py - est class def for layer 2 pyramidal cells
 #
-# v 1.0.0
-# rev 2012-09-11 (SL: par routines)
-# last rev: (MS: functions only used in L2Pyr() made private)
+# v 1.2.1
+# rev 2012-09-27 (MS: Dictionary of length scales to calculate dipole without 3d shape. Removed synapses from L5 Basket cells. Autapses allowed)
+# last rev: (SL: par routines)
 
 from neuron import h as nrn
 from class_cell import Pyr
@@ -31,14 +31,15 @@ class L2Pyr(Pyr):
         # creates self.list_dend
         self.create_dends(self.dend_props, self.cm)
         self.__connect_sections()
-        self.__set_3Dshape()
+        # self.__set_3Dshape()
 
         # biophysics
         self.__biophys_soma()
         self.__biophys_dends()
 
         # dipole_insert() comes from Cell()
-        self.dipole_insert()
+        self.yscale = self.get_sectnames()
+        self.dipole_insert(self.yscale)
 
         # create synapses
         self.__synapse_create()
@@ -64,24 +65,24 @@ class L2Pyr(Pyr):
         # Connections FROM all other L2 Pyramidal cells to this one
         for gid_src in gid_dict['L2_pyramidal']:
             # don't be redundant, this is only possible for LIKE cells, but it might not hurt to check
-            if gid_src != gid:
-                nc_dict = {
-                    'pos_src': pos_list[gid_src],
-                    'A_weight': 5e-4,
-                    'A_delay': 1.,
-                    'lamtha': 3.
-                }
+            # if gid_src != gid:
+            nc_dict = {
+                'pos_src': pos_list[gid_src],
+                'A_weight': 5e-4,
+                'A_delay': 1.,
+                'lamtha': 3.
+            }
 
-                # parconnect_from_src(gid_presyn, nc_dict, postsyn)
-                # ampa connections
-                self.ncfrom_L2Pyr.append(self.parconnect_from_src(gid_src, nc_dict, self.apicaloblique_ampa))
-                self.ncfrom_L2Pyr.append(self.parconnect_from_src(gid_src, nc_dict, self.basal2_ampa))
-                self.ncfrom_L2Pyr.append(self.parconnect_from_src(gid_src, nc_dict, self.basal3_ampa))
+            # parconnect_from_src(gid_presyn, nc_dict, postsyn)
+            # ampa connections
+            self.ncfrom_L2Pyr.append(self.parconnect_from_src(gid_src, nc_dict, self.apicaloblique_ampa))
+            self.ncfrom_L2Pyr.append(self.parconnect_from_src(gid_src, nc_dict, self.basal2_ampa))
+            self.ncfrom_L2Pyr.append(self.parconnect_from_src(gid_src, nc_dict, self.basal3_ampa))
 
-                # nmda connections
-                self.ncfrom_L2Pyr.append(self.parconnect_from_src(gid_src, nc_dict, self.apicaloblique_nmda))
-                self.ncfrom_L2Pyr.append(self.parconnect_from_src(gid_src, nc_dict, self.basal2_nmda))
-                self.ncfrom_L2Pyr.append(self.parconnect_from_src(gid_src, nc_dict, self.basal3_nmda))
+            # nmda connections
+            self.ncfrom_L2Pyr.append(self.parconnect_from_src(gid_src, nc_dict, self.apicaloblique_nmda))
+            self.ncfrom_L2Pyr.append(self.parconnect_from_src(gid_src, nc_dict, self.basal2_nmda))
+            self.ncfrom_L2Pyr.append(self.parconnect_from_src(gid_src, nc_dict, self.basal3_nmda))
 
         # connections FROM L2 basket cells TO this L2Pyr cell
         for gid_src in gid_dict['L2_basket']:
@@ -96,16 +97,16 @@ class L2Pyr(Pyr):
             self.ncfrom_L2Basket.append(self.parconnect_from_src(gid_src, nc_dict, self.soma_gabab))
 
         # connections FROM L5 basket cells TO this L2Pyr cell
-        for gid_src in gid_dict['L5_basket']:
-            nc_dict = {
-                'pos_src': pos_list[gid_src],
-                'A_weight': 2.5e-2,
-                'A_delay': 1.,
-                'lamtha': 70.
-            }
+        # for gid_src in gid_dict['L5_basket']:
+        #     nc_dict = {
+        #         'pos_src': pos_list[gid_src],
+        #         'A_weight': 2.5e-2,
+        #         'A_delay': 1.,
+        #         'lamtha': 70.
+        #     }
 
-            self.ncfrom_L5Basket.append(self.parconnect_from_src(gid_src, nc_dict, self.soma_gabaa))
-            self.ncfrom_L5Basket.append(self.parconnect_from_src(gid_src, nc_dict, self.soma_gabab))
+        #     self.ncfrom_L5Basket.append(self.parconnect_from_src(gid_src, nc_dict, self.soma_gabaa))
+        #     self.ncfrom_L5Basket.append(self.parconnect_from_src(gid_src, nc_dict, self.soma_gabab))
 
     # may be reorganizable
     def parreceive(self, gid, gid_dict, pos_list, p_ext):

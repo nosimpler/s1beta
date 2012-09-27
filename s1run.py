@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # s1run.py - primary run function for s1 project
 #
-# v 1.1.0
-# rev 2012-09-24 (SL: writes spikes for all nodes along with gids, formalized debug)
-# last major: (SL: parallelized)
+# v 1.2.1
+# rev 2012-09-27 (MS: dt set to 0.025ms)
+# last major: (SL: writes spikes for all nodes along with gids, formalized debug)
 
 import numpy as np
 from mpi4py import MPI
@@ -48,7 +48,7 @@ if __name__ == "__main__":
 
     # Set tstop before instantiating any classes
     nrn.tstop = 100.
-    nrn.dt = 0.05
+    nrn.dt = 0.025
     # nrn.cvode_active(1)
 
     # Create network from class_net's Network class
