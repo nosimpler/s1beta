@@ -2,5 +2,6 @@
 *.png
 *.eps
 *.dat
+.s1sh_history
 
 x86_64/
