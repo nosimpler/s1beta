@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 # s1run.py - primary run function for s1 project
 #
-# v 1.2.1
-# rev 2012-09-27 (MS: dt set to 0.025ms)
-# last major: (SL: writes spikes for all nodes along with gids, formalized debug)
+# v 1.2.0
+# rev 2012-09-27 (SL: Major reorganization started)
+# last major: (SL: handles directories and file creation)
 
+import os
 import numpy as np
 from mpi4py import MPI
 from time import clock
@@ -14,11 +15,15 @@ nrn.load_file("stdrun.hoc")
 # Cells are defined in './cells'
 from cells.L5_pyramidal import L5Pyr
 from class_net import Network
+import fn.fileio as fio
+import fn.paramrw as paramrw
 from plot.ptest import ptest
 from plot.pdipole import pdipole
 
 # spike write function
-def spikes_write(rank, net, filename_spikes):
+def spikes_write(net, filename_spikes):
+    pc = nrn.ParallelContext()
+
     for rank in range(int(pc.nhost())):
         # guarantees node order and no competition
         pc.barrier()
@@ -33,7 +38,7 @@ def spikes_write(rank, net, filename_spikes):
     pc.barrier()
 
 # All units for time: ms
-if __name__ == "__main__":
+def exec_runsim(p):
     # clock start time
     t0 = clock()
 
@@ -47,65 +52,77 @@ if __name__ == "__main__":
     np.random.seed(0)
 
     # Set tstop before instantiating any classes
-    nrn.tstop = 100.
-    nrn.dt = 0.025
+    nrn.tstop = p['tstop']
+    nrn.dt = p['dt']
     # nrn.cvode_active(1)
 
     # Create network from class_net's Network class
     # Network(gridpyr_x, gridpyr_y)
-    net = Network(1, 1)
+    net = Network(p['N_pyr_x'], p['N_pyr_y'])
 
-    # file name for spikes, everyone needs to know
-    filename_spikes = 'spikes.dat'
+    # create temporary spike file that everyone knows about
+    dproj = '/repo/data/s1'
+    filename_spikes = fio.file_spike_tmp(dproj)
 
-    # open main data file only on one processor
+    # create rotating data files and dirs on ONE central node
     if rank == 0:
-        file_name = 'testing.dat'
-        data_file = nrn.File()
-        data_file.wopen(file_name)
+        sim_prefix = 'test'
+        ddir = fio.OutputDataPaths(dproj, sim_prefix)
+        ddir.create_dirs()
 
-    # runtest
-    t_vec = nrn.Vector()
-    t_vec.record(nrn._ref_t)
+        # assign to param file
+        p['dir'] = ddir.dsim
+
+        # create file names
+        file_dpl = ddir.create_filename('dipole', sim_prefix)
+        file_param = ddir.create_filename('param', sim_prefix)
 
     # debug
     debug = 0
     if rank == 0:
         if debug:
             # net's method rec_debug(rank, gid)
-            v_debug = net.rec_debug(0, 2)
+            v_debug = net.rec_debug(0, 8)
             fileprefix_debug = 'debug'
             filename_debug = fileprefix_debug + '.dat'
+
+    # set t vec to record
+    t_vec = nrn.Vector()
+    t_vec.record(nrn._ref_t)
 
     # initialize cells to -65 mV and compile code
     # after all the NetCon delays have been specified
     dp_rec = nrn.Vector()
     dp_rec.record(nrn._ref_dp_total)
 
-    # record the spikes
-    vec_spikes = nrn.Vector()
-    vec_ids = nrn.Vector()
-
+    # sets the default max solver step in ms (purposefully large)
     pc.set_maxstep(10)
-    nrn.finitialize(-64.7)
 
     # set state variables if they have been changed since nrn.finitialize
+    # and run the solver
+    nrn.finitialize(-64.7)
     nrn.fcurrent()
     nrn.frecord_init()
-
-    # run the solver and combine dp_rec
     pc.psolve(nrn.tstop)
+
+    # combine dp_rec
     pc.allreduce(dp_rec, 1)
 
     # write time and calculated dipole to data file only if on the first proc
     # only execute this statement on one processor
     if rank == 0:
-        for i in range(int(t_vec.size())):
-            data_file.printf("%03.3f\t%5.4f\n", t_vec.x[i], dp_rec.x[i])
+        with open(file_dpl, 'a') as f:
+            for i in range(int(t_vec.size())):
+                f.write("%03.3f\t%5.4f\n" % (t_vec.x[i], dp_rec.x[i]))
 
-        # close the file
-        data_file.close()
-        pdipole('testing')
+        # write the gid list ...
+        paramrw.write(file_param, p, net.p_ext, net.gid_dict)
+
+        # all fig stuff needs to be moved
+        dfig = ddir.fileinfo['fig'][1]
+        dpl_list = fio.file_match(ddir.fileinfo, 'dipole')
+        for file_dpl in dpl_list:
+            pdipole(file_dpl, dfig)
 
         if debug:
             with open(filename_debug, 'w+') as file_debug:
@@ -113,10 +130,14 @@ if __name__ == "__main__":
                     file_debug.write("%03.3f\t%5.4f\n" % (t_vec.x[i], v_debug.x[i]))
 
             # also create a debug plot
-            pdipole(fileprefix_debug)
+            pdipole(filename_debug, os.getcwd())
 
     # write output spikes
-    spikes_write(rank, net, filename_spikes)
+    spikes_write(net, filename_spikes)
+
+    # move the spike file to the spike dir
+    if rank == 0:
+        ddir.move_spk(filename_spikes)
 
     if pc.nhost > 1:
         pc.runworker()
@@ -132,3 +153,14 @@ if __name__ == "__main__":
         # end clock time
         t1 = clock()
         print "Simulation run time: %4.4f s" % (t1-t0)
+
+if __name__ == "__main__":
+    # starting to use params
+    p = {
+        'N_pyr_x': 2,
+        'N_pyr_y': 2,
+        'tstop': 100.,
+        'dt': 0.025
+    }
+
+    exec_runsim(p)
