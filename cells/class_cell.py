@@ -1,8 +1,8 @@
 # class_cell.py - establish class def for general cell features
 #
-# v 1.2.1
-# rev 2012-09-27 (MS: Dipole in Cell() calculated without 3d shape. Function to scale section lengths added to Pyr()) 
-# last rev: (SL: Removed sec_to_target)
+# v 1.2.2
+# rev 2012-09-28 (MS: Fixed dipole_insert in Cell() to calculate dipole correctly)
+# last rev: (MS: Dipole in Cell() calculated without 3d shape. Function to scale section lengths added to Pyr()) 
 
 import numpy as np
 import itertools as it
@@ -74,7 +74,8 @@ class Cell():
             loc = np.array([seg.x for seg in sect])
 
             # these are the positions, including 0 but not L
-            pos = np.insert(loc, 0, 0)
+            pos = np.array([seg.x for seg in sect.allseg()])
+            # pos = np.insert(loc, 0, 0)
 
             # diff in yvals, scaled against the pos np.array. y_long as in longitudinal
             y_scale = (yscale[sect.name()] * sect.L) * pos
