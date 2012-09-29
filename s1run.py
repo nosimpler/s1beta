@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 # s1run.py - primary run function for s1 project
 #
-# v 1.2.0
-# rev 2012-09-27 (SL: Major reorganization started)
-# last major: (SL: handles directories and file creation)
+# v 1.2.3
+# rev 2012-09-29 (SL: total reorganization)
+# last major: (SL: Major reorganization started)
 
 import os
+import shutil
 import numpy as np
 from mpi4py import MPI
 from time import clock
@@ -19,6 +20,9 @@ import fn.fileio as fio
 import fn.paramrw as paramrw
 from plot.ptest import ptest
 from plot.pdipole import pdipole
+
+# params
+import p_sim
 
 # spike write function
 def spikes_write(net, filename_spikes):
@@ -38,106 +42,130 @@ def spikes_write(net, filename_spikes):
     pc.barrier()
 
 # All units for time: ms
-def exec_runsim(p):
+def exec_runsim(p_all):
     # clock start time
     t0 = clock()
+
+    # dealing with multiple params - there is a lot of overhead to this
+    # read the ranges of params and make up all combinations
+    # for loop that changes these params serially, with different file names and whatnot
+    # serial execution of each param file, since we're already doing charity here
+    # copy the param file and write the param dict to a file for that specific sim.
 
     pc = nrn.ParallelContext()
     rank = int(pc.id())
 
-    # global variable bs, should be node-independent
-    nrn("dp_total = 0.")
+    # creates p_exp.sim_prefix and other param structures
+    p_exp = paramrw.exp_params(p_all)
 
-    # Seed pseudorandom number generator
-    np.random.seed(0)
-
-    # Set tstop before instantiating any classes
-    nrn.tstop = p['tstop']
-    nrn.dt = p['dt']
-    # nrn.cvode_active(1)
-
-    # Create network from class_net's Network class
-    # Network(gridpyr_x, gridpyr_y)
-    net = Network(p['N_pyr_x'], p['N_pyr_y'])
-
-    # create temporary spike file that everyone knows about
+    # project directory
     dproj = '/repo/data/s1'
-    filename_spikes = fio.file_spike_tmp(dproj)
 
-    # create rotating data files and dirs on ONE central node
+    # one directory for all experiments
     if rank == 0:
-        sim_prefix = 'test'
-        ddir = fio.OutputDataPaths(dproj, sim_prefix)
+        ddir = fio.OutputDataPaths(dproj, p_exp.sim_prefix)
         ddir.create_dirs()
 
         # assign to param file
-        p['dir'] = ddir.dsim
+        # p['dir'] = ddir.dsim
 
-        # create file names
-        file_dpl = ddir.create_filename('dipole', sim_prefix)
-        file_param = ddir.create_filename('param', sim_prefix)
+    # iterate through i
+    for i in range(p_exp.N_sims):
+        p = p_exp.return_pdict(i)
 
-    # debug
-    debug = 0
-    if rank == 0:
-        if debug:
-            # net's method rec_debug(rank, gid)
-            v_debug = net.rec_debug(0, 8)
-            fileprefix_debug = 'debug'
-            filename_debug = fileprefix_debug + '.dat'
+        # get all nodes to this place before continuing
+        # tries to ensure we're all running the same params at the same time!
+        pc.barrier()
 
-    # set t vec to record
-    t_vec = nrn.Vector()
-    t_vec.record(nrn._ref_t)
+        # global variable bs, should be node-independent
+        nrn("dp_total = 0.")
 
-    # initialize cells to -65 mV and compile code
-    # after all the NetCon delays have been specified
-    dp_rec = nrn.Vector()
-    dp_rec.record(nrn._ref_dp_total)
+        # Seed pseudorandom number generator
+        np.random.seed(0)
 
-    # sets the default max solver step in ms (purposefully large)
-    pc.set_maxstep(10)
+        # Set tstop before instantiating any classes
+        nrn.tstop = p['tstop']
+        nrn.dt = p['dt']
+        # nrn.cvode_active(1)
 
-    # set state variables if they have been changed since nrn.finitialize
-    # and run the solver
-    nrn.finitialize(-64.7)
-    nrn.fcurrent()
-    nrn.frecord_init()
-    pc.psolve(nrn.tstop)
+        # Create network from class_net's Network class
+        # Network(gridpyr_x, gridpyr_y)
+        net = Network(p['N_pyr_x'], p['N_pyr_y'])
 
-    # combine dp_rec
-    pc.allreduce(dp_rec, 1)
+        # create prefix for files everyone knows about
+        exp_prefix = p_exp.sim_prefix + '-%03d' % i
 
-    # write time and calculated dipole to data file only if on the first proc
-    # only execute this statement on one processor
-    if rank == 0:
-        with open(file_dpl, 'a') as f:
-            for i in range(int(t_vec.size())):
-                f.write("%03.3f\t%5.4f\n" % (t_vec.x[i], dp_rec.x[i]))
+        # spike file needs to be known by all nodes
+        file_spikes_tmp = fio.file_spike_tmp(dproj)
 
-        # write the gid list ...
-        paramrw.write(file_param, p, net.p_ext, net.gid_dict)
+        # create rotating data files and dirs on ONE central node
+        if rank == 0:
+            # create file names
+            file_dpl = ddir.create_filename('dipole', exp_prefix)
+            file_param = ddir.create_filename('param', exp_prefix)
+            file_spikes = ddir.create_filename('spikes', exp_prefix)
 
-        # all fig stuff needs to be moved
-        dfig = ddir.fileinfo['fig'][1]
-        dpl_list = fio.file_match(ddir.fileinfo, 'dipole')
-        for file_dpl in dpl_list:
-            pdipole(file_dpl, dfig)
+        # debug
+        debug = 0
+        if rank == 0:
+            if debug:
+                # net's method rec_debug(rank, gid)
+                v_debug = net.rec_debug(0, 8)
+                filename_debug = 'debug.dat'
 
-        if debug:
-            with open(filename_debug, 'w+') as file_debug:
+        # set t vec to record
+        t_vec = nrn.Vector()
+        t_vec.record(nrn._ref_t)
+
+        # initialize cells to -65 mV and compile code
+        # after all the NetCon delays have been specified
+        dp_rec = nrn.Vector()
+        dp_rec.record(nrn._ref_dp_total)
+
+        # sets the default max solver step in ms (purposefully large)
+        pc.set_maxstep(10)
+
+        # set state variables if they have been changed since nrn.finitialize
+        # and run the solver
+        nrn.finitialize(-64.7)
+        nrn.fcurrent()
+        nrn.frecord_init()
+        pc.psolve(nrn.tstop)
+
+        # combine dp_rec
+        pc.allreduce(dp_rec, 1)
+
+        # write time and calculated dipole to data file only if on the first proc
+        # only execute this statement on one processor
+        if rank == 0:
+            with open(file_dpl, 'a') as f:
                 for i in range(int(t_vec.size())):
-                    file_debug.write("%03.3f\t%5.4f\n" % (t_vec.x[i], v_debug.x[i]))
+                    f.write("%03.3f\t%5.4f\n" % (t_vec.x[i], dp_rec.x[i]))
 
-            # also create a debug plot
-            pdipole(filename_debug, os.getcwd())
+            # write the gid list ...
+            paramrw.write(file_param, p, net.p_ext, net.gid_dict)
 
-    # write output spikes
-    spikes_write(net, filename_spikes)
+            # all fig stuff needs to be moved
+            dfig = ddir.fileinfo['fig'][1]
+            dpl_list = fio.file_match(ddir.fileinfo, 'dipole')
+            for file_dpl in dpl_list:
+                pdipole(file_dpl, dfig)
 
-    # move the spike file to the spike dir
-    if rank == 0:
-        ddir.move_spk(filename_spikes)
+            if debug:
+                with open(filename_debug, 'w+') as file_debug:
+                    for i in range(int(t_vec.size())):
+                        file_debug.write("%03.3f\t%5.4f\n" % (t_vec.x[i], v_debug.x[i]))
+
+                # also create a debug plot
+                pdipole(filename_debug, os.getcwd())
+
+        # write output spikes
+        # spikes_write(net, file_spikes)
+        spikes_write(net, file_spikes_tmp)
+
+        # move the spike file to the spike dir
+        if rank == 0:
+            shutil.move(file_spikes_tmp, file_spikes)
 
     if pc.nhost > 1:
         pc.runworker()
@@ -156,11 +184,4 @@ def exec_runsim(p):
 
 if __name__ == "__main__":
     # starting to use params
-    p = {
-        'N_pyr_x': 2,
-        'N_pyr_y': 2,
-        'tstop': 100.,
-        'dt': 0.025
-    }
-
-    exec_runsim(p)
+    exec_runsim(p_sim.all)

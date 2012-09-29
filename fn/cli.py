@@ -1,8 +1,8 @@
 # cli.py - routines for the command line interface console sssh.py
 #
-# v 1.2.0a
-# rev 2012-09-27 (SL: imported)
-# last major:
+# v 1.2.3
+# rev 2012-09-29 (SL: Fixed history, currently set no. of nodes)
+# last major: (SL: imported)
 
 from cmd import Cmd
 from datetime import datetime
@@ -24,7 +24,7 @@ class Console(Cmd):
         self.prompt = '\033[93m' + "[s1] " + '\033[0m'
         self.intro  = "\nThis is the SomatoSensory SHell\n"
         self.droot = '/repo/data/s1'
-        self.f_history = '.sssh_history'
+        self.f_history = '.s1sh_history'
         self.ddate = []
         self.dlast = []
         self.dlist = []
@@ -213,8 +213,8 @@ class Console(Cmd):
         """
         try:
             # self.expmts is the kain expmt subfolder
-            cmd = ['mpiexec -n %i ./s1run.py' % self.nprocs]
-            # cmd = ['mpiexec -n 4 ./s1run.py']
+            cmd = ['mpiexec -n 4 ./s1run.py']
+            # cmd = ['mpiexec -n %i ./s1run.py' % self.nprocs]
             proc = subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             proc.wait()
             # self.do_load(self.dir_data)

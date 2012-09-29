@@ -1,11 +1,12 @@
 # paramrw.py - routines for reading the param files
 #
-# v 1.2.0
-# rev 2012-09-27 (SL: writes more params)
-# last major: (SL: created)
+# v 1.2.3
+# rev 2012-09-29 (SL: param creation)
+# last major: (SL: writes more params)
 
 import re
 import fileio as fio
+from cartesian import cartesian
 
 # write the params to a filename
 def write(fparam, p, p_ext, gid_list):
@@ -55,6 +56,42 @@ def gen_expmts(f_in):
     except:
         print "Couldn't get a handle on expmts"
         return 0
+
+class exp_params():
+    def __init__(self, p_all):
+        self.p_all = p_all
+        # pop off the value for sim_prefix. then continue
+        self.sim_prefix = self.p_all.pop('sim_prefix')
+        self.list_params = self.__create_paramlist()
+        self.N_sims = len(self.list_params[0][1])
+
+    def __create_paramlist(self):
+        # p_all is the dict specifying all of the changing params
+        plist = []
+
+        # get all key/val pairs from the all dict
+        list_sorted = [item for item in self.p_all.iteritems()]
+
+        # sort the list by the key (alpha)
+        list_sorted.sort(key=lambda x: x[0])
+
+        # grab just the keys (but now in order)
+        self.keys_sorted = [item[0] for item in list_sorted]
+        self.p_template = dict.fromkeys(self.keys_sorted)
+
+        # grab just the values (but now in order)
+        for item in list_sorted:
+            plist.append(item[1])
+
+        vals_all = cartesian(plist)
+        return zip(self.keys_sorted, vals_all.transpose())
+
+    def return_pdict(self, i):
+        p_sim = dict.fromkeys(self.p_template)
+        for param in self.list_params:
+            p_sim[param[0]] = param[1][i]
+
+        return p_sim
 
 # Finds the changed variables
 def changed_vars(sim_list):

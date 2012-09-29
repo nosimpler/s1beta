@@ -1,8 +1,8 @@
 # fileio.py - general file input/output functions
 #
-# v 1.2.0
-# rev 2012-09-27 (SL: started reading from files)
-# last rev: (SL: created)
+# v 1.2.3
+# rev 2012-09-29 (SL: txt file extensions) 
+# last rev: (SL: started reading from files)
 
 import datetime, fnmatch, os, shutil, sys
 
@@ -68,10 +68,10 @@ class OutputDataPaths():
 
         # hard coded data types
         self.__datatypes = {
-            'spikes': '.spk',
-            'dipole': '.dpl',
+            'spikes': '-spk.txt',
+            'dipole': '-dpl.txt',
             'fig': '.png',
-            'param': '.param'
+            'param': '-param.txt'
         }
 
         # create date and sim directories if necessary
@@ -83,10 +83,10 @@ class OutputDataPaths():
         self.__create_dict()
         # print self.fileinfo
 
-    def move_spk(self, filename_spk):
-        dspikes = self.fileinfo['spikes'][1]
-        if dir_check(dspikes):
-            shutil.move(filename_spk, dspikes)
+    # def move_spk(self, file_tmp_spk, file_target_spk):
+    #     # dspikes = self.fileinfo['spikes'][1]
+    #     if dir_check(dspikes):
+    #         shutil.move(file_tmp_spk, file_target_spk)
 
     # Uses DirData class and returns date directory
     # this is NOT safe for midnight.
