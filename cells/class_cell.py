@@ -1,8 +1,8 @@
 # class_cell.py - establish class def for general cell features
 #
-# v 1.2.2
-# rev 2012-09-28 (MS: Fixed dipole_insert in Cell() to calculate dipole correctly)
-# last rev: (MS: Dipole in Cell() calculated without 3d shape. Function to scale section lengths added to Pyr()) 
+# v 1.2.4
+# rev 2012-09-29 (SL: Implemented the odd nseg code)
+# last rev: (MS: Fixed dipole_insert in Cell() to calculate dipole correctly)
 
 import numpy as np
 import itertools as it
@@ -274,8 +274,8 @@ class Pyr(Cell):
                 self.list_dend[-1].nseg = int(L / 50)
                 
                 # make dend.nseg odd for all sections
-                # if dend.nseg % 2 == 0:
-                #     dend.nseg += 1
+                if not self.list_dend[-1].nseg % 2:
+                    self.list_dend[-1].nseg += 1
 
     # set biophysics for soma
     def pyr_biophys_soma(self):
