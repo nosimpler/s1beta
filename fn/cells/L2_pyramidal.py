@@ -1,8 +1,8 @@
 # L2_pyramidal.py - est class def for layer 2 pyramidal cells
 #
-# v 1.2.5
-# rev 2012-10-01 (SL: added parreceive_gauss method)
-# last rev: (MS: Dictionary of length scales to calculate dipole without 3d shape. Removed synapses from L5 Basket cells. Autapses allowed)
+# v 1.2.7
+# rev 2012-10-01 (SL: parameterization of parconnect)
+# last rev: (SL: added parreceive_gauss method)
 
 from neuron import h as nrn
 from class_cell import Pyr
@@ -61,14 +61,15 @@ class L2Pyr(Pyr):
         self.apicaltuft_nmda = self.syn_nmda_create(self.list_dend[2](0.5))
 
     # collect receptor-type-based connections here
-    def parconnect(self, gid, gid_dict, pos_list):
+    def parconnect(self, gid, gid_dict, pos_list, p):
         # Connections FROM all other L2 Pyramidal cells to this one
         for gid_src in gid_dict['L2_pyramidal']:
             # don't be redundant, this is only possible for LIKE cells, but it might not hurt to check
             # if gid_src != gid:
+            # default value: 'A_weight': 5e-4,
             nc_dict = {
                 'pos_src': pos_list[gid_src],
-                'A_weight': 5e-4,
+                'A_weight': p['gbar_L2Pyr_L2Pyr'],
                 'A_delay': 1.,
                 'lamtha': 3.
             }

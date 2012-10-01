@@ -1,8 +1,8 @@
 # L5_pyramidal.py - establish class def for layer 5 pyramidal cells
 #
-# v 1.2.5
-# rev 2012-10-01 (SL: Added parreceive_gauss method)
-# last rev: (MS: Removed 3d shape. Dictionary of lenght scales passed to dipole_insert. Autapses allowed)
+# v 1.2.7
+# rev 2012-10-01 (SL: parameterization of parconnect)
+# last rev: (SL: Added parreceive_gauss method)
 
 from neuron import h as nrn
 from class_cell import Pyr
@@ -61,12 +61,13 @@ class L5Pyr(Pyr):
         self.basal3_nmda = self.syn_nmda_create(self.list_dend[7](0.5))
 
     # parallel connection function FROM all cell types TO here
-    def parconnect(self, gid, gid_dict, pos_list):
+    def parconnect(self, gid, gid_dict, pos_list, p):
         for gid_src in gid_dict['L5_pyramidal']:
             # if gid_src != gid:
             nc_dict = {
                 'pos_src': pos_list[gid_src],
-                'A_weight': 5e-4,
+                'A_weight': p['gbar_L5Pyr_L5Pyr'],
+                # 'A_weight': 5e-4,
                 'A_delay': 1.,
                 'lamtha': 3.
             }

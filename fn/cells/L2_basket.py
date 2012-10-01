@@ -1,8 +1,8 @@
 # L2_basket.py - establish class def for layer 2 basket cells
 #
-# v 1.2.1
-# rev 2012-09-27 (MS: Autapses allowed)
-# last rev: (SL: par routines)
+# v 1.2.7
+# rev 2012-10-01 (SL: parameterization of parconnect)
+# last rev: (MS: Autapses allowed)
 
 import itertools as it
 from neuron import h as nrn
@@ -22,7 +22,7 @@ class L2Basket(Basket):
 
     # par connect between all presynaptic cells
     # no connections from L5Pyr or L5Basket to L2Baskets
-    def parconnect(self, gid, gid_dict, pos_list):
+    def parconnect(self, gid, gid_dict, pos_list, p):
         # FROM L2 pyramidals TO this cell
         for gid_src in gid_dict['L2_pyramidal']:
             nc_dict = {

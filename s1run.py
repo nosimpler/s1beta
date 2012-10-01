@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # s1run.py - primary run function for s1 project
 #
-# v 1.2.5
-# rev 2012-10-01 (SL: total reorganization part 2)
-# last major: (SL: total reorganization)
+# v 1.2.7
+# rev 2012-10-01 (SL: network receives p struct for each parameterization)
+# last major: (SL: total reorganization part 2)
 
 import os
 import shutil
@@ -82,7 +82,7 @@ def exec_runsim(p_all):
         p = p_exp.return_pdict(i)
 
         # external params sometimes require changed params
-        p_ext, p_ext_gauss = paramrw.create_pext(p)
+        # p_ext, p_ext_gauss = paramrw.create_pext(p)
 
         # get all nodes to this place before continuing
         # tries to ensure we're all running the same params at the same time!
@@ -102,8 +102,8 @@ def exec_runsim(p_all):
 
         # Create network from class_net's Network class
         # Network(gridpyr_x, gridpyr_y)
-        net = Network(p['N_pyr_x'], p['N_pyr_y'], p_ext, p_ext_gauss)
-        # net = Network(p['N_pyr_x'], p['N_pyr_y'])
+        net = Network(p)
+        # net = Network(p['N_pyr_x'], p['N_pyr_y'], p_ext, p_ext_gauss)
 
         # create prefix for files everyone knows about
         exp_prefix = p_exp.sim_prefix + '-%03d' % i

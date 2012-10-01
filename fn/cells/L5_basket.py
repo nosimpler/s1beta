@@ -1,8 +1,8 @@
 # L5_basket.py - establish class def for layer 5 basket cells
 #
-# v 1.2.1
-# rev 2012-09-27 (MS: Autapses allowed)
-# last rev: (SL: par routines)
+# v 1.2.7
+# rev 2012-10-01 (SL: parameterization of parconnect)
+# last rev: (MS: Autapses allowed)
 
 import itertools as it
 from neuron import h as nrn
@@ -18,7 +18,7 @@ class L5Basket(Basket):
 
     # connections FROM other cells TO this cell
     # there are no connections from the L2Basket cells. congrats! 
-    def parconnect(self, gid, gid_dict, pos_list):
+    def parconnect(self, gid, gid_dict, pos_list, p):
         # FROM other L5Basket cells TO this cell
         for gid_src in gid_dict['L5_basket']:
             # if gid_src != gid:

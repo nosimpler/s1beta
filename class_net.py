@@ -1,8 +1,8 @@
 # class_net.py - establishes the Network class and related methods
 #
-# v 1.2.6
-# rev 2012-10-01 (SL: moved cells to fn/cells)
-# last major: (SL: added extgauss inputs)
+# v 1.2.7
+# rev 2012-10-01 (SL: now passing p around to parconnect, among other things)
+# last major: (SL: moved cells to fn/cells)
 
 import itertools as it
 import numpy as np
@@ -13,12 +13,19 @@ from fn.cells.L5_pyramidal import L5Pyr
 from fn.cells.L2_pyramidal import L2Pyr
 from fn.cells.L2_basket import L2Basket
 from fn.cells.L5_basket import L5Basket
+import fn.paramrw as paramrw
 
 # create Network class
 class Network():
-    def __init__(self, gridpyr_x, gridpyr_y, p_ext, p_ext_gauss):
+    def __init__(self, p):
+    # def __init__(self, gridpyr_x, gridpyr_y, p_ext, p_ext_gauss):
+        # set the params internally for this net
+        # better than passing it around like ...
+        self.p = p
+
         # int variables for grid of pyramidal cells (for now in both L2 and L5)
-        self.gridpyr = {'x': gridpyr_x, 'y': gridpyr_y}
+        self.gridpyr = {'x': self.p['N_pyr_x'], 'y': self.p['N_pyr_y']}
+        # self.gridpyr = {'x': gridpyr_x, 'y': gridpyr_y}
 
         # Parallel stuff
         self.pc = nrn.ParallelContext()
@@ -33,11 +40,8 @@ class Network():
 
         # all params of external inputs in p_ext
         # Global number of external inputs ... automatic counting makes more sense
-        self.p_ext = p_ext
+        self.p_ext, self.p_ext_gauss = paramrw.create_pext(self.p)
         self.N_extinput = len(self.p_ext)
-
-        # here, one input per E cell
-        self.p_ext_gauss = p_ext_gauss
 
         # cell position lists, also will give counts
         # extinput positions are all located at origin. This is sort of a hack bc of redundancy
@@ -264,7 +268,7 @@ class Network():
 
                 # for each gid, find all the other cells connected to it, based on gid
                 # this MUST be defined in EACH class of cell in self.cells_list
-                cell.parconnect(gid, self.gid_dict, self.pos_list)
+                cell.parconnect(gid, self.gid_dict, self.pos_list, self.p)
                 cell.parreceive(gid, self.gid_dict, self.pos_list, self.p_ext)
 
             # now do the gaussian inputs specific to these cells
