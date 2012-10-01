@@ -1,8 +1,8 @@
 # class_feed.py - establishes FeedExt(), FeedProximal() and FeedDistal()
 #
-# v 1.2.5
-# rev 2012-10-01 (SL: added ParFeedExtGauss())
-# last major: (SL: Now parallel feed method)
+# v 1.2.6
+# rev 2012-10-01 (SL: fixed sort bug for VecStim())
+# last major: (SL: added ParFeedExtGauss())
 
 import numpy as np
 import itertools as it
@@ -17,7 +17,9 @@ class ParFeedExtGauss():
 
         # mu and sigma values come from p
         # one single value from Gaussian dist.
-        val_gauss = np.random.normal(p['mu'], p['sigma'], 1)
+        # values MUST be sorted for VecStim()!
+        val_gauss = np.random.normal(p['mu'], p['sigma'], 50)
+        val_gauss.sort()
 
         # Convert array into nrn vector
         self.eventvec.from_python(val_gauss)

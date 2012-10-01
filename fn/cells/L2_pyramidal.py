@@ -139,7 +139,6 @@ class L2Pyr(Pyr):
         # gid_dict is the whole dictionary, including the gids of the extgauss
         # pos_list is also the pos of the extgauss (net origin)
         # p_ext_gauss are the params (strength, etc.)
-        # doesn't matter if this doesn't do anything
 
         # gid shift is based on L2_pyramidal cells NOT L5
         # I recognize this is ugly (hack)

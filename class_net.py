@@ -1,19 +1,18 @@
 # class_net.py - establishes the Network class and related methods
 #
-# v 1.2.5
-# rev 2012-10-01 (SL: added extgauss inputs)
-# last major: (SL: Records spikes, also has debug record voltage capability)
+# v 1.2.6
+# rev 2012-10-01 (SL: moved cells to fn/cells)
+# last major: (SL: added extgauss inputs)
 
 import itertools as it
 import numpy as np
 
 from neuron import h as nrn
 from fn.class_feed import ParFeedExt, ParFeedExtGauss
-from cells.L5_pyramidal import L5Pyr
-from cells.L2_pyramidal import L2Pyr
-from cells.L2_basket import L2Basket
-from cells.L5_basket import L5Basket
-# from params_extinput import p_ext, p_ext_gauss
+from fn.cells.L5_pyramidal import L5Pyr
+from fn.cells.L2_pyramidal import L2Pyr
+from fn.cells.L2_basket import L2Basket
+from fn.cells.L5_basket import L5Basket
 
 # create Network class
 class Network():

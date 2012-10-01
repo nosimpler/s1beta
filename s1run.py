@@ -14,7 +14,6 @@ from neuron import h as nrn
 nrn.load_file("stdrun.hoc")
 
 # Cells are defined in './cells'
-from cells.L5_pyramidal import L5Pyr
 from class_net import Network
 import fn.fileio as fio
 import fn.paramrw as paramrw
@@ -185,7 +184,6 @@ def exec_runsim(p_all):
             for file_spk in spk_list:
                 # spikefn.spikes_from_file(net.gid_dict, file_spk)
                 praster(net.gid_dict, nrn.tstop, file_spk, dfig)
-
 
     if pc.nhost > 1:
         pc.runworker()
