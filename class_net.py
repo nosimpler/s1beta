@@ -1,23 +1,23 @@
 # class_net.py - establishes the Network class and related methods
 #
-# v 1.1.0
-# rev 2012-09-24 (SL: Records spikes, also has debug record voltage capability)
-# last major: (SL: lots of clean up)
+# v 1.2.5
+# rev 2012-10-01 (SL: added extgauss inputs)
+# last major: (SL: Records spikes, also has debug record voltage capability)
 
 import itertools as it
 import numpy as np
 
 from neuron import h as nrn
-from fn.class_feed import ParFeedExt
+from fn.class_feed import ParFeedExt, ParFeedExtGauss
 from cells.L5_pyramidal import L5Pyr
 from cells.L2_pyramidal import L2Pyr
 from cells.L2_basket import L2Basket
 from cells.L5_basket import L5Basket
-from params_extinput import p_ext
+# from params_extinput import p_ext, p_ext_gauss
 
 # create Network class
 class Network():
-    def __init__(self, gridpyr_x, gridpyr_y):
+    def __init__(self, gridpyr_x, gridpyr_y, p_ext, p_ext_gauss):
         # int variables for grid of pyramidal cells (for now in both L2 and L5)
         self.gridpyr = {'x': gridpyr_x, 'y': gridpyr_y}
 
@@ -37,6 +37,9 @@ class Network():
         self.p_ext = p_ext
         self.N_extinput = len(self.p_ext)
 
+        # here, one input per E cell
+        self.p_ext_gauss = p_ext_gauss
+
         # cell position lists, also will give counts
         # extinput positions are all located at origin. This is sort of a hack bc of redundancy
         self.pos_list = []
@@ -45,14 +48,18 @@ class Network():
         self.L2_basket_pos = []
         self.L5_basket_pos = []
         self.extinput_pos = []
+        self.extgauss_pos = []
 
         # create coords and counts in self.N_{celltype} variables
         self.__create_coords_pyr()
         self.__create_coords_basket()
+
+        # also creates coords for the extgauss
+        self.N_extgauss = self.N_L2_pyr + self.N_L5_pyr
         self.__create_coords_extinput()
 
         # ugly for now
-        self.src_counts = (self.N_L2_pyr, self.N_L5_pyr, self.N_L2_basket, self.N_L5_basket, self.N_extinput)
+        self.src_counts = (self.N_L2_pyr, self.N_L5_pyr, self.N_L2_basket, self.N_L5_basket, self.N_extinput, self.N_extgauss)
 
         # create dictionary of GIDs according to cell type
         # global dictionary of gid and cell type
@@ -66,6 +73,7 @@ class Network():
         # create cells (and create self.origin in create_cells_pyr())
         self.cells_list = []
         self.extinput_list = []
+        self.extgauss_list = []
         self.__create_all_src()
 
         # parallel network connector
@@ -98,20 +106,21 @@ class Network():
             'L5_pyramidal': range(gid_ind[1], gid_ind[2]),
             'L2_basket': range(gid_ind[2], gid_ind[3]),
             'L5_basket': range(gid_ind[3], gid_ind[4]),
-            'extinput': range(gid_ind[4], gid_ind[5])
+            'extinput': range(gid_ind[4], gid_ind[5]),
+            'extgauss': range(gid_ind[5], gid_ind[6])
         }
 
         # total position list in order of gid
-        self.pos_list = self.L2_pyr_pos + self.L5_pyr_pos + self.L2_basket_pos + self.L5_basket_pos + self.extinput_pos
+        self.pos_list = self.L2_pyr_pos + self.L5_pyr_pos + self.L2_basket_pos + self.L5_basket_pos + self.extinput_pos + self.extgauss_pos
 
         for count in self.src_counts:
             self.N_src += count
 
     # this happens on EACH node
     # creates self.__gid_list for THIS node
+    # in the future (but not now) this should assign gids for inputs on same as receiving cell
     def __gid_assign(self):
         # round robin assignment of gids
-        # if gids are created here for the inputs, the N_cells will be changed to N_src
         for gid in range(self.rank, self.N_src, self.n_hosts):
             self.pc.set_gid2node(gid, self.rank)
             self.__gid_list.append(gid)
@@ -134,6 +143,9 @@ class Network():
         if gid in self.gid_dict['extinput']:
             return 'extinput'
 
+        if gid in self.gid_dict['extgauss']:
+            return 'extgauss'
+
     # Creates cells and grid
     # pyr grid is the immutable grid, origin now calculated in relation to feed
     def __create_coords_pyr(self):
@@ -146,6 +158,7 @@ class Network():
 
         self.N_L2_pyr = len(self.L2_pyr_pos)
         self.N_L5_pyr = len(self.L5_pyr_pos)
+        # self.N_pyr = self.N_L2_pyr + self.N_L5_pyr
 
     def __create_coords_basket(self):
         # define relevant x spacings for basket cells
@@ -181,6 +194,7 @@ class Network():
         self.origin = (origin_x, origin_y, origin_z)
 
         self.extinput_pos = [self.origin for i in range(self.N_extinput)]
+        self.extgauss_pos = [self.origin for i in range(self.N_extgauss)]
 
     # parallel create cells AND external inputs (feeds)
     # these are spike SOURCES but cells are also targets
@@ -219,9 +233,15 @@ class Network():
                     p_ind = gid - self.gid_dict['extinput'][0]
 
                     # now use the param index in the params and create the cell and artificial NetCon
+                    # what is self.t_evoked?
                     self.t_evoked = nrn.Vector([10.])
                     self.extinput_list.append(ParFeedExt(self.origin, self.p_ext[p_ind]))
-                    self.pc.cell(gid, self.extinput_list[-1].connect_to_target(None))
+                    self.pc.cell(gid, self.extinput_list[-1].connect_to_target())
+
+                elif type == 'extgauss':
+                    # use self.p_ext_gauss to create these gids
+                    self.extgauss_list.append(ParFeedExtGauss(self.p_ext_gauss))
+                    self.pc.cell(gid, self.extgauss_list[-1].connect_to_target())
 
                 else:
                     print "None of these types in Net()"
@@ -237,7 +257,6 @@ class Network():
     # for each item in the list, do a: nc = pc.gid_connect(source_gid, target_syn), weight,delay
     # Both for synapses AND for external inputs
     def __parnet_connect(self):
-        # print "in parnetcon", self.p_ext
         # loop over target zipped gids and cells
         for gid, cell in it.izip(self.__gid_list, self.cells_list):
             # ignore iteration over inputs, since they are NOT targets
@@ -248,6 +267,10 @@ class Network():
                 # this MUST be defined in EACH class of cell in self.cells_list
                 cell.parconnect(gid, self.gid_dict, self.pos_list)
                 cell.parreceive(gid, self.gid_dict, self.pos_list, self.p_ext)
+
+            # now do the gaussian inputs specific to these cells
+            if self.gid_to_type(gid) in ('L2_pyramidal', 'L5_pyramidal'):
+                cell.parreceive_gauss(gid, self.gid_dict, self.pos_list, self.p_ext_gauss)
 
     # recording debug function
     def rec_debug(self, rank_exec, gid):

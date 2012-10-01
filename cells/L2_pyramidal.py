@@ -1,8 +1,8 @@
 # L2_pyramidal.py - est class def for layer 2 pyramidal cells
 #
-# v 1.2.1
-# rev 2012-09-27 (MS: Dictionary of length scales to calculate dipole without 3d shape. Removed synapses from L5 Basket cells. Autapses allowed)
-# last rev: (SL: par routines)
+# v 1.2.5
+# rev 2012-10-01 (SL: added parreceive_gauss method)
+# last rev: (MS: Dictionary of length scales to calculate dipole without 3d shape. Removed synapses from L5 Basket cells. Autapses allowed)
 
 from neuron import h as nrn
 from class_cell import Pyr
@@ -133,6 +133,29 @@ class L2Pyr(Pyr):
                     # if this evoked, do nmda
                     if not p_src['f_input']:
                         self.ncfrom_extinput.append(self.parconnect_from_src(gid_src, nc_dict, self.apicaltuft_nmda))
+
+    def parreceive_gauss(self, gid, gid_dict, pos_list, p_ext_gauss):
+        # gid is this cell's gid
+        # gid_dict is the whole dictionary, including the gids of the extgauss
+        # pos_list is also the pos of the extgauss (net origin)
+        # p_ext_gauss are the params (strength, etc.)
+        # doesn't matter if this doesn't do anything
+
+        # gid shift is based on L2_pyramidal cells NOT L5
+        # I recognize this is ugly (hack)
+        gid_shift = gid_dict['extgauss'][0] - gid_dict['L2_pyramidal'][0]
+        if 'L2Pyr' in p_ext_gauss.keys():
+            gid_extgauss = gid + gid_shift
+            nc_dict = {
+                'pos_src': pos_list[gid_extgauss],
+                'A_weight': p_ext_gauss['L2Pyr'][0],
+                'A_delay': p_ext_gauss['L2Pyr'][1],
+                'lamtha': p_ext_gauss['lamtha']
+            }
+
+            self.ncfrom_extgauss.append(self.parconnect_from_src(gid_extgauss, nc_dict, self.basal2_ampa))
+            self.ncfrom_extgauss.append(self.parconnect_from_src(gid_extgauss, nc_dict, self.basal3_ampa))
+            self.ncfrom_extgauss.append(self.parconnect_from_src(gid_extgauss, nc_dict, self.apicaloblique_ampa))
 
     # Sets dendritic properties
     def __set_dend_props(self):

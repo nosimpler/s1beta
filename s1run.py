@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # s1run.py - primary run function for s1 project
 #
-# v 1.2.3
-# rev 2012-09-29 (SL: total reorganization)
-# last major: (SL: Major reorganization started)
+# v 1.2.5
+# rev 2012-10-01 (SL: total reorganization part 2)
+# last major: (SL: total reorganization)
 
 import os
 import shutil
@@ -18,8 +18,8 @@ from cells.L5_pyramidal import L5Pyr
 from class_net import Network
 import fn.fileio as fio
 import fn.paramrw as paramrw
-from plot.ptest import ptest
 from plot.pdipole import pdipole
+from fn.praster import praster
 
 # params
 import p_sim
@@ -40,6 +40,14 @@ def spikes_write(net, filename_spikes):
 
     # let all nodes iterate through loop in which only one rank writes
     pc.barrier()
+
+def copy_paramfile(dsim):
+    # assumes in this cwd, can use try/except in the future
+    paramfile = 'p_sim.py'
+    paramfile_orig = os.path.join(os.getcwd(), paramfile)
+    paramfile_sim = os.path.join(dsim, paramfile)
+
+    shutil.copyfile(paramfile_orig, paramfile_sim)
 
 # All units for time: ms
 def exec_runsim(p_all):
@@ -66,12 +74,16 @@ def exec_runsim(p_all):
         ddir = fio.OutputDataPaths(dproj, p_exp.sim_prefix)
         ddir.create_dirs()
 
+        copy_paramfile(ddir.dsim)
         # assign to param file
         # p['dir'] = ddir.dsim
 
     # iterate through i
     for i in range(p_exp.N_sims):
         p = p_exp.return_pdict(i)
+
+        # external params sometimes require changed params
+        p_ext, p_ext_gauss = paramrw.create_pext(p)
 
         # get all nodes to this place before continuing
         # tries to ensure we're all running the same params at the same time!
@@ -81,7 +93,8 @@ def exec_runsim(p_all):
         nrn("dp_total = 0.")
 
         # Seed pseudorandom number generator
-        np.random.seed(0)
+        np.random.seed(rank)
+        # np.random.seed(0)
 
         # Set tstop before instantiating any classes
         nrn.tstop = p['tstop']
@@ -90,7 +103,8 @@ def exec_runsim(p_all):
 
         # Create network from class_net's Network class
         # Network(gridpyr_x, gridpyr_y)
-        net = Network(p['N_pyr_x'], p['N_pyr_y'])
+        net = Network(p['N_pyr_x'], p['N_pyr_y'], p_ext, p_ext_gauss)
+        # net = Network(p['N_pyr_x'], p['N_pyr_y'])
 
         # create prefix for files everyone knows about
         exp_prefix = p_exp.sim_prefix + '-%03d' % i
@@ -166,6 +180,12 @@ def exec_runsim(p_all):
         # move the spike file to the spike dir
         if rank == 0:
             shutil.move(file_spikes_tmp, file_spikes)
+
+            spk_list = fio.file_match(ddir.fileinfo, 'spikes')
+            for file_spk in spk_list:
+                # spikefn.spikes_from_file(net.gid_dict, file_spk)
+                praster(net.gid_dict, nrn.tstop, file_spk, dfig)
+
 
     if pc.nhost > 1:
         pc.runworker()

@@ -1,13 +1,36 @@
 # class_feed.py - establishes FeedExt(), FeedProximal() and FeedDistal()
 #
-# v 1.0.0
-# rev 2012-09-11 (SL: Now parallel feed method)
-# last major: (SL: minor)
+# v 1.2.5
+# rev 2012-10-01 (SL: added ParFeedExtGauss())
+# last major: (SL: Now parallel feed method)
 
 import numpy as np
 import itertools as it
 
 from neuron import h as nrn
+
+# this seems wasteful but necessary
+class ParFeedExtGauss():
+    def __init__(self, p):
+        self.eventvec = nrn.Vector()
+        self.vs = nrn.VecStim()
+
+        # mu and sigma values come from p
+        # one single value from Gaussian dist.
+        val_gauss = np.random.normal(p['mu'], p['sigma'], 1)
+
+        # Convert array into nrn vector
+        self.eventvec.from_python(val_gauss)
+
+        # load eventvec into VecStim object
+        self.vs.play(self.eventvec)
+
+    # for parallel, maybe be that postsyn for this is just nil (None)
+    def connect_to_target(self):
+        nc = nrn.NetCon(self.vs, None)
+        nc.threshold = 0
+
+        return nc
 
 class ParFeedExt():
     def __init__(self, net_origin, p):
@@ -20,7 +43,12 @@ class ParFeedExt():
         self.t0 = p['t0']
         self.f_input = p['f_input']
 
-        # if f_input is 0, then this is a one-time feed
+        # # if f_input is 0, then this is a one-time feed
+        # if 'stim' in p.keys():
+        #     # check on this feed.
+        #     if p['stim'] is 'gaussian':
+        #         pass
+
         if not self.f_input:
             # use VecStim().play() in this case
             # should write to eventvec here
@@ -32,8 +60,8 @@ class ParFeedExt():
             self.__create_eventvec()
 
     # for parallel, maybe be that postsyn for this is just nil (None)
-    def connect_to_target(self, postsyn):
-        nc = nrn.NetCon(self.vs, postsyn)
+    def connect_to_target(self):
+        nc = nrn.NetCon(self.vs, None)
         nc.threshold = 0
 
         return nc
@@ -42,7 +70,7 @@ class ParFeedExt():
     # and load vector into VecStim object
     # only used in feeds
     def __create_eventvec(self):
-        # array of mean stimulus times, starts at 150 ms
+        # array of mean stimulus times, starts at t0
         array_isi = np.arange(self.t0, nrn.tstop, 1000./self.f_input)
 
         # array of single stimulus times -- no doublets 

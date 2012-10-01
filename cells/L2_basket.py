@@ -67,6 +67,7 @@ class L2Basket(Basket):
 
                 elif p_src['loc'] is 'distal':
                     self.ncfrom_extinput.append(self.parconnect_from_src(gid_src, nc_dict, self.soma_ampa))
+
                     # if f_input is 0, treat as an evoked input
                     if not p_src['f_input']:
                         self.ncfrom_extinput.append(self.parconnect_from_src(gid_src, nc_dict, self.soma_nmda))

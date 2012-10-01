@@ -1,8 +1,8 @@
 # L5_pyramidal.py - establish class def for layer 5 pyramidal cells
 #
-# v 1.2.1
-# rev 2012-09-27 (MS: Removed 3d shape. Dictionary of lenght scales passed to dipole_insert. Autapses allowed)
-# last rev: (SL: par routines)
+# v 1.2.5
+# rev 2012-10-01 (SL: Added parreceive_gauss method)
+# last rev: (MS: Removed 3d shape. Dictionary of lenght scales passed to dipole_insert. Autapses allowed)
 
 from neuron import h as nrn
 from class_cell import Pyr
@@ -146,12 +146,38 @@ class L5Pyr(Pyr):
                     if not p_src['f_input']:
                         self.ncfrom_extinput.append(self.parconnect_from_src(gid_src, nc_dict, self.apicaltuft_nmda))
 
+    # PROXIMAL ONLY FOR NOW
+    def parreceive_gauss(self, gid, gid_dict, pos_list, p_ext_gauss):
+        # gid is this cell's gid
+        # gid_dict is the whole dictionary, including the gids of the extgauss
+        # pos_list is also the pos of the extgauss (net origin)
+        # p_ext_gauss are the params (strength, etc.)
+        # doesn't matter if this doesn't do anything
+
+        # gid shift is based on L2_pyramidal cells NOT L5
+        # I recognize this is ugly (hack)
+        gid_shift = gid_dict['extgauss'][0] - gid_dict['L2_pyramidal'][0]
+        # print gid, gid_shift, gid+gid_shift
+        if 'L5Pyr' in p_ext_gauss.keys():
+            gid_extgauss = gid + gid_shift
+            nc_dict = {
+                'pos_src': pos_list[gid_extgauss],
+                'A_weight': p_ext_gauss['L5Pyr'][0],
+                'A_delay': p_ext_gauss['L5Pyr'][1],
+                'lamtha': p_ext_gauss['lamtha']
+            }
+
+            self.ncfrom_extgauss.append(self.parconnect_from_src(gid_extgauss, nc_dict, self.basal2_ampa))
+            self.ncfrom_extgauss.append(self.parconnect_from_src(gid_extgauss, nc_dict, self.basal3_ampa))
+            self.ncfrom_extgauss.append(self.parconnect_from_src(gid_extgauss, nc_dict, self.apicaloblique_ampa))
+
     # writes to self.dend_props list of tuples
     def __set_dend_props(self):
         # Hard coded dend properties
-        self.dend_names = ['apical_trunk', 'apical_1', 'apical_2',
-                           'apical_tuft', 'apical_oblique', 'basal_1', 
-                           'basal_2', 'basal_3'
+        self.dend_names = [
+            'apical_trunk', 'apical_1', 'apical_2',
+            'apical_tuft', 'apical_oblique', 'basal_1',
+            'basal_2', 'basal_3'
         ]
 
         self.dend_L = [102, 680, 680, 425, 255, 85, 255, 255]

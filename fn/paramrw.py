@@ -86,12 +86,94 @@ class exp_params():
         vals_all = cartesian(plist)
         return zip(self.keys_sorted, vals_all.transpose())
 
+    # return pdict based on that one value, PLUS append the p_ext here ... yes, hack-y
     def return_pdict(self, i):
         p_sim = dict.fromkeys(self.p_template)
         for param in self.list_params:
             p_sim[param[0]] = param[1][i]
 
         return p_sim
+
+# creates the external feed params based on individual simulation params p
+def create_pext(p):
+    # default params
+    feed_prox = {
+        'f_input': 10.,
+        't0': 150.,
+        'L2Pyr': (4e-5, 0.1),
+        'L5Pyr': (4e-5, 1.),
+        'L2Basket': (8e-5, 0.1),
+        'L5Basket': (8e-5, 1.),
+        'lamtha': 100.,
+        'loc': 'proximal'
+    }
+
+    feed_dist = {
+        'f_input': 10.,
+        't0': 150.,
+        'L2Pyr': (4e-5, 5.),
+        'L5Pyr': (4e-5, 5.),
+        'L2Basket': (4e-5, 5.),
+        'lamtha': 100.,
+        'loc': 'distal'
+    }
+
+    # Create evoked response parameters
+    evoked_prox_early = {
+        'f_input': 0.,
+        't0': 454.,
+        'L2Pyr': (1e-3, 0.1),
+        'L5Pyr': (5e-4, 1.),
+        'L2Basket': (2e-3, 0.1),
+        'L5Basket': (1e-3, 1.),
+        'lamtha': 3.,
+        'loc': 'proximal'
+    }
+
+    evoked_prox_late = {
+        'f_input': 0.,
+        't0': 564.,
+        'L2Pyr': (6.89e-3, 0.1),
+        'L5Pyr': (3.471e-3, 5.),
+        'L2Basket': (6.89e-3, 0.1),
+        'L5Basket': (3.471e-3, 5.),
+        'lamtha': 3.,
+        'loc': 'proximal'
+    }
+
+    evoked_dist = {
+        'f_input': 0.,
+        't0': 499.,
+        'L2Pyr': (1.05e-3, 0.1),
+        'L5Pyr': (1.05e-3, 0.1),
+        'L2Basket': (5.02e-4, 0.1),
+        'lamtha': 3.,
+        'loc': 'distal'
+    }
+
+    # this needs to create many feeds
+    p_ext_gauss = {
+        'stim': 'gaussian',
+        'mu': p['Gauss_mu'],
+        'sigma': p['Gauss_sigma'],
+        'L2Pyr': (p['Gauss_A_L2Pyr'], 0.1),
+        'L5Pyr': (p['Gauss_A_L5Pyr'], 1.),
+        'lamtha': 100.,
+        'loc': 'proximal'
+    }
+
+    # indexable py list of param dicts for parallel
+    # turn off individual feeds by commenting out relevant line here.
+    # always valid, no matter the length
+    p_ext = [
+        # feed_prox,
+        # feed_dist,
+        # evoked_prox_early,
+        # evoked_prox_late,
+        # evoked_dist
+    ]
+
+    return p_ext, p_ext_gauss
 
 # Finds the changed variables
 def changed_vars(sim_list):

@@ -1,8 +1,8 @@
 # class_cell.py - establish class def for general cell features
 #
-# v 1.2.4
-# rev 2012-09-29 (SL: Implemented the odd nseg code)
-# last rev: (MS: Fixed dipole_insert in Cell() to calculate dipole correctly)
+# v 1.2.5
+# rev 2012-10-01 (SL: added ncfrom_extgauss list)
+# last rev: (SL: Implemented the odd nseg code)
 
 import numpy as np
 import itertools as it
@@ -38,6 +38,7 @@ class Cell():
         self.ncfrom_L5Pyr = []
         self.ncfrom_L5Basket = []
         self.ncfrom_extinput = []
+        self.ncfrom_extgauss = []
 
     # two things need to happen here for nrn:
     # 1. dipole needs to be inserted into each section
