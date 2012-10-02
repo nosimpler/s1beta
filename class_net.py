@@ -1,8 +1,8 @@
 # class_net.py - establishes the Network class and related methods
 #
-# v 1.2.7
-# rev 2012-10-01 (SL: now passing p around to parconnect, among other things)
-# last major: (SL: moved cells to fn/cells)
+# v 1.2.8
+# rev 2012-10-02 (SL: Added parreceive_gauss methods to basket cells)
+# last major: (SL: now passing p around to parconnect, among other things)
 
 import itertools as it
 import numpy as np
@@ -58,7 +58,8 @@ class Network():
         self.__create_coords_basket()
 
         # also creates coords for the extgauss
-        self.N_extgauss = self.N_L2_pyr + self.N_L5_pyr
+        self.N_cells = self.N_L2_pyr + self.N_L5_pyr + self.N_L2_basket + self.N_L5_basket
+        self.N_extgauss = self.N_cells
         self.__create_coords_extinput()
 
         # ugly for now
@@ -87,13 +88,54 @@ class Network():
         self.spikegids = nrn.Vector()
         self.__record_spikes()
 
-    # setup spike recording for this node
-    def __record_spikes(self):
-        # iterate through gids on this node and set to record spikes in spike time vec and id vec
-        # agnostic to type of source, will sort that out later
-        for gid in self.__gid_list:
-            if self.pc.gid_exists(gid):
-                self.pc.spike_record(gid, self.spiketimes, self.spikegids)
+    # Creates cells and grid
+    # pyr grid is the immutable grid, origin now calculated in relation to feed
+    def __create_coords_pyr(self):
+        xrange = np.arange(self.gridpyr['x'])
+        yrange = np.arange(self.gridpyr['y'])
+
+        # create list of tuples/coords, (x, y, z)
+        self.L2_pyr_pos = [pos for pos in it.product(xrange, yrange, [0])]
+        self.L5_pyr_pos = [pos for pos in it.product(xrange, yrange, [self.zdiff])]
+
+        self.N_L2_pyr = len(self.L2_pyr_pos)
+        self.N_L5_pyr = len(self.L5_pyr_pos)
+
+    def __create_coords_basket(self):
+        # define relevant x spacings for basket cells
+        xzero = np.arange(0, self.gridpyr['x'], 3)
+        xone = np.arange(1, self.gridpyr['x'], 3)
+
+        # split even and odd y vals
+        yeven = np.arange(0, self.gridpyr['y'], 2)
+        yodd = np.arange(1, self.gridpyr['y'], 2)
+
+        # create general list of x,y coords and sort it
+        coords = [pos for pos in it.product(xzero, yeven)] + [pos for pos in it.product(xone, yodd)]
+        coords_sorted = sorted(coords, key=lambda pos: pos[1])
+
+        # append the z value for position for L2 and L5
+        self.L2_basket_pos = [pos_xy + (0,) for pos_xy in coords_sorted]
+        self.L5_basket_pos = [pos_xy + (self.zdiff,) for pos_xy in coords_sorted]
+
+        # number of cells
+        self.N_L2_basket = len(self.L2_basket_pos)
+        self.N_L5_basket = len(self.L5_basket_pos)
+
+    # creates origin AND creates external input coords (same thing)
+    def __create_coords_extinput(self):
+        xrange = np.arange(self.gridpyr['x'])
+        yrange = np.arange(self.gridpyr['y'])
+
+        # origin's z component isn't really used in calculating distance functions from origin
+        # these must be ints!
+        origin_x = xrange[(len(xrange)-1)/2]
+        origin_y = yrange[(len(yrange)-1)/2]
+        origin_z = np.floor(self.zdiff/2)
+        self.origin = (origin_x, origin_y, origin_z)
+
+        self.extinput_pos = [self.origin for i in range(self.N_extinput)]
+        self.extgauss_pos = [self.origin for i in range(self.N_extgauss)]
 
     # creates gid dicts and pos_lists
     def __create_gid_dict(self):
@@ -148,56 +190,6 @@ class Network():
 
         if gid in self.gid_dict['extgauss']:
             return 'extgauss'
-
-    # Creates cells and grid
-    # pyr grid is the immutable grid, origin now calculated in relation to feed
-    def __create_coords_pyr(self):
-        xrange = np.arange(self.gridpyr['x'])
-        yrange = np.arange(self.gridpyr['y'])
-
-        # create list of tuples/coords, (x, y, z)
-        self.L2_pyr_pos = [pos for pos in it.product(xrange, yrange, [0])]
-        self.L5_pyr_pos = [pos for pos in it.product(xrange, yrange, [self.zdiff])]
-
-        self.N_L2_pyr = len(self.L2_pyr_pos)
-        self.N_L5_pyr = len(self.L5_pyr_pos)
-        # self.N_pyr = self.N_L2_pyr + self.N_L5_pyr
-
-    def __create_coords_basket(self):
-        # define relevant x spacings for basket cells
-        xzero = np.arange(0, self.gridpyr['x'], 3)
-        xone = np.arange(1, self.gridpyr['x'], 3)
-
-        # split even and odd y vals
-        yeven = np.arange(0, self.gridpyr['y'], 2)
-        yodd = np.arange(1, self.gridpyr['y'], 2)
-
-        # create general list of x,y coords and sort it
-        coords = [pos for pos in it.product(xzero, yeven)] + [pos for pos in it.product(xone, yodd)]
-        coords_sorted = sorted(coords, key=lambda pos: pos[1])
-
-        # append the z value for position for L2 and L5
-        self.L2_basket_pos = [pos_xy + (0,) for pos_xy in coords_sorted]
-        self.L5_basket_pos = [pos_xy + (self.zdiff,) for pos_xy in coords_sorted]
-
-        # number of cells
-        self.N_L2_basket = len(self.L2_basket_pos)
-        self.N_L5_basket = len(self.L5_basket_pos)
-
-    # creates origin AND creates external input coords (same thing)
-    def __create_coords_extinput(self):
-        xrange = np.arange(self.gridpyr['x'])
-        yrange = np.arange(self.gridpyr['y'])
-
-        # origin's z component isn't really used in calculating distance functions from origin
-        # these must be ints!
-        origin_x = xrange[(len(xrange)-1)/2]
-        origin_y = yrange[(len(yrange)-1)/2]
-        origin_z = np.floor(self.zdiff/2)
-        self.origin = (origin_x, origin_y, origin_z)
-
-        self.extinput_pos = [self.origin for i in range(self.N_extinput)]
-        self.extgauss_pos = [self.origin for i in range(self.N_extgauss)]
 
     # parallel create cells AND external inputs (feeds)
     # these are spike SOURCES but cells are also targets
@@ -261,6 +253,7 @@ class Network():
     # Both for synapses AND for external inputs
     def __parnet_connect(self):
         # loop over target zipped gids and cells
+        # cells_list has NO extinputs anyway. also no extgausses
         for gid, cell in it.izip(self.__gid_list, self.cells_list):
             # ignore iteration over inputs, since they are NOT targets
             if self.pc.gid_exists(gid) and self.gid_to_type(gid) is not 'extinput':
@@ -272,8 +265,16 @@ class Network():
                 cell.parreceive(gid, self.gid_dict, self.pos_list, self.p_ext)
 
             # now do the gaussian inputs specific to these cells
-            if self.gid_to_type(gid) in ('L2_pyramidal', 'L5_pyramidal'):
+            # if self.gid_to_type(gid) in ('L2_pyramidal', 'L5_pyramidal'):
                 cell.parreceive_gauss(gid, self.gid_dict, self.pos_list, self.p_ext_gauss)
+
+    # setup spike recording for this node
+    def __record_spikes(self):
+        # iterate through gids on this node and set to record spikes in spike time vec and id vec
+        # agnostic to type of source, will sort that out later
+        for gid in self.__gid_list:
+            if self.pc.gid_exists(gid):
+                self.pc.spike_record(gid, self.spiketimes, self.spikegids)
 
     # recording debug function
     def rec_debug(self, rank_exec, gid):

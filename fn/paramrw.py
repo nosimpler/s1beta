@@ -1,8 +1,8 @@
 # paramrw.py - routines for reading the param files
 #
-# v 1.2.3
-# rev 2012-09-29 (SL: param creation)
-# last major: (SL: writes more params)
+# v 1.2.8
+# rev 2012-10-01 (SL: Added basket params for extgauss input)
+# last major: (SL: param creation)
 
 import re
 import fileio as fio
@@ -158,6 +158,8 @@ def create_pext(p):
         'sigma': p['Gauss_sigma'],
         'L2Pyr': (p['Gauss_A_L2Pyr'], 0.1),
         'L5Pyr': (p['Gauss_A_L5Pyr'], 1.),
+        'L2Basket': (p['Gauss_A_L2Basket'], 1.),
+        'L5Basket': (p['Gauss_A_L5Basket'], 1.),
         'lamtha': 100.,
         'loc': 'proximal'
     }

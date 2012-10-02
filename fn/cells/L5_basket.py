@@ -1,8 +1,8 @@
 # L5_basket.py - establish class def for layer 5 basket cells
 #
-# v 1.2.7
-# rev 2012-10-01 (SL: parameterization of parconnect)
-# last rev: (MS: Autapses allowed)
+# v 1.2.8
+# rev 2012-10-02 (SL: added parreceive_gauss)
+# last rev: (SL: parameterization of parconnect)
 
 import itertools as it
 from neuron import h as nrn
@@ -66,3 +66,19 @@ class L5Basket(Basket):
                 }
 
                 self.ncfrom_extinput.append(self.parconnect_from_src(gid_src, nc_dict, self.soma_ampa))
+
+    def parreceive_gauss(self, gid, gid_dict, pos_list, p_ext_gauss):
+        # gid is this cell's gid
+        # gid_dict is the whole dictionary, including the gids of the extgauss
+        # pos_list is also the pos of the extgauss (net origin)
+        # p_ext_gauss are the params (strength, etc.)
+        if 'L2Pyr' in p_ext_gauss.keys():
+            gid_extgauss = gid + gid_dict['extgauss'][0]
+            nc_dict = {
+                'pos_src': pos_list[gid_extgauss],
+                'A_weight': p_ext_gauss['L5Basket'][0],
+                'A_delay': p_ext_gauss['L5Basket'][1],
+                'lamtha': p_ext_gauss['lamtha']
+            }
+
+            self.ncfrom_extgauss.append(self.parconnect_from_src(gid_extgauss, nc_dict, self.soma_ampa))

@@ -1,8 +1,8 @@
 # L5_pyramidal.py - establish class def for layer 5 pyramidal cells
 #
-# v 1.2.7
-# rev 2012-10-01 (SL: parameterization of parconnect)
-# last rev: (SL: Added parreceive_gauss method)
+# v 1.2.8
+# rev 2012-10-02 (SL: made parreceive_gauss a bit cleaner)
+# last rev: (SL: parameterization of parconnect)
 
 from neuron import h as nrn
 from class_cell import Pyr
@@ -157,10 +157,10 @@ class L5Pyr(Pyr):
 
         # gid shift is based on L2_pyramidal cells NOT L5
         # I recognize this is ugly (hack)
-        gid_shift = gid_dict['extgauss'][0] - gid_dict['L2_pyramidal'][0]
-        # print gid, gid_shift, gid+gid_shift
+        # gid_shift = gid_dict['extgauss'][0] - gid_dict['L2_pyramidal'][0]
         if 'L5Pyr' in p_ext_gauss.keys():
-            gid_extgauss = gid + gid_shift
+            gid_extgauss = gid + gid_dict['extgauss'][0]
+            # gid_extgauss = gid + gid_shift
             nc_dict = {
                 'pos_src': pos_list[gid_extgauss],
                 'A_weight': p_ext_gauss['L5Pyr'][0],

@@ -1,8 +1,8 @@
 # L2_basket.py - establish class def for layer 2 basket cells
 #
-# v 1.2.7
-# rev 2012-10-01 (SL: parameterization of parconnect)
-# last rev: (MS: Autapses allowed)
+# v 1.2.8
+# rev 2012-10-02 (SL: added parreceive_extgauss)
+# last rev: (SL: parameterization of parconnect)
 
 import itertools as it
 from neuron import h as nrn
@@ -71,3 +71,24 @@ class L2Basket(Basket):
                     # if f_input is 0, treat as an evoked input
                     if not p_src['f_input']:
                         self.ncfrom_extinput.append(self.parconnect_from_src(gid_src, nc_dict, self.soma_nmda))
+
+    def parreceive_gauss(self, gid, gid_dict, pos_list, p_ext_gauss):
+        # gid is this cell's gid
+        # gid_dict is the whole dictionary, including the gids of the extgauss
+        # pos_list is also the pos of the extgauss (net origin)
+        # p_ext_gauss are the params (strength, etc.)
+        # I recognize this is ugly (hack)
+        if 'L2Basket' in p_ext_gauss.keys():
+            # since gid ids are unique, then these will all be shifted.
+            # if order of extgauss random feeds ever matters (likely), then will have to preserve order
+            # of creation based on gid ids of the cells
+            # this is a dumb place to put this information
+            gid_extgauss = gid + gid_dict['extgauss'][0]
+            nc_dict = {
+                'pos_src': pos_list[gid_extgauss],
+                'A_weight': p_ext_gauss['L2Basket'][0],
+                'A_delay': p_ext_gauss['L2Basket'][1],
+                'lamtha': p_ext_gauss['lamtha']
+            }
+
+            self.ncfrom_extgauss.append(self.parconnect_from_src(gid_extgauss, nc_dict, self.soma_ampa))

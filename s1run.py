@@ -103,7 +103,6 @@ def exec_runsim(p_all):
         # Create network from class_net's Network class
         # Network(gridpyr_x, gridpyr_y)
         net = Network(p)
-        # net = Network(p['N_pyr_x'], p['N_pyr_y'], p_ext, p_ext_gauss)
 
         # create prefix for files everyone knows about
         exp_prefix = p_exp.sim_prefix + '-%03d' % i
