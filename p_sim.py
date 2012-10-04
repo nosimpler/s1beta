@@ -7,20 +7,21 @@
 from numpy import array, linspace
 
 all = {
-    'sim_prefix': 'spikeresponse',
+    'sim_prefix': 'largescale',
 
     # numbers of cells making up the pyramidal grids
-    'N_pyr_x': 1,
-    'N_pyr_y': 1,
+    'N_pyr_x': 10,
+    'N_pyr_y': 10,
 
     # amplitudes of individual gaussian random inputs to L2Pyr and L5Pyr
     # 'Gauss_A_L2Pyr': 1.7e-5,
     # 'Gauss_A_L5Pyr': 5.5e-5,
     'Gauss_A_L2Pyr': 0.,
     'Gauss_A_L5Pyr': 0.,
-    # 'Gauss_A_L2Basket': linspace(0., 1e-3, 5),
-    'Gauss_A_L2Basket': 0.,
-    'Gauss_A_L5Basket': linspace(0., 1e-3, 5),
+    'Gauss_A_L2Basket': 2.5e-4,
+    # 'Gauss_A_L2Basket': 0.,
+    'Gauss_A_L5Basket': 0.,
+    # 'Gauss_A_L5Basket': 2.5e-4,
 
     # Gaussian parameters
     'Gauss_mu': 250.,
@@ -32,6 +33,6 @@ all = {
     'gbar_L5Pyr_L5Pyr': 0.,
 
     # numerics
-    'tstop': 500.,
+    'tstop': 350.,
     'dt': 0.025
 }

@@ -1,8 +1,8 @@
 # L2_basket.py - establish class def for layer 2 basket cells
 #
-# v 1.2.8
-# rev 2012-10-02 (SL: added parreceive_extgauss)
-# last rev: (SL: parameterization of parconnect)
+# v 1.2.9
+# rev 2012-10-03 (SL: replaced pos_list with pos_dict)
+# last rev: (SL: added parreceive_extgauss)
 
 import itertools as it
 from neuron import h as nrn
@@ -22,11 +22,11 @@ class L2Basket(Basket):
 
     # par connect between all presynaptic cells
     # no connections from L5Pyr or L5Basket to L2Baskets
-    def parconnect(self, gid, gid_dict, pos_list, p):
+    def parconnect(self, gid, gid_dict, pos_dict, p):
         # FROM L2 pyramidals TO this cell
-        for gid_src in gid_dict['L2_pyramidal']:
+        for gid_src, pos in it.izip(gid_dict['L2_pyramidal'], pos_dict['L2_pyramidal']):
             nc_dict = {
-                'pos_src': pos_list[gid_src],
+                'pos_src': pos,
                 'A_weight': 5e-4,
                 'A_delay': 1.,
                 'lamtha': 3.
@@ -35,10 +35,11 @@ class L2Basket(Basket):
             self.ncfrom_L2Pyr.append(self.parconnect_from_src(gid_src, nc_dict, self.soma_ampa))
 
         # FROM other L2Basket cells
-        for gid_src in gid_dict['L2_basket']:
+        for gid_src, pos in it.izip(gid_dict['L2_basket'], pos_dict['L2_basket']):
+        # for gid_src in gid_dict['L2_basket']:
             # if gid_src != gid:
             nc_dict = {
-                'pos_src': pos_list[gid_src],
+                'pos_src': pos,
                 'A_weight': 2e-2,
                 'A_delay': 1.,
                 'lamtha': 20.
@@ -48,14 +49,14 @@ class L2Basket(Basket):
 
     # this function might make more sense as a method of net?
     # par: receive from external inputs
-    def parreceive(self, gid, gid_dict, pos_list, p_ext):
+    def parreceive(self, gid, gid_dict, pos_dict, p_ext):
         # for some gid relating to the input feed:
-        for gid_src, p_src in it.izip(gid_dict['extinput'], p_ext):
+        for gid_src, p_src, pos in it.izip(gid_dict['extinput'], p_ext, pos_dict['extinput']):
             # check if params are defined in the p_src
             if 'L2Basket' in p_src.keys():
                 # create an nc_dict
                 nc_dict = {
-                    'pos_src': pos_list[gid_src],
+                    'pos_src': pos,
                     'A_weight': p_src['L2Basket'][0],
                     'A_delay': p_src['L2Basket'][1],
                     'lamtha': p_src['lamtha']
@@ -72,7 +73,7 @@ class L2Basket(Basket):
                     if not p_src['f_input']:
                         self.ncfrom_extinput.append(self.parconnect_from_src(gid_src, nc_dict, self.soma_nmda))
 
-    def parreceive_gauss(self, gid, gid_dict, pos_list, p_ext_gauss):
+    def parreceive_gauss(self, gid, gid_dict, pos_dict, p_ext_gauss):
         # gid is this cell's gid
         # gid_dict is the whole dictionary, including the gids of the extgauss
         # pos_list is also the pos of the extgauss (net origin)
@@ -84,8 +85,10 @@ class L2Basket(Basket):
             # of creation based on gid ids of the cells
             # this is a dumb place to put this information
             gid_extgauss = gid + gid_dict['extgauss'][0]
+
+            # gid works here because there are as many pos items in pos_dict['extgauss'] as there are cells
             nc_dict = {
-                'pos_src': pos_list[gid_extgauss],
+                'pos_src': pos_dict['extgauss'][gid],
                 'A_weight': p_ext_gauss['L2Basket'][0],
                 'A_delay': p_ext_gauss['L2Basket'][1],
                 'lamtha': p_ext_gauss['lamtha']

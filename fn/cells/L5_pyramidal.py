@@ -1,8 +1,8 @@
 # L5_pyramidal.py - establish class def for layer 5 pyramidal cells
 #
-# v 1.2.8
-# rev 2012-10-02 (SL: made parreceive_gauss a bit cleaner)
-# last rev: (SL: parameterization of parconnect)
+# v 1.2.9
+# rev 2012-10-03 (SL: pos_dict instead of pos_list)
+# last rev: (SL: made parreceive_gauss a bit cleaner)
 
 from neuron import h as nrn
 from class_cell import Pyr
@@ -61,11 +61,11 @@ class L5Pyr(Pyr):
         self.basal3_nmda = self.syn_nmda_create(self.list_dend[7](0.5))
 
     # parallel connection function FROM all cell types TO here
-    def parconnect(self, gid, gid_dict, pos_list, p):
-        for gid_src in gid_dict['L5_pyramidal']:
+    def parconnect(self, gid, gid_dict, pos_dict, p):
+        for gid_src, pos in it.izip(gid_dict['L5_pyramidal'], pos_dict['L5_pyramidal']):
             # if gid_src != gid:
             nc_dict = {
-                'pos_src': pos_list[gid_src],
+                'pos_src': pos,
                 'A_weight': p['gbar_L5Pyr_L5Pyr'],
                 # 'A_weight': 5e-4,
                 'A_delay': 1.,
@@ -83,9 +83,9 @@ class L5Pyr(Pyr):
             self.ncfrom_L5Pyr.append(self.parconnect_from_src(gid_src, nc_dict, self.basal3_nmda))
 
         # connections FROM L5Basket TO here
-        for gid_src in gid_dict['L5_basket']:
+        for gid_src, pos in it.izip(gid_dict['L5_basket'], pos_dict['L5_basket']):
             nc_dict = {
-                'pos_src': pos_list[gid_src],
+                'pos_src': pos,
                 'A_weight': 2.5e-2,
                 'A_delay': 1.,
                 'lamtha': 70.
@@ -96,10 +96,10 @@ class L5Pyr(Pyr):
             self.ncfrom_L5Basket.append(self.parconnect_from_src(gid_src, nc_dict, self.soma_gabab))
 
         # connections FROM L2Pyr TO here
-        for gid_src in gid_dict['L2_pyramidal']:
+        for gid_src, pos in it.izip(gid_dict['L2_pyramidal'], pos_dict['L2_pyramidal']):
             # this delay is longer than most
             nc_dict = {
-                'pos_src': pos_list[gid_src],
+                'pos_src': pos,
                 'A_weight': 2.5e-4,
                 'A_delay': 3.,
                 'lamtha': 3.
@@ -111,9 +111,9 @@ class L5Pyr(Pyr):
             self.ncfrom_L2Pyr.append(self.parconnect_from_src(gid_src, nc_dict, self.apicaloblique_ampa))
 
         # connections FROM L2Basket TO here
-        for gid_src in gid_dict['L2_basket']:
+        for gid_src, pos in it.izip(gid_dict['L2_basket'], pos_dict['L2_basket']):
             nc_dict = {
-                'pos_src': pos_list[gid_src],
+                'pos_src': pos,
                 'A_weight': 1e-3,
                 'A_delay': 1.,
                 'lamtha': 50.
@@ -122,11 +122,11 @@ class L5Pyr(Pyr):
             self.ncfrom_L2Basket.append(self.parconnect_from_src(gid_src, nc_dict, self.apicaltuft_gabaa))
 
     # receive from external inputs
-    def parreceive(self, gid, gid_dict, pos_list, p_ext):
-        for gid_src, p_src in it.izip(gid_dict['extinput'], p_ext):
+    def parreceive(self, gid, gid_dict, pos_dict, p_ext):
+        for gid_src, p_src, pos in it.izip(gid_dict['extinput'], p_ext, pos_dict['extinput']):
             if 'L5Pyr' in p_src.keys():
                 nc_dict = {
-                    'pos_src': pos_list[gid_src],
+                    'pos_src': pos,
                     'A_weight': p_src['L5Pyr'][0],
                     'A_delay': p_src['L5Pyr'][1],
                     'lamtha': p_src['lamtha']
@@ -148,10 +148,10 @@ class L5Pyr(Pyr):
                         self.ncfrom_extinput.append(self.parconnect_from_src(gid_src, nc_dict, self.apicaltuft_nmda))
 
     # PROXIMAL ONLY FOR NOW
-    def parreceive_gauss(self, gid, gid_dict, pos_list, p_ext_gauss):
+    def parreceive_gauss(self, gid, gid_dict, pos_dict, p_ext_gauss):
         # gid is this cell's gid
         # gid_dict is the whole dictionary, including the gids of the extgauss
-        # pos_list is also the pos of the extgauss (net origin)
+        # pos_dict is also the pos of the extgauss (net origin)
         # p_ext_gauss are the params (strength, etc.)
         # doesn't matter if this doesn't do anything
 
@@ -160,9 +160,9 @@ class L5Pyr(Pyr):
         # gid_shift = gid_dict['extgauss'][0] - gid_dict['L2_pyramidal'][0]
         if 'L5Pyr' in p_ext_gauss.keys():
             gid_extgauss = gid + gid_dict['extgauss'][0]
-            # gid_extgauss = gid + gid_shift
+
             nc_dict = {
-                'pos_src': pos_list[gid_extgauss],
+                'pos_src': pos_dict['extgauss'][gid],
                 'A_weight': p_ext_gauss['L5Pyr'][0],
                 'A_delay': p_ext_gauss['L5Pyr'][1],
                 'lamtha': p_ext_gauss['lamtha']

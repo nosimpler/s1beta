@@ -1,8 +1,8 @@
 # class_net.py - establishes the Network class and related methods
 #
-# v 1.2.8
-# rev 2012-10-02 (SL: Added parreceive_gauss methods to basket cells)
-# last major: (SL: now passing p around to parconnect, among other things)
+# v 1.2.9
+# rev 2012-10-03 (SL: Removed pos_list in favor of pos_dict)
+# last major: (SL: Added parreceive_gauss methods to basket cells)
 
 import itertools as it
 import numpy as np
@@ -18,14 +18,12 @@ import fn.paramrw as paramrw
 # create Network class
 class Network():
     def __init__(self, p):
-    # def __init__(self, gridpyr_x, gridpyr_y, p_ext, p_ext_gauss):
         # set the params internally for this net
         # better than passing it around like ...
         self.p = p
 
         # int variables for grid of pyramidal cells (for now in both L2 and L5)
         self.gridpyr = {'x': self.p['N_pyr_x'], 'y': self.p['N_pyr_y']}
-        # self.gridpyr = {'x': gridpyr_x, 'y': gridpyr_y}
 
         # Parallel stuff
         self.pc = nrn.ParallelContext()
@@ -43,15 +41,26 @@ class Network():
         self.p_ext, self.p_ext_gauss = paramrw.create_pext(self.p)
         self.N_extinput = len(self.p_ext)
 
-        # cell position lists, also will give counts
+        # absolute source list of keys on which everything gets created
+        # alpha order HERE matters but cannot in dicts
+        self.src_list = [
+            'L2_basket',
+            'L2_pyramidal',
+            'L5_basket',
+            'L5_pyramidal',
+            'extinput',
+            'extgauss'
+        ]
+
+        # cell position lists, also will give counts: must be known by ALL nodes
         # extinput positions are all located at origin. This is sort of a hack bc of redundancy
-        self.pos_list = []
-        self.L2_pyr_pos = []
-        self.L5_pyr_pos = []
-        self.L2_basket_pos = []
-        self.L5_basket_pos = []
-        self.extinput_pos = []
-        self.extgauss_pos = []
+        self.pos_dict = dict.fromkeys(self.src_list)
+        # self.L2_pyr_pos = []
+        # self.L5_pyr_pos = []
+        # self.L2_basket_pos = []
+        # self.L5_basket_pos = []
+        # self.extinput_pos = []
+        # self.extgauss_pos = []
 
         # create coords and counts in self.N_{celltype} variables
         self.__create_coords_pyr()
@@ -63,7 +72,7 @@ class Network():
         self.__create_coords_extinput()
 
         # ugly for now
-        self.src_counts = (self.N_L2_pyr, self.N_L5_pyr, self.N_L2_basket, self.N_L5_basket, self.N_extinput, self.N_extgauss)
+        self.src_counts = (self.N_L2_basket, self.N_L2_pyr, self.N_L5_basket, self.N_L5_pyr, self.N_extinput, self.N_extgauss)
 
         # create dictionary of GIDs according to cell type
         # global dictionary of gid and cell type
@@ -95,11 +104,13 @@ class Network():
         yrange = np.arange(self.gridpyr['y'])
 
         # create list of tuples/coords, (x, y, z)
-        self.L2_pyr_pos = [pos for pos in it.product(xrange, yrange, [0])]
-        self.L5_pyr_pos = [pos for pos in it.product(xrange, yrange, [self.zdiff])]
+        self.pos_dict['L2_pyramidal'] = [pos for pos in it.product(xrange, yrange, [0])]
+        self.pos_dict['L5_pyramidal'] = [pos for pos in it.product(xrange, yrange, [self.zdiff])]
+        # self.L2_pyr_pos = [pos for pos in it.product(xrange, yrange, [0])]
+        # self.L5_pyr_pos = [pos for pos in it.product(xrange, yrange, [self.zdiff])]
 
-        self.N_L2_pyr = len(self.L2_pyr_pos)
-        self.N_L5_pyr = len(self.L5_pyr_pos)
+        self.N_L2_pyr = len(self.pos_dict['L2_pyramidal'])
+        self.N_L5_pyr = len(self.pos_dict['L5_pyramidal'])
 
     def __create_coords_basket(self):
         # define relevant x spacings for basket cells
@@ -115,14 +126,17 @@ class Network():
         coords_sorted = sorted(coords, key=lambda pos: pos[1])
 
         # append the z value for position for L2 and L5
-        self.L2_basket_pos = [pos_xy + (0,) for pos_xy in coords_sorted]
-        self.L5_basket_pos = [pos_xy + (self.zdiff,) for pos_xy in coords_sorted]
+        # print len(coords_sorted)
+        self.pos_dict['L2_basket'] = [pos_xy + (0,) for pos_xy in coords_sorted]
+        self.pos_dict['L5_basket'] = [pos_xy + (self.zdiff,) for pos_xy in coords_sorted]
+        # self.L2_basket_pos = [pos_xy + (0,) for pos_xy in coords_sorted]
+        # self.L5_basket_pos = [pos_xy + (self.zdiff,) for pos_xy in coords_sorted]
 
         # number of cells
-        self.N_L2_basket = len(self.L2_basket_pos)
-        self.N_L5_basket = len(self.L5_basket_pos)
+        self.N_L2_basket = len(self.pos_dict['L2_basket'])
+        self.N_L5_basket = len(self.pos_dict['L5_basket'])
 
-    # creates origin AND creates external input coords (same thing)
+    # creates origin AND creates external input coords (same thing for now but won't fix because could change)
     def __create_coords_extinput(self):
         xrange = np.arange(self.gridpyr['x'])
         yrange = np.arange(self.gridpyr['y'])
@@ -134,8 +148,10 @@ class Network():
         origin_z = np.floor(self.zdiff/2)
         self.origin = (origin_x, origin_y, origin_z)
 
-        self.extinput_pos = [self.origin for i in range(self.N_extinput)]
-        self.extgauss_pos = [self.origin for i in range(self.N_extgauss)]
+        self.pos_dict['extinput'] = [self.origin for i in range(self.N_extinput)]
+        self.pos_dict['extgauss'] = [self.origin for i in range(self.N_extgauss)]
+        # self.extinput_pos = [self.origin for i in range(self.N_extinput)]
+        # self.extgauss_pos = [self.origin for i in range(self.N_extgauss)]
 
     # creates gid dicts and pos_lists
     def __create_gid_dict(self):
@@ -146,26 +162,30 @@ class Network():
         for i in range(len(self.src_counts)):
             gid_ind.append(gid_ind[i]+self.src_counts[i])
 
+        # gid order is guaranteed HERE
+        # alpha order here but NOT guaranteed for dict
         self.gid_dict = {
-            'L2_pyramidal': range(gid_ind[0], gid_ind[1]),
-            'L5_pyramidal': range(gid_ind[1], gid_ind[2]),
-            'L2_basket': range(gid_ind[2], gid_ind[3]),
-            'L5_basket': range(gid_ind[3], gid_ind[4]),
+            'L2_basket': range(gid_ind[0], gid_ind[1]),
+            'L2_pyramidal': range(gid_ind[1], gid_ind[2]),
+            'L5_basket': range(gid_ind[2], gid_ind[3]),
+            'L5_pyramidal': range(gid_ind[3], gid_ind[4]),
             'extinput': range(gid_ind[4], gid_ind[5]),
             'extgauss': range(gid_ind[5], gid_ind[6])
         }
 
         # total position list in order of gid
-        self.pos_list = self.L2_pyr_pos + self.L5_pyr_pos + self.L2_basket_pos + self.L5_basket_pos + self.extinput_pos + self.extgauss_pos
+        # self.pos_list = self.L2_pyr_pos + self.L5_pyr_pos + self.L2_basket_pos + self.L5_basket_pos + self.extinput_pos + self.extgauss_pos
 
         for count in self.src_counts:
             self.N_src += count
 
     # this happens on EACH node
     # creates self.__gid_list for THIS node
-    # in the future (but not now) this should assign gids for inputs on same as receiving cell
+    # NOT perfectly balanced for now
     def __gid_assign(self):
+        gid_shift = self.gid_dict['extgauss'][0] - self.gid_dict['L2_pyramidal'][0]
         # round robin assignment of gids
+        # for gid in range(self.rank, self.N_cells, self.n_hosts):
         for gid in range(self.rank, self.N_src, self.n_hosts):
             self.pc.set_gid2node(gid, self.rank)
             self.__gid_list.append(gid)
@@ -202,7 +222,12 @@ class Network():
                 # get type of cell and pos via gid
                 # now should be valid for ext inputs
                 type = self.gid_to_type(gid)
-                pos = self.pos_list[gid]
+                type_pos_ind = gid - self.gid_dict[type][0]
+                # print type, gid, self.gid_dict[type], self.pos_dict[type]
+                pos = self.pos_dict[type][type_pos_ind]
+
+                # pos was in order of gid
+                # pos = self.pos_list[gid]
 
                 # figure out which cell type is assoc with the gid
                 # create cells based on loc property
@@ -261,12 +286,15 @@ class Network():
 
                 # for each gid, find all the other cells connected to it, based on gid
                 # this MUST be defined in EACH class of cell in self.cells_list
-                cell.parconnect(gid, self.gid_dict, self.pos_list, self.p)
-                cell.parreceive(gid, self.gid_dict, self.pos_list, self.p_ext)
+                cell.parconnect(gid, self.gid_dict, self.pos_dict, self.p)
+                cell.parreceive(gid, self.gid_dict, self.pos_dict, self.p_ext)
+                # cell.parconnect(gid, self.gid_dict, self.pos_list, self.p)
+                # cell.parreceive(gid, self.gid_dict, self.pos_list, self.p_ext)
 
             # now do the gaussian inputs specific to these cells
             # if self.gid_to_type(gid) in ('L2_pyramidal', 'L5_pyramidal'):
-                cell.parreceive_gauss(gid, self.gid_dict, self.pos_list, self.p_ext_gauss)
+                cell.parreceive_gauss(gid, self.gid_dict, self.pos_dict, self.p_ext_gauss)
+                # cell.parreceive_gauss(gid, self.gid_dict, self.pos_list, self.p_ext_gauss)
 
     # setup spike recording for this node
     def __record_spikes(self):

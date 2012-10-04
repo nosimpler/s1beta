@@ -1,8 +1,8 @@
 # L2_pyramidal.py - est class def for layer 2 pyramidal cells
 #
-# v 1.2.8
-# rev 2012-10-02 (SL: cleaned up parreceive_extgauss)
-# last rev: (SL: parameterization of parconnect)
+# v 1.2.9
+# rev 2012-10-03 (SL: pos_dict instead of pos_list)
+# last rev: (SL: cleaned up parreceive_extgauss)
 
 from neuron import h as nrn
 from class_cell import Pyr
@@ -61,14 +61,14 @@ class L2Pyr(Pyr):
         self.apicaltuft_nmda = self.syn_nmda_create(self.list_dend[2](0.5))
 
     # collect receptor-type-based connections here
-    def parconnect(self, gid, gid_dict, pos_list, p):
+    def parconnect(self, gid, gid_dict, pos_dict, p):
         # Connections FROM all other L2 Pyramidal cells to this one
-        for gid_src in gid_dict['L2_pyramidal']:
+        for gid_src, pos in it.izip(gid_dict['L2_pyramidal'], pos_dict['L2_pyramidal']):
             # don't be redundant, this is only possible for LIKE cells, but it might not hurt to check
             # if gid_src != gid:
             # default value: 'A_weight': 5e-4,
             nc_dict = {
-                'pos_src': pos_list[gid_src],
+                'pos_src': pos,
                 'A_weight': p['gbar_L2Pyr_L2Pyr'],
                 'A_delay': 1.,
                 'lamtha': 3.
@@ -86,9 +86,9 @@ class L2Pyr(Pyr):
             self.ncfrom_L2Pyr.append(self.parconnect_from_src(gid_src, nc_dict, self.basal3_nmda))
 
         # connections FROM L2 basket cells TO this L2Pyr cell
-        for gid_src in gid_dict['L2_basket']:
+        for gid_src, pos in it.izip(gid_dict['L2_basket'], pos_dict['L2_basket']):
             nc_dict = {
-                'pos_src': pos_list[gid_src],
+                'pos_src': pos,
                 'A_weight': 5e-2,
                 'A_delay': 1.,
                 'lamtha': 50.
@@ -110,12 +110,12 @@ class L2Pyr(Pyr):
         #     self.ncfrom_L5Basket.append(self.parconnect_from_src(gid_src, nc_dict, self.soma_gabab))
 
     # may be reorganizable
-    def parreceive(self, gid, gid_dict, pos_list, p_ext):
-        for gid_src, p_src in it.izip(gid_dict['extinput'], p_ext):
+    def parreceive(self, gid, gid_dict, pos_dict, p_ext):
+        for gid_src, p_src, pos in it.izip(gid_dict['extinput'], p_ext, pos_dict['extinput']):
             # only connect extinput to synapses if the params exist in this param dict
             if 'L2Pyr' in p_src.keys():
                 nc_dict = {
-                    'pos_src': pos_list[gid_src],
+                    'pos_src': pos,
                     'A_weight': p_src['L2Pyr'][0],
                     'A_delay': p_src['L2Pyr'][1],
                     'lamtha': p_src['lamtha']
@@ -135,7 +135,7 @@ class L2Pyr(Pyr):
                     if not p_src['f_input']:
                         self.ncfrom_extinput.append(self.parconnect_from_src(gid_src, nc_dict, self.apicaltuft_nmda))
 
-    def parreceive_gauss(self, gid, gid_dict, pos_list, p_ext_gauss):
+    def parreceive_gauss(self, gid, gid_dict, pos_dict, p_ext_gauss):
         # gid is this cell's gid
         # gid_dict is the whole dictionary, including the gids of the extgauss
         # pos_list is also the pos of the extgauss (net origin)
@@ -146,9 +146,9 @@ class L2Pyr(Pyr):
         # gid_shift = gid_dict['extgauss'][0] - gid_dict['L2_pyramidal'][0]
         if 'L2Pyr' in p_ext_gauss.keys():
             gid_extgauss = gid + gid_dict['extgauss'][0]
-            # gid_extgauss = gid + gid_shift
+
             nc_dict = {
-                'pos_src': pos_list[gid_extgauss],
+                'pos_src': pos_dict['extgauss'][gid],
                 'A_weight': p_ext_gauss['L2Pyr'][0],
                 'A_delay': p_ext_gauss['L2Pyr'][1],
                 'lamtha': p_ext_gauss['lamtha']
