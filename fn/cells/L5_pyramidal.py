@@ -1,6 +1,6 @@
 # L5_pyramidal.py - establish class def for layer 5 pyramidal cells
 #
-# v 1.2.9
+# v 1.2.9a
 # rev 2012-10-03 (SL: pos_dict instead of pos_list)
 # last rev: (SL: made parreceive_gauss a bit cleaner)
 
@@ -46,7 +46,6 @@ class L5Pyr(Pyr):
 
     def __synapse_create(self):
         # creates synapses onto this cell in distal sections unique to this cell type
-        # print self.soma(0.5), self.list_dend[3](0.5)
         self.apicaltuft_gabaa = self.syn_gabaa_create(self.list_dend[3](0.5))
         self.apicaltuft_ampa = self.syn_ampa_create(self.list_dend[3](0.5))
         self.apicaltuft_nmda = self.syn_nmda_create(self.list_dend[3](0.5))

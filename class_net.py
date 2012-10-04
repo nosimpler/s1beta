@@ -1,6 +1,6 @@
 # class_net.py - establishes the Network class and related methods
 #
-# v 1.2.9
+# v 1.2.9a
 # rev 2012-10-03 (SL: Removed pos_list in favor of pos_dict)
 # last major: (SL: Added parreceive_gauss methods to basket cells)
 
@@ -55,12 +55,6 @@ class Network():
         # cell position lists, also will give counts: must be known by ALL nodes
         # extinput positions are all located at origin. This is sort of a hack bc of redundancy
         self.pos_dict = dict.fromkeys(self.src_list)
-        # self.L2_pyr_pos = []
-        # self.L5_pyr_pos = []
-        # self.L2_basket_pos = []
-        # self.L5_basket_pos = []
-        # self.extinput_pos = []
-        # self.extgauss_pos = []
 
         # create coords and counts in self.N_{celltype} variables
         self.__create_coords_pyr()
@@ -106,8 +100,6 @@ class Network():
         # create list of tuples/coords, (x, y, z)
         self.pos_dict['L2_pyramidal'] = [pos for pos in it.product(xrange, yrange, [0])]
         self.pos_dict['L5_pyramidal'] = [pos for pos in it.product(xrange, yrange, [self.zdiff])]
-        # self.L2_pyr_pos = [pos for pos in it.product(xrange, yrange, [0])]
-        # self.L5_pyr_pos = [pos for pos in it.product(xrange, yrange, [self.zdiff])]
 
         self.N_L2_pyr = len(self.pos_dict['L2_pyramidal'])
         self.N_L5_pyr = len(self.pos_dict['L5_pyramidal'])
@@ -129,8 +121,6 @@ class Network():
         # print len(coords_sorted)
         self.pos_dict['L2_basket'] = [pos_xy + (0,) for pos_xy in coords_sorted]
         self.pos_dict['L5_basket'] = [pos_xy + (self.zdiff,) for pos_xy in coords_sorted]
-        # self.L2_basket_pos = [pos_xy + (0,) for pos_xy in coords_sorted]
-        # self.L5_basket_pos = [pos_xy + (self.zdiff,) for pos_xy in coords_sorted]
 
         # number of cells
         self.N_L2_basket = len(self.pos_dict['L2_basket'])
@@ -150,8 +140,6 @@ class Network():
 
         self.pos_dict['extinput'] = [self.origin for i in range(self.N_extinput)]
         self.pos_dict['extgauss'] = [self.origin for i in range(self.N_extgauss)]
-        # self.extinput_pos = [self.origin for i in range(self.N_extinput)]
-        # self.extgauss_pos = [self.origin for i in range(self.N_extgauss)]
 
     # creates gid dicts and pos_lists
     def __create_gid_dict(self):
@@ -172,9 +160,6 @@ class Network():
             'extinput': range(gid_ind[4], gid_ind[5]),
             'extgauss': range(gid_ind[5], gid_ind[6])
         }
-
-        # total position list in order of gid
-        # self.pos_list = self.L2_pyr_pos + self.L5_pyr_pos + self.L2_basket_pos + self.L5_basket_pos + self.extinput_pos + self.extgauss_pos
 
         for count in self.src_counts:
             self.N_src += count
@@ -223,11 +208,7 @@ class Network():
                 # now should be valid for ext inputs
                 type = self.gid_to_type(gid)
                 type_pos_ind = gid - self.gid_dict[type][0]
-                # print type, gid, self.gid_dict[type], self.pos_dict[type]
                 pos = self.pos_dict[type][type_pos_ind]
-
-                # pos was in order of gid
-                # pos = self.pos_list[gid]
 
                 # figure out which cell type is assoc with the gid
                 # create cells based on loc property
@@ -288,13 +269,10 @@ class Network():
                 # this MUST be defined in EACH class of cell in self.cells_list
                 cell.parconnect(gid, self.gid_dict, self.pos_dict, self.p)
                 cell.parreceive(gid, self.gid_dict, self.pos_dict, self.p_ext)
-                # cell.parconnect(gid, self.gid_dict, self.pos_list, self.p)
-                # cell.parreceive(gid, self.gid_dict, self.pos_list, self.p_ext)
 
             # now do the gaussian inputs specific to these cells
             # if self.gid_to_type(gid) in ('L2_pyramidal', 'L5_pyramidal'):
                 cell.parreceive_gauss(gid, self.gid_dict, self.pos_dict, self.p_ext_gauss)
-                # cell.parreceive_gauss(gid, self.gid_dict, self.pos_list, self.p_ext_gauss)
 
     # setup spike recording for this node
     def __record_spikes(self):
