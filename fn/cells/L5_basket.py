@@ -1,8 +1,8 @@
 # L5_basket.py - establish class def for layer 5 basket cells
 #
-# v 1.2.9
-# rev 2012-10-03 (SL: pos_dict instead of pos_list)
-# last rev: (SL: added parreceive_gauss)
+# v 1.2.11
+# rev 2012-10-04 (SL: separate extgauss feed params)
+# last rev: (SL: pos_dict instead of pos_list)
 
 import itertools as it
 from neuron import h as nrn
@@ -72,13 +72,13 @@ class L5Basket(Basket):
         # gid_dict is the whole dictionary, including the gids of the extgauss
         # pos_dict is also the pos of the extgauss (net origin)
         # p_ext_gauss are the params (strength, etc.)
-        if 'L2Pyr' in p_ext_gauss.keys():
+        if 'L5_basket' in p_ext_gauss.keys():
             gid_extgauss = gid + gid_dict['extgauss'][0]
 
             nc_dict = {
                 'pos_src': pos_dict['extgauss'][gid],
-                'A_weight': p_ext_gauss['L5Basket'][0],
-                'A_delay': p_ext_gauss['L5Basket'][1],
+                'A_weight': p_ext_gauss['L5_basket'][0],
+                'A_delay': p_ext_gauss['L5_basket'][1],
                 'lamtha': p_ext_gauss['lamtha']
             }
 

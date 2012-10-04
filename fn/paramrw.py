@@ -1,8 +1,8 @@
 # paramrw.py - routines for reading the param files
 #
-# v 1.2.8
-# rev 2012-10-01 (SL: Added basket params for extgauss input)
-# last major: (SL: param creation)
+# v 1.2.11
+# rev 2012-10-04 (SL: separate extgauss feed params)
+# last major: (SL: Added basket params for extgauss input)
 
 import re
 import fileio as fio
@@ -152,14 +152,13 @@ def create_pext(p):
     }
 
     # this needs to create many feeds
+    # (amplitude, delay, mu, sigma). ordered this way to preserve compatibility
     p_ext_gauss = {
         'stim': 'gaussian',
-        'mu': p['Gauss_mu'],
-        'sigma': p['Gauss_sigma'],
-        'L2Pyr': (p['Gauss_A_L2Pyr'], 0.1),
-        'L5Pyr': (p['Gauss_A_L5Pyr'], 1.),
-        'L2Basket': (p['Gauss_A_L2Basket'], 1.),
-        'L5Basket': (p['Gauss_A_L5Basket'], 1.),
+        'L2_basket': (p['L2Basket_Gauss_A'], 1., p['L2Basket_Gauss_mu'], p['L2Basket_Gauss_sigma']),
+        'L2_pyramidal': (p['L2Pyr_Gauss_A'], 0.1, p['L2Pyr_Gauss_mu'], p['L2Pyr_Gauss_sigma']),
+        'L5_basket': (p['L5Basket_Gauss_A'], 1., p['L5Basket_Gauss_mu'], p['L5Basket_Gauss_sigma']),
+        'L5_pyramidal': (p['L5Pyr_Gauss_A'], 1., p['L5Pyr_Gauss_mu'], p['L5Pyr_Gauss_sigma']),
         'lamtha': 100.,
         'loc': 'proximal'
     }

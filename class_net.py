@@ -1,8 +1,8 @@
 # class_net.py - establishes the Network class and related methods
 #
-# v 1.2.10
-# rev 2012-10-04 (SL: assigns extgauss gids to cells)
-# last major: (SL: Removed pos_list in favor of pos_dict)
+# v 1.2.11
+# rev 2012-10-04 (SL: separate params for extgauss)
+# last major: (SL: assigns extgauss gids to cells)
 
 import itertools as it
 import numpy as np
@@ -208,6 +208,17 @@ class Network():
         if gid in self.gid_dict['extgauss']:
             return 'extgauss'
 
+    # creates the external feed appropriate for this gid
+    # only mu and sigma really get read here, dependent upon postsynaptic cell type
+    def __create_extgauss_params(self, gid_extgauss):
+        # linear shift from corresponding cell gid
+        gid_post = gid_extgauss - self.gid_dict['extgauss'][0]
+        type = self.gid_to_type(gid_post)
+
+        # should only return a cell type
+        # return values 2 and 3 of the tuple of this cell type and assign to mu and sigma
+        return self.p_ext_gauss[type][2:4]
+
     # parallel create cells AND external inputs (feeds)
     # these are spike SOURCES but cells are also targets
     # external inputs are not targets
@@ -253,7 +264,9 @@ class Network():
 
                 elif type == 'extgauss':
                     # use self.p_ext_gauss to create these gids
-                    self.extgauss_list.append(ParFeedExtGauss(self.p_ext_gauss))
+                    mu, sigma = self.__create_extgauss_params(gid)
+                    self.extgauss_list.append(ParFeedExtGauss(mu, sigma))
+                    # self.extgauss_list.append(ParFeedExtGauss(self.p_ext_gauss))
                     self.pc.cell(gid, self.extgauss_list[-1].connect_to_target())
 
                 else:

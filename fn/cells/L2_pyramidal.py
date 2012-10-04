@@ -1,8 +1,8 @@
 # L2_pyramidal.py - est class def for layer 2 pyramidal cells
 #
-# v 1.2.9
-# rev 2012-10-03 (SL: pos_dict instead of pos_list)
-# last rev: (SL: cleaned up parreceive_extgauss)
+# v 1.2.11
+# rev 2012-10-04 (SL: separate extgauss feed params)
+# last rev: (SL: pos_dict instead of pos_list)
 
 from neuron import h as nrn
 from class_cell import Pyr
@@ -144,13 +144,13 @@ class L2Pyr(Pyr):
         # gid shift is based on L2_pyramidal cells NOT L5
         # I recognize this is ugly (hack)
         # gid_shift = gid_dict['extgauss'][0] - gid_dict['L2_pyramidal'][0]
-        if 'L2Pyr' in p_ext_gauss.keys():
+        if 'L2_pyramidal' in p_ext_gauss.keys():
             gid_extgauss = gid + gid_dict['extgauss'][0]
 
             nc_dict = {
                 'pos_src': pos_dict['extgauss'][gid],
-                'A_weight': p_ext_gauss['L2Pyr'][0],
-                'A_delay': p_ext_gauss['L2Pyr'][1],
+                'A_weight': p_ext_gauss['L2_pyramidal'][0],
+                'A_delay': p_ext_gauss['L2_pyramidal'][1],
                 'lamtha': p_ext_gauss['lamtha']
             }
 

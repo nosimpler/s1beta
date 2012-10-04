@@ -1,8 +1,8 @@
 # L2_basket.py - establish class def for layer 2 basket cells
 #
-# v 1.2.9
-# rev 2012-10-03 (SL: replaced pos_list with pos_dict)
-# last rev: (SL: added parreceive_extgauss)
+# v 1.2.11
+# rev 2012-10-04 (SL: ext gauss feeds separate)
+# last rev: (SL: replaced pos_list with pos_dict)
 
 import itertools as it
 from neuron import h as nrn
@@ -79,7 +79,7 @@ class L2Basket(Basket):
         # pos_list is also the pos of the extgauss (net origin)
         # p_ext_gauss are the params (strength, etc.)
         # I recognize this is ugly (hack)
-        if 'L2Basket' in p_ext_gauss.keys():
+        if 'L2_basket' in p_ext_gauss.keys():
             # since gid ids are unique, then these will all be shifted.
             # if order of extgauss random feeds ever matters (likely), then will have to preserve order
             # of creation based on gid ids of the cells
@@ -89,8 +89,8 @@ class L2Basket(Basket):
             # gid works here because there are as many pos items in pos_dict['extgauss'] as there are cells
             nc_dict = {
                 'pos_src': pos_dict['extgauss'][gid],
-                'A_weight': p_ext_gauss['L2Basket'][0],
-                'A_delay': p_ext_gauss['L2Basket'][1],
+                'A_weight': p_ext_gauss['L2_basket'][0],
+                'A_delay': p_ext_gauss['L2_basket'][1],
                 'lamtha': p_ext_gauss['lamtha']
             }
 

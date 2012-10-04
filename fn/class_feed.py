@@ -1,8 +1,8 @@
 # class_feed.py - establishes FeedExt(), FeedProximal() and FeedDistal()
 #
-# v 1.2.6
-# rev 2012-10-01 (SL: fixed sort bug for VecStim())
-# last major: (SL: added ParFeedExtGauss())
+# v 1.2.11
+# rev 2012-10-04 (SL: ParFeedExtGauss different mu, sigma vals)
+# last major: (SL: fixed sort bug for VecStim())
 
 import numpy as np
 import itertools as it
@@ -11,14 +11,15 @@ from neuron import h as nrn
 
 # this seems wasteful but necessary
 class ParFeedExtGauss():
-    def __init__(self, p):
+    def __init__(self, mu, sigma):
         self.eventvec = nrn.Vector()
         self.vs = nrn.VecStim()
 
         # mu and sigma values come from p
         # one single value from Gaussian dist.
         # values MUST be sorted for VecStim()!
-        val_gauss = np.random.normal(p['mu'], p['sigma'], 50)
+        val_gauss = np.random.normal(mu, sigma, 50)
+        # val_gauss = np.random.normal(p['mu'], p['sigma'], 50)
         val_gauss.sort()
 
         # Convert array into nrn vector

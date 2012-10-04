@@ -1,8 +1,8 @@
 # spikefn.py - dealing with spikes
 #
-# v 1.2.5
-# 2012-10-01 (SL: created)
-# last major:
+# v 1.2.11
+# 2012-10-04 (SL: separate extgauss feed params)
+# last major: (SL: created)
 
 import fileio as fio
 import numpy as np
@@ -28,33 +28,52 @@ class Spikes():
 
         return spike_list
 
+def split_extgauss(s, gid_dict, type):
+    gid_cell = gid_dict[type]
+    gid_extgauss_start = gid_dict['extgauss'][0]
+    gid_extgauss_cell = [gid + gid_extgauss_start for gid in gid_dict[type]]
+
+    return Spikes(s, gid_extgauss_cell)
+
 # not "purely" from files
 def spikes_from_file(gid_dict, fspikes):
     s = np.loadtxt(open(fspikes, 'rb'))
 
+    # get the qnd dict keys from gid_dict
     s_dict = dict.fromkeys(gid_dict)
+
+    # remove extgauss from keys, going to be replaced with a bunch for different types
+    del s_dict['extgauss']
+
+    # now iterate over remaining keys
     for key in s_dict.keys():
+        # sort of a hack to separate extgauss
         s_dict[key] = Spikes(s, gid_dict[key])
-        # s_dict[key] = s_type.spike_list
+
+        if key not in 'extinput':
+            # figure out its extgauss feed
+            newkey = 'extgauss_' + key
+            s_dict[newkey] = split_extgauss(s, gid_dict, key)
 
     return s_dict
 
 # from the supplied key name, return a marker style
 def get_markerstyle(key):
     markerstyle = ''
+
+    # ext now same color, not ideal yet
     if 'L2' in key:
         markerstyle += 'k'
     elif 'L5' in key:
         markerstyle += 'r'
-    elif 'ext' in key:
-        markerstyle += 'b'
 
-    if 'pyramidal' in key:
+    # short circuit this by putting extgauss first ... cheap.
+    if 'extgauss' in key:
+        markerstyle += '.'
+    elif 'pyramidal' in key:
         markerstyle += '2'
     elif 'basket' in key:
         markerstyle += '|'
-    else:
-        markerstyle += '.'
 
     return markerstyle
 
@@ -65,9 +84,6 @@ def spike_png(a, s_dict):
     # parse spikes file by cell type
     # output all cell spikes
 
-    # s_e and s_i are lists of spike lists
-    # print "in spike_png, s_e is:", s_e, "and s_i is:", s_i
-
     # get the length of s - new way
     N_total = 0
     for key in s_dict.keys():
@@ -77,13 +93,13 @@ def spike_png(a, s_dict):
     # e_ticks starts at 1 for padding
     # i_ticks ends at -1 for padding
     y_ticks = np.linspace(0, 1, N_total + 2)
-    # y_ticks = np.linspace(0, 1, N_e + N_i + 2)
 
     # Turn the hold on
     a.hold(True)
 
     # define start point
     tick_start = 1
+
     for key in s_dict.keys():
         # print key, s_dict[key].spike_list
         s_dict[key].tick_marks = y_ticks[tick_start:tick_start+s_dict[key].N_cells]
