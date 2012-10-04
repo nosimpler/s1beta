@@ -77,7 +77,7 @@ def get_markerstyle(key):
 
     return markerstyle
 
-# save_png makes and saves the file name for the png file
+# spike_png plots spikes based on input dict
 def spike_png(a, s_dict):
     # new spikepng function:
     # receive lists of cell spikes and the gid dict for now
