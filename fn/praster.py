@@ -1,6 +1,6 @@
 # praster.py - plot dipole function
 #
-# v 1.2.12
+# v 1.2.13a
 # rev 2012-10-04 (SL: using fig_raster)
 # last major: (SL: imported)
 
@@ -15,8 +15,6 @@ import spikefn as spikefn
 def praster(gid_dict, tstop, file_name, dfig):
     # ddipole is dipole data
     s_dict = spikefn.spikes_from_file(gid_dict, file_name)
-
-    print s_dict
 
     s_dict_extgauss = {}
     s_dict_L2 = {}
