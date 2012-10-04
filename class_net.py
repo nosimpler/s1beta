@@ -1,8 +1,8 @@
 # class_net.py - establishes the Network class and related methods
 #
-# v 1.2.9a
-# rev 2012-10-03 (SL: Removed pos_list in favor of pos_dict)
-# last major: (SL: Added parreceive_gauss methods to basket cells)
+# v 1.2.10
+# rev 2012-10-04 (SL: assigns extgauss gids to cells)
+# last major: (SL: Removed pos_list in favor of pos_dict)
 
 import itertools as it
 import numpy as np
@@ -166,14 +166,26 @@ class Network():
 
     # this happens on EACH node
     # creates self.__gid_list for THIS node
-    # NOT perfectly balanced for now
     def __gid_assign(self):
-        gid_shift = self.gid_dict['extgauss'][0] - self.gid_dict['L2_pyramidal'][0]
         # round robin assignment of gids
-        # for gid in range(self.rank, self.N_cells, self.n_hosts):
-        for gid in range(self.rank, self.N_src, self.n_hosts):
+        for gid in range(self.rank, self.N_cells, self.n_hosts):
+        # for gid in range(self.rank, self.N_src, self.n_hosts):
+            # set the cell gid
             self.pc.set_gid2node(gid, self.rank)
             self.__gid_list.append(gid)
+
+            # calculate gid for the extgauss and assign to same rank
+            gid_extgauss = self.gid_dict['extgauss'][0] + gid
+            self.pc.set_gid2node(gid_extgauss, self.rank)
+            self.__gid_list.append(gid_extgauss)
+
+        # NOT perfectly balanced for now
+        for gid in range(self.rank, self.N_extinput, self.n_hosts):
+            self.pc.set_gid2node(gid, self.rank)
+            self.__gid_list.append(gid)
+
+        # extremely important to get the gids in the right order
+        self.__gid_list.sort()
 
     # reverse lookup of gid to type
     # there may be a better, more general way to do this
@@ -233,7 +245,7 @@ class Network():
                     # to find param index, take difference between REAL gid here and gid start point of the items
                     p_ind = gid - self.gid_dict['extinput'][0]
 
-                    # now use the param index in the params and create the cell and artificial NetCon
+                   # now use the param index in the params and create the cell and artificial NetCon
                     # what is self.t_evoked?
                     self.t_evoked = nrn.Vector([10.])
                     self.extinput_list.append(ParFeedExt(self.origin, self.p_ext[p_ind]))
