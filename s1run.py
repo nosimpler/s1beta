@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # s1run.py - primary run function for s1 project
 #
-# v 1.2.7
-# rev 2012-10-01 (SL: network receives p struct for each parameterization)
-# last major: (SL: total reorganization part 2)
+# v 1.2.12
+# rev 2012-10-04 (SL: separate fig dirs)
+# last major: (SL: network receives p struct for each parameterization)
 
 import os
 import shutil
@@ -158,10 +158,11 @@ def exec_runsim(p_all):
             paramrw.write(file_param, p, net.p_ext, net.gid_dict)
 
             # all fig stuff needs to be moved
-            dfig = ddir.fileinfo['fig'][1]
+            dfig_dpl = ddir.fileinfo['figdpl'][1]
             dpl_list = fio.file_match(ddir.fileinfo, 'dipole')
+
             for file_dpl in dpl_list:
-                pdipole(file_dpl, dfig)
+                pdipole(file_dpl, dfig_dpl)
 
             if debug:
                 with open(filename_debug, 'w+') as file_debug:
@@ -179,10 +180,12 @@ def exec_runsim(p_all):
         if rank == 0:
             shutil.move(file_spikes_tmp, file_spikes)
 
+            dfig_spk = ddir.fileinfo['figspk'][1]
             spk_list = fio.file_match(ddir.fileinfo, 'spikes')
+
             for file_spk in spk_list:
                 # spikefn.spikes_from_file(net.gid_dict, file_spk)
-                praster(net.gid_dict, nrn.tstop, file_spk, dfig)
+                praster(net.gid_dict, nrn.tstop, file_spk, dfig_spk)
 
     if pc.nhost > 1:
         pc.runworker()

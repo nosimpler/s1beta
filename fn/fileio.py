@@ -1,8 +1,8 @@
 # fileio.py - general file input/output functions
 #
-# v 1.2.3
-# rev 2012-09-29 (SL: txt file extensions) 
-# last rev: (SL: started reading from files)
+# v 1.2.13
+# rev 2012-10-04 (SL: separate fig dirs)
+# last rev: (SL: txt file extensions) 
 
 import datetime, fnmatch, os, shutil, sys
 
@@ -70,7 +70,8 @@ class OutputDataPaths():
         self.__datatypes = {
             'spikes': '-spk.txt',
             'dipole': '-dpl.txt',
-            'fig': '.png',
+            'figspk': '-spk.png',
+            'figdpl': '-dpl.png',
             'param': '-param.txt'
         }
 
@@ -81,7 +82,6 @@ class OutputDataPaths():
         # create dict and subdirs
         self.fileinfo = dict.fromkeys(self.__datatypes)
         self.__create_dict()
-        # print self.fileinfo
 
     # def move_spk(self, file_tmp_spk, file_target_spk):
     #     # dspikes = self.fileinfo['spikes'][1]
@@ -97,7 +97,7 @@ class OutputDataPaths():
 
     def create_dirs(self):
         for key in self.fileinfo.keys():
-           dir_create(self.fileinfo[key][1])
+            dir_create(self.fileinfo[key][1])
 
     # simdir_create
     # creates subdirs too
