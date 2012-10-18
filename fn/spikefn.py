@@ -1,8 +1,8 @@
 # spikefn.py - dealing with spikes
 #
-# v 1.2.11
-# 2012-10-04 (SL: separate extgauss feed params)
-# last major: (SL: created)
+# v 1.2.14
+# 2012-10-18 (SL: Minor)
+# last major: (SL: separate extgauss feed params)
 
 import fileio as fio
 import numpy as np
@@ -11,7 +11,8 @@ class Spikes():
     def __init__(self, s_all, ranges):
         self.r = ranges
         self.spike_list = self.filter(s_all)
-        self.N_cells = len(self.spike_list)
+        self.N_cells = len(self.r)
+        self.N_spikingcells = len(self.spike_list)
 
         # this is set externally
         self.tick_marks = []
@@ -65,7 +66,7 @@ def get_markerstyle(key):
     if 'L2' in key:
         markerstyle += 'k'
     elif 'L5' in key:
-        markerstyle += 'r'
+        markerstyle += 'b'
 
     # short circuit this by putting extgauss first ... cheap.
     if 'extgauss' in key:
@@ -115,4 +116,5 @@ def spike_png(a, s_dict):
             a.plot(spk_cell, s_dict[key].tick_marks[i] * np.ones(len(spk_cell)), markerstyle, markeredgewidth=2, markersize=10)
             i += 1
 
+    a.set_ylim([0, 1])
     a.grid()

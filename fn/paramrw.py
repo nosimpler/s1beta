@@ -1,8 +1,8 @@
 # paramrw.py - routines for reading the param files
 #
-# v 1.2.11
-# rev 2012-10-04 (SL: separate extgauss feed params)
-# last major: (SL: Added basket params for extgauss input)
+# v 1.2.14
+# rev 2012-10-18 (SL: Minor)
+# last major: (SL: separate extgauss feed params)
 
 import re
 import fileio as fio
@@ -18,7 +18,7 @@ def write(fparam, p, p_ext, gid_list):
             f.write('\n')
 
         for key in p.keys():
-            f.write('%13s: ' % key)
+            f.write('%22s: ' % key)
 
             if key.startswith('N_'):
                 f.write('%i\n' % p[key])
