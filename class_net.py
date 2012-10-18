@@ -1,8 +1,8 @@
 # class_net.py - establishes the Network class and related methods
 #
-# v 1.2.11
-# rev 2012-10-04 (SL: separate params for extgauss)
-# last major: (SL: assigns extgauss gids to cells)
+# v 1.2.15
+# rev 2012-10-18 (SL: Fixed extinput gid assignment)
+# last major: (SL: separate params for extgauss)
 
 import itertools as it
 import numpy as np
@@ -180,7 +180,11 @@ class Network():
             self.__gid_list.append(gid_extgauss)
 
         # NOT perfectly balanced for now
-        for gid in range(self.rank, self.N_extinput, self.n_hosts):
+        for gid_base in range(self.rank, self.N_extinput, self.n_hosts):
+            # shift the gid_base to the extinput gid
+            gid = gid_base + self.gid_dict['extinput'][0]
+
+            # set as usual
             self.pc.set_gid2node(gid, self.rank)
             self.__gid_list.append(gid)
 
@@ -258,7 +262,7 @@ class Network():
 
                    # now use the param index in the params and create the cell and artificial NetCon
                     # what is self.t_evoked?
-                    self.t_evoked = nrn.Vector([10.])
+                    # self.t_evoked = nrn.Vector([10.])
                     self.extinput_list.append(ParFeedExt(self.origin, self.p_ext[p_ind]))
                     self.pc.cell(gid, self.extinput_list[-1].connect_to_target())
 
@@ -266,7 +270,6 @@ class Network():
                     # use self.p_ext_gauss to create these gids
                     mu, sigma = self.__create_extgauss_params(gid)
                     self.extgauss_list.append(ParFeedExtGauss(mu, sigma))
-                    # self.extgauss_list.append(ParFeedExtGauss(self.p_ext_gauss))
                     self.pc.cell(gid, self.extgauss_list[-1].connect_to_target())
 
                 else:
@@ -295,8 +298,7 @@ class Network():
                 cell.parconnect(gid, self.gid_dict, self.pos_dict, self.p)
                 cell.parreceive(gid, self.gid_dict, self.pos_dict, self.p_ext)
 
-            # now do the gaussian inputs specific to these cells
-            # if self.gid_to_type(gid) in ('L2_pyramidal', 'L5_pyramidal'):
+                # now do the gaussian inputs specific to these cells
                 cell.parreceive_gauss(gid, self.gid_dict, self.pos_dict, self.p_ext_gauss)
 
     # setup spike recording for this node
