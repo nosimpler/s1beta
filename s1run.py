@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # s1run.py - primary run function for s1 project
 #
-# v 1.2.12
-# rev 2012-10-04 (SL: separate fig dirs)
-# last major: (SL: network receives p struct for each parameterization)
+# v 1.2.16
+# rev 2012-10-19 (MS: Morlet analysis added)
+# last major: (SL: separate fig dirs)
 
 import os
 import shutil
@@ -18,6 +18,7 @@ from class_net import Network
 import fn.fileio as fio
 import fn.paramrw as paramrw
 from plot.pdipole import pdipole
+from fn.spec import MorletSpec
 from fn.praster import praster
 
 # params
@@ -159,10 +160,15 @@ def exec_runsim(p_all):
 
             # all fig stuff needs to be moved
             dfig_dpl = ddir.fileinfo['figdpl'][1]
+            dfig_wvlt = ddir.fileinfo['figwvlt'][1]
             dpl_list = fio.file_match(ddir.fileinfo, 'dipole')
 
             for file_dpl in dpl_list:
+                # Plot dipole data
                 pdipole(file_dpl, dfig_dpl)
+
+                # Morlet analysis
+                MorletSpec(file_dpl, dfig_wvlt)
 
             if debug:
                 with open(filename_debug, 'w+') as file_debug:

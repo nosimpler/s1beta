@@ -7,22 +7,22 @@
 from numpy import array, linspace
 
 all = {
-    'sim_prefix': 'L2inhib-mu',
+    'sim_prefix': 'wvlt-test',
 
     # numbers of cells making up the pyramidal grids
-    'N_pyr_x': 10,
-    'N_pyr_y': 10,
+    'N_pyr_x': 1,
+    'N_pyr_y': 1,
 
     # amplitudes of individual gaussian random inputs to L2Pyr and L5Pyr
     # L2 Basket params
-    # 'L2Basket_Gauss_A': 0.,
-    'L2Basket_Gauss_A': 5.9e-5,
+    'L2Basket_Gauss_A': 0.,
+    # 'L2Basket_Gauss_A': 5.9e-5,
     'L2Basket_Gauss_mu': 200.,
     'L2Basket_Gauss_sigma': 3.6,
 
     # L2 Pyr params
-    # 'L2Pyr_Gauss_A': 0.,
-    'L2Pyr_Gauss_A': 1.8e-5,
+    'L2Pyr_Gauss_A': 0.,
+    # 'L2Pyr_Gauss_A': 1.8e-5,
     'L2Pyr_Gauss_mu': 200.,
     'L2Pyr_Gauss_sigma': 3.6,
 
@@ -42,7 +42,11 @@ all = {
     'gbar_L2Pyr_L2Pyr': 0.,
     'gbar_L5Pyr_L5Pyr': 0.,
 
+    # Ongoing alpha rhythms
+    'f_input_prox': 10.,
+    # 'f_input_prox': array([10., 20.]),
+
     # numerics
-    'tstop': 350.,
+    'tstop': 1000.,
     'dt': 0.025
 }

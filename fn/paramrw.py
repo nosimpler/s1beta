@@ -1,7 +1,7 @@
 # paramrw.py - routines for reading the param files
 #
-# v 1.2.14
-# rev 2012-10-18 (SL: Minor)
+# v 1.2.19
+# rev 2012-10-19 (MS: feed_prox freq set in p_sim.py)
 # last major: (SL: separate extgauss feed params)
 
 import re
@@ -98,7 +98,8 @@ class exp_params():
 def create_pext(p):
     # default params
     feed_prox = {
-        'f_input': 10.,
+        'f_input': p['f_input_prox'],
+        # 'f_input': 10.,
         't0': 150.,
         'L2Pyr': (4e-5, 0.1),
         'L5Pyr': (4e-5, 1.),

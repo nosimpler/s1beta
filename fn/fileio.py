@@ -1,8 +1,8 @@
 # fileio.py - general file input/output functions
 #
-# v 1.2.13
-# rev 2012-10-04 (SL: separate fig dirs)
-# last rev: (SL: txt file extensions) 
+# v 1.2.16
+# rev 2012-10-19 (MS: added wavelet fig dir)
+# last rev: (SL: separate fig dirs)
 
 import datetime, fnmatch, os, shutil, sys
 
@@ -72,6 +72,7 @@ class OutputDataPaths():
             'dipole': '-dpl.txt',
             'figspk': '-spk.png',
             'figdpl': '-dpl.png',
+            'figwvlt': '-wvlt.png',
             'param': '-param.txt'
         }
 
