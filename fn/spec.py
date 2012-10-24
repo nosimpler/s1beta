@@ -1,6 +1,6 @@
-# spec.py - Average time-fruency energy representation using Morlet wavelet method
+# spec.py - Average time-frequency energy representation using Morlet wavelet method
 #
-# v 1.2.16
+# v 1.2.16a
 # rev 2012-10-19 (MS: Created)
 # last major:
 
@@ -19,8 +19,8 @@ class MorletSpec():
         self.fig_name = os.path.join(dfig, self.file_prefix+'wvlt.png')        
 
         # Import dipole data and remove extra dimensions from signal array. 
-        Signal = np.loadtxt(open(file_name, 'rb'))
-        self.S = Signal.squeeze()
+        data_raw = np.loadtxt(open(file_name, 'rb'))
+        self.S = data_raw.squeeze()
 
         # Remove first 150ms of simulation
         self.S = self.S[150./nrn.dt:, 1]
@@ -68,7 +68,6 @@ class MorletSpec():
         dt = 1. / self.fs
         sf = f / self.width
         st = 1. / (2.*np.pi*sf)
-        
 
         t = np.arange(-3.5*st,3.5*st,dt) 
         m = self.morlet(f, t)

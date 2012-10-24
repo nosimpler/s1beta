@@ -1,6 +1,6 @@
 # paramrw.py - routines for reading the param files
 #
-# v 1.2.19
+# v 1.2.16a
 # rev 2012-10-19 (MS: feed_prox freq set in p_sim.py)
 # last major: (SL: separate extgauss feed params)
 

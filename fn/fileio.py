@@ -72,7 +72,8 @@ class OutputDataPaths():
             'dipole': '-dpl.txt',
             'figspk': '-spk.png',
             'figdpl': '-dpl.png',
-            'figwvlt': '-wvlt.png',
+            'figspec': '-spec.png',
+            # 'figwvlt': '-wvlt.png',
             'param': '-param.txt'
         }
 
