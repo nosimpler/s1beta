@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # s1run.py - primary run function for s1 project
 #
-# v 1.2.16
-# rev 2012-10-19 (MS: Morlet analysis added)
-# last major: (SL: separate fig dirs)
+# v 1.2.17
+# rev 2012-10-25 (SL: outsourced plotting and fixed bug)
+# last major: (MS: Morlet analysis added)
 
 import os
 import shutil
@@ -17,9 +17,7 @@ nrn.load_file("stdrun.hoc")
 from class_net import Network
 import fn.fileio as fio
 import fn.paramrw as paramrw
-from plot.pdipole import pdipole
-from fn.spec import MorletSpec
-from fn.praster import praster
+import fn.plotfn as plotfn
 
 # params
 import p_sim
@@ -158,18 +156,6 @@ def exec_runsim(p_all):
             # write the gid list ...
             paramrw.write(file_param, p, net.p_ext, net.gid_dict)
 
-            # all fig stuff needs to be moved
-            dfig_dpl = ddir.fileinfo['figdpl'][1]
-            dfig_wvlt = ddir.fileinfo['figwvlt'][1]
-            dpl_list = fio.file_match(ddir.fileinfo, 'dipole')
-
-            for file_dpl in dpl_list:
-                # Plot dipole data
-                pdipole(file_dpl, dfig_dpl)
-
-                # Morlet analysis
-                MorletSpec(file_dpl, dfig_wvlt)
-
             if debug:
                 with open(filename_debug, 'w+') as file_debug:
                     for i in range(int(t_vec.size())):
@@ -186,13 +172,6 @@ def exec_runsim(p_all):
         if rank == 0:
             shutil.move(file_spikes_tmp, file_spikes)
 
-            dfig_spk = ddir.fileinfo['figspk'][1]
-            spk_list = fio.file_match(ddir.fileinfo, 'spikes')
-
-            for file_spk in spk_list:
-                # spikefn.spikes_from_file(net.gid_dict, file_spk)
-                praster(net.gid_dict, nrn.tstop, file_spk, dfig_spk)
-
     if pc.nhost > 1:
         pc.runworker()
         pc.done()
@@ -200,6 +179,8 @@ def exec_runsim(p_all):
         t1 = clock()
         if rank == 0:
             print "Simulation run time: %4.4f s" % (t1-t0)
+
+            plotfn.pall(ddir, net.gid_dict, nrn.tstop)
 
         nrn.quit()
 

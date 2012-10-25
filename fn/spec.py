@@ -1,8 +1,8 @@
 # spec.py - Average time-frequency energy representation using Morlet wavelet method
 #
-# v 1.2.16a
-# rev 2012-10-19 (MS: Created)
-# last major:
+# v 1.2.17
+# rev 2012-10-25 (SL: Added close() and assorted minor)
+# last major: (MS: Created)
 
 import os
 import numpy as np
@@ -16,7 +16,7 @@ class MorletSpec():
 
         # Split to find file prefix
         self.file_prefix = file_name.split('/')[-1].split('dpl')[0]
-        self.fig_name = os.path.join(dfig, self.file_prefix+'wvlt.png')        
+        self.fig_name = os.path.join(dfig, self.file_prefix+'spec.png')
 
         # Import dipole data and remove extra dimensions from signal array. 
         data_raw = np.loadtxt(open(file_name, 'rb'))
@@ -78,7 +78,7 @@ class MorletSpec():
         return y
 
     def morlet(self, f, t):
-        # Morlet's wavelet for frecuency f and time t
+        # Morlet's wavelet for frequency f and time t
         # Wavelet normalized so total energy is 1
         # f: specific frequency
         # t: not entirely sure...
@@ -117,16 +117,17 @@ class MorletSpec():
             return Sc.tranpose()
 
     def ft(self, s, f):
-        tv = np.arange(0,len(s))/self.fs
-        tmp = np.exp(1.j*2.*np.pi*f*tv)
-        S = 2 * sum(s*tmp)/len(s)
+        tv = np.arange(0,len(s)) / self.fs
+        tmp = np.exp(1.j*2. * np.pi * f * tv)
+        S = 2 * sum(s * tmp) / len(s)
 
         return S
 
     def plot(self):
-        plt.imshow(self.TFR, extent = [self.timevec[0], self.timevec[-1], self.freqvec[-1], self.freqvec[0]], aspect = 'auto', origin = 'upper')
+        plt.imshow(self.TFR, extent=[self.timevec[0], self.timevec[-1], self.freqvec[-1], self.freqvec[0]], aspect='auto', origin='upper')
 
         plt.xlabel('Time (ms)')
         plt.ylabel('Frequency (Hz)')
 
         plt.savefig(self.fig_name)
+        plt.close()

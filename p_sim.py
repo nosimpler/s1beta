@@ -7,11 +7,11 @@
 from numpy import array, linspace
 
 all = {
-    'sim_prefix': 'wvlt-test',
+    'sim_prefix': 'plot_test',
 
     # numbers of cells making up the pyramidal grids
-    'N_pyr_x': 1,
-    'N_pyr_y': 1,
+    'N_pyr_x': 2,
+    'N_pyr_y': 2,
 
     # amplitudes of individual gaussian random inputs to L2Pyr and L5Pyr
     # L2 Basket params
@@ -21,7 +21,7 @@ all = {
     'L2Basket_Gauss_sigma': 3.6,
 
     # L2 Pyr params
-    'L2Pyr_Gauss_A': 0.,
+    'L2Pyr_Gauss_A': 0.
     # 'L2Pyr_Gauss_A': 1.8e-5,
     'L2Pyr_Gauss_mu': 200.,
     'L2Pyr_Gauss_sigma': 3.6,
@@ -47,6 +47,6 @@ all = {
     # 'f_input_prox': array([10., 20.]),
 
     # numerics
-    'tstop': 1000.,
-    'dt': 0.025
+    'tstop': 250.,
+    'dt': 0.025,
 }

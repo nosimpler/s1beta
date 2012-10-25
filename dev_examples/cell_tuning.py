@@ -1,8 +1,8 @@
 # cell_tuning.py - tune individual cell types
 #
-# v 0.2.8
-# rev 2012-07-23 (MS: Added units)
-# last major: (SL: cleaned up)
+# v 1.2.17
+# rev 2012-10-25 (SL: some minor changes, untested)
+# last major: (MS: Added units)
 
 from neuron import h
 
@@ -14,8 +14,8 @@ mpl.use('Agg')
 import matplotlib.pyplot as plt 
 from ..plottools.axes_create import fig_std
 
-from ..cells.L5_pyramidal import L5Pyr
-from ..cells.L2_pyramidal import L2Pyr
+from ..fn.cells.L5_pyramidal import L5Pyr
+from ..fn.cells.L2_pyramidal import L2Pyr
 
 h.load_file("stdrun.hoc")
 
@@ -56,7 +56,6 @@ def stimulus(seg, file_prefix):
 
     # save figure as 2 different formats
     plt.savefig(file_prefix+'.png')
-    # plt.savefig(figname)
     testfig.close()
 
 if __name__ == "__main__":
