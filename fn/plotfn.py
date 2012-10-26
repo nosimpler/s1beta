@@ -1,13 +1,27 @@
 # plotfn.py - pall and possibly other plot routines
 #
-# v 1.2.17
-# rev 2012-10-25 (SL: created from s1run.py)
-# last major:
+# v 1.2.18
+# rev 2012-10-26 (SL: using pkernel to parallelize plotting)
+# last major: (SL: created from s1run.py)
 
 from pdipole import pdipole
 from spec import MorletSpec
 from praster import praster
+import itertools as it
 import fileio as fio
+from multiprocessing import Pool
+
+# terrible handling of variables
+def pkernel(ddir, file_spk, file_dpl, gid_dict, tstop):
+    # fig dirs
+    dfig_dpl = ddir.fileinfo['figdpl'][1]
+    dfig_spec = ddir.fileinfo['figspec'][1]
+    dfig_spk = ddir.fileinfo['figspk'][1]
+
+    # plot kernels
+    praster(gid_dict, tstop, file_spk, dfig_spk)
+    pdipole(file_dpl, dfig_dpl)
+    MorletSpec(file_dpl, dfig_spec)
 
 # plot function - this is sort of a stop-gap and shouldn't live here, really
 def pall(ddir, gid_dict, tstop):
@@ -16,6 +30,7 @@ def pall(ddir, gid_dict, tstop):
     dfig_spec = ddir.fileinfo['figspec'][1]
     dfig_spk = ddir.fileinfo['figspk'][1]
 
+    # these should be equivalent lengths
     dpl_list = fio.file_match(ddir.fileinfo, 'dipole')
     spk_list = fio.file_match(ddir.fileinfo, 'spikes')
 
@@ -29,3 +44,10 @@ def pall(ddir, gid_dict, tstop):
 
         # Morlet analysis
         MorletSpec(file_dpl, dfig_spec)
+
+    pl = Pool()
+    for file_spk, file_dpl in it.izip(spk_list, dpl_list):
+        pl.apply_async(pkernel, (ddir, file_spk, file_dpl, gid_dict, tstop))
+
+    pl.close()
+    pl.join()

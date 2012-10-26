@@ -1,8 +1,8 @@
 # paramrw.py - routines for reading the param files
 #
-# v 1.2.16a
-# rev 2012-10-19 (MS: feed_prox freq set in p_sim.py)
-# last major: (SL: separate extgauss feed params)
+# v 1.2.18
+# rev 2012-10-26 (SL: ranges for param write)
+# last major: (MS: feed_prox freq set in p_sim.py)
 
 import re
 import fileio as fio
@@ -11,14 +11,24 @@ from cartesian import cartesian
 # write the params to a filename
 def write(fparam, p, p_ext, gid_list):
     with open(fparam, 'a') as f:
+        pstring = '%22s: '
+
         for key in gid_list.keys():
-            f.write('%13s: ' % key)
-            for gid in gid_list[key]:
-                f.write('%4i ' % gid)
+            f.write(pstring % key)
+            # f.write('%13s: ' % key)
+
+            if len(gid_list[key]):
+                f.write('[%4i, %4i] ' % (gid_list[key][0], gid_list[key][-1]))
+
+            else:
+                f.write('[]')
+
+            # for gid in gid_list[key]:
+            #     f.write('%4i ' % gid)
             f.write('\n')
 
         for key in p.keys():
-            f.write('%22s: ' % key)
+            f.write(pstring % key)
 
             if key.startswith('N_'):
                 f.write('%i\n' % p[key])
