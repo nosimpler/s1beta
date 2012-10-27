@@ -1,12 +1,13 @@
 # paramrw.py - routines for reading the param files
 #
-# v 1.2.18
-# rev 2012-10-26 (SL: ranges for param write)
-# last major: (MS: feed_prox freq set in p_sim.py)
+# v 1.2.19
+# rev 2012-10-26 (SL: checks against default param dict as ground ref)
+# last major: (SL: ranges for param write)
 
 import re
 import fileio as fio
 from cartesian import cartesian
+from params_default import params_default
 
 # write the params to a filename
 def write(fparam, p, p_ext, gid_list):
@@ -63,17 +64,38 @@ def gen_expmts(f_in):
 
     try:
         return lines[0].split(': ')[1][1:-1].split(', ')
+
     except:
         print "Couldn't get a handle on expmts"
         return 0
 
 class exp_params():
-    def __init__(self, p_all):
-        self.p_all = p_all
+    def __init__(self, p_all_input):
+        self.__create_dict_from_default(p_all_input)
+
         # pop off the value for sim_prefix. then continue
         self.sim_prefix = self.p_all.pop('sim_prefix')
         self.list_params = self.__create_paramlist()
         self.N_sims = len(self.list_params[0][1])
+
+    # create the dict based on the default param dict
+    def __create_dict_from_default(self, p_all_input):
+        # create a copy of params_default through which to iterate
+        self.p_all = params_default
+
+        # now find ONLY the values that are present in the supplied p_all_input
+        # based on the default dict
+        for key in self.p_all.keys():
+            if key in p_all_input:
+                # pop val off so the remaining items in p_all_input are extraneous
+                self.p_all[key] = p_all_input.pop(key)
+                # self.p_all[key] = p_all_input[key]
+            else:
+                print "Param struct missing %s, resorting to default val" % key
+
+        # now display extraneous keys, if there were any
+        if len(p_all_input):
+            print "Keys were not found in in default params: %s" % str(p_all_input.keys())
 
     def __create_paramlist(self):
         # p_all is the dict specifying all of the changing params
