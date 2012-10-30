@@ -1,8 +1,8 @@
 # paramrw.py - routines for reading the param files
 #
-# v 1.2.20
-# rev 2012-10-30 (SL: Added distal frequency param)
-# last major: (SL: checks against default param dict as ground ref)
+# v 1.2.22
+# rev 2012-10-30 (SL: auto calc feed validity, added input times for feeds)
+# last major: (SL: Added distal frequency param)
 
 import re
 import fileio as fio
@@ -126,12 +126,26 @@ class exp_params():
 
         return p_sim
 
+# qnd function to just add feeds based on tstop
+# could be properly made into a meaningful class.
+def feed_validate(p_ext, d, tstop):
+    if tstop > d['t0']:
+        p_ext.append(d)
+
+    return p_ext
+
 # creates the external feed params based on individual simulation params p
-def create_pext(p):
+def create_pext(p, tstop):
+    # indexable py list of param dicts for parallel
+    # turn off individual feeds by commenting out relevant line here.
+    # always valid, no matter the length
+    p_ext = []
+
     # default params
     feed_prox = {
         'f_input': p['f_input_prox'],
-        't0': 150.,
+        't0': p['t0_input'],
+        # 't0': 150.,
         'L2Pyr': (4e-5, 0.1),
         'L5Pyr': (4e-5, 1.),
         'L2Basket': (8e-5, 0.1),
@@ -140,9 +154,12 @@ def create_pext(p):
         'loc': 'proximal'
     }
 
+    p_ext = feed_validate(p_ext, feed_prox, tstop)
+
     feed_dist = {
         'f_input': p['f_input_dist'],
-        't0': 150.,
+        't0': p['t0_input'],
+        # 't0': 150.,
         'L2Pyr': (4e-5, 5.),
         'L5Pyr': (4e-5, 5.),
         'L2Basket': (4e-5, 5.),
@@ -150,11 +167,14 @@ def create_pext(p):
         'loc': 'distal'
     }
 
+    p_ext = feed_validate(p_ext, feed_dist, tstop)
+
     # Create evoked response parameters
     # f_input needs to be defined as 0
     evoked_prox_early = {
         'f_input': 0.,
-        't0': 454.,
+        't0': p['t_evoked_prox_early'],
+        # 't0': 454.,
         'L2Pyr': (1e-3, 0.1),
         'L5Pyr': (5e-4, 1.),
         'L2Basket': (2e-3, 0.1),
@@ -163,9 +183,12 @@ def create_pext(p):
         'loc': 'proximal'
     }
 
+    p_ext = feed_validate(p_ext, evoked_prox_early, tstop)
+
     evoked_prox_late = {
         'f_input': 0.,
-        't0': 564.,
+        't0': p['t_evoked_prox_late'],
+        # 't0': 564.,
         'L2Pyr': (6.89e-3, 0.1),
         'L5Pyr': (3.471e-3, 5.),
         'L2Basket': (6.89e-3, 0.1),
@@ -174,15 +197,20 @@ def create_pext(p):
         'loc': 'proximal'
     }
 
+    p_ext = feed_validate(p_ext, evoked_prox_late, tstop)
+
     evoked_dist = {
         'f_input': 0.,
-        't0': 499.,
+        't0': p['t_evoked_dist'],
+        # 't0': 499.,
         'L2Pyr': (1.05e-3, 0.1),
         'L5Pyr': (1.05e-3, 0.1),
         'L2Basket': (5.02e-4, 0.1),
         'lamtha': 3.,
         'loc': 'distal'
     }
+
+    p_ext = feed_validate(p_ext, evoked_dist, tstop)
 
     # this needs to create many feeds
     # (amplitude, delay, mu, sigma). ordered this way to preserve compatibility
@@ -196,16 +224,13 @@ def create_pext(p):
         'loc': 'proximal'
     }
 
-    # indexable py list of param dicts for parallel
-    # turn off individual feeds by commenting out relevant line here.
-    # always valid, no matter the length
-    p_ext = [
-        # feed_prox,
-        # feed_dist,
-        evoked_prox_early,
-        # evoked_prox_late,
-        # evoked_dist
-    ]
+    # p_ext = [
+    #     feed_prox,
+    #     feed_dist,
+    #     evoked_prox_early,
+    #     evoked_prox_late,
+    #     evoked_dist
+    # ]
 
     return p_ext, p_ext_gauss
 

@@ -1,8 +1,8 @@
 # class_net.py - establishes the Network class and related methods
 #
-# v 1.2.15
-# rev 2012-10-18 (SL: Fixed extinput gid assignment)
-# last major: (SL: separate params for extgauss)
+# v 1.2.22
+# rev 2012-10-30 (SL: tstop given to extfeeds)
+# last major: (SL: Fixed extinput gid assignment)
 
 import itertools as it
 import numpy as np
@@ -38,7 +38,7 @@ class Network():
 
         # all params of external inputs in p_ext
         # Global number of external inputs ... automatic counting makes more sense
-        self.p_ext, self.p_ext_gauss = paramrw.create_pext(self.p)
+        self.p_ext, self.p_ext_gauss = paramrw.create_pext(self.p, nrn.tstop)
         self.N_extinput = len(self.p_ext)
 
         # absolute source list of keys on which everything gets created

@@ -1,8 +1,8 @@
 # params_default.py - list of default params and values
 #
-# v 1.2.20
-# rev 2012-10-30 (SL: added maximal synaptic conductances)
-# last major: (SL: created)
+# v 1.2.22
+# rev 2012-10-30 (SL: added proximal and distal input params)
+# last major: (SL: added maximal synaptic conductances)
 
 # flat file of default values
 # tuples for different "experiments"
@@ -56,8 +56,14 @@ params_default = {
     'gbar_L2Pyr_L5Basket': 2.5e-4,
 
     # Ongoing alpha rhythms
+    't0_input': 150.,
     'f_input_prox': 10.,
     'f_input_dist': 10.,
+
+    # times for evoked responses
+    't_evoked_prox_early': 454.,
+    't_evoked_prox_late': 564.,
+    't_evoked_dist': 499.,
 
     # numerics
     'tstop': 1000.,

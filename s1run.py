@@ -80,9 +80,6 @@ def exec_runsim(p_all):
     for i in range(p_exp.N_sims):
         p = p_exp.return_pdict(i)
 
-        # external params sometimes require changed params
-        # p_ext, p_ext_gauss = paramrw.create_pext(p)
-
         # get all nodes to this place before continuing
         # tries to ensure we're all running the same params at the same time!
         pc.barrier()

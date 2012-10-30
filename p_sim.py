@@ -7,11 +7,11 @@
 from numpy import array, linspace
 
 all = {
-    'sim_prefix': 'evoked',
+    'sim_prefix': 'debug',
 
     # numbers of cells making up the pyramidal grids
-    'N_pyr_x': 2,
-    'N_pyr_y': 2,
+    'N_pyr_x': 1,
+    'N_pyr_y': 1,
 
     # amplitudes of individual gaussian random inputs to L2Pyr and L5Pyr
     # L2 Basket params
@@ -40,26 +40,41 @@ all = {
 
     # maximal conductances TO L2Pyrs
     'gbar_L2Pyr_L2Pyr': 0.,
-    'gbar_L2Basket_L2Pyr': 5e-2,
+    'gbar_L2Basket_L2Pyr': 0.,
+    # 'gbar_L2Basket_L2Pyr': 5e-2,
 
     # max conductances TO L2Baskets
-    'gbar_L2Pyr_L2Basket': 5e-4,
-    'gbar_L2Basket_L2Basket': 2e-2,
+    'gbar_L2Pyr_L2Basket': 0.,
+    'gbar_L2Basket_L2Basket': 0.,
+    # 'gbar_L2Pyr_L2Basket': 5e-4,
+    # 'gbar_L2Basket_L2Basket': 2e-2,
     
     # max conductances TO L5Pyrs
     'gbar_L5Pyr_L5Pyr': 0.,
-    'gbar_L2Pyr_L5Pyr': 2.5e-4,
-    'gbar_L2Basket_L5Pyr': 5e-4,
-    'gbar_L5Basket_L5Pyr': 2.5e-2,
+    'gbar_L2Pyr_L5Pyr': 0.,
+    'gbar_L2Basket_L5Pyr': 0.,
+    'gbar_L5Basket_L5Pyr': 0.,
+    # 'gbar_L2Pyr_L5Pyr': 2.5e-4,
+    # 'gbar_L2Basket_L5Pyr': 5e-4,
+    # 'gbar_L5Basket_L5Pyr': 2.5e-2,
 
     # max conductances TO L5Baskets
-    'gbar_L5Basket_L5Basket': 2e-2,
-    'gbar_L5Pyr_L5Basket': 5e-4,
-    'gbar_L2Pyr_L5Basket': 2.5e-4,
+    'gbar_L5Basket_L5Basket': 0.,
+    'gbar_L5Pyr_L5Basket': 0.,
+    'gbar_L2Pyr_L5Basket': 0.,
+    # 'gbar_L5Basket_L5Basket': 2e-2,
+    # 'gbar_L5Pyr_L5Basket': 5e-4,
+    # 'gbar_L2Pyr_L5Basket': 2.5e-4,
 
     # Ongoing alpha rhythms
+    't0_input': 150.,
     'f_input_prox': 10.,
     'f_input_dist': 10.,
+
+    # times for evoked responses
+    't_evoked_prox_early': 454.,
+    't_evoked_prox_late': 564.,
+    't_evoked_dist': 499.,
 
     # numerics
     'tstop': 1000.,
