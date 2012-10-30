@@ -1,8 +1,8 @@
 # L2_pyramidal.py - est class def for layer 2 pyramidal cells
 #
-# v 1.2.11
-# rev 2012-10-04 (SL: separate extgauss feed params)
-# last rev: (SL: pos_dict instead of pos_list)
+# v 1.2.20
+# rev 2012-10-30 (SL: added synaptic conductance params)
+# last rev: (SL: separate extgauss feed params)
 
 from neuron import h as nrn
 from class_cell import Pyr
@@ -87,9 +87,10 @@ class L2Pyr(Pyr):
 
         # connections FROM L2 basket cells TO this L2Pyr cell
         for gid_src, pos in it.izip(gid_dict['L2_basket'], pos_dict['L2_basket']):
+
             nc_dict = {
                 'pos_src': pos,
-                'A_weight': 5e-2,
+                'A_weight': p['gbar_L2Basket_L2Pyr'],
                 'A_delay': 1.,
                 'lamtha': 50.
             }

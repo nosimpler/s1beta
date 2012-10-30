@@ -1,8 +1,8 @@
 # L5_pyramidal.py - establish class def for layer 5 pyramidal cells
 #
-# v 1.2.11
-# rev 2012-10-04 (SL: separate extgauss feed params)
-# last rev: (SL: pos_dict instead of pos_list)
+# v 1.2.20
+# rev 2012-10-30 (SL: added synaptic conductance params)
+# last rev: (SL: separate extgauss feed params)
 
 from neuron import h as nrn
 from class_cell import Pyr
@@ -61,12 +61,12 @@ class L5Pyr(Pyr):
 
     # parallel connection function FROM all cell types TO here
     def parconnect(self, gid, gid_dict, pos_dict, p):
+        # connections FROM L5Pyr TO here
         for gid_src, pos in it.izip(gid_dict['L5_pyramidal'], pos_dict['L5_pyramidal']):
             # if gid_src != gid:
             nc_dict = {
                 'pos_src': pos,
                 'A_weight': p['gbar_L5Pyr_L5Pyr'],
-                # 'A_weight': 5e-4,
                 'A_delay': 1.,
                 'lamtha': 3.
             }
@@ -85,7 +85,8 @@ class L5Pyr(Pyr):
         for gid_src, pos in it.izip(gid_dict['L5_basket'], pos_dict['L5_basket']):
             nc_dict = {
                 'pos_src': pos,
-                'A_weight': 2.5e-2,
+                'A_weight': p['gbar_L5Basket_L5Pyr'],
+                # 'A_weight': 2.5e-2,
                 'A_delay': 1.,
                 'lamtha': 70.
             }
@@ -99,7 +100,8 @@ class L5Pyr(Pyr):
             # this delay is longer than most
             nc_dict = {
                 'pos_src': pos,
-                'A_weight': 2.5e-4,
+                'A_weight': p['gbar_L2Pyr_L5Pyr'],
+                # 'A_weight': 2.5e-4,
                 'A_delay': 3.,
                 'lamtha': 3.
             }
@@ -113,7 +115,7 @@ class L5Pyr(Pyr):
         for gid_src, pos in it.izip(gid_dict['L2_basket'], pos_dict['L2_basket']):
             nc_dict = {
                 'pos_src': pos,
-                'A_weight': 1e-3,
+                'A_weight': p['gbar_L2Basket_L5Pyr'],
                 'A_delay': 1.,
                 'lamtha': 50.
             }

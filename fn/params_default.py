@@ -1,8 +1,8 @@
 # params_default.py - list of default params and values
 #
-# v 1.2.18
-# rev 2012-10-26 (SL: created)
-# last major:
+# v 1.2.20
+# rev 2012-10-30 (SL: added maximal synaptic conductances)
+# last major: (SL: created)
 
 # flat file of default values
 # tuples for different "experiments"
@@ -11,8 +11,8 @@ params_default = {
     'sim_prefix': 'default',
 
     # numbers of cells making up the pyramidal grids
-    'N_pyr_x': 1,
-    'N_pyr_y': 1,
+    'N_pyr_x': 10,
+    'N_pyr_y': 10,
 
     # amplitudes of individual gaussian random inputs to L2Pyr and L5Pyr
     # L2 Basket params
@@ -36,14 +36,30 @@ params_default = {
     'L5Basket_Gauss_mu': 500.,
     'L5Basket_Gauss_sigma': 2.,
 
-    # maximal conductances for these connections
+    # max conductances TO L2Pyrs
     'gbar_L2Pyr_L2Pyr': 0.,
+    'gbar_L2Basket_L2Pyr': 5e-2,
+
+    # max conductances TO L2Baskets
+    'gbar_L2Pyr_L2Basket': 5e-4,
+    'gbar_L2Basket_L2Basket': 2e-2,
+
+    # max conductances TO L5Pyr
     'gbar_L5Pyr_L5Pyr': 0.,
+    'gbar_L2Pyr_L5Pyr': 2.5e-4,
+    'gbar_L2Basket_L5Pyr': 1e-3,
+    'gbar_L5Basket_L5Pyr': 2.5e-2,
+
+    # max conductances TO L5Baskets
+    'gbar_L5Basket_L5Basket': 2e-2,
+    'gbar_L5Pyr_L5Basket': 5e-4,
+    'gbar_L2Pyr_L5Basket': 2.5e-4,
 
     # Ongoing alpha rhythms
     'f_input_prox': 10.,
+    'f_input_dist': 10.,
 
     # numerics
-    'tstop': 100.,
+    'tstop': 1000.,
     'dt': 0.025,
 }

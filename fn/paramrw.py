@@ -1,8 +1,8 @@
 # paramrw.py - routines for reading the param files
 #
-# v 1.2.19
-# rev 2012-10-26 (SL: checks against default param dict as ground ref)
-# last major: (SL: ranges for param write)
+# v 1.2.20
+# rev 2012-10-30 (SL: Added distal frequency param)
+# last major: (SL: checks against default param dict as ground ref)
 
 import re
 import fileio as fio
@@ -131,7 +131,6 @@ def create_pext(p):
     # default params
     feed_prox = {
         'f_input': p['f_input_prox'],
-        # 'f_input': 10.,
         't0': 150.,
         'L2Pyr': (4e-5, 0.1),
         'L5Pyr': (4e-5, 1.),
@@ -142,7 +141,7 @@ def create_pext(p):
     }
 
     feed_dist = {
-        'f_input': 10.,
+        'f_input': p['f_input_dist'],
         't0': 150.,
         'L2Pyr': (4e-5, 5.),
         'L5Pyr': (4e-5, 5.),
@@ -152,6 +151,7 @@ def create_pext(p):
     }
 
     # Create evoked response parameters
+    # f_input needs to be defined as 0
     evoked_prox_early = {
         'f_input': 0.,
         't0': 454.,
@@ -202,7 +202,7 @@ def create_pext(p):
     p_ext = [
         # feed_prox,
         # feed_dist,
-        # evoked_prox_early,
+        evoked_prox_early,
         # evoked_prox_late,
         # evoked_dist
     ]

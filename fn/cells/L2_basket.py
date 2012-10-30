@@ -1,8 +1,8 @@
 # L2_basket.py - establish class def for layer 2 basket cells
 #
-# v 1.2.11
-# rev 2012-10-04 (SL: ext gauss feeds separate)
-# last rev: (SL: replaced pos_list with pos_dict)
+# v 1.2.20
+# rev 2012-10-30 (SL: added synaptic conductances)
+# last rev: (SL: ext gauss feeds separate)
 
 import itertools as it
 from neuron import h as nrn
@@ -27,7 +27,7 @@ class L2Basket(Basket):
         for gid_src, pos in it.izip(gid_dict['L2_pyramidal'], pos_dict['L2_pyramidal']):
             nc_dict = {
                 'pos_src': pos,
-                'A_weight': 5e-4,
+                'A_weight': p['gbar_L2Pyr_L2Basket'],
                 'A_delay': 1.,
                 'lamtha': 3.
             }
@@ -40,7 +40,8 @@ class L2Basket(Basket):
             # if gid_src != gid:
             nc_dict = {
                 'pos_src': pos,
-                'A_weight': 2e-2,
+                'A_weight': p['gbar_L2Basket_L2Basket'],
+                # 'A_weight': 2e-2,
                 'A_delay': 1.,
                 'lamtha': 20.
             }
