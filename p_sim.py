@@ -13,7 +13,7 @@ rank = int(pc.id())
 random.seed(rank)
 
 all = {
-    'sim_prefix': 'memory-test',
+    'sim_prefix': 'title-test',
 
     # numbers of cells making up the pyramidal grids
     'N_pyr_x': 1,

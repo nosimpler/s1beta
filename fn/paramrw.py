@@ -1,8 +1,8 @@
 # paramrw.py - routines for reading the param files
 #
-# v 1.2.22
-# rev 2012-10-30 (SL: auto calc feed validity, added input times for feeds)
-# last major: (SL: Added distal frequency param)
+# v 1.2.24
+# rev 2012-10-31 (MS: Added get_key_types() in exp_params() to find keys whose values change over runs)
+# last major: (SL: auto calc feed validity, added input times for feeds)
 
 import re
 import fileio as fio
@@ -126,6 +126,24 @@ class exp_params():
 
         return p_sim
 
+    # Find keys that change run to run (i.e. have more than one associated value)
+    def get_key_types(self):
+        key_dict = {
+                    'dynamic_keys': [],
+                    'static_keys': [],
+                   }
+
+        for key in self.p_all.keys():
+            try:
+                len(self.p_all[key])
+                key_dict['dynamic_keys'].append(key)
+
+            except TypeError:
+                key_dict['static_keys'].append(key)
+                # static_keys.append(key)
+
+        return key_dict
+
 # qnd function to just add feeds based on tstop
 # could be properly made into a meaningful class.
 def feed_validate(p_ext, d, tstop):
@@ -228,8 +246,8 @@ def create_pext(p, tstop):
     # turn off individual feeds by commenting out relevant line here.
     # always valid, no matter the length
     p_ext = [
-        # feed_prox,
-        # feed_dist,
+        feed_prox,
+        feed_dist,
         # evoked_prox_early,
         # evoked_prox_late,
         # evoked_dist

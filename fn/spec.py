@@ -1,8 +1,8 @@
 # spec.py - Average time-frequency energy representation using Morlet wavelet method
 #
-# v 1.2.23
-# rev 2012-10-30 (MS: Added tstop check before analysis, p_dict input for title generation)
-# last major: (SL: Added close() and assorted minor)
+# v 1.2.24
+# rev 2012-10-31 (MS: title includes key/value pairs for keys whose value changes over runs)
+# last major: (MS: Added tstop check before analysis, p_dict input for title generation)
 
 import os
 import numpy as np
@@ -12,14 +12,17 @@ import matplotlib.pyplot as plt
 from neuron import h as nrn
 
 class MorletSpec():
-    def __init__(self, file_name, p_dict, dfig):
+    def __init__(self, file_name, dfig, p_dict, key_types):
 
         # Split to find file prefix
         self.file_prefix = file_name.split('/')[-1].split('dpl')[0]
         self.fig_name = os.path.join(dfig, self.file_prefix+'spec.png')
 
-        # Save p_dict as self dictionary
+        # Save p_dict, key_types as self dictionary
         self.p = p_dict
+        self.key_types = key_types
+        # print [string + ': %2.1f' %p_dict[string] for string in self.key_types['dynamic_keys']]
+
 
         # Import dipole data and remove extra dimensions from signal array. 
         data_raw = np.loadtxt(open(file_name, 'rb'))
@@ -137,7 +140,11 @@ class MorletSpec():
 
         plt.xlabel('Time (ms)')
         plt.ylabel('Frequency (Hz)')
-        plt.title('f_input_prox: %2.1f; f_input_dist: %2.1f' %(self.p['f_input_prox'], self.p['f_input_dist']))
+
+        title = [key + ': %2.1f' %self.p[key] for key in self.key_types['dynamic_keys']]
+        plt.title(title)
+
+        # plt.title('f_input_prox: %2.1f; f_input_dist: %2.1f' %(self.p['f_input_prox'], self.p['f_input_dist']))
 
         plt.savefig(self.fig_name)
         plt.close()
