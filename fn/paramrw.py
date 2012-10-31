@@ -224,13 +224,16 @@ def create_pext(p, tstop):
         'loc': 'proximal'
     }
 
-    # p_ext = [
-    #     feed_prox,
-    #     feed_dist,
-    #     evoked_prox_early,
-    #     evoked_prox_late,
-    #     evoked_dist
-    # ]
+    # indexable py list of param dicts for parallel
+    # turn off individual feeds by commenting out relevant line here.
+    # always valid, no matter the length
+    p_ext = [
+        # feed_prox,
+        # feed_dist,
+        # evoked_prox_early,
+        # evoked_prox_late,
+        # evoked_dist
+    ]
 
     return p_ext, p_ext_gauss
 

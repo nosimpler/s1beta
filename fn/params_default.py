@@ -1,12 +1,13 @@
 # params_default.py - list of default params and values
 #
-# v 1.2.22
-# rev 2012-10-30 (SL: added proximal and distal input params)
-# last major: (SL: added maximal synaptic conductances)
+# v 1.2.23
+# rev 2012-10-30 (MS: Reset values for max conductances L2Pyr-L2Pyr, L5Pyr-L5Pyr
+# last major: (SL: added proximal and distal input params)
 
 # flat file of default values
 # tuples for different "experiments"
 # will most often be overwritten
+
 params_default = {
     'sim_prefix': 'default',
 
@@ -36,8 +37,9 @@ params_default = {
     'L5Basket_Gauss_mu': 500.,
     'L5Basket_Gauss_sigma': 2.,
 
+    # maxsimal conducatnces for all synapses
     # max conductances TO L2Pyrs
-    'gbar_L2Pyr_L2Pyr': 0.,
+    'gbar_L2Pyr_L2Pyr': 5e-4,
     'gbar_L2Basket_L2Pyr': 5e-2,
 
     # max conductances TO L2Baskets
@@ -45,7 +47,7 @@ params_default = {
     'gbar_L2Basket_L2Basket': 2e-2,
 
     # max conductances TO L5Pyr
-    'gbar_L5Pyr_L5Pyr': 0.,
+    'gbar_L5Pyr_L5Pyr': 5e-4,
     'gbar_L2Pyr_L5Pyr': 2.5e-4,
     'gbar_L2Basket_L5Pyr': 1e-3,
     'gbar_L5Basket_L5Pyr': 2.5e-2,
@@ -65,7 +67,11 @@ params_default = {
     't_evoked_prox_late': 564.,
     't_evoked_dist': 499.,
 
+    # analysis
+    'spec_max_freq': 41.,
+
     # numerics
     'tstop': 1000.,
     'dt': 0.025,
+    'prng_seed': 0,
 }

@@ -1,15 +1,15 @@
 #!/usr/bin/env python
 # s1run.py - primary run function for s1 project
 #
-# v 1.2.17
-# rev 2012-10-25 (SL: outsourced plotting and fixed bug)
-# last major: (MS: Morlet analysis added)
+# v 1.2.23
+# rev 2012-10-30 (MS: Added benchmarking to exec_runsim())
+# last major: (SL: outsourced plotting and fixed bug)
 
 import os
 import shutil
 import numpy as np
 from mpi4py import MPI
-from time import clock
+from time import clock, time
 from neuron import h as nrn
 nrn.load_file("stdrun.hoc")
 
@@ -78,6 +78,10 @@ def exec_runsim(p_all):
 
     # iterate through i
     for i in range(p_exp.N_sims):
+        if rank == 0:
+            t1 = time()
+            print "Run number:", i
+
         p = p_exp.return_pdict(i)
 
         # get all nodes to this place before continuing
@@ -88,7 +92,7 @@ def exec_runsim(p_all):
         nrn("dp_total = 0.")
 
         # Seed pseudorandom number generator
-        np.random.seed(rank)
+        np.random.seed(int(p['prng_seed']))
         # np.random.seed(0)
 
         # Set tstop before instantiating any classes
@@ -138,7 +142,10 @@ def exec_runsim(p_all):
         nrn.finitialize(-64.7)
         nrn.fcurrent()
         nrn.frecord_init()
+
+        if rank == 0: t2 = time()
         pc.psolve(nrn.tstop)
+        if rank == 0: print "\tIntegration time:", time() - t2
 
         # combine dp_rec
         pc.allreduce(dp_rec, 1)
@@ -169,6 +176,8 @@ def exec_runsim(p_all):
         if rank == 0:
             shutil.move(file_spikes_tmp, file_spikes)
 
+            print "\tRun time:", time() - t1
+
     if pc.nhost > 1:
         pc.runworker()
         pc.done()
@@ -176,8 +185,14 @@ def exec_runsim(p_all):
         t1 = clock()
         if rank == 0:
             print "Simulation run time: %4.4f s" % (t1-t0)
+            print "Plotting..."
 
-            plotfn.pall(ddir, net.gid_dict, nrn.tstop)
+            t3 = time()
+
+            # is there a reason to pass nrn.tstop?
+            plotfn.pall(ddir, p_exp, net.gid_dict, nrn.tstop)
+
+            print "\tPlot time:", time() - t3 
 
         nrn.quit()
 

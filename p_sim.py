@@ -4,10 +4,16 @@
 # np.arrays for everything else?
 # turns out, some whitespace is valid for dicts!
 
-from numpy import array, linspace
+from numpy import array, linspace, random
+from itertools import izip
+from neuron import h as nrn
+
+pc = nrn.ParallelContext()
+rank = int(pc.id())
+random.seed(rank)
 
 all = {
-    'sim_prefix': 'debug',
+    'sim_prefix': 'memory-test',
 
     # numbers of cells making up the pyramidal grids
     'N_pyr_x': 1,
@@ -38,9 +44,11 @@ all = {
     'L5Basket_Gauss_mu': 1000.,
     'L5Basket_Gauss_sigma': 2.,
 
-    # maximal conductances TO L2Pyrs
+    # maximal conductacnes for all synapses
+    # max conductances TO L2Pyrs
     'gbar_L2Pyr_L2Pyr': 0.,
     'gbar_L2Basket_L2Pyr': 0.,
+    # 'gbar_L2Pyr_L2Pyr': 5e-4,
     # 'gbar_L2Basket_L2Pyr': 5e-2,
 
     # max conductances TO L2Baskets
@@ -54,6 +62,7 @@ all = {
     'gbar_L2Pyr_L5Pyr': 0.,
     'gbar_L2Basket_L5Pyr': 0.,
     'gbar_L5Basket_L5Pyr': 0.,
+    # 'gbar_L5Pyr_L5Pyr': 5e-4,
     # 'gbar_L2Pyr_L5Pyr': 2.5e-4,
     # 'gbar_L2Basket_L5Pyr': 5e-4,
     # 'gbar_L5Basket_L5Pyr': 2.5e-2,
@@ -70,13 +79,20 @@ all = {
     't0_input': 150.,
     'f_input_prox': 10.,
     'f_input_dist': 10.,
+    # 'f_input_prox': linspace(5, 30, num=6),
+    # 'f_input_dist': linspace(5, 30, num=6),
 
     # times for evoked responses
     't_evoked_prox_early': 454.,
     't_evoked_prox_late': 564.,
     't_evoked_dist': 499.,
 
+    # analysis
+    'spec_max_freq': 41.,
+
     # numerics
     'tstop': 1000.,
     'dt': 0.025,
+    'prng_seed': rank,
+    # 'prng_seed': random.randint(40, size=1)
 }
