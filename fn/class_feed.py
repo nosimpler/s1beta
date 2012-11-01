@@ -1,8 +1,8 @@
 # class_feed.py - establishes FeedExt(), FeedProximal() and FeedDistal()
 #
-# v 1.2.25
-# rev 2012-11-01 (SL: Added ParFeedExtPois())
-# last major: (SL: ParFeedExtGauss different mu, sigma vals)
+# v 1.2.26
+# rev 2012-11-01 (SL: added check for lamtha = 0.)
+# last major: (SL: Added ParFeedExtPois())
 
 import numpy as np
 import itertools as it
@@ -27,18 +27,22 @@ class ParFeedExtPois():
         # one single value from Gaussian dist.
         # values MUST be sorted for VecStim()!
         # start the initial value
-        t_gen = t0 + t_wait(lamtha)
-        val_pois = np.array([])
+        if lamtha > 0.:
+            t_gen = t0 + t_wait(lamtha)
+            val_pois = np.array([])
 
-        if t_gen < T:
-            np.append(val_pois, t_gen)
-
-        # vals are guaranteed to be monotonically increasing, no need to sort
-        while t_gen < T:
-            # so as to not clobber confusingly base off of t_gen ...
-            t_gen += t_wait(lamtha)
             if t_gen < T:
-                val_pois = np.append(val_pois, t_gen)
+                np.append(val_pois, t_gen)
+
+            # vals are guaranteed to be monotonically increasing, no need to sort
+            while t_gen < T:
+                # so as to not clobber confusingly base off of t_gen ...
+                t_gen += t_wait(lamtha)
+                if t_gen < T:
+                    val_pois = np.append(val_pois, t_gen)
+
+        else:
+            val_pois = np.array([])
 
         # checks the distribution stats
         # if len(val_pois):

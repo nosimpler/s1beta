@@ -7,45 +7,51 @@
 from numpy import array, linspace
 
 all = {
-    'sim_prefix': 'pois_test',
+    'sim_prefix': 'pois',
 
     # numbers of cells making up the pyramidal grids
     'N_pyr_x': 1,
     'N_pyr_y': 1,
 
     # Poisson input
-    'pois_lamtha': array([10., 50., 100.]),
-    'pois_T': 1000.,
+    # 'pois_lamtha': 20.,
+    'pois_T': 250.,
 
     # amplitudes of individual gaussian random inputs to L2Pyr and L5Pyr
     # L2 Basket params
     'L2Basket_Gauss_A': 0.,
     # 'L2Basket_Gauss_A': 5.9e-5,
-    'L2Basket_Gauss_mu': 200.,
+    'L2Basket_Gauss_mu': 2000.,
     'L2Basket_Gauss_sigma': 3.6,
-    # 'L2Basket_Gauss_sigma': array([3.6, 10., 100., 200.]),
-    'L2Basket_Pois_A': 0.,
+    'L2Basket_Pois_A': 1.25e-2,
+    'L2Basket_Pois_lamtha': 0.,
 
     # L2 Pyr params
     'L2Pyr_Gauss_A': 0.,
     # 'L2Pyr_Gauss_A': 1.8e-5,
-    'L2Pyr_Gauss_mu': 200.,
+    'L2Pyr_Gauss_mu': 2000.,
     'L2Pyr_Gauss_sigma': 3.6,
-    'L2Pyr_Pois_A': 0.,
+    # 'L2Pyr_Pois_A': 0.,
+    'L2Pyr_Pois_A': 6.25e-3,
+    'L2Pyr_Pois_lamtha': 0.,
 
     # L5 Pyr params
     'L5Pyr_Gauss_A': 0.,
     # 'L5Pyr_Gauss_A': linspace(5.83e-5, 5.25e-5, 5),
     'L5Pyr_Gauss_mu': 1000.,
     'L5Pyr_Gauss_sigma': 4.8,
-    'L5Pyr_Pois_A': 0.,
+    # 'L5Pyr_Pois_A': 0.,
+    'L5Pyr_Pois_A': 6.25e-3,
+    'L5Pyr_Pois_lamtha': 0.,
 
     # L5 Basket params
     'L5Basket_Gauss_A': 0.,
     # 'L5Basket_Gauss_A': 7.3e-5,
     'L5Basket_Gauss_mu': 1000.,
     'L5Basket_Gauss_sigma': 2.,
-    'L5Basket_Pois_A': 0.,
+    # 'L5Basket_Pois_A': 0.,
+    'L5Basket_Pois_A': 6.25e-3,
+    'L5Basket_Pois_lamtha': 100.,
 
     # maximal conductacnes for all synapses
     # max conductances TO L2Pyrs
@@ -94,6 +100,6 @@ all = {
     'spec_max_freq': 41.,
 
     # numerics
-    'tstop': 1000.,
+    'tstop': 400.,
     'dt': 0.025,
 }

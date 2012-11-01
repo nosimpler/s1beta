@@ -1,8 +1,8 @@
 # paramrw.py - routines for reading the param files
 #
-# v 1.2.25
-# rev 2012-11-01 (SL: added extpois params)
-# last major: (MS: Fixed bug creating p_ext in exp_params())
+# v 1.2.26
+# rev 2012-11-01 (SL: added Poisson lamtha param per cell type)
+# last major: (SL: added extpois params)
 
 import re
 import fileio as fio
@@ -246,11 +246,11 @@ def create_pext(p, tstop):
     # Poisson distributed inputs to proximal
     p_ext_pois = {
         'stim': 'poisson',
-        'L2_basket': (p['L2Basket_Pois_A'], 1.),
-        'L2_pyramidal': (p['L2Pyr_Pois_A'], 0.),
-        'L5_basket': (p['L5Basket_Pois_A'], 1.),
-        'L5_pyramidal': (p['L5Pyr_Pois_A'], 1.),
-        'lamtha': p['pois_lamtha'],
+        'L2_basket': (p['L2Basket_Pois_A'], 1., p['L2Basket_Pois_lamtha']),
+        'L2_pyramidal': (p['L2Pyr_Pois_A'], 0.1, p['L2Pyr_Pois_lamtha']),
+        'L5_basket': (p['L5Basket_Pois_A'], 1., p['L5Basket_Pois_lamtha']),
+        'L5_pyramidal': (p['L5Pyr_Pois_A'], 1., p['L5Pyr_Pois_lamtha']),
+        'lamtha_space': 100.,
         't_interval': (0., p['pois_T']),
         'loc': 'proximal'
     }
@@ -268,4 +268,5 @@ def changed_vars(sim_list):
 
     keyvals = list(line.split(": ") for line in lines)
     var_list = list(line for line in keyvals if re.match('[KL\(]', line[1][0]))
+
     return var_list

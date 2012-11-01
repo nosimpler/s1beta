@@ -1,6 +1,6 @@
 # class_net.py - establishes the Network class and related methods
 #
-# v 1.2.25
+# v 1.2.26
 # rev 2012-11-01 (SL: Added Poisson distributed inputs to all cells)
 # last major: (SL: tstop given to extfeeds)
 
@@ -236,15 +236,14 @@ class Network():
         # return values 2 and 3 of the tuple of this cell type and assign to mu and sigma
         return self.p_ext_gauss[type][2:4]
 
-    # this is not currently used, since the params needed for the feed creation
-    # are not changing dep on cell type
+    # returns the lamtha related to the postsynaptic cell type
     def __create_extpois_params(self, gid_extpois):
         # linear shift from corresponding cell gid
         gid_post = gid_extpois - self.gid_dict['extpois'][0]
         type = self.gid_to_type(gid_post)
 
-        # return the params related to that cell type
-        return self.p_ext_pois[type]
+        # return the lamtha related to this celltype
+        return self.p_ext_pois[type][2]
 
     # parallel create cells AND external inputs (feeds)
     # these are spike SOURCES but cells are also targets
@@ -296,9 +295,10 @@ class Network():
                     self.pc.cell(gid, self.extgauss_list[-1].connect_to_target())
 
                 elif type == 'extpois':
-                    # use self.p_ext_gauss to create these gids
-                    lamtha = self.p_ext_pois['lamtha']
+                    lamtha = self.__create_extpois_params(gid)
+                    # lamtha = self.p_ext_pois['lamtha']
                     t_interval = self.p_ext_pois['t_interval']
+
                     self.extpois_list.append(ParFeedExtPois(lamtha, t_interval))
                     self.pc.cell(gid, self.extpois_list[-1].connect_to_target())
 

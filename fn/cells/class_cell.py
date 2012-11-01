@@ -1,8 +1,8 @@
 # class_cell.py - establish class def for general cell features
 #
-# v 1.2.25
-# rev 2012-11-01 (SL: added parreceive_pois methods for Pyr() and Basket())
-# last rev: (SL: added ncfrom_extgauss list)
+# v 1.2.26
+# rev 2012-11-01 (SL: lamtha set per cell type)
+# last rev: (SL: added parreceive_pois methods for Pyr() and Basket())
 
 import numpy as np
 import itertools as it
@@ -228,7 +228,7 @@ class Basket(Cell):
                 'pos_src': pos_dict['extpois'][gid],
                 'A_weight': p_ext_pois[self.celltype][0],
                 'A_delay': p_ext_pois[self.celltype][1],
-                'lamtha': p_ext_pois['lamtha']
+                'lamtha': p_ext_pois['lamtha_space']
             }
 
             self.ncfrom_extpois.append(self.parconnect_from_src(gid_extpois, nc_dict, self.soma_ampa))
@@ -259,7 +259,7 @@ class Pyr(Cell):
                 'pos_src': pos_dict['extpois'][gid],
                 'A_weight': p_ext_pois[self.celltype][0],
                 'A_delay': p_ext_pois[self.celltype][1],
-                'lamtha': p_ext_pois['lamtha']
+                'lamtha': p_ext_pois['lamtha_space']
             }
 
             self.ncfrom_extpois.append(self.parconnect_from_src(gid_extpois, nc_dict, self.basal2_ampa))

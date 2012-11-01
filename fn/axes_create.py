@@ -1,8 +1,8 @@
 # axes_create.py - simple axis creation
 #
-# v 1.2.25
-# rev 2012-11-01 (SL: Changed axes on raster plot)
-# last major: (SL: added raster fig)
+# v 1.2.26
+# rev 2012-11-01 (SL: corrected axes for L2/L5 on raster)
+# last major: (SL: Changed axes on raster plot)
 
 # usage:
 # testfig = fig_std()
@@ -40,8 +40,8 @@ class fig_raster():
 
         self.ax = {}
 
-        self.__panel_create(grid0, 'L2')
-        self.__panel_create(grid1, 'L5')
+        self.__panel_create(grid1, 'L2')
+        self.__panel_create(grid0, 'L5')
 
         # self.ax_L5 = self.f.add_subplot(grid[1:2, :])
         # self.ax_L5_extgauss = self.f.add_subplot(grid[2:3, :])

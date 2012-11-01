@@ -1,8 +1,8 @@
 # params_default.py - list of default params and values
 #
-# v 1.2.25
-# rev 2012-11-01 (SL: Added pois param defaults)
-# last major: (MS: Removed key 'prng_seed')
+# v 1.2.26
+# rev 2012-11-01 (SL: Added param for poisson lamtha per cell type)
+# last major: (SL: Added pois param defaults)
 
 # flat file of default values
 # tuples for different "experiments"
@@ -15,7 +15,7 @@ params_default = {
     'N_pyr_x': 10,
     'N_pyr_y': 10,
 
-    'pois_lamtha': 10.,
+    # 'pois_lamtha': 10.,
     'pois_T': 1000.,
 
     # amplitudes of individual gaussian random inputs to L2Pyr and L5Pyr
@@ -24,18 +24,21 @@ params_default = {
     'L2Basket_Gauss_mu': 200.,
     'L2Basket_Gauss_sigma': 3.6,
     'L2Basket_Pois_A': 0.,
+    'L2Basket_Pois_lamtha': 10.,
 
     # L2 Pyr params
     'L2Pyr_Gauss_A': 1.8e-5,
     'L2Pyr_Gauss_mu': 150.,
     'L2Pyr_Gauss_sigma': 3.6,
     'L2Pyr_Pois_A': 0.,
+    'L2Pyr_Pois_lamtha': 10.,
 
     # L5 Pyr params
     'L5Pyr_Gauss_A': 5.83e-5,
     'L5Pyr_Gauss_mu': 500.,
     'L5Pyr_Gauss_sigma': 4.8,
     'L5Pyr_Pois_A': 0.,
+    'L5Pyr_Pois_lamtha': 10.,
 
     # L5 Basket params
     'L5Basket_Gauss_A': 0.,
@@ -43,6 +46,7 @@ params_default = {
     'L5Basket_Gauss_mu': 500.,
     'L5Basket_Gauss_sigma': 2.,
     'L5Basket_Pois_A': 0.,
+    'L5Basket_Pois_lamtha': 10.,
 
     # maxsimal conducatnces for all synapses
     # max conductances TO L2Pyrs
