@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # s1run.py - primary run function for s1 project
 #
-# v 1.2.23
-# rev 2012-10-30 (MS: Added benchmarking to exec_runsim())
-# last major: (SL: outsourced plotting and fixed bug)
+# v 1.2.24a
+# rev 2012-10-30 (MS: prng seed set in exec_runsim() based on rank)
+# last major: (MS: Added benchmarking to exec_runsim())
 
 import os
 import shutil
@@ -92,7 +92,7 @@ def exec_runsim(p_all):
         nrn("dp_total = 0.")
 
         # Seed pseudorandom number generator
-        np.random.seed(int(p['prng_seed']))
+        np.random.seed(rank)
         # np.random.seed(0)
 
         # Set tstop before instantiating any classes

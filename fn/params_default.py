@@ -1,8 +1,8 @@
 # params_default.py - list of default params and values
 #
-# v 1.2.23
-# rev 2012-10-30 (MS: Reset values for max conductances L2Pyr-L2Pyr, L5Pyr-L5Pyr
-# last major: (SL: added proximal and distal input params)
+# v 1.2.24a
+# rev 2012-11-01 (MS: Removed key 'prng_seed')
+# last major: (MS: Reset values for max conductances L2Pyr-L2Pyr, L5Pyr-L5Pyr
 
 # flat file of default values
 # tuples for different "experiments"
@@ -73,5 +73,4 @@ params_default = {
     # numerics
     'tstop': 1000.,
     'dt': 0.025,
-    'prng_seed': 0,
 }

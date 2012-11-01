@@ -1,8 +1,8 @@
 # paramrw.py - routines for reading the param files
 #
-# v 1.2.24
-# rev 2012-10-31 (MS: Added get_key_types() in exp_params() to find keys whose values change over runs)
-# last major: (SL: auto calc feed validity, added input times for feeds)
+# v 1.2.24a
+# rev 2012-11-01 (MS: Fixed bug creating p_ext in exp_params())
+# last major: (MS: Added get_key_types() in exp_params() to find keys whose values change over runs)
 
 import re
 import fileio as fio
@@ -245,13 +245,13 @@ def create_pext(p, tstop):
     # indexable py list of param dicts for parallel
     # turn off individual feeds by commenting out relevant line here.
     # always valid, no matter the length
-    p_ext = [
-        feed_prox,
-        feed_dist,
-        # evoked_prox_early,
-        # evoked_prox_late,
-        # evoked_dist
-    ]
+    # p_ext = [
+    #     # feed_prox,
+    #     # feed_dist,
+    #     # evoked_prox_early,
+    #     # evoked_prox_late,
+    #     # evoked_dist
+    # ]
 
     return p_ext, p_ext_gauss
 

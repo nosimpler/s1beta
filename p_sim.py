@@ -4,13 +4,7 @@
 # np.arrays for everything else?
 # turns out, some whitespace is valid for dicts!
 
-from numpy import array, linspace, random
-from itertools import izip
-from neuron import h as nrn
-
-pc = nrn.ParallelContext()
-rank = int(pc.id())
-random.seed(rank)
+from numpy import array, linspace
 
 all = {
     'sim_prefix': 'title-test',
@@ -93,6 +87,4 @@ all = {
     # numerics
     'tstop': 1000.,
     'dt': 0.025,
-    'prng_seed': rank,
-    # 'prng_seed': random.randint(40, size=1)
 }
