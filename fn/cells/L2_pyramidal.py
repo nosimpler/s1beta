@@ -1,8 +1,8 @@
 # L2_pyramidal.py - est class def for layer 2 pyramidal cells
 #
-# v 1.2.20
-# rev 2012-10-30 (SL: added synaptic conductance params)
-# last rev: (SL: separate extgauss feed params)
+# v 1.2.25
+# rev 2012-11-01 (SL: added self.celltype)
+# last rev: (SL: added synaptic conductance params)
 
 from neuron import h as nrn
 from class_cell import Pyr
@@ -17,6 +17,7 @@ class L2Pyr(Pyr):
     def __init__(self, pos):
         # usage: Pyr.__init__(self, pos, L, diam, Ra, cm)
         Pyr.__init__(self, pos, 22.1, 23.4, 0.6195, 'L2Pyr')
+        self.celltype = 'L2_pyramidal'
 
         # prealloc namespace for dend properties
         # set in dend_props()

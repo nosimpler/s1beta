@@ -1,8 +1,8 @@
 # spikefn.py - dealing with spikes
 #
-# v 1.2.14
-# 2012-10-18 (SL: Minor)
-# last major: (SL: separate extgauss feed params)
+# v 1.2.25
+# 2012-11-01 (SL: Calculating poisson events, too)
+# last major: (SL: Minor)
 
 import fileio as fio
 import numpy as np
@@ -29,12 +29,21 @@ class Spikes():
 
         return spike_list
 
+# splits ext gauss by supplied cell type
 def split_extgauss(s, gid_dict, type):
     gid_cell = gid_dict[type]
     gid_extgauss_start = gid_dict['extgauss'][0]
     gid_extgauss_cell = [gid + gid_extgauss_start for gid in gid_dict[type]]
 
     return Spikes(s, gid_extgauss_cell)
+
+# splits ext pois by supplied cell type
+def split_extpois(s, gid_dict, type):
+    gid_cell = gid_dict[type]
+    gid_extpois_start = gid_dict['extpois'][0]
+    gid_extpois_cell = [gid + gid_extpois_start for gid in gid_dict[type]]
+
+    return Spikes(s, gid_extpois_cell)
 
 # not "purely" from files
 def spikes_from_file(gid_dict, fspikes):
@@ -45,6 +54,7 @@ def spikes_from_file(gid_dict, fspikes):
 
     # remove extgauss from keys, going to be replaced with a bunch for different types
     del s_dict['extgauss']
+    del s_dict['extpois']
 
     # now iterate over remaining keys
     for key in s_dict.keys():
@@ -53,8 +63,12 @@ def spikes_from_file(gid_dict, fspikes):
 
         if key not in 'extinput':
             # figure out its extgauss feed
-            newkey = 'extgauss_' + key
-            s_dict[newkey] = split_extgauss(s, gid_dict, key)
+            newkey_gauss = 'extgauss_' + key
+            s_dict[newkey_gauss] = split_extgauss(s, gid_dict, key)
+
+            # figure out its extpois feed
+            newkey_pois = 'extpois_' + key
+            s_dict[newkey_pois] = split_extpois(s, gid_dict, key)
 
     return s_dict
 
@@ -70,6 +84,8 @@ def get_markerstyle(key):
 
     # short circuit this by putting extgauss first ... cheap.
     if 'extgauss' in key:
+        markerstyle += '.'
+    elif 'extpois' in key:
         markerstyle += '.'
     elif 'pyramidal' in key:
         markerstyle += '2'
@@ -113,7 +129,7 @@ def spike_png(a, s_dict):
         for spk_cell in s_dict[key].spike_list:
             # a.plot(np.array([451.6]), e_ticks[i] * np.ones(1), 'k.', markersize=2.5)
             # print len(s_dict[key].tick_marks), len(spk_cell)
-            a.plot(spk_cell, s_dict[key].tick_marks[i] * np.ones(len(spk_cell)), markerstyle, markeredgewidth=2, markersize=10)
+            a.plot(spk_cell, s_dict[key].tick_marks[i] * np.ones(len(spk_cell)), markerstyle, markeredgewidth=2, markersize=5)
             i += 1
 
     a.set_ylim([0, 1])

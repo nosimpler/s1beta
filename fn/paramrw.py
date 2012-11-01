@@ -1,8 +1,8 @@
 # paramrw.py - routines for reading the param files
 #
-# v 1.2.24a
-# rev 2012-11-01 (MS: Fixed bug creating p_ext in exp_params())
-# last major: (MS: Added get_key_types() in exp_params() to find keys whose values change over runs)
+# v 1.2.25
+# rev 2012-11-01 (SL: added extpois params)
+# last major: (MS: Fixed bug creating p_ext in exp_params())
 
 import re
 import fileio as fio
@@ -112,6 +112,7 @@ class exp_params():
         self.p_template = dict.fromkeys(self.keys_sorted)
 
         # grab just the values (but now in order)
+        # plist = [item[1] for item in list_sorted]
         for item in list_sorted:
             plist.append(item[1])
 
@@ -242,18 +243,19 @@ def create_pext(p, tstop):
         'loc': 'proximal'
     }
 
-    # indexable py list of param dicts for parallel
-    # turn off individual feeds by commenting out relevant line here.
-    # always valid, no matter the length
-    # p_ext = [
-    #     # feed_prox,
-    #     # feed_dist,
-    #     # evoked_prox_early,
-    #     # evoked_prox_late,
-    #     # evoked_dist
-    # ]
+    # Poisson distributed inputs to proximal
+    p_ext_pois = {
+        'stim': 'poisson',
+        'L2_basket': (p['L2Basket_Pois_A'], 1.),
+        'L2_pyramidal': (p['L2Pyr_Pois_A'], 0.),
+        'L5_basket': (p['L5Basket_Pois_A'], 1.),
+        'L5_pyramidal': (p['L5Pyr_Pois_A'], 1.),
+        'lamtha': p['pois_lamtha'],
+        't_interval': (0., p['pois_T']),
+        'loc': 'proximal'
+    }
 
-    return p_ext, p_ext_gauss
+    return p_ext, p_ext_gauss, p_ext_pois
 
 # Finds the changed variables
 def changed_vars(sim_list):

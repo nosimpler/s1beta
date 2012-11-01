@@ -45,6 +45,7 @@ def pall(ddir, p_exp, gid_dict, tstop):
     dpl_list = fio.file_match(ddir.fileinfo, 'dipole')
     spk_list = fio.file_match(ddir.fileinfo, 'spikes')
 
+    # Please keep this code around; it's useful for debugging
     # for file_spk in spk_list:
     #     # spikefn.spikes_from_file(net.gid_dict, file_spk)
     #     praster(gid_dict, tstop, file_spk, dfig_spk)

@@ -1,14 +1,14 @@
 # class_net.py - establishes the Network class and related methods
 #
-# v 1.2.22
-# rev 2012-10-30 (SL: tstop given to extfeeds)
-# last major: (SL: Fixed extinput gid assignment)
+# v 1.2.25
+# rev 2012-11-01 (SL: Added Poisson distributed inputs to all cells)
+# last major: (SL: tstop given to extfeeds)
 
 import itertools as it
 import numpy as np
 
 from neuron import h as nrn
-from fn.class_feed import ParFeedExt, ParFeedExtGauss
+from fn.class_feed import ParFeedExt, ParFeedExtGauss, ParFeedExtPois
 from fn.cells.L5_pyramidal import L5Pyr
 from fn.cells.L2_pyramidal import L2Pyr
 from fn.cells.L2_basket import L2Basket
@@ -38,7 +38,7 @@ class Network():
 
         # all params of external inputs in p_ext
         # Global number of external inputs ... automatic counting makes more sense
-        self.p_ext, self.p_ext_gauss = paramrw.create_pext(self.p, nrn.tstop)
+        self.p_ext, self.p_ext_gauss, self.p_ext_pois = paramrw.create_pext(self.p, nrn.tstop)
         self.N_extinput = len(self.p_ext)
 
         # absolute source list of keys on which everything gets created
@@ -49,7 +49,8 @@ class Network():
             'L5_basket',
             'L5_pyramidal',
             'extinput',
-            'extgauss'
+            'extgauss',
+            'extpois',
         ]
 
         # cell position lists, also will give counts: must be known by ALL nodes
@@ -63,10 +64,11 @@ class Network():
         # also creates coords for the extgauss
         self.N_cells = self.N_L2_pyr + self.N_L5_pyr + self.N_L2_basket + self.N_L5_basket
         self.N_extgauss = self.N_cells
+        self.N_extpois = self.N_cells
         self.__create_coords_extinput()
 
         # ugly for now
-        self.src_counts = (self.N_L2_basket, self.N_L2_pyr, self.N_L5_basket, self.N_L5_pyr, self.N_extinput, self.N_extgauss)
+        self.src_counts = (self.N_L2_basket, self.N_L2_pyr, self.N_L5_basket, self.N_L5_pyr, self.N_extinput, self.N_extgauss, self.N_extpois)
 
         # create dictionary of GIDs according to cell type
         # global dictionary of gid and cell type
@@ -81,6 +83,7 @@ class Network():
         self.cells_list = []
         self.extinput_list = []
         self.extgauss_list = []
+        self.extpois_list = []
         self.__create_all_src()
 
         # parallel network connector
@@ -140,6 +143,7 @@ class Network():
 
         self.pos_dict['extinput'] = [self.origin for i in range(self.N_extinput)]
         self.pos_dict['extgauss'] = [self.origin for i in range(self.N_extgauss)]
+        self.pos_dict['extpois'] = [self.origin for i in range(self.N_extpois)]
 
     # creates gid dicts and pos_lists
     def __create_gid_dict(self):
@@ -158,7 +162,8 @@ class Network():
             'L5_basket': range(gid_ind[2], gid_ind[3]),
             'L5_pyramidal': range(gid_ind[3], gid_ind[4]),
             'extinput': range(gid_ind[4], gid_ind[5]),
-            'extgauss': range(gid_ind[5], gid_ind[6])
+            'extgauss': range(gid_ind[5], gid_ind[6]),
+            'extpois': range(gid_ind[6], gid_ind[7]),
         }
 
         for count in self.src_counts:
@@ -178,6 +183,11 @@ class Network():
             gid_extgauss = self.gid_dict['extgauss'][0] + gid
             self.pc.set_gid2node(gid_extgauss, self.rank)
             self.__gid_list.append(gid_extgauss)
+
+            # calculate gid for the extpois and assign to same rank
+            gid_extpois = self.gid_dict['extpois'][0] + gid
+            self.pc.set_gid2node(gid_extpois, self.rank)
+            self.__gid_list.append(gid_extpois)
 
         # NOT perfectly balanced for now
         for gid_base in range(self.rank, self.N_extinput, self.n_hosts):
@@ -212,6 +222,9 @@ class Network():
         if gid in self.gid_dict['extgauss']:
             return 'extgauss'
 
+        if gid in self.gid_dict['extpois']:
+            return 'extpois'
+
     # creates the external feed appropriate for this gid
     # only mu and sigma really get read here, dependent upon postsynaptic cell type
     def __create_extgauss_params(self, gid_extgauss):
@@ -222,6 +235,16 @@ class Network():
         # should only return a cell type
         # return values 2 and 3 of the tuple of this cell type and assign to mu and sigma
         return self.p_ext_gauss[type][2:4]
+
+    # this is not currently used, since the params needed for the feed creation
+    # are not changing dep on cell type
+    def __create_extpois_params(self, gid_extpois):
+        # linear shift from corresponding cell gid
+        gid_post = gid_extpois - self.gid_dict['extpois'][0]
+        type = self.gid_to_type(gid_post)
+
+        # return the params related to that cell type
+        return self.p_ext_pois[type]
 
     # parallel create cells AND external inputs (feeds)
     # these are spike SOURCES but cells are also targets
@@ -272,6 +295,13 @@ class Network():
                     self.extgauss_list.append(ParFeedExtGauss(mu, sigma))
                     self.pc.cell(gid, self.extgauss_list[-1].connect_to_target())
 
+                elif type == 'extpois':
+                    # use self.p_ext_gauss to create these gids
+                    lamtha = self.p_ext_pois['lamtha']
+                    t_interval = self.p_ext_pois['t_interval']
+                    self.extpois_list.append(ParFeedExtPois(lamtha, t_interval))
+                    self.pc.cell(gid, self.extpois_list[-1].connect_to_target())
+
                 else:
                     print "None of these types in Net()"
                     exit()
@@ -300,6 +330,7 @@ class Network():
 
                 # now do the gaussian inputs specific to these cells
                 cell.parreceive_gauss(gid, self.gid_dict, self.pos_dict, self.p_ext_gauss)
+                cell.parreceive_pois(gid, self.gid_dict, self.pos_dict, self.p_ext_pois)
 
     # setup spike recording for this node
     def __record_spikes(self):

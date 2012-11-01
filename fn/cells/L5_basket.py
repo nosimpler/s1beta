@@ -1,8 +1,8 @@
 # L5_basket.py - establish class def for layer 5 basket cells
 #
-# v 1.2.20
-# rev 2012-10-30 (SL: added synaptic conductance params)
-# last rev: (SL: separate extgauss feed params)
+# v 1.2.25
+# rev 2012-11-01 (SL: added self.celltype)
+# last rev: (SL: added synaptic conductance params)
 
 import itertools as it
 from neuron import h as nrn
@@ -15,6 +15,7 @@ class L5Basket(Basket):
     def __init__(self, pos):
         # Pyr.__init__(self, pos, L, diam, Ra, cm)
         Basket.__init__(self, pos, 'L5Basket')
+        self.celltype = 'L5_basket'
 
     # connections FROM other cells TO this cell
     # there are no connections from the L2Basket cells. congrats! 
@@ -25,7 +26,6 @@ class L5Basket(Basket):
             nc_dict = {
                 'pos_src': pos,
                 'A_weight': p['gbar_L5Basket_L5Basket'],
-                # 'A_weight': 2e-2,
                 'A_delay': 1.,
                 'lamtha': 20.
             }

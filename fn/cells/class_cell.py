@@ -1,8 +1,8 @@
 # class_cell.py - establish class def for general cell features
 #
-# v 1.2.5
-# rev 2012-10-01 (SL: added ncfrom_extgauss list)
-# last rev: (SL: Implemented the odd nseg code)
+# v 1.2.25
+# rev 2012-11-01 (SL: added parreceive_pois methods for Pyr() and Basket())
+# last rev: (SL: added ncfrom_extgauss list)
 
 import numpy as np
 import itertools as it
@@ -39,6 +39,7 @@ class Cell():
         self.ncfrom_L5Basket = []
         self.ncfrom_extinput = []
         self.ncfrom_extgauss = []
+        self.ncfrom_extpois = []
 
     # two things need to happen here for nrn:
     # 1. dipole needs to be inserted into each section
@@ -218,6 +219,20 @@ class Basket(Cell):
 
         nrn.pop_section()
 
+    # parreceive_pois is going to be based on the self.celltype!
+    def parreceive_pois(self, gid, gid_dict, pos_dict, p_ext_pois):
+        if self.celltype in p_ext_pois.keys():
+            gid_extpois = gid + gid_dict['extpois'][0]
+
+            nc_dict = {
+                'pos_src': pos_dict['extpois'][gid],
+                'A_weight': p_ext_pois[self.celltype][0],
+                'A_delay': p_ext_pois[self.celltype][1],
+                'lamtha': p_ext_pois['lamtha']
+            }
+
+            self.ncfrom_extpois.append(self.parconnect_from_src(gid_extpois, nc_dict, self.soma_ampa))
+
 # General Pyramidal cell class
 class Pyr(Cell):
     def __init__(self, pos, L, diam, cm, cell_name='Pyr'):
@@ -234,6 +249,22 @@ class Pyr(Cell):
         # segment on the soma specified here
         self.soma_gabaa = self.syn_gabaa_create(self.soma(0.5))
         self.soma_gabab = self.syn_gabab_create(self.soma(0.5))
+
+    # parreceive_pois is going to be based on the self.celltype!
+    def parreceive_pois(self, gid, gid_dict, pos_dict, p_ext_pois):
+        if self.celltype in p_ext_pois.keys():
+            gid_extpois = gid + gid_dict['extpois'][0]
+
+            nc_dict = {
+                'pos_src': pos_dict['extpois'][gid],
+                'A_weight': p_ext_pois[self.celltype][0],
+                'A_delay': p_ext_pois[self.celltype][1],
+                'lamtha': p_ext_pois['lamtha']
+            }
+
+            self.ncfrom_extpois.append(self.parconnect_from_src(gid_extpois, nc_dict, self.basal2_ampa))
+            self.ncfrom_extpois.append(self.parconnect_from_src(gid_extpois, nc_dict, self.basal3_ampa))
+            self.ncfrom_extpois.append(self.parconnect_from_src(gid_extpois, nc_dict, self.apicaloblique_ampa))
 
     # Create dictionary of section names with entries to scale section lenghts to length along z-axis 
     def get_sectnames(self):

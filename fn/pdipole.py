@@ -1,8 +1,8 @@
 # pdipole.py - plot dipole function
 #
-# v 1.2.24
-# rev 2012-09-31 (MS: title includes key/value pairs for all keys whose values change over runs)
-# last major: (SL: uses new file input and directory)
+# v 1.2.25
+# rev 2012-11-01 (SL: changed figure handle locally)
+# last major: (MS: title includes key/val pairs for changed vals)
 
 import os
 import matplotlib.pyplot as plt
@@ -22,15 +22,14 @@ def pdipole(file_name, dfig, p_dict, key_types):
     t_vec = ddipole[:, 0]
     dp_total = ddipole[:, 1]
 
-    testfig = fig_std()
-    testfig.ax0.plot(t_vec, dp_total)
-    # testfig.ax0.set_ylim(-4e4, 3e4)
+    f = fig_std()
+    f.ax0.plot(t_vec, dp_total)
+    # f.ax0.set_ylim(-4e4, 3e4)
 
     title = [key + ': %2.1f' %p_dict[key] for key in key_types['dynamic_keys']]
     plt.title(title)
-    # plt.title('f_input_prox: %2.1f; f_input_dist: %2.1f' %(p_dict['f_input_prox'], p_dict['f_input_dist']))
 
     fig_name = os.path.join(dfig, file_prefix+'.png')
 
     plt.savefig(fig_name)
-    testfig.close()
+    f.close()

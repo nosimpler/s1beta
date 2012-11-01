@@ -1,13 +1,62 @@
 # class_feed.py - establishes FeedExt(), FeedProximal() and FeedDistal()
 #
-# v 1.2.11
-# rev 2012-10-04 (SL: ParFeedExtGauss different mu, sigma vals)
-# last major: (SL: fixed sort bug for VecStim())
+# v 1.2.25
+# rev 2012-11-01 (SL: Added ParFeedExtPois())
+# last major: (SL: ParFeedExtGauss different mu, sigma vals)
 
 import numpy as np
 import itertools as it
 
 from neuron import h as nrn
+
+# based on cdf for exp wait time distribution from unif [0, 1)
+# returns in ms based on lamtha in Hz
+def t_wait(lamtha):
+    return -1000. * np.log(1. - np.random.rand()) / lamtha
+
+class ParFeedExtPois():
+    def __init__(self, lamtha, t_interval):
+        self.eventvec = nrn.Vector()
+        self.vs = nrn.VecStim()
+
+        # check the t interval
+        t0 = t_interval[0]
+        T = t_interval[1]
+
+        # mu and sigma values come from p
+        # one single value from Gaussian dist.
+        # values MUST be sorted for VecStim()!
+        # start the initial value
+        t_gen = t0 + t_wait(lamtha)
+        val_pois = np.array([])
+
+        if t_gen < T:
+            np.append(val_pois, t_gen)
+
+        # vals are guaranteed to be monotonically increasing, no need to sort
+        while t_gen < T:
+            # so as to not clobber confusingly base off of t_gen ...
+            t_gen += t_wait(lamtha)
+            if t_gen < T:
+                val_pois = np.append(val_pois, t_gen)
+
+        # checks the distribution stats
+        # if len(val_pois):
+        #     xdiff = np.diff(val_pois/1000)
+        #     print lamtha, np.mean(xdiff), np.var(xdiff), 1/lamtha**2
+
+        # Convert array into nrn vector
+        self.eventvec.from_python(val_pois)
+
+        # load eventvec into VecStim object
+        self.vs.play(self.eventvec)
+
+    # for parallel, maybe be that postsyn for this is just nil (None)
+    def connect_to_target(self):
+        nc = nrn.NetCon(self.vs, None)
+        nc.threshold = 0
+
+        return nc
 
 # this seems wasteful but necessary
 class ParFeedExtGauss():
@@ -20,6 +69,11 @@ class ParFeedExtGauss():
         # values MUST be sorted for VecStim()!
         val_gauss = np.random.normal(mu, sigma, 50)
         # val_gauss = np.random.normal(p['mu'], p['sigma'], 50)
+
+        # remove non-zero values brute force-ly
+        val_gauss = val_gauss[val_gauss > 0]
+
+        # sort values - critical for nrn
         val_gauss.sort()
 
         # Convert array into nrn vector

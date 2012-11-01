@@ -1,8 +1,8 @@
 # L5_pyramidal.py - establish class def for layer 5 pyramidal cells
 #
-# v 1.2.20
-# rev 2012-10-30 (SL: added synaptic conductance params)
-# last rev: (SL: separate extgauss feed params)
+# v 1.2.25
+# rev 2012-11-01 (SL: added self.celltype)
+# last rev: (SL: added synaptic conductance params)
 
 from neuron import h as nrn
 from class_cell import Pyr
@@ -18,6 +18,7 @@ class L5Pyr(Pyr):
     def __init__(self, pos):
         # Pyr.__init__(self, pos, L, diam, Ra, cm, {prefix})
         Pyr.__init__(self, pos, 39, 28.9, 0.85, 'L5Pyr')
+        self.celltype = 'L5_pyramidal'
 
         # preallocate namespaces for dend properties
         # set in dend_props()

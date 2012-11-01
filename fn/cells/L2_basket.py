@@ -1,8 +1,8 @@
 # L2_basket.py - establish class def for layer 2 basket cells
 #
-# v 1.2.20
-# rev 2012-10-30 (SL: added synaptic conductances)
-# last rev: (SL: ext gauss feeds separate)
+# v 1.2.25
+# rev 2012-11-01 (SL: Added self.celltype)
+# last rev: (SL: added synaptic conductances)
 
 import itertools as it
 from neuron import h as nrn
@@ -15,6 +15,7 @@ class L2Basket(Basket):
     def __init__(self, pos):
         # Pyr.__init__(self, pos, L, diam, Ra, cm)
         Basket.__init__(self, pos, 'L2Basket')
+        self.celltype = 'L2_basket'
 
         # self.soma_ampa and self.soma_gabaa are inherited from Basket()
         # create nmda synapse unique to L2Basket

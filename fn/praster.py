@@ -1,8 +1,8 @@
 # praster.py - plot dipole function
 #
-# v 1.2.13a
-# rev 2012-10-04 (SL: using fig_raster)
-# last major: (SL: imported)
+# v 1.2.25
+# rev 2012-11-01 (SL: plotting pois input)
+# last major: (SL: using fig_raster)
 
 import os
 import numpy as np
@@ -16,15 +16,30 @@ def praster(gid_dict, tstop, file_name, dfig):
     # ddipole is dipole data
     s_dict = spikefn.spikes_from_file(gid_dict, file_name)
 
-    s_dict_extgauss = {}
     s_dict_L2 = {}
     s_dict_L5 = {}
+    s_dict_L2_extgauss = {}
+    s_dict_L2_extpois = {}
+    s_dict_L5_extgauss = {}
+    s_dict_L5_extpois = {}
 
     # clean out s_dict destructively
     for key in s_dict.keys():
         # do this first to remove all extgauss feeds
         if 'extgauss' in key:
-            s_dict_extgauss[key] = s_dict.pop(key)
+            if 'L2_' in key:
+                s_dict_L2_extgauss[key] = s_dict.pop(key)
+
+            elif 'L5_' in key:
+                s_dict_L5_extgauss[key] = s_dict.pop(key)
+
+        elif 'extpois' in key:
+            # s_dict_extpois[key] = s_dict.pop(key)
+            if 'L2_' in key:
+                s_dict_L2_extpois[key] = s_dict.pop(key)
+
+            elif 'L5_' in key:
+                s_dict_L5_extpois[key] = s_dict.pop(key)
 
         # L2 next
         elif 'L2_' in key:
@@ -38,9 +53,12 @@ def praster(gid_dict, tstop, file_name, dfig):
 
     # create standard fig and axes
     f = fig_raster(tstop)
-    spikefn.spike_png(f.ax_L2, s_dict_L2)
-    spikefn.spike_png(f.ax_L5, s_dict_L5)
-    spikefn.spike_png(f.ax_extgauss, s_dict_extgauss)
+    spikefn.spike_png(f.ax['L2'], s_dict_L2)
+    spikefn.spike_png(f.ax['L5'], s_dict_L5)
+    spikefn.spike_png(f.ax['L2_extpois'], s_dict_L2_extpois)
+    spikefn.spike_png(f.ax['L2_extgauss'], s_dict_L2_extgauss)
+    spikefn.spike_png(f.ax['L5_extpois'], s_dict_L5_extpois)
+    spikefn.spike_png(f.ax['L5_extgauss'], s_dict_L5_extgauss)
 
     # testfig.ax0.plot(t_vec, dp_total)
     fig_name = os.path.join(dfig, file_prefix+'.png')
