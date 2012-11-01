@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # s1run.py - primary run function for s1 project
 #
-# v 1.2.24a
+# v 1.2.26a
 # rev 2012-10-30 (MS: prng seed set in exec_runsim() based on rank)
 # last major: (MS: Added benchmarking to exec_runsim())
 
@@ -9,7 +9,7 @@ import os
 import shutil
 import numpy as np
 from mpi4py import MPI
-from time import clock, time
+import time
 from neuron import h as nrn
 nrn.load_file("stdrun.hoc")
 
@@ -50,7 +50,7 @@ def copy_paramfile(dsim):
 # All units for time: ms
 def exec_runsim(p_all):
     # clock start time
-    t0 = clock()
+    t0 = time.time()
 
     # dealing with multiple params - there is a lot of overhead to this
     # read the ranges of params and make up all combinations
@@ -71,6 +71,7 @@ def exec_runsim(p_all):
     if rank == 0:
         ddir = fio.OutputDataPaths(dproj, p_exp.sim_prefix)
         ddir.create_dirs()
+        # print ddir.fileinfo
 
         copy_paramfile(ddir.dsim)
         # assign to param file
@@ -79,7 +80,7 @@ def exec_runsim(p_all):
     # iterate through i
     for i in range(p_exp.N_sims):
         if rank == 0:
-            t1 = time()
+            t1 = time.time()
             print "Run number:", i
 
         p = p_exp.return_pdict(i)
@@ -143,9 +144,13 @@ def exec_runsim(p_all):
         nrn.fcurrent()
         nrn.frecord_init()
 
-        if rank == 0: t2 = time()
+        if rank == 0: 
+            t2 = time.time()
+
         pc.psolve(nrn.tstop)
-        if rank == 0: print "\tIntegration time:", time() - t2
+
+        if rank == 0: 
+            print "\tIntegration time:", time.time() - t2
 
         # combine dp_rec
         pc.allreduce(dp_rec, 1)
@@ -175,30 +180,28 @@ def exec_runsim(p_all):
         # move the spike file to the spike dir
         if rank == 0:
             shutil.move(file_spikes_tmp, file_spikes)
-
-            print "\tRun time:", time() - t1
+            print "\tRun time:", time.time() - t1
 
     if pc.nhost > 1:
         pc.runworker()
         pc.done()
 
-        t1 = clock()
+        t1 = time.time()
         if rank == 0:
             print "Simulation run time: %4.4f s" % (t1-t0)
-            print "Plotting..."
+            print "Plotting ...",
 
-            t3 = time()
+            t3 = time.time()
 
-            # is there a reason to pass nrn.tstop?
             plotfn.pall(ddir, p_exp, net.gid_dict, nrn.tstop)
 
-            print "\tPlot time:", time() - t3 
+            print "time:", time.time() - t3 
 
         nrn.quit()
 
     else:
         # end clock time
-        t1 = clock()
+        t1 = time.time()
         print "Simulation run time: %4.4f s" % (t1-t0)
 
 if __name__ == "__main__":

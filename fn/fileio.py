@@ -1,8 +1,8 @@
 # fileio.py - general file input/output functions
 #
-# v 1.2.17
-# rev 2012-10-25 (SL: minor)
-# last rev: (MS: added wavelet fig dir)
+# v 1.2.26a
+# rev 2012-11-01 (png to eps in the unused fig filename extensions)
+# last rev: (SL: minor)
 
 import datetime, fnmatch, os, shutil, sys
 
@@ -67,12 +67,13 @@ class OutputDataPaths():
         self.sim_prefix = sim_prefix
 
         # hard coded data types
+        # fig extensions are not currently being used as well as they could be
         self.__datatypes = {
             'spikes': '-spk.txt',
             'dipole': '-dpl.txt',
-            'figspk': '-spk.png',
-            'figdpl': '-dpl.png',
-            'figspec': '-spec.png',
+            'figspk': '-spk.eps',
+            'figdpl': '-dpl.eps',
+            'figspec': '-spec.eps',
             'param': '-param.txt'
         }
 
@@ -104,13 +105,13 @@ class OutputDataPaths():
     # creates subdirs too
     def simdir(self):
         n = 0
-        sim_name = self.sim_prefix + '-%03d' % n
-        dsim = os.path.join(self.ddate, sim_name)
+        self.sim_name = self.sim_prefix + '-%03d' % n
+        dsim = os.path.join(self.ddate, self.sim_name)
 
         while dir_check(dsim):
             n += 1
-            sim_name = self.sim_prefix + '-%03d' % n
-            dsim = os.path.join(self.ddate, sim_name)
+            self.sim_name = self.sim_prefix + '-%03d' % n
+            dsim = os.path.join(self.ddate, self.sim_name)
 
         return dsim
 
