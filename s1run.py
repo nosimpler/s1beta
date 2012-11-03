@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # s1run.py - primary run function for s1 project
 #
-# v 1.2.27
-# rev 2012-11-03 (SL: Added epscompress function to plot runtime)
-# last major: (MS: prng seed set in exec_runsim() based on rank)
+# v 1.2.29
+# rev 2012-11-03 (SL: Added number of total runs output)
+# last major: (SL: Added epscompress function to plot runtime)
 
 import os
 import shutil
@@ -81,7 +81,8 @@ def exec_runsim(p_all):
     for i in range(p_exp.N_sims):
         if rank == 0:
             t1 = time.time()
-            print "Run number:", i
+            # Tells run number, prints total runs-1 for zero indexing
+            print "Run number: %i of %i" % (i, p_exp.N_sims-1)
 
         p = p_exp.return_pdict(i)
 
