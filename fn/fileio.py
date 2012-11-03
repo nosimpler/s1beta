@@ -1,10 +1,12 @@
 # fileio.py - general file input/output functions
 #
-# v 1.2.26a
-# rev 2012-11-01 (png to eps in the unused fig filename extensions)
-# last rev: (SL: minor)
+# v 1.2.27
+# rev 2012-11-03 (SL: makes better eps and png files in spikes, but not separated yet)
+# last rev: (SL: png to eps in the unused fig filename extensions)
 
 import datetime, fnmatch, os, shutil, sys
+import itertools as it
+import subprocess
 
 # Cleans input files
 def clean_lines(file):
@@ -23,6 +25,8 @@ def gid_dict_from_file(fparam):
     for param in plist:
         print param
 
+# create file name for temporary spike file
+# that every processor is aware of
 def file_spike_tmp(dproj):
     filename_spikes = 'spikes_tmp.spk'
     file_spikes = os.path.join(dproj, filename_spikes)
@@ -140,3 +144,54 @@ def subdir_move(dir_out, name_dir, file_pattern):
 
     for filename in glob.iglob(os.path.join(dir_out, file_pattern)):
         shutil.move(filename, dir_name)
+
+# currently used only minimally in epscompress
+# need to figure out how to change argument list in cmd as below
+def cmds_runmulti(cmdlist):
+    with open(os.devnull, 'w') as devnull:
+        procs = [subprocess.Popen(cmd, stdout=devnull, stderr=devnull) for cmd in cmdlist]
+        for proc in procs:
+            proc.wait()
+
+# list spike raster eps files and then rasterize them to HQ png files, lossless compress, 
+# reencapsulate as eps, and remove backups when successful
+def epscompress(fileinfo):
+    cmds_gs = []
+    cmds_opti = []
+    cmds_encaps = []
+
+    # lists of eps files and corresponding png files
+    epslist = file_match(fileinfo, 'figspk')
+    pnglist = [f.replace('.eps', '.png') for f in epslist]
+    epsbackuplist = [f.replace('.eps', '.bak.eps') for f in epslist]
+
+    # create command lists for gs, optipng, and convert
+    for pngfile, epsfile in it.izip(pnglist, epslist):
+        cmds_gs.append(('gs -r300 -dEPSCrop -dTextAlphaBits=4 -sDEVICE=png16m -sOutputFile=%s -dBATCH -dNOPAUSE %s' % (pngfile, epsfile)))
+        cmds_opti.append(('optipng', pngfile))
+        cmds_encaps.append(('convert %s eps3:%s' % (pngfile, epsfile)))
+
+    # create procs list and run
+    procs_gs = [subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE) for cmd in cmds_gs]
+    for proc in procs_gs:
+        proc.wait()
+
+    # create optipng procs list and run
+    cmds_runmulti(cmds_opti)
+    # procs_opti = [subprocess.Popen(cmd) for cmd in cmds_opti]
+    # for proc in procs_opti:
+    #     proc.wait()
+
+    # backup original eps files temporarily
+    for epsfile, epsbakfile in it.izip(epslist, epsbackuplist):
+        shutil.move(epsfile, epsbakfile)
+
+    # recreate original eps files, now encapsulated, optimized rasters
+    # cmds_runmulti(cmds_encaps)
+    procs_encaps = [subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE) for cmd in cmds_encaps]
+    for proc in procs_encaps:
+        proc.wait()
+
+    # remove all of the backup files
+    for epsbakfile in epsbackuplist:
+        os.remove(epsbakfile)

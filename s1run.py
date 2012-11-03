@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # s1run.py - primary run function for s1 project
 #
-# v 1.2.26a
-# rev 2012-10-30 (MS: prng seed set in exec_runsim() based on rank)
-# last major: (MS: Added benchmarking to exec_runsim())
+# v 1.2.27
+# rev 2012-11-03 (SL: Added epscompress function to plot runtime)
+# last major: (MS: prng seed set in exec_runsim() based on rank)
 
 import os
 import shutil
@@ -182,6 +182,7 @@ def exec_runsim(p_all):
             shutil.move(file_spikes_tmp, file_spikes)
             print "\tRun time:", time.time() - t1
 
+    # plot should probably be moved outside of this
     if pc.nhost > 1:
         pc.runworker()
         pc.done()
@@ -193,7 +194,9 @@ def exec_runsim(p_all):
 
             t3 = time.time()
 
+            # run plots and epscompress function
             plotfn.pall(ddir, p_exp, net.gid_dict, nrn.tstop)
+            fio.epscompress(ddir.fileinfo)
 
             print "time:", time.time() - t3 
 
