@@ -1,20 +1,20 @@
 # L2_basket.py - establish class def for layer 2 basket cells
 #
-# v 1.2.25
-# rev 2012-11-01 (SL: Added self.celltype)
-# last rev: (SL: added synaptic conductances)
+# v 1.2.28
+# rev 2012-11-03 (SL: Basket to BasketSingle)
+# last rev: (SL: Added self.celltype)
 
 import itertools as it
 from neuron import h as nrn
-from class_cell import Basket
+from class_cell import BasketSingle
 
 # Units for e: mV
 # Units for gbar: S/cm^2 unless otherwise noted
 
-class L2Basket(Basket):
+class L2Basket(BasketSingle):
     def __init__(self, pos):
         # Pyr.__init__(self, pos, L, diam, Ra, cm)
-        Basket.__init__(self, pos, 'L2Basket')
+        BasketSingle.__init__(self, pos, 'L2Basket')
         self.celltype = 'L2_basket'
 
         # self.soma_ampa and self.soma_gabaa are inherited from Basket()

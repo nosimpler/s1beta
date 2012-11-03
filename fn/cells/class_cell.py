@@ -1,8 +1,8 @@
 # class_cell.py - establish class def for general cell features
 #
-# v 1.2.26
-# rev 2012-11-01 (SL: lamtha set per cell type)
-# last rev: (SL: added parreceive_pois methods for Pyr() and Basket())
+# v 1.2.28
+# rev 2012-11-03 (SL: Basket to BasketSingle)
+# last rev: (SL: lamtha set per cell type)
 
 import numpy as np
 import itertools as it
@@ -191,7 +191,7 @@ class Cell():
         nrn.pt3dadd(0, self.L, 0, self.diam, sec=self.soma)
 
 # Inhibitory cell class
-class Basket(Cell):
+class BasketSingle(Cell):
     def __init__(self, pos, cell_name='Basket'):
         # Cell.__init__(self, L, diam, Cm, {name_prefix})
         Cell.__init__(self, pos, 39, 20, 0.85, cell_name)

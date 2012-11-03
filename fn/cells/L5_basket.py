@@ -1,20 +1,20 @@
 # L5_basket.py - establish class def for layer 5 basket cells
 #
-# v 1.2.25
-# rev 2012-11-01 (SL: added self.celltype)
-# last rev: (SL: added synaptic conductance params)
+# v 1.2.28
+# rev 2012-11-03 (SL: Basket to BasketSingle)
+# last rev: (SL: added self.celltype)
 
 import itertools as it
 from neuron import h as nrn
-from class_cell import Basket
+from class_cell import BasketSingle
 
 # Units for e: mV
 # Units for gbar: S/cm^2 unless otherwise noted
 
-class L5Basket(Basket):
+class L5Basket(BasketSingle):
     def __init__(self, pos):
         # Pyr.__init__(self, pos, L, diam, Ra, cm)
-        Basket.__init__(self, pos, 'L5Basket')
+        BasketSingle.__init__(self, pos, 'L5Basket')
         self.celltype = 'L5_basket'
 
     # connections FROM other cells TO this cell
