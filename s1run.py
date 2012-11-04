@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # s1run.py - primary run function for s1 project
 #
-# v 1.2.29
-# rev 2012-11-03 (SL: Added number of total runs output)
-# last major: (SL: Added epscompress function to plot runtime)
+# v 1.2.30
+# rev 2012-11-03 (SL: changed the timer output)
+# last major: (SL: Added number of total runs output)
 
 import os
 import shutil
@@ -82,7 +82,7 @@ def exec_runsim(p_all):
         if rank == 0:
             t1 = time.time()
             # Tells run number, prints total runs-1 for zero indexing
-            print "Run number: %i of %i" % (i, p_exp.N_sims-1)
+            print "Run number: %i of %i" % (i, p_exp.N_sims-1),
 
         p = p_exp.return_pdict(i)
 
@@ -145,13 +145,13 @@ def exec_runsim(p_all):
         nrn.fcurrent()
         nrn.frecord_init()
 
-        if rank == 0: 
-            t2 = time.time()
+        # if rank == 0: 
+        #     t2 = time.time()
 
         pc.psolve(nrn.tstop)
 
-        if rank == 0: 
-            print "\tIntegration time:", time.time() - t2
+        # if rank == 0: 
+        #     print "\tIntegration time:", time.time() - t2
 
         # combine dp_rec
         pc.allreduce(dp_rec, 1)
@@ -181,7 +181,7 @@ def exec_runsim(p_all):
         # move the spike file to the spike dir
         if rank == 0:
             shutil.move(file_spikes_tmp, file_spikes)
-            print "\tRun time:", time.time() - t1
+            print "... finished in: %.4f s" % (time.time() - t1)
 
     # plot should probably be moved outside of this
     if pc.nhost > 1:
