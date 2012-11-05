@@ -7,7 +7,7 @@
 from numpy import array, linspace
 
 all = {
-    'sim_prefix': 'pois',
+    'sim_prefix': 'test',
 
     # numbers of cells making up the pyramidal grids
     'N_pyr_x': 1,
@@ -23,16 +23,17 @@ all = {
     # 'L2Basket_Gauss_A': 5.9e-5,
     'L2Basket_Gauss_mu': 2000.,
     'L2Basket_Gauss_sigma': 3.6,
-    'L2Basket_Pois_A': 1.25e-2,
+    'L2Basket_Pois_A': 0.,
+    # 'L2Basket_Pois_A': 1.25e-2,
     'L2Basket_Pois_lamtha': 0.,
 
     # L2 Pyr params
     'L2Pyr_Gauss_A': 0.,
     # 'L2Pyr_Gauss_A': 1.8e-5,
-    'L2Pyr_Gauss_mu': 2000.,
+    'L2Pyr_Gauss_mu': 200.,
     'L2Pyr_Gauss_sigma': 3.6,
-    # 'L2Pyr_Pois_A': 0.,
-    'L2Pyr_Pois_A': 6.25e-3,
+    'L2Pyr_Pois_A': 0.,
+    # 'L2Pyr_Pois_A': 6.25e-3,
     'L2Pyr_Pois_lamtha': 0.,
 
     # L5 Pyr params
@@ -40,8 +41,8 @@ all = {
     # 'L5Pyr_Gauss_A': linspace(5.83e-5, 5.25e-5, 5),
     'L5Pyr_Gauss_mu': 1000.,
     'L5Pyr_Gauss_sigma': 4.8,
-    # 'L5Pyr_Pois_A': 0.,
-    'L5Pyr_Pois_A': 6.25e-3,
+    'L5Pyr_Pois_A': 0.,
+    # 'L5Pyr_Pois_A': 6.25e-3,
     'L5Pyr_Pois_lamtha': 0.,
 
     # L5 Basket params
@@ -49,8 +50,8 @@ all = {
     # 'L5Basket_Gauss_A': 7.3e-5,
     'L5Basket_Gauss_mu': 1000.,
     'L5Basket_Gauss_sigma': 2.,
-    # 'L5Basket_Pois_A': 0.,
-    'L5Basket_Pois_A': 6.25e-3,
+    'L5Basket_Pois_A': 0.,
+    # 'L5Basket_Pois_A': 6.25e-3,
     'L5Basket_Pois_lamtha': 100.,
 
     # maximal conductacnes for all synapses
@@ -85,9 +86,9 @@ all = {
     # 'gbar_L2Pyr_L5Basket': 2.5e-4,
 
     # Ongoing alpha rhythms
-    't0_input': 600.,
-    'f_input_prox': 10.,
-    'f_input_dist': 10.,
+    't0_input': 150.,
+    'f_input_prox': [10.],
+    'f_input_dist': [10.],
     # 'f_input_prox': linspace(5, 30, num=6),
     # 'f_input_dist': linspace(5, 30, num=6),
 
@@ -100,6 +101,6 @@ all = {
     'spec_max_freq': 41.,
 
     # numerics
-    'tstop': 400.,
+    'tstop': 1000.,
     'dt': 0.025,
 }

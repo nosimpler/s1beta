@@ -1,8 +1,8 @@
 # fileio.py - general file input/output functions
 #
-# v 1.2.31
-# rev 2012-11-04 (SL: added slightly redundant class for now, will be merged in future)
-# last rev: (SL: makes better eps and png files in spikes, but not separated yet)
+# v 1.2.32
+# rev 2012-11-05 (MS: added directory for raw spec data, changed data file names)
+# last rev: (SL: added slightly redundant class for now, will be merged in future)
 
 import datetime, fnmatch, os, shutil, sys
 import itertools as it
@@ -69,8 +69,9 @@ class SimulationPaths():
 
         # straight up copy from below
         self.datatypes = {
-            'spikes': '-spk.txt',
-            'dipole': '-dpl.txt',
+            'rawspk': '-spk.txt',
+            'rawdpl': '-dpl.txt',
+            'rawspec': '-spec.txt',
             'figspk': '-spk.eps',
             'figdpl': '-dpl.eps',
             'figspec': '-spec.eps',
@@ -109,12 +110,13 @@ class OutputDataPaths():
         # hard coded data types
         # fig extensions are not currently being used as well as they could be
         self.__datatypes = {
-            'spikes': '-spk.txt',
-            'dipole': '-dpl.txt',
+            'rawspk': '-spk.txt',
+            'rawdpl': '-dpl.txt',
+            'rawspec': '-spec.txt',
             'figspk': '-spk.eps',
             'figdpl': '-dpl.eps',
             'figspec': '-spec.eps',
-            'param': '-param.txt'
+            'param': '-param.txt',
         }
 
         # create date and sim directories if necessary

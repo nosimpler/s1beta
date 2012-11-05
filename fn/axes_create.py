@@ -1,8 +1,8 @@
 # axes_create.py - simple axis creation
 #
-# v 1.2.26
-# rev 2012-11-01 (SL: corrected axes for L2/L5 on raster)
-# last major: (SL: Changed axes on raster plot)
+# v 1.2.32
+# rev 2012-11-05 (MS: Added class fig_spec)
+# last major: (SL: corrected axes for L2/L5 on raster)
 
 # usage:
 # testfig = fig_std()
@@ -24,6 +24,22 @@ class fig_std():
 
         gs0 = gridspec.GridSpec(1, 1)
         self.ax0 = self.f.add_subplot(gs0[:])
+
+    def close(self):
+        plt.close(self.f)
+
+class fig_spec():
+    def __init__(self):
+        self.f = plt.figure(figsize = (8, 6))
+        font_prop = {'size': 10}
+        mpl.rc('font', **font_prop)
+
+        gs0 = gridspec.GridSpec(1, 1)
+        self.ax0 = self.f.add_subplot(gs0[:])
+
+        # gs0 = gridspec.GridSpec(2, 1, height_ratios=[1,3])
+        # self.ax0 = self.f.add_subplot(gs0[:1, :])
+        # self.ax1 = self.f.add_subplot(gs0[1:2, :])
 
     def close(self):
         plt.close(self.f)
@@ -84,8 +100,11 @@ def testfn():
     # testfig = fig_std()
     # testfig.ax0.plot(x)
 
-    testfig = fig_raster(100)
-    testfig.ax['L5'].plot(x)
+    # testfig = fig_raster(100)
+    # testfig.ax['L5'].plot(x)
+
+    testfig = fig_spec()
+    testfig.ax0.plot(x)
 
     plt.savefig('testing.png')
     testfig.close()

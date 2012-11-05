@@ -1,8 +1,8 @@
 # cli.py - routines for the command line interface console sssh.py
 #
-# v 1.2.31
-# rev 2012-11-03 (SL: added some qnd routines for replotting)
-# last major: (SL: Fixed history, currently set no. of nodes)
+# v 1.2.32
+# rev 2012-11-05 (MS: updated replot to use new data directory names)
+# last major: (SL: added some qnd routines for replotting)
 
 from cmd import Cmd
 from datetime import datetime
@@ -216,7 +216,7 @@ class Console(Cmd):
         fext_figspk = self.simpaths.datatypes['figspk']
 
         pool = multiprocessing.Pool()
-        for fparam, fspk in it.izip(self.simpaths.filelists['param'], self.simpaths.filelists['spikes']):
+        for fparam, fspk in it.izip(self.simpaths.filelists['param'], self.simpaths.filelists['rawspk']):
             gid_dict, p = paramrw.read(fparam)
             pool.apply_async(praster, (gid_dict, p['tstop'], fspk, dfig_spk))
 

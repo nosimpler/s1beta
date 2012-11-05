@@ -1,15 +1,16 @@
 #!/usr/bin/env python
 # s1run.py - primary run function for s1 project
 #
-# v 1.2.31
-# rev 2012-11-03 (SL: timer stuff)
-# last major: (SL: changed the timer output)
+# v 1.2.32
+# rev 2012-11-05 (MS: Separate spec analysis and spec plotting)
+# last major: (SL: timer stuff)
 
 import os
+import time
 import shutil
 import numpy as np
 from mpi4py import MPI
-import time
+from multiprocessing import Pool
 from neuron import h as nrn
 nrn.load_file("stdrun.hoc")
 
@@ -18,6 +19,7 @@ from class_net import Network
 import fn.fileio as fio
 import fn.paramrw as paramrw
 import fn.plotfn as plotfn
+from fn.spec import MorletSpec, spec_analysis
 
 # params
 import p_sim
@@ -80,7 +82,7 @@ def exec_runsim(p_all):
     # iterate through i
     for i in range(p_exp.N_sims):
         if rank == 0:
-            t1 = time.time()
+            run_start = time.time()
             # Tells run number, prints total runs-1 for zero indexing
             print "Run %i of %i" % (i, p_exp.N_sims-1),
 
@@ -115,9 +117,10 @@ def exec_runsim(p_all):
         # create rotating data files and dirs on ONE central node
         if rank == 0:
             # create file names
-            file_dpl = ddir.create_filename('dipole', exp_prefix)
+            file_dpl = ddir.create_filename('rawdpl', exp_prefix)
             file_param = ddir.create_filename('param', exp_prefix)
-            file_spikes = ddir.create_filename('spikes', exp_prefix)
+            file_spikes = ddir.create_filename('rawspk', exp_prefix)
+            file_spec = ddir.create_filename('rawspec', exp_prefix)
 
         # debug
         debug = 0
@@ -181,7 +184,7 @@ def exec_runsim(p_all):
         # move the spike file to the spike dir
         if rank == 0:
             shutil.move(file_spikes_tmp, file_spikes)
-            print "... finished in: %4.4f s" % (time.time() - t1)
+            print "... finished in: %4.4f s" % (time.time() - run_start)
 
     # plot should probably be moved outside of this
     if pc.nhost > 1:
@@ -191,17 +194,23 @@ def exec_runsim(p_all):
         t1 = time.time()
         if rank == 0:
             print "Simulation run time: %4.4f s" % (t1-t0)
+            print "Analyzing...",
+
+            anl_start = time.time()            
+
+            spec_analysis(ddir, p_exp)
+
+            print "time: %4.2f s" % (time.time() - anl_start) 
             print "Plotting ...",
 
-            t3 = time.time()
+            plot_start = time.time()
 
             # run plots and epscompress function
             plotfn.pall(ddir, p_exp, net.gid_dict, nrn.tstop)
             fext_figspk, dfig_spk = ddir.fileinfo['figspk']
             fio.epscompress(dfig_spk, fext_figspk)
 
-            print "time: %4.4f s" % (time.time() - t3)
-
+            print "time: %4.4f s" % (time.time() - plot_start) 
         nrn.quit()
 
     else:

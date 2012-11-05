@@ -1,37 +1,32 @@
 # spec.py - Average time-frequency energy representation using Morlet wavelet method
 #
-# v 1.2.24
-# rev 2012-10-31 (MS: title includes key/value pairs for keys whose value changes over runs)
-# last major: (MS: Added tstop check before analysis, p_dict input for title generation)
+# v 1.2.32
+# rev 2012-11-05 (MS: Separated data analysis and plot routines)
+# last major: (MS: title includes key/value pairs for keys whose value changes over runs)
 
 import os
 import numpy as np
 import scipy.signal as sps
 import itertools as it
 import matplotlib.pyplot as plt
+from multiprocessing import Pool
 from neuron import h as nrn
 
+import fileio as fio
+from axes_create import fig_spec
+
 class MorletSpec():
-    def __init__(self, file_name, dfig, p_dict, key_types):
-
-        # Split to find file prefix
-        self.file_prefix = file_name.split('/')[-1].split('dpl')[0]
-        self.fig_name = os.path.join(dfig, self.file_prefix+'spec.png')
-
-        # Save p_dict, key_types as self dictionary
-        self.p = p_dict
-        self.key_types = key_types
-        # print [string + ': %2.1f' %p_dict[string] for string in self.key_types['dynamic_keys']]
-
+    # def __init__(self, file_name, dfig, p_dict, key_types):
+    def __init__(self, file_read, file_write, p_dict):
 
         # Import dipole data and remove extra dimensions from signal array. 
-        data_raw = np.loadtxt(open(file_name, 'rb'))
+        data_raw = np.loadtxt(open(file_read, 'rb'))
         self.S = data_raw.squeeze()
 
         # Check that tstop is greater than 150 ms:
-        if nrn.tstop > 150.:
+        if p_dict['tstop'] > 150.:
             # Remove first 150ms of simulation
-            self.S = self.S[150./nrn.dt:, 1]
+            self.S = self.S[150./p_dict['dt']+1:, 1]
 
             # Array of frequencies over which to sort
             self.freqvec = np.arange(1., p_dict['spec_max_freq'])
@@ -40,27 +35,36 @@ class MorletSpec():
             self.width = 7.
 
             # Calculate sampling frequency
-            self.fs = 1000./nrn.dt
+            self.fs = 1000./p_dict['dt']
 
-            self.TFR = self.traces2TFR()
-            self.plot()
+            # Generate Spec data
+            self.TFR = self.__traces2TFR()
+
+            # Add time vector as first row of TFR data
+            self.TFR = np.vstack([self.timevec, self.TFR])
+
+            # Write data to file
+            np.savetxt(file_write, self.TFR, fmt = "%5.4f")
+
+            # self.plot()
 
         else:
             print "tstop not greater than 150ms. Skipping wavelet analysis."
 
-    def traces2TFR(self):
+        return 0.
+
+    def __traces2TFR(self):
         self.S_trans = self.S.transpose()
-        # LNR50 = 1
 
         # range should probably be 0 to len(self.S_trans)
-        self.timevec = 1000. * np.arange(1, len(self.S_trans))/self.fs
+        self.timevec = 1000. * np.arange(1, len(self.S_trans)+1)/self.fs
 
         B = np.zeros((len(self.freqvec), len(self.S_trans)))
  
         if self.S_trans.ndim == 1:
             for j in range(0, len(self.freqvec)):
                     s = sps.detrend(self.S_trans[:])
-                    B[j,:] = B[j,:] + self.energyvec(self.freqvec[j], self.lnr50(s))
+                    B[j,:] = B[j,:] + self.__energyvec(self.freqvec[j], self.__lnr50(s))
 
             return B
 
@@ -68,9 +72,9 @@ class MorletSpec():
             for i in range(0, self.S_trans.shape[0]):
                 for j in range(0, len(self.freqvec)):
                     s = sps.detrend(self.S_trans[i,:])
-                    B[j,:] = B[j,:] + self.energyvec(self.freqvec[j], self.lnr50(s))
+                    B[j,:] = B[j,:] + self.__energyvec(self.freqvec[j], self.__lnr50(s))
 
-    def energyvec(self, f, s):
+    def __energyvec(self, f, s):
         # Return an array containing the energy as function of time for freq f
         # The energy is calculated using Morlet's wavelets
         # f: frequency 
@@ -81,14 +85,14 @@ class MorletSpec():
         st = 1. / (2.*np.pi*sf)
 
         t = np.arange(-3.5*st,3.5*st,dt) 
-        m = self.morlet(f, t)
+        m = self.__morlet(f, t)
         y = sps.fftconvolve(s, m)
         y = (2. * abs(y) / self.fs)**2
         y = y[np.ceil(len(m)/2.):len(y)-np.floor(len(m)/2.)+1]
 
         return y
 
-    def morlet(self, f, t):
+    def __morlet(self, f, t):
         # Morlet's wavelet for frequency f and time t
         # Wavelet normalized so total energy is 1
         # f: specific frequency
@@ -102,7 +106,7 @@ class MorletSpec():
 
         return y
 
-    def lnr50(self, s):
+    def __lnr50(self, s):
         # Line noise reduction (50 Hz) the amplitude and phase of the line notch is estimate.
         # A sinusoid with these characterisitics is then subtracted from the signal.
         # s: signal 
@@ -112,7 +116,7 @@ class MorletSpec():
 
         if np.ndim(s) == 1:
             Sc = np.zeros(s.shape)
-            Sft = self.ft(s[:], fNoise)
+            Sft = self.__ft(s[:], fNoise)
             Sc[:] = s[:] - abs(Sft) * np.cos(2.*np.pi*fNoise*tv-np.angle(Sft))
 
             return Sc
@@ -127,24 +131,52 @@ class MorletSpec():
                 
             return Sc.tranpose()
 
-    def ft(self, s, f):
+    def __ft(self, s, f):
         tv = np.arange(0,len(s)) / self.fs
         tmp = np.exp(1.j*2. * np.pi * f * tv)
         S = 2 * sum(s * tmp) / len(s)
 
         return S
 
-    def plot(self):
-        plt.imshow(self.TFR, extent=[self.timevec[0], self.timevec[-1], self.freqvec[-1], self.freqvec[0]], aspect='auto', origin='upper')
-        plt.colorbar()
+def pspec(file_name, dfig, p_dict, key_types):
+    # Load data from file. First row of array is time.
+    dspec = np.loadtxt(open(file_name, 'rb'))
 
-        plt.xlabel('Time (ms)')
-        plt.ylabel('Frequency (Hz)')
+    timevec = dspec[:, 0]
+    freqvec = np.arange(1, dspec.shape[0])
+    TFR = np.delete(dspec, (0), axis = 0)
 
-        title = [key + ': %2.1f' %self.p[key] for key in self.key_types['dynamic_keys']]
-        plt.title(title)
+    # Split to find file prefix
+    file_prefix = file_name.split('/')[-1].split('.')[0]
+    fig_name = os.path.join(dfig, file_prefix+'.png')
 
-        # plt.title('f_input_prox: %2.1f; f_input_dist: %2.1f' %(self.p['f_input_prox'], self.p['f_input_dist']))
+    # Plot data
+    f = fig_spec()
+    pc = f.ax0.imshow(TFR, extent=[timevec[0], timevec[-1], freqvec[-1], freqvec[0]], aspect='auto', origin='upper')
+    f.f.colorbar(pc)
 
-        plt.savefig(self.fig_name)
-        plt.close()
+    # plt.imshow(self.TFR, extent=[self.timevec[0], self.timevec[-1], self.freqvec[-1], self.freqvec[0]], aspect='auto', origin='upper')
+    # plt.colorbar()
+
+    plt.xlabel('Time (ms)')
+    plt.ylabel('Frequency (Hz)')
+
+    title = [key + ': %2.1f' %p_dict[key] for key in key_types['dynamic_keys']]
+    plt.title(title)
+
+    plt.savefig(fig_name)
+    f.close()
+
+# Does spec analysis for all files in simulation directory
+def spec_analysis(ddir, p_exp):
+    dict_list = [p_exp.return_pdict(i) for i in range(p_exp.N_sims)]
+    fext_spec, dspec = ddir.fileinfo['rawdpl']
+    dpl_list = fio.file_match(dspec, fext_spec)
+    spec_names = [ddir.create_filename('rawspec', p_exp.sim_prefix + '-%03d' % i) for i in range(p_exp.N_sims)]
+
+    pl = Pool()
+    for p_dict, file_dpl, file_spec in it.izip(dict_list, dpl_list, spec_names):        
+        pl.apply_async(MorletSpec, (file_dpl, file_spec, p_dict))
+ 
+    pl.close()
+    pl.join()
