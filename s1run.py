@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # s1run.py - primary run function for s1 project
 #
-# v 1.2.30
-# rev 2012-11-03 (SL: changed the timer output)
-# last major: (SL: Added number of total runs output)
+# v 1.2.31
+# rev 2012-11-03 (SL: timer stuff)
+# last major: (SL: changed the timer output)
 
 import os
 import shutil
@@ -71,7 +71,7 @@ def exec_runsim(p_all):
     if rank == 0:
         ddir = fio.OutputDataPaths(dproj, p_exp.sim_prefix)
         ddir.create_dirs()
-        # print ddir.fileinfo
+        print "Simulation directory is: %s" % ddir.dsim
 
         copy_paramfile(ddir.dsim)
         # assign to param file
@@ -82,7 +82,7 @@ def exec_runsim(p_all):
         if rank == 0:
             t1 = time.time()
             # Tells run number, prints total runs-1 for zero indexing
-            print "Run number: %i of %i" % (i, p_exp.N_sims-1),
+            print "Run %i of %i" % (i, p_exp.N_sims-1),
 
         p = p_exp.return_pdict(i)
 
@@ -181,7 +181,7 @@ def exec_runsim(p_all):
         # move the spike file to the spike dir
         if rank == 0:
             shutil.move(file_spikes_tmp, file_spikes)
-            print "... finished in: %.4f s" % (time.time() - t1)
+            print "... finished in: %4.4f s" % (time.time() - t1)
 
     # plot should probably be moved outside of this
     if pc.nhost > 1:
@@ -197,9 +197,10 @@ def exec_runsim(p_all):
 
             # run plots and epscompress function
             plotfn.pall(ddir, p_exp, net.gid_dict, nrn.tstop)
-            fio.epscompress(ddir.fileinfo)
+            fext_figspk, dfig_spk = ddir.fileinfo['figspk']
+            fio.epscompress(dfig_spk, fext_figspk)
 
-            print "time:", time.time() - t3 
+            print "time: %4.4f s" % (time.time() - t3)
 
         nrn.quit()
 

@@ -1,18 +1,21 @@
 # cli.py - routines for the command line interface console sssh.py
 #
-# v 1.2.3
-# rev 2012-09-29 (SL: Fixed history, currently set no. of nodes)
-# last major: (SL: imported)
+# v 1.2.31
+# rev 2012-11-03 (SL: added some qnd routines for replotting)
+# last major: (SL: Fixed history, currently set no. of nodes)
 
 from cmd import Cmd
 from datetime import datetime
-# from clidefs import *
+import clidefs
 # import plot.psummary as psum
 import multiprocessing
 import subprocess
 import fileio as fio
 import os, signal
 import readline as rl
+import paramrw
+import itertools as it
+from praster import praster
 
 # def handler(signum, frame):
 #     print '\nKeyboardInterrupt'
@@ -42,7 +45,7 @@ class Console(Cmd):
         # self.datelist = get_subdir_list(self.droot)
 
         # set the date, grabs a dlist
-        # self.do_setdate(datetime.now().strftime("%Y-%m-%d"))
+        self.do_setdate(datetime.now().strftime("%Y-%m-%d"))
 
     def do_giddict(self, args):
         pass
@@ -155,8 +158,8 @@ class Console(Cmd):
         print "Date set to", self.ddate
         
         # also get subdir list
-        somepath = os.path.join(self.droot, self.ddate)
-        self.dlist = get_subdir_list(os.path.join(somepath))
+        # somepath = os.path.join(self.droot, self.ddate)
+        # self.dlist = get_subdir_list(os.path.join(somepath))
 
     def complete_setdate(self, text, line, j0, J):
         """complete function for setdate
@@ -181,11 +184,8 @@ class Console(Cmd):
 
         if os.path.exists(dir_check):
             self.dir_data = dir_check
-            self.sim_list = fio.gen_sim_list(self.dir_data)
-            self.expmts = gen_expmts(self.sim_list[0])
-            self.param_list = fio.param_query(self.dir_data, self.expmts)
-            self.N_sims = number_of_sims(self.param_list[0][1])
-            self.var_list = changed_vars(self.sim_list)
+            self.simpaths = fio.SimulationPaths(self.dir_data)
+
         else:
             print dir_check
             print "Could not find that dir, maybe check your date?"
@@ -202,6 +202,32 @@ class Console(Cmd):
                 return 0
         else:
             return self.dlist
+
+    def do_replot(self, args):
+        """Regenerates plots in given directory
+        """
+        # regenerate_plots(self.dir_data)
+
+        # simpaths.filelists is the list of files
+        fparam = self.simpaths.filelists['param'][0]
+        dfig_spk = self.simpaths.dfigs['spikes']
+
+        # same for all spike rasters
+        fext_figspk = self.simpaths.datatypes['figspk']
+
+        pool = multiprocessing.Pool()
+        for fparam, fspk in it.izip(self.simpaths.filelists['param'], self.simpaths.filelists['spikes']):
+            gid_dict, p = paramrw.read(fparam)
+            pool.apply_async(praster, (gid_dict, p['tstop'], fspk, dfig_spk))
+
+        pool.close()
+        pool.join()
+
+        fio.epscompress(dfig_spk, fext_figspk)
+
+    def do_summary(self, args):
+        epslist = fio.file_match(self.simpaths.dfigs['spikes'], '.eps')
+        clidefs.pdf_create(self.dir_data, 'testing', epslist)
 
     def do_save(self, args):
         """Copies the entire current directory over to the cppub directory
@@ -237,15 +263,6 @@ class Console(Cmd):
         """Create phase hist full plot
         """
         exec_pphase(self.dir_data, args)
-
-    def do_plot(self, args):
-        """Regenerates plots in given directory
-        """
-        try:
-            regenerate_plots(self.dir_data)
-        except:
-            "Cannot seem to do generate these plots."
-            return 0
 
     def do_pcompare3(self, args):
         """Plot compare 3

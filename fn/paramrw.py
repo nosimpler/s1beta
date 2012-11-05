@@ -1,22 +1,55 @@
 # paramrw.py - routines for reading the param files
 #
-# v 1.2.26
-# rev 2012-11-01 (SL: added Poisson lamtha param per cell type)
-# last major: (SL: added extpois params)
+# v 1.2.31
+# rev 2012-11-05 (SL: added param reading method)
+# last major: (SL: added Poisson lamtha param per cell type)
 
 import re
 import fileio as fio
+import numpy as np
 from cartesian import cartesian
 from params_default import params_default
 
+# reads params and returns gid dict and p dict
+def read(fparam):
+    lines = fio.clean_lines(fparam)
+    p = {}
+    gid_dict = {}
+
+    for line in lines:
+        keystring, val = line.split(": ")
+        key = keystring.strip()
+
+        if val[0] is '[':
+            val_range = val[1:-1].split(', ')
+
+            if len(val_range) is 2:
+                ind_start = int(val_range[0])
+                ind_end = int(val_range[1]) + 1
+                gid_dict[key] = np.arange(ind_start, ind_end)
+
+            else:
+                gid_dict[key] = np.array([])
+
+        else:
+            p[key] = float(val)
+
+    return gid_dict, p
+
 # write the params to a filename
+# now sorting
 def write(fparam, p, p_ext, gid_list):
+    # sort the items in the dict by key
+    p_sorted = [key for key in p.iteritems()]
+    p_sorted.sort(key=lambda x: x[0])
+
+    # open the file for appending
     with open(fparam, 'a') as f:
         pstring = '%22s: '
 
+        # write the gid info first
         for key in gid_list.keys():
             f.write(pstring % key)
-            # f.write('%13s: ' % key)
 
             if len(gid_list[key]):
                 f.write('[%4i, %4i] ' % (gid_list[key][0], gid_list[key][-1]))
@@ -24,18 +57,18 @@ def write(fparam, p, p_ext, gid_list):
             else:
                 f.write('[]')
 
-            # for gid in gid_list[key]:
-            #     f.write('%4i ' % gid)
             f.write('\n')
 
-        for key in p.keys():
+        # do the params in p_sorted
+        for param in p_sorted:
+            key, val = param
+
             f.write(pstring % key)
 
             if key.startswith('N_'):
-                f.write('%i\n' % p[key])
+                f.write('%i\n' % val)
             else:
-                f.write(str(p[key])+'\n')
-                # f.write('%d\n' % p[key])
+                f.write(str(val)+'\n')
 
 # Searches f_param for any match of p
 def find_param(fparam, p):

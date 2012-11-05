@@ -1,8 +1,8 @@
 # fileio.py - general file input/output functions
 #
-# v 1.2.27
-# rev 2012-11-03 (SL: makes better eps and png files in spikes, but not separated yet)
-# last rev: (SL: png to eps in the unused fig filename extensions)
+# v 1.2.31
+# rev 2012-11-04 (SL: added slightly redundant class for now, will be merged in future)
+# last rev: (SL: makes better eps and png files in spikes, but not separated yet)
 
 import datetime, fnmatch, os, shutil, sys
 import itertools as it
@@ -33,14 +33,15 @@ def file_spike_tmp(dproj):
     return file_spikes
 
 # Get the data files matching file_ext in this directory
-def file_match(dict_fileinfo, key):
-    dsearch = dict_fileinfo[key][1]
-    file_ext = '*'+dict_fileinfo[key][0]
+def file_match(dsearch, file_ext):
+# def file_match(dict_fileinfo, key):
+    # dsearch = dict_fileinfo[key][1]
+    # file_ext = '*'+dict_fileinfo[key][0]
 
     file_list = []
     if os.path.exists(dsearch):
         for root, dirnames, filenames in os.walk(dsearch):
-            for fname in fnmatch.filter(filenames, file_ext):
+            for fname in fnmatch.filter(filenames, '*'+file_ext):
                 file_list.append(os.path.join(root, fname))
 
     # sort file list? untested
@@ -60,6 +61,41 @@ def dir_check(d):
 def dir_create(d):
     if not dir_check(d):
         os.makedirs(d)
+
+# redundant with OutputDataPaths() for a little while
+class SimulationPaths():
+    def __init__(self, dsim):
+        self.dsim = dsim
+
+        # straight up copy from below
+        self.datatypes = {
+            'spikes': '-spk.txt',
+            'dipole': '-dpl.txt',
+            'figspk': '-spk.eps',
+            'figdpl': '-dpl.eps',
+            'figspec': '-spec.eps',
+            'param': '-param.txt'
+        }
+        self.filelists = self.__getfiles()
+        self.dfigs = self.__dfigs_create()
+
+    # grab lists of non-fig files
+    def __getfiles(self):
+        filelists = {}
+        for key in self.datatypes:
+            if not key.startswith('fig'):
+                subdir = os.path.join(self.dsim, key)
+                fext = self.datatypes[key]
+                filelists[key] = file_match(subdir, fext)
+
+        return filelists
+
+    def __dfigs_create(self):
+        return {
+            'spikes': os.path.join(self.dsim, 'figspk'),
+            'dipole': os.path.join(self.dsim, 'figdpl'),
+            'spec': os.path.join(self.dsim, 'figspec'),
+        }
 
 # creates data dirs and a dictionary of useful types
 class OutputDataPaths():
@@ -155,13 +191,14 @@ def cmds_runmulti(cmdlist):
 
 # list spike raster eps files and then rasterize them to HQ png files, lossless compress, 
 # reencapsulate as eps, and remove backups when successful
-def epscompress(fileinfo):
+def epscompress(dfig_spk, fext_figspk):
     cmds_gs = []
     cmds_opti = []
     cmds_encaps = []
 
     # lists of eps files and corresponding png files
-    epslist = file_match(fileinfo, 'figspk')
+    # fext_figspk, dfig_spk = fileinfo['figspk']
+    epslist = file_match(dfig_spk, fext_figspk)
     pnglist = [f.replace('.eps', '.png') for f in epslist]
     epsbackuplist = [f.replace('.eps', '.bak.eps') for f in epslist]
 

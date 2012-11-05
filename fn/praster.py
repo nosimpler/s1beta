@@ -1,8 +1,8 @@
 # praster.py - plot dipole function
 #
-# v 1.2.26a
-# rev 2012-11-01 (SL: plotting pois input)
-# last major: (SL: using fig_raster)
+# v 1.2.31
+# rev 2012-11-05 (SL: fixed file name)
+# last major: (SL: plotting pois input)
 
 import os
 import numpy as np
@@ -12,9 +12,9 @@ from axes_create import fig_raster
 import spikefn as spikefn
 
 # file_info is (rootdir, subdir, 
-def praster(gid_dict, tstop, file_name, dfig):
+def praster(gid_dict, tstop, file_spk, dfig):
     # ddipole is dipole data
-    s_dict = spikefn.spikes_from_file(gid_dict, file_name)
+    s_dict = spikefn.spikes_from_file(gid_dict, file_spk)
 
     s_dict_L2 = {}
     s_dict_L5 = {}
@@ -49,7 +49,7 @@ def praster(gid_dict, tstop, file_name, dfig):
             s_dict_L5[key] = s_dict.pop(key)
 
     # split to find file prefix
-    file_prefix = file_name.split('/')[-1].split('.')[0]
+    file_prefix = file_spk.split('/')[-1].split('.')[0]
 
     # create standard fig and axes
     f = fig_raster(tstop)

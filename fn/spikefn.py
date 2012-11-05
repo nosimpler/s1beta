@@ -1,11 +1,12 @@
 # spikefn.py - dealing with spikes
 #
-# v 1.2.25
-# 2012-11-01 (SL: Calculating poisson events, too)
-# last major: (SL: Minor)
+# v 1.2.31
+# 2012-11-05 (SL: added psth method and merged split functions, some other stuff)
+# last major: (SL: Calculating poisson events, too)
 
 import fileio as fio
 import numpy as np
+import itertools as it
 
 class Spikes():
     def __init__(self, s_all, ranges):
@@ -17,6 +18,8 @@ class Spikes():
         # this is set externally
         self.tick_marks = []
 
+    # returns spike_list, a list of lists of spikes.
+    # Each list corresponds to a cell, counted by range
     def filter(self, s_all):
         spike_list = []
 
@@ -29,21 +32,29 @@ class Spikes():
 
         return spike_list
 
+    # plot psth
+    def ppsth(self, a):
+        # flatten list of spikes
+        s_agg = np.array(list(it.chain.from_iterable(self.spike_list)))
+
+        # plot histogram to axis 'a'
+        a.hist(s_agg, bins, normed=True, facecolor='g', alpha=0.75)
+
 # splits ext gauss by supplied cell type
-def split_extgauss(s, gid_dict, type):
-    gid_cell = gid_dict[type]
-    gid_extgauss_start = gid_dict['extgauss'][0]
-    gid_extgauss_cell = [gid + gid_extgauss_start for gid in gid_dict[type]]
+# def split_extgauss(s, gid_dict, type):
+#     gid_cell = gid_dict[type]
+#     gid_extgauss_start = gid_dict['extgauss'][0]
+#     gid_extgauss_cell = [gid + gid_extgauss_start for gid in gid_dict[type]]
+#
+#     return Spikes(s, gid_extgauss_cell)
 
-    return Spikes(s, gid_extgauss_cell)
+# splits ext random feeds (of type exttype) by supplied cell type
+def split_extrand(s, gid_dict, celltype, exttype):
+    gid_cell = gid_dict[celltype]
+    gid_exttype_start = gid_dict[exttype][0]
+    gid_exttype_cell = [gid + gid_exttype_start for gid in gid_dict[celltype]]
 
-# splits ext pois by supplied cell type
-def split_extpois(s, gid_dict, type):
-    gid_cell = gid_dict[type]
-    gid_extpois_start = gid_dict['extpois'][0]
-    gid_extpois_cell = [gid + gid_extpois_start for gid in gid_dict[type]]
-
-    return Spikes(s, gid_extpois_cell)
+    return Spikes(s, gid_exttype_cell)
 
 # not "purely" from files
 def spikes_from_file(gid_dict, fspikes):
@@ -64,11 +75,13 @@ def spikes_from_file(gid_dict, fspikes):
         if key not in 'extinput':
             # figure out its extgauss feed
             newkey_gauss = 'extgauss_' + key
-            s_dict[newkey_gauss] = split_extgauss(s, gid_dict, key)
+            s_dict[newkey_gauss] = split_extrand(s, gid_dict, key, 'extgauss')
+            # s_dict[newkey_gauss] = split_extgauss(s, gid_dict, key)
 
             # figure out its extpois feed
             newkey_pois = 'extpois_' + key
-            s_dict[newkey_pois] = split_extpois(s, gid_dict, key)
+            s_dict[newkey_pois] = split_extrand(s, gid_dict, key, 'extpois')
+            # s_dict[newkey_pois] = split_extpois(s, gid_dict, key)
 
     return s_dict
 
@@ -77,20 +90,20 @@ def get_markerstyle(key):
     markerstyle = ''
 
     # ext now same color, not ideal yet
-    if 'L2' in key:
-        markerstyle += 'k'
-    elif 'L5' in key:
-        markerstyle += 'b'
+    # if 'L2' in key:
+    #     markerstyle += 'k'
+    # elif 'L5' in key:
+    #     markerstyle += 'b'
 
     # short circuit this by putting extgauss first ... cheap.
     if 'extgauss' in key:
-        markerstyle += '.'
+        markerstyle += 'k.'
     elif 'extpois' in key:
-        markerstyle += '.'
+        markerstyle += 'k.'
     elif 'pyramidal' in key:
-        markerstyle += '2'
+        markerstyle += 'k2'
     elif 'basket' in key:
-        markerstyle += '|'
+        markerstyle += 'r|'
 
     return markerstyle
 

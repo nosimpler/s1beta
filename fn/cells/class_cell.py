@@ -266,7 +266,7 @@ class Pyr(Cell):
             self.ncfrom_extpois.append(self.parconnect_from_src(gid_extpois, nc_dict, self.basal3_ampa))
             self.ncfrom_extpois.append(self.parconnect_from_src(gid_extpois, nc_dict, self.apicaloblique_ampa))
 
-    # Create dictionary of section names with entries to scale section lenghts to length along z-axis 
+    # Create dictionary of section names with entries to scale section lengths to length along z-axis
     def get_sectnames(self):
         seclist = nrn.SectionList()
         seclist.wholetree(sec=self.soma)

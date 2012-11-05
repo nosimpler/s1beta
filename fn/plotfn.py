@@ -1,8 +1,8 @@
 # plotfn.py - pall and possibly other plot routines
 #
-# v 1.2.24
-# rev 2012-10-31 (MS: using get_key_types from paramrw.py to identify keys whose value changes over runs. These keys are passed to plot functions for title generation)
-# last major: (SL: attempting to make this truly asynchronous)
+# v 1.2.31
+# rev 2012-11-05 (SL: changed usage of file_match)
+# last major: (MS: using get_key_types from paramrw.py to identify keys whose value changes over runs. These keys are passed to plot functions for title generation)
 
 from pdipole import pdipole
 from spec import MorletSpec
@@ -42,8 +42,13 @@ def pall(ddir, p_exp, gid_dict, tstop):
 
     # these should be equivalent lengths
     dict_list = [p_exp.return_pdict(i) for i in range(p_exp.N_sims)]
-    dpl_list = fio.file_match(ddir.fileinfo, 'dipole')
-    spk_list = fio.file_match(ddir.fileinfo, 'spikes')
+    fext_dpl, ddpl = ddir.fileinfo['dipole']
+    fext_spk, dspk = ddir.fileinfo['spikes']
+
+    dpl_list = fio.file_match(ddpl, fext_dpl)
+    spk_list = fio.file_match(dspk, fext_spk)
+    # dpl_list = fio.file_match(ddir.fileinfo, 'dipole')
+    # spk_list = fio.file_match(ddir.fileinfo, 'spikes')
 
     # Please keep this code around; it's useful for debugging
     # for file_spk in spk_list:
