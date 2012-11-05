@@ -3,4 +3,5 @@
 *.eps
 *.dat
 .s1sh_history
+.DS_Store
 x86_64/
