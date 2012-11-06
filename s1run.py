@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # s1run.py - primary run function for s1 project
 #
-# v 1.2.32
-# rev 2012-11-05 (MS: Separate spec analysis and spec plotting)
-# last major: (SL: timer stuff)
+# v 1.3.0
+# rev 2012-11-05 (SL: reading params based on flat non-python file)
+# last major: (MS: Separate spec analysis and spec plotting)
 
 import os
 import time
@@ -41,16 +41,19 @@ def spikes_write(net, filename_spikes):
     # let all nodes iterate through loop in which only one rank writes
     pc.barrier()
 
-def copy_paramfile(dsim):
+# copies param file into root dsim directory
+def copy_paramfile(dsim, f_psim):
     # assumes in this cwd, can use try/except in the future
-    paramfile = 'p_sim.py'
-    paramfile_orig = os.path.join(os.getcwd(), paramfile)
+    print os.path.join(os.getcwd(), f_psim)
+    paramfile = f_psim.split("/")[-1]
+    paramfile_orig = os.path.join(os.getcwd(), f_psim)
     paramfile_sim = os.path.join(dsim, paramfile)
 
     shutil.copyfile(paramfile_orig, paramfile_sim)
 
 # All units for time: ms
-def exec_runsim(p_all):
+def exec_runsim(f_psim):
+# def exec_runsim(p_all):
     # clock start time
     t0 = time.time()
 
@@ -64,7 +67,8 @@ def exec_runsim(p_all):
     rank = int(pc.id())
 
     # creates p_exp.sim_prefix and other param structures
-    p_exp = paramrw.exp_params(p_all)
+    p_exp = paramrw.exp_params(f_psim)
+    # p_exp = paramrw.exp_params(p_all)
 
     # project directory
     dproj = '/repo/data/s1'
@@ -75,7 +79,7 @@ def exec_runsim(p_all):
         ddir.create_dirs()
         print "Simulation directory is: %s" % ddir.dsim
 
-        copy_paramfile(ddir.dsim)
+        copy_paramfile(ddir.dsim, f_psim)
         # assign to param file
         # p['dir'] = ddir.dsim
 
@@ -194,14 +198,14 @@ def exec_runsim(p_all):
         t1 = time.time()
         if rank == 0:
             print "Simulation run time: %4.4f s" % (t1-t0)
-            print "Analyzing...",
+            print "Analysis ...",
 
-            anl_start = time.time()            
+            t_start_analysis = time.time()
 
             spec_analysis(ddir, p_exp)
 
-            print "time: %4.2f s" % (time.time() - anl_start) 
-            print "Plotting ...",
+            print "time: %4.4f s" % (time.time() - t_start_analysis)
+            print "Plot ...",
 
             plot_start = time.time()
 
@@ -220,4 +224,12 @@ def exec_runsim(p_all):
 
 if __name__ == "__main__":
     # starting to use params
-    exec_runsim(p_sim.all)
+    try:
+        f_psim = sys.argv[1]
+
+    except (IndexError):
+        print "Usage: %s param_input" % sys.argv[0]
+        sys.exit(1)
+
+    exec_runsim(f_psim)
+    # exec_runsim(p_sim.all)

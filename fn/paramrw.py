@@ -1,8 +1,8 @@
 # paramrw.py - routines for reading the param files
 #
-# v 1.2.31
-# rev 2012-11-05 (SL: added param reading method)
-# last major: (SL: added Poisson lamtha param per cell type)
+# v 1.3.0
+# rev 2012-11-06 (SL: reads params based on non-python file)
+# last major: (SL: added param reading method)
 
 import re
 import fileio as fio
@@ -103,13 +103,55 @@ def gen_expmts(f_in):
         return 0
 
 class exp_params():
-    def __init__(self, p_all_input):
+    def __init__(self, f_psim):
+    # def __init__(self, p_all_input):
+        # read in params from a file
+        p_all_input = self.read_sim(f_psim)
+
         self.__create_dict_from_default(p_all_input)
 
         # pop off the value for sim_prefix. then continue
         self.sim_prefix = self.p_all.pop('sim_prefix')
         self.list_params = self.__create_paramlist()
         self.N_sims = len(self.list_params[0][1])
+
+    # reads .param file and returns p_all_input dict
+    def read_sim(self, f_psim):
+        lines = fio.clean_lines(f_psim)
+
+        # ignore comments
+        lines = [line for line in lines if line[0] is not '#']
+        p = {}
+
+        for line in lines:
+            # splits line by ':'
+            param, val = line.split(": ")
+
+            # sim_prefix is not a rotated variable
+            # not sure why `if param is 'sim_prefix':` does not work here
+            if param == 'sim_prefix':
+                p[param] = str(val)
+
+            else:
+                # interpret this as a list of vals
+                # type floats to a np array
+                if val[0] is '[':
+                    val_list = val[1:-1].split(', ')
+                    val_range = np.array([float(item) for item in val_list])
+
+                    p[param] = val_range
+
+                # interpret as a linspace
+                elif val[0] is 'L':
+                    val_list = val[2:-1].split(', ')
+                    val_range = np.linspace(float(val_list[0]), float(val_list[1]), int(val_list[2]))
+
+                    p[param] = val_range
+
+                else:
+                    p[param] = float(val)
+
+        return p
 
     # create the dict based on the default param dict
     def __create_dict_from_default(self, p_all_input):
@@ -163,9 +205,9 @@ class exp_params():
     # Find keys that change run to run (i.e. have more than one associated value)
     def get_key_types(self):
         key_dict = {
-                    'dynamic_keys': [],
-                    'static_keys': [],
-                   }
+            'dynamic_keys': [],
+            'static_keys': [],
+        }
 
         for key in self.p_all.keys():
             try:
@@ -197,7 +239,6 @@ def create_pext(p, tstop):
     feed_prox = {
         'f_input': p['f_input_prox'],
         't0': p['t0_input'],
-        # 't0': 150.,
         'L2Pyr': (4e-5, 0.1),
         'L5Pyr': (4e-5, 1.),
         'L2Basket': (8e-5, 0.1),
@@ -211,7 +252,6 @@ def create_pext(p, tstop):
     feed_dist = {
         'f_input': p['f_input_dist'],
         't0': p['t0_input'],
-        # 't0': 150.,
         'L2Pyr': (4e-5, 5.),
         'L5Pyr': (4e-5, 5.),
         'L2Basket': (4e-5, 5.),
@@ -240,7 +280,6 @@ def create_pext(p, tstop):
     evoked_prox_late = {
         'f_input': 0.,
         't0': p['t_evoked_prox_late'],
-        # 't0': 564.,
         'L2Pyr': (6.89e-3, 0.1),
         'L5Pyr': (3.471e-3, 5.),
         'L2Basket': (6.89e-3, 0.1),
@@ -254,7 +293,6 @@ def create_pext(p, tstop):
     evoked_dist = {
         'f_input': 0.,
         't0': p['t_evoked_dist'],
-        # 't0': 499.,
         'L2Pyr': (1.05e-3, 0.1),
         'L5Pyr': (1.05e-3, 0.1),
         'L2Basket': (5.02e-4, 0.1),
