@@ -1,8 +1,8 @@
 # L2_pyramidal.py - est class def for layer 2 pyramidal cells
 #
-# v 1.2.25
-# rev 2012-11-01 (SL: added self.celltype)
-# last rev: (SL: added synaptic conductance params)
+# v 1.2.33
+# rev 2012-11-06 (MS: Synapse creation and biophysics moved from class_cell.py to here)
+# last rev: (SL: added self.celltype)
 
 from neuron import h as nrn
 from class_cell import Pyr
@@ -46,8 +46,12 @@ class L2Pyr(Pyr):
         self.__synapse_create()
 
     def __synapse_create(self):
-        # creates synapses onto this cell in distal sections unique to this cell type
-        # print self.soma(0.5), self.list_dend[3](0.5)
+        # creates synapses onto this cell 
+        # Somatic synapses
+        self.soma_gabaa = self.syn_gabaa_create(self.soma(0.5))
+        self.soma_gabab = self.syn_gabab_create(self.soma(0.5))
+
+        # Dendritic synapses
         # Here list_dend[3] is the oblique apical dendritic section, different from the L5Pyr!
         self.apicaloblique_ampa = self.syn_ampa_create(self.list_dend[3](0.5))
         self.apicaloblique_nmda = self.syn_nmda_create(self.list_dend[3](0.5))
@@ -197,19 +201,24 @@ class L2Pyr(Pyr):
     # Adds biophysics to soma
     def __biophys_soma(self):
         # set soma biophysics specified in Pyr
-        self.pyr_biophys_soma()
+        # self.pyr_biophys_soma()
 
-        # set 'hh' mechanism values not specified in Pyr
+        # Insert 'hh' mechanism
+        self.soma.insert('hh')
+        self.soma.gkbar_hh = 0.01
+        self.soma.gl_hh = 4.26e-5
+        self.soma.el_hh = -65
         self.soma.gnabar_hh = 0.18
                 
-        # set gbar_km
+        # Insert 'km' mechanism
         # Units: pS/um^2
+        self.soma.insert('km')
         self.soma.gbar_km = 250
 
     # Defining biophysics for dendrites
     def __biophys_dends(self):
         # set dend biophysics specified in Pyr()
-        self.pyr_biophys_dends()
+        # self.pyr_biophys_dends()
 
         # set dend biophysics not specified in Pyr()
         for sec in self.list_dend:
@@ -218,12 +227,16 @@ class L2Pyr(Pyr):
             # in a section. This method is significantly faster than using
             # a for loop to iterate over all segments to set mech values
 
-            # set 'hh' mechanisms not set in Pyr()
+            # Insert 'hh' mechansim
+            sec.insert('hh')
+            sec.gkbar_hh = 0.01
+            sec.gl_hh = 4.26e-5
             sec.gnabar_hh = 0.15
             sec.el_hh = -65
 
-            # set gbar_km 
+            # Insert 'km' mechanism
             # Units: pS/um^2
+            sec.insert('km')
             sec.gbar_km = 250
 
     # Define 3D shape and position of cell. By default neuron uses xy plane for

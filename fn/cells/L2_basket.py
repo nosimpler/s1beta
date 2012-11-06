@@ -1,8 +1,8 @@
 # L2_basket.py - establish class def for layer 2 basket cells
 #
-# v 1.2.28
-# rev 2012-11-03 (SL: Basket to BasketSingle)
-# last rev: (SL: Added self.celltype)
+# v 1.2.33
+# rev 2012-11-06 (MS: Synapse creation and biophysics moved from class_cell.py to here)
+# last rev: (SL: Basket to BasketSingle)
 
 import itertools as it
 from neuron import h as nrn
@@ -17,9 +17,21 @@ class L2Basket(BasketSingle):
         BasketSingle.__init__(self, pos, 'L2Basket')
         self.celltype = 'L2_basket'
 
+        self.__synapse_create()
+        self.__biophysics()
+
         # self.soma_ampa and self.soma_gabaa are inherited from Basket()
         # create nmda synapse unique to L2Basket
+        # self.soma_nmda = self.syn_nmda_create(self.soma(0.5))
+
+    def __synapse_create(self):
+        # ceates synapses onto this cell 
+        self.soma_ampa = self.syn_ampa_create(self.soma(0.5))
+        self.soma_gabaa = self.syn_gabaa_create(self.soma(0.5))
         self.soma_nmda = self.syn_nmda_create(self.soma(0.5))
+
+    def __biophysics(self):
+        self.soma.insert('hh')
 
     # par connect between all presynaptic cells
     # no connections from L5Pyr or L5Basket to L2Baskets

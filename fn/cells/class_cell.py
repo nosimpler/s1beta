@@ -1,8 +1,8 @@
 # class_cell.py - establish class def for general cell features
 #
-# v 1.2.28
-# rev 2012-11-03 (SL: Basket to BasketSingle)
-# last rev: (SL: lamtha set per cell type)
+# v 1.2.33
+# rev 2012-11-06 (MS: All synapse creation and biophysics moved to individual cell classes)
+# last rev: (SL: Basket to BasketSingle)
 
 import numpy as np
 import itertools as it
@@ -25,7 +25,7 @@ class Cell():
 
         # create soma and set geometry
         self.soma = nrn.Section(cell=self, name=cell_name+'_soma')
-        self.soma.insert('hh')
+        # self.soma.insert('hh')
         self.soma.L = L_soma
         self.soma.diam = diam_soma
         self.soma.Ra = 200
@@ -203,8 +203,8 @@ class BasketSingle(Cell):
         # self.__shape_change()        
 
         # Creating synapses onto this cell
-        self.soma_ampa = self.syn_ampa_create(self.soma(0.5))
-        self.soma_gabaa = self.syn_gabaa_create(self.soma(0.5))
+        # self.soma_ampa = self.syn_ampa_create(self.soma(0.5))
+        # self.soma_gabaa = self.syn_gabaa_create(self.soma(0.5))
 
     # Define 3D shape and position of cell. By default neuron uses xy plane for
     # height and xz plane for depth. This is opposite for model as a whole, but
@@ -247,8 +247,8 @@ class Pyr(Cell):
         # creates synapses using inherited method from Cell()
         # synapse on THIS cell needs to be RECEIVING from Inh
         # segment on the soma specified here
-        self.soma_gabaa = self.syn_gabaa_create(self.soma(0.5))
-        self.soma_gabab = self.syn_gabab_create(self.soma(0.5))
+        # self.soma_gabaa = self.syn_gabaa_create(self.soma(0.5))
+        # self.soma_gabab = self.syn_gabab_create(self.soma(0.5))
 
     # parreceive_pois is going to be based on the self.celltype!
     def parreceive_pois(self, gid, gid_dict, pos_dict, p_ext_pois):
@@ -310,22 +310,22 @@ class Pyr(Cell):
                     self.list_dend[-1].nseg += 1
 
     # set biophysics for soma
-    def pyr_biophys_soma(self):
-        # set some 'hh' mechanism values
-        self.soma.gkbar_hh = 0.01
-        self.soma.gl_hh = 4.26e-5
-        self.soma.el_hh = -65
-        
-        # insert 'km' mechanism
-        self.soma.insert('km')
+    # def pyr_biophys_soma(self):
+    #     # set some 'hh' mechanism values
+    #     self.soma.gkbar_hh = 0.01
+    #     self.soma.gl_hh = 4.26e-5
+    #     self.soma.el_hh = -65
+    #     
+    #     # insert 'km' mechanism
+    #     self.soma.insert('km')
 
     # set biophysics for dendritic sections
-    def pyr_biophys_dends(self):
-         for sec in self.list_dend:
-            # insert 'hh' mechanism
-            sec.insert('hh')
-            sec.gkbar_hh = 0.01
-            sec.gl_hh = 4.26e-5
+    # def pyr_biophys_dends(self):
+    #      for sec in self.list_dend:
+    #         # insert 'hh' mechanism
+    #         sec.insert('hh')
+    #         sec.gkbar_hh = 0.01
+    #         sec.gl_hh = 4.26e-5
 
-            # insert 'km' mechanism
-            sec.insert('km')
+    #         # insert 'km' mechanism
+    #         sec.insert('km')

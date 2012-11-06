@@ -1,8 +1,8 @@
 # L5_pyramidal.py - establish class def for layer 5 pyramidal cells
 #
-# v 1.2.25
-# rev 2012-11-01 (SL: added self.celltype)
-# last rev: (SL: added synaptic conductance params)
+# v 1.2.33
+# rev 2012-11-06 (MS: Synapse creation and biophysics moved from class_cell.py to here)
+# last rev: (SL: added self.celltype)
 
 from neuron import h as nrn
 from class_cell import Pyr
@@ -46,7 +46,12 @@ class L5Pyr(Pyr):
         self.__synapse_create()
 
     def __synapse_create(self):
-        # creates synapses onto this cell in distal sections unique to this cell type
+        # creates synapses onto this cell 
+        # Somatic synapses
+        self.soma_gabaa = self.syn_gabaa_create(self.soma(0.5))
+        self.soma_gabab = self.syn_gabab_create(self.soma(0.5))
+
+        # Dendritic synapses
         self.apicaltuft_gabaa = self.syn_gabaa_create(self.list_dend[3](0.5))
         self.apicaltuft_ampa = self.syn_ampa_create(self.list_dend[3](0.5))
         self.apicaltuft_nmda = self.syn_nmda_create(self.list_dend[3](0.5))
@@ -102,7 +107,6 @@ class L5Pyr(Pyr):
             nc_dict = {
                 'pos_src': pos,
                 'A_weight': p['gbar_L2Pyr_L5Pyr'],
-                # 'A_weight': 2.5e-4,
                 'A_delay': 3.,
                 'lamtha': 3.
             }
@@ -216,9 +220,14 @@ class L5Pyr(Pyr):
     # adds biophysics to soma
     def __biophys_soma(self):
         # set soma biophysics specified in Pyr
-        self.pyr_biophys_soma()
+        # self.pyr_biophys_soma()
 
-        # set hh params not set in Pyr()
+        # Insert 'hh' mechanism
+        self.soma.insert('hh')
+        self.soma.gkbar_hh = 0.01
+        self.soma.gl_hh = 4.26e-5
+        self.soma.el_hh = -65
+
         self.soma.gnabar_hh = 0.16
 
         # insert 'ca' mechanism
@@ -236,8 +245,9 @@ class L5Pyr(Pyr):
         self.soma.insert('kca')
         self.soma.gbar_kca = 2e-4
 
-        # set gbar_km
+        # Insert 'km' mechanism
         # Units: pS/um^2
+        self.soma.insert('km')
         self.soma.gbar_km = 200 
 
         # insert 'cat' mechanism
@@ -250,11 +260,14 @@ class L5Pyr(Pyr):
         
     def __biophys_dends(self):
         # set dend biophysics specified in Pyr()
-        self.pyr_biophys_dends()
+        # self.pyr_biophys_dends()
 
         # set dend biophysics not specified in Pyr()
         for sec in self.list_dend:
-            # set hh params not set in Pyr()
+            # Insert 'hh' mechanism
+            sec.insert('hh')
+            sec.gkbar_hh = 0.01
+            sec.gl_hh = 4.26e-5
             sec.gnabar_hh = 0.14
             sec.el_hh = -71
 
@@ -271,8 +284,9 @@ class L5Pyr(Pyr):
             sec.insert('kca')
             sec.gbar_kca = 2e-4
 
-            # set gbar_km
+            # Insert 'km' mechansim
             # Units: pS/um^2
+            sec.insert('km')
             sec.gbar_km = 200
 
             # insert 'cat' and 'ar' mechanisms
@@ -292,10 +306,7 @@ class L5Pyr(Pyr):
         for sec in self.list_dend:
             sec.push()
             for seg in sec:
-                # print nrn.distance(seg.x)
-                # seg.gbar_cat = 2e-4*exp(0.0*nrn.distance(seg.x))
                 seg.gbar_ar = 1e-6 * np.exp(3e-3 * nrn.distance(seg.x))
-                # print nrn.distance(seg.x), seg.gbar_ar 
 
             nrn.pop_section()
 
