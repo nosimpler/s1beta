@@ -1,14 +1,15 @@
 # spec.py - Average time-frequency energy representation using Morlet wavelet method
 #
-# v 1.2.32
-# rev 2012-11-05 (MS: Separated data analysis and plot routines)
-# last major: (MS: title includes key/value pairs for keys whose value changes over runs)
+# v 1.4.0
+# rev 2012-11-07 (SL: Reading and writing file names more standardly)
+# last major: (MS: Separated data analysis and plot routines)
 
 import os
 import numpy as np
 import scipy.signal as sps
 import itertools as it
 import matplotlib.pyplot as plt
+import paramrw
 from multiprocessing import Pool
 from neuron import h as nrn
 
@@ -16,11 +17,13 @@ import fileio as fio
 from axes_create import fig_spec
 
 class MorletSpec():
-    # def __init__(self, file_name, dfig, p_dict, key_types):
-    def __init__(self, file_read, file_write, p_dict):
+    # def __init__(self, fparam, fdata, fdata_spec_output)
+    def __init__(self, fparam, fdata, fdata_spec):
+        # function is called this way because paramrw.read() returns 2 outputs
+        p_dict = paramrw.read(fparam)[1]
 
         # Import dipole data and remove extra dimensions from signal array. 
-        data_raw = np.loadtxt(open(file_read, 'rb'))
+        data_raw = np.loadtxt(open(fdata, 'rb'))
         self.S = data_raw.squeeze()
 
         # Check that tstop is greater than 150 ms:
@@ -44,7 +47,7 @@ class MorletSpec():
             self.TFR = np.vstack([self.timevec, self.TFR])
 
             # Write data to file
-            np.savetxt(file_write, self.TFR, fmt = "%5.4f")
+            np.savetxt(fdata_spec, self.TFR, fmt="%5.4f")
 
             # self.plot()
 
@@ -102,7 +105,7 @@ class MorletSpec():
         st = 1. / (2. * np.pi * sf)
         A = 1. / (st * np.sqrt(2.*np.pi))
 
-        y = A * np.exp(-t**2./(2.*st**2.)) * np.exp(1.j*2.*np.pi*f*t)
+        y = A * np.exp(-t**2. / (2. * st**2.)) * np.exp(1.j * 2. * np.pi * f * t)
 
         return y
 
@@ -169,14 +172,24 @@ def pspec(file_name, dfig, p_dict, key_types):
 
 # Does spec analysis for all files in simulation directory
 def spec_analysis(ddir, p_exp):
-    dict_list = [p_exp.return_pdict(i) for i in range(p_exp.N_sims)]
-    fext_spec, dspec = ddir.fileinfo['rawdpl']
-    dpl_list = fio.file_match(dspec, fext_spec)
-    spec_names = [ddir.create_filename('rawspec', p_exp.sim_prefix + '-%03d' % i) for i in range(p_exp.N_sims)]
+    # param info
+    fext_param, dparam = ddir.fileinfo['param']
+    param_list = fio.file_match(dparam, fext_param)
+    # dict_list = [p_exp.return_pdict(i) for i in range(p_exp.N_sims)]
+
+    # dipole info
+    fext_dpl, ddpl = ddir.fileinfo['rawdpl']
+    dpl_list = fio.file_match(ddpl, fext_dpl)
+
+    # create list of spec output names
+    sim_prefix_list = [fio.strip_extprefix(fparam) for fparam in param_list]
+    spec_list = [ddir.create_filename('rawspec', sim_prefix) for sim_prefix in sim_prefix_list]
+    # spec_names = [ddir.create_filename('rawspec', p_exp.sim_prefix + '-%03d' % i) for i in range(p_exp.N_sims)]
 
     pl = Pool()
-    for p_dict, file_dpl, file_spec in it.izip(dict_list, dpl_list, spec_names):        
-        pl.apply_async(MorletSpec, (file_dpl, file_spec, p_dict))
+    for fparam, fdpl, fspec in it.izip(param_list, dpl_list, spec_list):
+        pl.apply_async(MorletSpec, (fparam, fdpl, fspec))
+        # pl.apply_async(MorletSpec, (file_dpl, file_spec, p_dict))
  
     pl.close()
     pl.join()

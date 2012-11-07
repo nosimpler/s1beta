@@ -1,8 +1,8 @@
 # params_default.py - list of default params and values
 #
-# v 1.2.26
-# rev 2012-11-01 (SL: Added param for poisson lamtha per cell type)
-# last major: (SL: Added pois param defaults)
+# v 1.4.0
+# rev 2012-11-07 (SL: Added param for N_trials)
+# last major: (SL: Added param for poisson lamtha per cell type)
 
 # flat file of default values
 # tuples for different "experiments"
@@ -82,6 +82,8 @@ params_default = {
     'spec_max_freq': 41.,
 
     # numerics
+    # N_trials of 0 means that seed is set by rank, will still run 1 trial (obviously)
+    'N_trials': 0,
     'tstop': 1000.,
     'dt': 0.025,
 }

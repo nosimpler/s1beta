@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # s1run.py - primary run function for s1 project
 #
-# v 1.3.0
-# rev 2012-11-05 (SL: reading params based on flat non-python file)
-# last major: (MS: Separate spec analysis and spec plotting)
+# v 1.4.0
+# rev 2012-11-07 (SL: Implemented N_trials)
+# last major: (SL: reading params based on flat non-python file)
 
 import os
 import time
@@ -19,10 +19,8 @@ from class_net import Network
 import fn.fileio as fio
 import fn.paramrw as paramrw
 import fn.plotfn as plotfn
-from fn.spec import MorletSpec, spec_analysis
-
-# params
-import p_sim
+from fn.spec import spec_analysis
+# from fn.spec import MorletSpec, spec_analysis
 
 # spike write function
 def spikes_write(net, filename_spikes):
@@ -53,7 +51,6 @@ def copy_paramfile(dsim, f_psim):
 
 # All units for time: ms
 def exec_runsim(f_psim):
-# def exec_runsim(p_all):
     # clock start time
     t0 = time.time()
 
@@ -68,7 +65,6 @@ def exec_runsim(f_psim):
 
     # creates p_exp.sim_prefix and other param structures
     p_exp = paramrw.exp_params(f_psim)
-    # p_exp = paramrw.exp_params(p_all)
 
     # project directory
     dproj = '/repo/data/s1'
@@ -92,103 +88,109 @@ def exec_runsim(f_psim):
 
         p = p_exp.return_pdict(i)
 
-        # get all nodes to this place before continuing
-        # tries to ensure we're all running the same params at the same time!
-        pc.barrier()
+        # if N_trials is set to 0, run 1 anyway!
+        if not p_exp.N_trials:
+            N_trialruns = 1
+        else:
+            N_trialruns = p_exp.N_trials
 
-        # global variable bs, should be node-independent
-        nrn("dp_total = 0.")
+        # iterate through trialruns
+        for j in range(N_trialruns):
+            # get all nodes to this place before continuing
+            # tries to ensure we're all running the same params at the same time!
+            pc.barrier()
 
-        # Seed pseudorandom number generator
-        np.random.seed(rank)
-        # np.random.seed(0)
+            # global variable bs, should be node-independent
+            nrn("dp_total = 0.")
 
-        # Set tstop before instantiating any classes
-        nrn.tstop = p['tstop']
-        nrn.dt = p['dt']
-        # nrn.cvode_active(1)
+            # Seed pseudorandom number generator
+            if not p_exp.N_trials:
+                np.random.seed(rank)
+            else:
+                # if there are N_trials, then randomize the seed
+                np.random.seed()
 
-        # Create network from class_net's Network class
-        # Network(gridpyr_x, gridpyr_y)
-        net = Network(p)
+            # Set tstop before instantiating any classes
+            nrn.tstop = p['tstop']
+            nrn.dt = p['dt']
+            # nrn.cvode_active(1)
 
-        # create prefix for files everyone knows about
-        exp_prefix = p_exp.sim_prefix + '-%03d' % i
+            # Create network from class_net's Network class
+            # Network(gridpyr_x, gridpyr_y)
+            net = Network(p)
 
-        # spike file needs to be known by all nodes
-        file_spikes_tmp = fio.file_spike_tmp(dproj)
+            # create prefix for files everyone knows about
+            exp_prefix = "%s-%03d-T%02d" % (p_exp.sim_prefix, i, j)
 
-        # create rotating data files and dirs on ONE central node
-        if rank == 0:
-            # create file names
-            file_dpl = ddir.create_filename('rawdpl', exp_prefix)
-            file_param = ddir.create_filename('param', exp_prefix)
-            file_spikes = ddir.create_filename('rawspk', exp_prefix)
-            file_spec = ddir.create_filename('rawspec', exp_prefix)
+            # spike file needs to be known by all nodes
+            file_spikes_tmp = fio.file_spike_tmp(dproj)
 
-        # debug
-        debug = 0
-        if rank == 0:
-            if debug:
-                # net's method rec_debug(rank, gid)
-                v_debug = net.rec_debug(0, 8)
-                filename_debug = 'debug.dat'
+            # create rotating data files and dirs on ONE central node
+            if rank == 0:
+                # create file names
+                file_dpl = ddir.create_filename('rawdpl', exp_prefix)
+                file_param = ddir.create_filename('param', exp_prefix)
+                file_spikes = ddir.create_filename('rawspk', exp_prefix)
+                file_spec = ddir.create_filename('rawspec', exp_prefix)
 
-        # set t vec to record
-        t_vec = nrn.Vector()
-        t_vec.record(nrn._ref_t)
+            # debug
+            debug = 0
+            if rank == 0:
+                if debug:
+                    # net's method rec_debug(rank, gid)
+                    v_debug = net.rec_debug(0, 8)
+                    filename_debug = 'debug.dat'
 
-        # initialize cells to -65 mV and compile code
-        # after all the NetCon delays have been specified
-        dp_rec = nrn.Vector()
-        dp_rec.record(nrn._ref_dp_total)
+            # set t vec to record
+            t_vec = nrn.Vector()
+            t_vec.record(nrn._ref_t)
 
-        # sets the default max solver step in ms (purposefully large)
-        pc.set_maxstep(10)
+            # initialize cells to -65 mV and compile code
+            # after all the NetCon delays have been specified
+            dp_rec = nrn.Vector()
+            dp_rec.record(nrn._ref_dp_total)
 
-        # set state variables if they have been changed since nrn.finitialize
-        # and run the solver
-        nrn.finitialize(-64.7)
-        nrn.fcurrent()
-        nrn.frecord_init()
+            # sets the default max solver step in ms (purposefully large)
+            pc.set_maxstep(10)
 
-        # if rank == 0: 
-        #     t2 = time.time()
+            # set state variables if they have been changed since nrn.finitialize
+            # and run the solver
+            nrn.finitialize(-64.7)
+            nrn.fcurrent()
+            nrn.frecord_init()
 
-        pc.psolve(nrn.tstop)
+            pc.psolve(nrn.tstop)
 
-        # if rank == 0: 
-        #     print "\tIntegration time:", time.time() - t2
+            # combine dp_rec
+            pc.allreduce(dp_rec, 1)
 
-        # combine dp_rec
-        pc.allreduce(dp_rec, 1)
+            # write time and calculated dipole to data file only if on the first proc
+            # only execute this statement on one processor
+            if rank == 0:
+                with open(file_dpl, 'a') as f:
+                    for k in range(int(t_vec.size())):
+                        f.write("%03.3f\t%5.4f\n" % (t_vec.x[k], dp_rec.x[k]))
 
-        # write time and calculated dipole to data file only if on the first proc
-        # only execute this statement on one processor
-        if rank == 0:
-            with open(file_dpl, 'a') as f:
-                for i in range(int(t_vec.size())):
-                    f.write("%03.3f\t%5.4f\n" % (t_vec.x[i], dp_rec.x[i]))
+                # write the params, but add a trial number
+                p['Trial'] = j
+                paramrw.write(file_param, p, net.p_ext, net.gid_dict)
 
-            # write the gid list ...
-            paramrw.write(file_param, p, net.p_ext, net.gid_dict)
+                if debug:
+                    with open(filename_debug, 'w+') as file_debug:
+                        for m in range(int(t_vec.size())):
+                            file_debug.write("%03.3f\t%5.4f\n" % (t_vec.x[m], v_debug.x[m]))
 
-            if debug:
-                with open(filename_debug, 'w+') as file_debug:
-                    for i in range(int(t_vec.size())):
-                        file_debug.write("%03.3f\t%5.4f\n" % (t_vec.x[i], v_debug.x[i]))
+                    # also create a debug plot
+                    pdipole(filename_debug, os.getcwd())
 
-                # also create a debug plot
-                pdipole(filename_debug, os.getcwd())
+            # write output spikes
+            # spikes_write(net, file_spikes)
+            spikes_write(net, file_spikes_tmp)
 
-        # write output spikes
-        # spikes_write(net, file_spikes)
-        spikes_write(net, file_spikes_tmp)
-
-        # move the spike file to the spike dir
-        if rank == 0:
-            shutil.move(file_spikes_tmp, file_spikes)
-            print "... finished in: %4.4f s" % (time.time() - run_start)
+            # move the spike file to the spike dir
+            if rank == 0:
+                shutil.move(file_spikes_tmp, file_spikes)
+                print "... finished in: %4.4f s" % (time.time() - run_start)
 
     # plot should probably be moved outside of this
     if pc.nhost > 1:
@@ -232,4 +234,3 @@ if __name__ == "__main__":
         sys.exit(1)
 
     exec_runsim(f_psim)
-    # exec_runsim(p_sim.all)

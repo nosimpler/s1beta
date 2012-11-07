@@ -1,8 +1,8 @@
 # fileio.py - general file input/output functions
 #
-# v 1.2.32
-# rev 2012-11-05 (MS: added directory for raw spec data, changed data file names)
-# last rev: (SL: added slightly redundant class for now, will be merged in future)
+# v 1.4.0
+# rev 2012-11-07 (SL: strips prefixes, adds file_match to OutputDataPaths class)
+# last rev: (MS: added directory for raw spec data, changed data file names)
 
 import datetime, fnmatch, os, shutil, sys
 import itertools as it
@@ -32,13 +32,21 @@ def file_spike_tmp(dproj):
     file_spikes = os.path.join(dproj, filename_spikes)
     return file_spikes
 
+# this is ugly, potentially. sorry, future
+def strip_extprefix(filename):
+    f_raw = filename.split("/")[-1]
+    f = f_raw.split(".")[0].split("-")[:-1]
+    ext_prefix = f.pop(0)
+
+    for part in f:
+        ext_prefix += "-%s" % part
+
+    return ext_prefix
+
 # Get the data files matching file_ext in this directory
 def file_match(dsearch, file_ext):
-# def file_match(dict_fileinfo, key):
-    # dsearch = dict_fileinfo[key][1]
-    # file_ext = '*'+dict_fileinfo[key][0]
-
     file_list = []
+
     if os.path.exists(dsearch):
         for root, dirnames, filenames in os.walk(dsearch):
             for fname in fnmatch.filter(filenames, '*'+file_ext):
@@ -171,6 +179,23 @@ class OutputDataPaths():
         file_path_full = os.path.join(self.fileinfo[key][1], file_name_raw)
 
         return file_path_full
+
+    # Get the data files matching file_ext in this directory
+    # functionally the same as the previous function but with a local scope
+    def file_match(self, key):
+        fext, dsearch = self.fileinfo[key]
+
+        file_list = []
+
+        if os.path.exists(dsearch):
+            for root, dirnames, filenames in os.walk(dsearch):
+                for fname in fnmatch.filter(filenames, '*'+fext):
+                    file_list.append(os.path.join(root, fname))
+
+        # sort file list? untested
+        file_list.sort()
+
+        return file_list
 
 # Finds and moves files to created subdirectories. 
 def subdir_move(dir_out, name_dir, file_pattern):

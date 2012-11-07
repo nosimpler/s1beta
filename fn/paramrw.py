@@ -1,8 +1,8 @@
 # paramrw.py - routines for reading the param files
 #
-# v 1.3.0
-# rev 2012-11-06 (SL: reads params based on non-python file)
-# last major: (SL: added param reading method)
+# v 1.4.0
+# rev 2012-11-07 (SL: Implemented N_Trials)
+# last major: (SL: reads params based on non-python file)
 
 import re
 import fileio as fio
@@ -110,8 +110,9 @@ class exp_params():
 
         self.__create_dict_from_default(p_all_input)
 
-        # pop off the value for sim_prefix. then continue
+        # pop off the value for sim_prefix and int(N_trials) then continue
         self.sim_prefix = self.p_all.pop('sim_prefix')
+        self.N_trials = int(self.p_all.pop('N_trials'))
         self.list_params = self.__create_paramlist()
         self.N_sims = len(self.list_params[0][1])
 

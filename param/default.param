@@ -80,5 +80,6 @@ t_evoked_dist: 2000.
 spec_max_freq: 41.
 
 # numerics
+N_trials = 0
 tstop: 1500.
 dt: 0.025

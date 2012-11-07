@@ -1,8 +1,8 @@
 # cli.py - routines for the command line interface console sssh.py
 #
-# v 1.2.32
-# rev 2012-11-05 (MS: updated replot to use new data directory names)
-# last major: (SL: added some qnd routines for replotting)
+# v 1.4.0
+# rev 2012-11-07 (SL: Minor)
+# last major: (MS: updated replot to use new data directory names)
 
 from cmd import Cmd
 from datetime import datetime
@@ -67,7 +67,6 @@ class Console(Cmd):
 
     def do_quickdraw(self, args):
         self.do_setdate('2012-04-02')
-        # self.do_setdate('2012-02-19')
         # self.do_setdate('cppub')
         self.do_load('gassembly-002')
         self.do_pcompare('sim0=11 sim1=11')
@@ -173,8 +172,9 @@ class Console(Cmd):
         else:
             return self.datelist
 
-
     def do_checkdate(self, args):
+        """Displays the current date
+        """
         print self.ddate
 
     def do_load(self, args):
@@ -224,6 +224,9 @@ class Console(Cmd):
         pool.join()
 
         fio.epscompress(dfig_spk, fext_figspk)
+
+    def do_psth(self, args):
+        pass
 
     def do_summary(self, args):
         epslist = fio.file_match(self.simpaths.dfigs['spikes'], '.eps')
