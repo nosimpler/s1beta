@@ -4,11 +4,11 @@
 # np.arrays for everything else?
 # turns out some whitespace is valid for dicts!
 
-sim_prefix: debug
+sim_prefix: cell_test
 
 # numbers of cells making up the pyramidal grids
-N_pyr_x: 2
-N_pyr_y: 2
+N_pyr_x: 1
+N_pyr_y: 1
 
 # Poisson input
 # pois_lamtha: 20.
@@ -65,21 +65,23 @@ gbar_L2Pyr_L5Basket: 2.5e-4
 
 # Ongoing alpha rhythms
 t0_input: 150.
-f_input_prox: 10.
-f_input_dist: 10.
+# f_input_prox: L[10., 20, 11]
+# f_input_dist: L[10., 20, 11]
+f_input_prox: [10.]
+f_input_dist: [10.]
 
 # times for evoked responses
-t_evoked_prox_early: 2000.
-t_evoked_prox_late: 2000.
-t_evoked_dist: 2000.
+t_evoked_prox_early: 6000.
+t_evoked_prox_late: 6000.
+t_evoked_dist: 6000.
 # t_evoked_prox_early: 454.
 # t_evoked_prox_late: 564.
 # t_evoked_dist: 499.
 
 # analysis
-spec_max_freq: 41.
+spec_max_freq: 61.
 
 # numerics
-N_trials: 2
-tstop: 400.
+N_trials: 0
+tstop: 5000.
 dt: 0.025

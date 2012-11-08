@@ -1,8 +1,8 @@
 # fileio.py - general file input/output functions
 #
-# v 1.4.0
-# rev 2012-11-07 (SL: strips prefixes, adds file_match to OutputDataPaths class)
-# last rev: (MS: added directory for raw spec data, changed data file names)
+# v 1.4.1
+# rev 2012-11-07 (MS: For now, changed rawspec file type to .npz)
+# last rev: (SL: strips prefixes, adds file_match to OutputDataPaths class)
 
 import datetime, fnmatch, os, shutil, sys
 import itertools as it
@@ -120,7 +120,7 @@ class OutputDataPaths():
         self.__datatypes = {
             'rawspk': '-spk.txt',
             'rawdpl': '-dpl.txt',
-            'rawspec': '-spec.txt',
+            'rawspec': '-spec.npz',
             'figspk': '-spk.eps',
             'figdpl': '-dpl.eps',
             'figspec': '-spec.eps',

@@ -1,8 +1,8 @@
 # spec.py - Average time-frequency energy representation using Morlet wavelet method
 #
-# v 1.4.0
-# rev 2012-11-07 (SL: Reading and writing file names more standardly)
-# last major: (MS: Separated data analysis and plot routines)
+# v 1.4.1
+# rev 2012-11-07 (MS: For now, raw spec data saved as .npz file - makes plotting easier)
+# last major: (SL: Reading and writing file names more standardly)
 
 import os
 import numpy as np
@@ -44,17 +44,18 @@ class MorletSpec():
             self.TFR = self.__traces2TFR()
 
             # Add time vector as first row of TFR data
-            self.TFR = np.vstack([self.timevec, self.TFR])
+            # self.TFR = np.vstack([self.timevec, self.TFR])
 
             # Write data to file
-            np.savetxt(fdata_spec, self.TFR, fmt="%5.4f")
+            np.savez_compressed(fdata_spec, time = self.timevec, freq = self.freqvec, TFR = self.TFR)
+            # np.savetxt(file_write, self.TFR, fmt = "%5.4f")
 
             # self.plot()
 
         else:
             print "tstop not greater than 150ms. Skipping wavelet analysis."
 
-        return 0.
+        # return 0.
 
     def __traces2TFR(self):
         self.S_trans = self.S.transpose()
@@ -143,11 +144,16 @@ class MorletSpec():
 
 def pspec(file_name, dfig, p_dict, key_types):
     # Load data from file. First row of array is time.
-    dspec = np.loadtxt(open(file_name, 'rb'))
+    dspec = np.load(file_name)
+    # dspec = np.loadtxt(open(file_name, 'rb'))
 
-    timevec = dspec[:, 0]
-    freqvec = np.arange(1, dspec.shape[0])
-    TFR = np.delete(dspec, (0), axis = 0)
+    timevec = dspec['time']
+    freqvec = dspec['freq']
+    TFR = dspec['TFR']
+
+    # timevec = dspec['TFR'][:, 0]
+    # freqvec = np.arange(1, dspec['TFR'].shape[0])
+    # TFR = np.delete(dspec['TFR'], (0), axis = 0)
 
     # Split to find file prefix
     file_prefix = file_name.split('/')[-1].split('.')[0]
@@ -193,3 +199,6 @@ def spec_analysis(ddir, p_exp):
  
     pl.close()
     pl.join()
+
+    # for fparam, fdpl, fspec in it.izip(param_list, dpl_list, spec_list):
+    #     MorletSpec(fparam, fdpl, fspec)

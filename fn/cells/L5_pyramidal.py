@@ -1,8 +1,8 @@
 # L5_pyramidal.py - establish class def for layer 5 pyramidal cells
 #
-# v 1.2.33
-# rev 2012-11-06 (MS: Synapse creation and biophysics moved from class_cell.py to here)
-# last rev: (SL: added self.celltype)
+# v 1.4.1
+# rev 2012-11-07 (MS: Soma props, dend props set in dictionaries. Reorganized)
+# last rev: (MS: Synapse creation and biophysics moved from class_cell.py to here)
 
 from neuron import h as nrn
 from class_cell import Pyr
@@ -16,20 +16,27 @@ import itertools as it
 
 class L5Pyr(Pyr):
     def __init__(self, pos):
-        # Pyr.__init__(self, pos, L, diam, Ra, cm, {prefix})
-        Pyr.__init__(self, pos, 39, 28.9, 0.85, 'L5Pyr')
+        # Set morphology properties
+        soma_props = self.__set_soma_props(pos)
+        dend_props, dend_names = self.__set_dend_props()
+
+        # Pyr.__init__(self, soma_props)
+        Pyr.__init__(self, soma_props)
+        # Pyr.__init__(self, pos, 39, 28.9, 0.85, 'L5Pyr')
         self.celltype = 'L5_pyramidal'
 
         # preallocate namespaces for dend properties
         # set in dend_props()
-        self.dend_names = []
-        self.dend_L = []
-        self.dend_diam = []
-        self.cm = 0.85
+        # self.dend_names = []
+        # self.dend_L = []
+        # self.dend_diam = []
+        # self.dend_cm = soma_props['cm']
+        # self.cm = 0.85
 
         # Geometry
-        self.__set_dend_props()
-        self.create_dends(self.dend_props, self.cm)
+        # dend Cm and dend Ra set using soma Cm and soma Ra
+        self.create_dends(dend_names, dend_props, soma_props)
+        # self.create_dends(self.dend_props, self.cm)
         self.__connect_sections()
         # self.__set_3Dshape()
 
@@ -44,6 +51,188 @@ class L5Pyr(Pyr):
 
         # create synapses
         self.__synapse_create()
+
+    # Sets somatic properties. Returns dictionary.
+    def __set_soma_props(self, pos):
+         return {
+            'pos': pos,
+            'L': 39.,
+            'diam': 28.9,
+            'cm': 0.85,
+            'Ra': 200.,
+            'name': 'L5Pyr',
+        }
+
+    # Returns dictionary of dendritic properties and list of dendrite names
+    def __set_dend_props(self):
+        # Hard coded dend properties
+        dend_props =  {
+            'apical_trunk': {
+                'L': 102.,
+                'diam': 10.2,
+            },
+            'apical_1': {
+                'L': 680.,
+                'diam': 7.48,
+            },
+            'apical_2': {
+                'L': 680.,
+                'diam': 4.93,
+            },
+            'apical_tuft': {
+                'L': 425.,
+                'diam': 3.4,
+            },
+            'apical_oblique': {
+                'L': 255.,
+                'diam': 5.1,
+            },
+            'basal_1': {
+                'L': 85.,
+                'diam': 6.8,
+            },
+            'basal_2': {
+                'L': 255.,
+                'diam': 8.5,
+            },
+            'basal_3': {
+                'L': 255.,
+                'diam': 8.5,
+            },
+        }
+
+        # These MUST match order the above keys in exact order!
+        dend_names = [
+            'apical_trunk', 'apical_1', 'apical_2',
+            'apical_tuft', 'apical_oblique', 'basal_1',
+            'basal_2', 'basal_3'
+        ]
+
+        return dend_props, dend_names
+
+        # self.dend_L = [102, 680, 680, 425, 255, 85, 255, 255]
+        # self.dend_diam = [10.2, 7.48, 4.93, 3.4, 5.1, 6.8, 8.5, 8.5]
+
+        # # check lengths for congruity
+        # if len(self.dend_L) == len(self.dend_diam):
+        #     # Zip above lists together
+        #     self.dend_props = it.izip(self.dend_names, self.dend_L, self.dend_diam) 
+        # else:
+        #     print "self.dend_L and self.dend_diam are not the same length"
+        #     print "please fix in L5_pyramidal.py"
+        #     sys.exit()
+
+    # connects sections of this cell together
+    def __connect_sections(self):
+        # child.connect(parent, parent_end, {child_start=0})
+        # Distal
+        self.list_dend[0].connect(self.soma, 1, 0)
+        self.list_dend[1].connect(self.list_dend[0], 1, 0)
+
+        self.list_dend[2].connect(self.list_dend[1], 1, 0)
+        self.list_dend[3].connect(self.list_dend[2], 1, 0)
+
+        # dend[4] comes off of dend[0](1)
+        self.list_dend[4].connect(self.list_dend[0], 1, 0)
+
+        # Proximal
+        self.list_dend[5].connect(self.soma, 0, 0)
+        self.list_dend[6].connect(self.list_dend[5], 1, 0)
+        self.list_dend[7].connect(self.list_dend[5], 1, 0)
+            
+    # adds biophysics to soma
+    def __biophys_soma(self):
+        # set soma biophysics specified in Pyr
+        # self.pyr_biophys_soma()
+
+        # Insert 'hh' mechanism
+        self.soma.insert('hh')
+        self.soma.gkbar_hh = 0.01
+        self.soma.gl_hh = 4.26e-5
+        self.soma.el_hh = -65
+
+        self.soma.gnabar_hh = 0.16
+
+        # insert 'ca' mechanism
+        # Units: pS/um^2
+        self.soma.insert('ca')
+        self.soma.gbar_ca = 60
+
+        # insert 'cad' mechanism
+        # units of tau are ms
+        self.soma.insert('cad')
+        self.soma.taur_cad = 20
+
+        # insert 'kca' mechanism
+        # units are S/cm^2?
+        self.soma.insert('kca')
+        self.soma.gbar_kca = 2e-4
+
+        # Insert 'km' mechanism
+        # Units: pS/um^2
+        self.soma.insert('km')
+        self.soma.gbar_km = 200 
+
+        # insert 'cat' mechanism
+        self.soma.insert('cat')
+        self.soma.gbar_cat = 2e-4
+
+        # insert 'ar' mechanism
+        self.soma.insert('ar')
+        self.soma.gbar_ar = 1e-6
+        
+    def __biophys_dends(self):
+        # set dend biophysics specified in Pyr()
+        # self.pyr_biophys_dends()
+
+        # set dend biophysics not specified in Pyr()
+        for sec in self.list_dend:
+            # Insert 'hh' mechanism
+            sec.insert('hh')
+            sec.gkbar_hh = 0.01
+            sec.gl_hh = 4.26e-5
+            sec.gnabar_hh = 0.14
+            sec.el_hh = -71
+
+            # Insert 'ca' mechanims
+            # Units: pS/um^2
+            sec.insert('ca')
+            sec.gbar_ca = 60
+
+            # Insert 'cad' mechanism
+            sec.insert('cad')
+            sec.taur_cad = 20
+
+            # Insert 'kca' mechanism
+            sec.insert('kca')
+            sec.gbar_kca = 2e-4
+
+            # Insert 'km' mechansim
+            # Units: pS/um^2
+            sec.insert('km')
+            sec.gbar_km = 200
+
+            # insert 'cat' and 'ar' mechanisms
+            sec.insert('cat')
+            sec.gbar_cat = 2e-4
+            sec.insert('ar')
+
+        # set gbar_ar
+        # Value depends on distance from the soma. Soma is set as 
+        # origin by passing self.soma as a sec argument to nrn.distance()
+        # Then iterate over segment nodes of dendritic sections 
+        # and set gbar_ar depending on nrn.distance(seg.x), which returns
+        # distance from the soma to this point on the CURRENTLY ACCESSED
+        # SECTION!!!
+        nrn.distance(sec=self.soma)
+
+        for sec in self.list_dend:
+            sec.push()
+            for seg in sec:
+                seg.gbar_ar = 1e-6 * np.exp(3e-3 * nrn.distance(seg.x))
+
+            nrn.pop_section()
+
 
     def __synapse_create(self):
         # creates synapses onto this cell 
@@ -177,138 +366,6 @@ class L5Pyr(Pyr):
             self.ncfrom_extgauss.append(self.parconnect_from_src(gid_extgauss, nc_dict, self.basal2_ampa))
             self.ncfrom_extgauss.append(self.parconnect_from_src(gid_extgauss, nc_dict, self.basal3_ampa))
             self.ncfrom_extgauss.append(self.parconnect_from_src(gid_extgauss, nc_dict, self.apicaloblique_ampa))
-
-    # writes to self.dend_props list of tuples
-    def __set_dend_props(self):
-        # Hard coded dend properties
-        self.dend_names = [
-            'apical_trunk', 'apical_1', 'apical_2',
-            'apical_tuft', 'apical_oblique', 'basal_1',
-            'basal_2', 'basal_3'
-        ]
-
-        self.dend_L = [102, 680, 680, 425, 255, 85, 255, 255]
-        self.dend_diam = [10.2, 7.48, 4.93, 3.4, 5.1, 6.8, 8.5, 8.5]
-
-        # check lengths for congruity
-        if len(self.dend_L) == len(self.dend_diam):
-            # Zip above lists together
-            self.dend_props = it.izip(self.dend_names, self.dend_L, self.dend_diam) 
-        else:
-            print "self.dend_L and self.dend_diam are not the same length"
-            print "please fix in L5_pyramidal.py"
-            sys.exit()
-
-    # connects sections of this cell together
-    def __connect_sections(self):
-        # child.connect(parent, parent_end, {child_start=0})
-        # Distal
-        self.list_dend[0].connect(self.soma, 1, 0)
-        self.list_dend[1].connect(self.list_dend[0], 1, 0)
-
-        self.list_dend[2].connect(self.list_dend[1], 1, 0)
-        self.list_dend[3].connect(self.list_dend[2], 1, 0)
-
-        # dend[4] comes off of dend[0](1)
-        self.list_dend[4].connect(self.list_dend[0], 1, 0)
-
-        # Proximal
-        self.list_dend[5].connect(self.soma, 0, 0)
-        self.list_dend[6].connect(self.list_dend[5], 1, 0)
-        self.list_dend[7].connect(self.list_dend[5], 1, 0)
-            
-    # adds biophysics to soma
-    def __biophys_soma(self):
-        # set soma biophysics specified in Pyr
-        # self.pyr_biophys_soma()
-
-        # Insert 'hh' mechanism
-        self.soma.insert('hh')
-        self.soma.gkbar_hh = 0.01
-        self.soma.gl_hh = 4.26e-5
-        self.soma.el_hh = -65
-
-        self.soma.gnabar_hh = 0.16
-
-        # insert 'ca' mechanism
-        # Units: pS/um^2
-        self.soma.insert('ca')
-        self.soma.gbar_ca = 60
-
-        # insert 'cad' mechanism
-        # units of tau are ms
-        self.soma.insert('cad')
-        self.soma.taur_cad = 20
-
-        # insert 'kca' mechanism
-        # units are S/cm^2?
-        self.soma.insert('kca')
-        self.soma.gbar_kca = 2e-4
-
-        # Insert 'km' mechanism
-        # Units: pS/um^2
-        self.soma.insert('km')
-        self.soma.gbar_km = 200 
-
-        # insert 'cat' mechanism
-        self.soma.insert('cat')
-        self.soma.gbar_cat = 2e-4
-
-        # insert 'ar' mechanism
-        self.soma.insert('ar')
-        self.soma.gbar_ar = 1e-6
-        
-    def __biophys_dends(self):
-        # set dend biophysics specified in Pyr()
-        # self.pyr_biophys_dends()
-
-        # set dend biophysics not specified in Pyr()
-        for sec in self.list_dend:
-            # Insert 'hh' mechanism
-            sec.insert('hh')
-            sec.gkbar_hh = 0.01
-            sec.gl_hh = 4.26e-5
-            sec.gnabar_hh = 0.14
-            sec.el_hh = -71
-
-            # Insert 'ca' mechanims
-            # Units: pS/um^2
-            sec.insert('ca')
-            sec.gbar_ca = 60
-
-            # Insert 'cad' mechanism
-            sec.insert('cad')
-            sec.taur_cad = 20
-
-            # Insert 'kca' mechanism
-            sec.insert('kca')
-            sec.gbar_kca = 2e-4
-
-            # Insert 'km' mechansim
-            # Units: pS/um^2
-            sec.insert('km')
-            sec.gbar_km = 200
-
-            # insert 'cat' and 'ar' mechanisms
-            sec.insert('cat')
-            sec.gbar_cat = 2e-4
-            sec.insert('ar')
-
-        # set gbar_ar
-        # Value depends on distance from the soma. Soma is set as 
-        # origin by passing self.soma as a sec argument to nrn.distance()
-        # Then iterate over segment nodes of dendritic sections 
-        # and set gbar_ar depending on nrn.distance(seg.x), which returns
-        # distance from the soma to this point on the CURRENTLY ACCESSED
-        # SECTION!!!
-        nrn.distance(sec=self.soma)
-
-        for sec in self.list_dend:
-            sec.push()
-            for seg in sec:
-                seg.gbar_ar = 1e-6 * np.exp(3e-3 * nrn.distance(seg.x))
-
-            nrn.pop_section()
 
     # Define 3D shape and position of cell. By default neuron uses xy plane for
     # height and xz plane for depth. This is opposite for model as a whole, but

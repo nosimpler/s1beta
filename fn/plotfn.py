@@ -45,6 +45,7 @@ def pall(ddir, p_exp, gid_dict, tstop):
     dpl_list = ddir.file_match('rawdpl')
     spk_list = ddir.file_match('rawspk')
     spec_list = ddir.file_match('rawspec')
+
     # dict_list = [p_exp.return_pdict(i) for i in range(p_exp.N_sims)]
     # fext_dpl, ddpl = ddir.fileinfo['rawdpl']
     # fext_spk, dspk = ddir.fileinfo['rawspk']
@@ -66,9 +67,9 @@ def pall(ddir, p_exp, gid_dict, tstop):
     #     # spikefn.spikes_from_file(net.gid_dict, file_spk)
     #     praster(gid_dict, tstop, file_spk, dfig_spk)
 
-    # for p_dict, file_dpl, file_spec in it.izip(dict_list, dpl_list, spec_list):
-    #     # Plot dipole data
-    #     pdipole(file_dpl, dfig_dpl)
+    # for p_dict, file_dpl, file_spec in it.izip(param_list, dpl_list, spec_list):
+    #     # # Plot dipole data
+    #     # pdipole(file_dpl, dfig_dpl)
 
     #     # Morlet analysis
     #     pspec(file_spec, dfig_spec, p_dict, key_types)

@@ -13,6 +13,7 @@ from class_cell import BasketSingle
 
 class L5Basket(BasketSingle):
     def __init__(self, pos):
+        # Note: Cell properties are set in BasketSingle()
         BasketSingle.__init__(self, pos, 'L5Basket')
         self.celltype = 'L5_basket'
 

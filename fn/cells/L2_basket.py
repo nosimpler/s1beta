@@ -13,7 +13,8 @@ from class_cell import BasketSingle
 
 class L2Basket(BasketSingle):
     def __init__(self, pos):
-        # Pyr.__init__(self, pos, L, diam, Ra, cm)
+        # BasketSingle.__init__(self, pos, L, diam, Ra, cm)
+        # Note: Basket cell properties set in BasketSingle())
         BasketSingle.__init__(self, pos, 'L2Basket')
         self.celltype = 'L2_basket'
 
