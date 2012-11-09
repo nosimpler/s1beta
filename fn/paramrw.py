@@ -1,8 +1,8 @@
 # paramrw.py - routines for reading the param files
 #
-# v 1.4.0
-# rev 2012-11-07 (SL: Implemented N_Trials)
-# last major: (SL: reads params based on non-python file)
+# v 1.4.2
+# rev 2012-11-09 (SL: Fixed the imported but never used find_param function)
+# last major: (SL: Implemented N_Trials)
 
 import re
 import fileio as fio
@@ -76,7 +76,8 @@ def find_param(fparam, p):
     param_list = [line for line in lines if line.split(': ')[0].startswith(p)]
 
     # return a list of tuples
-    return [(param.split(': ')[0], float(param.split(': ')[1][1:-1])) for param in param_list]
+    return [(param.split(': ')[0], float(param.split(': ')[1])) for param in param_list]
+    # return [(param.split(': ')[0], float(param.split(': ')[1][1:-1])) for param in param_list]
 
 def read_simgroup(fparam):
     lines = fio.clean_lines(fparam)
@@ -102,9 +103,9 @@ def gen_expmts(f_in):
         print "Couldn't get a handle on expmts"
         return 0
 
+# class controlling multiple simulation files (.param)
 class exp_params():
     def __init__(self, f_psim):
-    # def __init__(self, p_all_input):
         # read in params from a file
         p_all_input = self.read_sim(f_psim)
 

@@ -1,13 +1,14 @@
 # spikefn.py - dealing with spikes
 #
-# v 1.2.31
-# 2012-11-05 (SL: added psth method and merged split functions, some other stuff)
-# last major: (SL: Calculating poisson events, too)
+# v 1.4.2
+# rev 2012-11-09 (SL: Added a hist bin optimization function that is/isn't used)
+# last major: (SL: added psth method and merged split functions, some other stuff)
 
 import fileio as fio
 import numpy as np
 import itertools as it
 
+# meant as a class for ONE cell type
 class Spikes():
     def __init__(self, s_all, ranges):
         self.r = ranges
@@ -55,6 +56,39 @@ def split_extrand(s, gid_dict, celltype, exttype):
     gid_exttype_cell = [gid + gid_exttype_start for gid in gid_dict[celltype]]
 
     return Spikes(s, gid_exttype_cell)
+
+# histogram bin optimization
+# Shimazaki and Shinomoto, Neural Comput, 2007
+def hist_bin_opt(x, N_trials):
+    bin_checks = np.linspace(10, 150, 15)
+    costs = np.zeros(len(bin_checks))
+
+    i = 0
+    # this might be vectorizable in np
+    for n_bins in bin_checks:
+        # use np.histogram to do the numerical minimization
+        pdf, bin_edges = np.histogram(x, n_bins)
+
+        # calculate bin width
+        # some discrepancy here but should be fine
+        w_bin = np.unique(np.diff(bin_edges))
+        if len(w_bin) > 1:
+            w_bin = w_bin[0]
+
+        # calc mean and var
+        kbar = np.mean(pdf)
+        kvar = np.var(pdf)
+
+        # calc cost
+        costs[i] = (2*kbar - kvar) / (N_trials * w_bin)**2
+        i += 1
+
+    # find the bin size corresponding to a minimization of the costs
+    bin_opt_list = bin_checks[costs.min() == costs]
+    bin_opt = bin_opt_list[0]
+
+    print bin_opt
+    return bin_opt
 
 # not "purely" from files
 def spikes_from_file(gid_dict, fspikes):

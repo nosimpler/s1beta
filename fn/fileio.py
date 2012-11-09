@@ -1,12 +1,12 @@
 # fileio.py - general file input/output functions
 #
-# v 1.4.1
-# rev 2012-11-07 (MS: For now, changed rawspec file type to .npz)
-# last rev: (SL: strips prefixes, adds file_match to OutputDataPaths class)
+# v 1.4.2
+# rev 2012-11-09 (SL: Now processing sublists of files based on num procs)
+# last rev: (MS: For now, changed rawspec file type to .npz)
 
 import datetime, fnmatch, os, shutil, sys
 import itertools as it
-import subprocess
+import subprocess, multiprocessing
 
 # Cleans input files
 def clean_lines(file):
@@ -33,6 +33,7 @@ def file_spike_tmp(dproj):
     return file_spikes
 
 # this is ugly, potentially. sorry, future
+# i.e will change when the file name format changes
 def strip_extprefix(filename):
     f_raw = filename.split("/")[-1]
     f = f_raw.split(".")[0].split("-")[:-1]
@@ -44,13 +45,18 @@ def strip_extprefix(filename):
     return ext_prefix
 
 # Get the data files matching file_ext in this directory
-def file_match(dsearch, file_ext):
+# this function traverses ALL directories
+# local=1 makes the search local and not recursive
+def file_match(dsearch, file_ext, local=0):
     file_list = []
 
-    if os.path.exists(dsearch):
-        for root, dirnames, filenames in os.walk(dsearch):
-            for fname in fnmatch.filter(filenames, '*'+file_ext):
-                file_list.append(os.path.join(root, fname))
+    if not local:
+        if os.path.exists(dsearch):
+            for root, dirnames, filenames in os.walk(dsearch):
+                for fname in fnmatch.filter(filenames, '*'+file_ext):
+                    file_list.append(os.path.join(root, fname))
+    else:
+        file_list = [os.path.join(dsearch, file) for file in os.listdir(dsearch) if file.endswith(file_ext)]
 
     # sort file list? untested
     file_list.sort()
@@ -75,6 +81,8 @@ class SimulationPaths():
     def __init__(self, dsim):
         self.dsim = dsim
 
+        self.fparam = file_match(dsim, '.param')
+
         # straight up copy from below
         self.datatypes = {
             'rawspk': '-spk.txt',
@@ -87,6 +95,7 @@ class SimulationPaths():
         }
         self.filelists = self.__getfiles()
         self.dfigs = self.__dfigs_create()
+        self.expnames = self.__get_exp_names()
 
     # grab lists of non-fig files
     def __getfiles(self):
@@ -105,6 +114,30 @@ class SimulationPaths():
             'dipole': os.path.join(self.dsim, 'figdpl'),
             'spec': os.path.join(self.dsim, 'figspec'),
         }
+
+    def __get_exp_names(self):
+        expnames = []
+        # Reads the unique experiment names
+        for file in self.filelists['param']:
+            # get the parts of the name we care about
+            parts = file.split('/')[-1].split('.')[0].split('-')[:2]
+            name = parts[0] + '-' + parts[1]
+
+            if name not in expnames:
+                expnames.append(name)
+
+        return expnames
+
+    def exp_files_of_type(self, datatype):
+        # create dict of experiments
+        d = dict.fromkeys(self.expnames)
+
+        # create file lists that match the dict keys for only files for this experiment
+        # this all would be nicer with a freaking folder
+        for key in d:
+            d[key] = [file for file in self.filelists[datatype] if key in file.split("/")[-1]]
+
+        return d
 
 # creates data dirs and a dictionary of useful types
 class OutputDataPaths():
@@ -211,21 +244,29 @@ def subdir_move(dir_out, name_dir, file_pattern):
 # currently used only minimally in epscompress
 # need to figure out how to change argument list in cmd as below
 def cmds_runmulti(cmdlist):
+    n_threads = multiprocessing.cpu_count()
+    list_runs = [cmdlist[i:i+n_threads] for i in range(0, len(cmdlist), n_threads)]
+
+    # open devnull for writing extraneous output
     with open(os.devnull, 'w') as devnull:
-        procs = [subprocess.Popen(cmd, stdout=devnull, stderr=devnull) for cmd in cmdlist]
-        for proc in procs:
-            proc.wait()
+        for sublist in list_runs:
+            procs = [subprocess.Popen(cmd, stdout=devnull, stderr=devnull) for cmd in sublist]
+
+            for proc in procs:
+                proc.wait()
 
 # list spike raster eps files and then rasterize them to HQ png files, lossless compress, 
 # reencapsulate as eps, and remove backups when successful
-def epscompress(dfig_spk, fext_figspk):
+def epscompress(dfig_spk, fext_figspk, local=0):
     cmds_gs = []
     cmds_opti = []
     cmds_encaps = []
 
+    n_threads = multiprocessing.cpu_count()
+
     # lists of eps files and corresponding png files
     # fext_figspk, dfig_spk = fileinfo['figspk']
-    epslist = file_match(dfig_spk, fext_figspk)
+    epslist = file_match(dfig_spk, fext_figspk, local)
     pnglist = [f.replace('.eps', '.png') for f in epslist]
     epsbackuplist = [f.replace('.eps', '.bak.eps') for f in epslist]
 
@@ -235,16 +276,17 @@ def epscompress(dfig_spk, fext_figspk):
         cmds_opti.append(('optipng', pngfile))
         cmds_encaps.append(('convert %s eps3:%s' % (pngfile, epsfile)))
 
-    # create procs list and run
-    procs_gs = [subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE) for cmd in cmds_gs]
-    for proc in procs_gs:
-        proc.wait()
+    # create procs list of manageable lists and run
+    runs_gs = [cmds_gs[i:i+n_threads] for i in range(0, len(cmds_gs), n_threads)]
+
+    # run each sublist differently
+    for sublist in runs_gs:
+        procs_gs = [subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE) for cmd in sublist]
+        for proc in procs_gs:
+            proc.wait()
 
     # create optipng procs list and run
     cmds_runmulti(cmds_opti)
-    # procs_opti = [subprocess.Popen(cmd) for cmd in cmds_opti]
-    # for proc in procs_opti:
-    #     proc.wait()
 
     # backup original eps files temporarily
     for epsfile, epsbakfile in it.izip(epslist, epsbackuplist):
@@ -252,9 +294,12 @@ def epscompress(dfig_spk, fext_figspk):
 
     # recreate original eps files, now encapsulated, optimized rasters
     # cmds_runmulti(cmds_encaps)
-    procs_encaps = [subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE) for cmd in cmds_encaps]
-    for proc in procs_encaps:
-        proc.wait()
+    runs_encaps = [cmds_encaps[i:i+n_threads] for i in range(0, len(cmds_encaps), n_threads)]
+    for sublist in runs_encaps:
+        procs_encaps = [subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE) for cmd in sublist]
+
+        for proc in procs_encaps:
+            proc.wait()
 
     # remove all of the backup files
     for epsbakfile in epsbackuplist:

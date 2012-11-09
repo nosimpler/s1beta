@@ -1,8 +1,8 @@
 # cli.py - routines for the command line interface console sssh.py
 #
-# v 1.4.0
-# rev 2012-11-07 (SL: Minor)
-# last major: (MS: updated replot to use new data directory names)
+# v 1.4.2
+# rev 2012-11-09 (SL: Added psth to qnd function)
+# last major: (SL: Minor)
 
 from cmd import Cmd
 from datetime import datetime
@@ -16,6 +16,7 @@ import readline as rl
 import paramrw
 import itertools as it
 from praster import praster
+from ppsth import ppsth
 
 # def handler(signum, frame):
 #     print '\nKeyboardInterrupt'
@@ -226,7 +227,9 @@ class Console(Cmd):
         fio.epscompress(dfig_spk, fext_figspk)
 
     def do_psth(self, args):
-        pass
+        # self.do_setdate('2012-11-07')
+        # self.do_load('inhtone-001')
+        ppsth(self.simpaths)
 
     def do_summary(self, args):
         epslist = fio.file_match(self.simpaths.dfigs['spikes'], '.eps')
