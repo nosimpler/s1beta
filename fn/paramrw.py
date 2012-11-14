@@ -1,8 +1,8 @@
 # paramrw.py - routines for reading the param files
 #
-# v 1.4.2
-# rev 2012-11-09 (SL: Fixed the imported but never used find_param function)
-# last major: (SL: Implemented N_Trials)
+# v 1.4.3
+# rev 2012-11-14 (SL: changed ExpParams() name
+# last major: (SL: Fixed the imported but never used find_param function)
 
 import re
 import fileio as fio
@@ -104,7 +104,7 @@ def gen_expmts(f_in):
         return 0
 
 # class controlling multiple simulation files (.param)
-class exp_params():
+class ExpParams():
     def __init__(self, f_psim):
         # read in params from a file
         p_all_input = self.read_sim(f_psim)
@@ -218,7 +218,6 @@ class exp_params():
 
             except TypeError:
                 key_dict['static_keys'].append(key)
-                # static_keys.append(key)
 
         return key_dict
 

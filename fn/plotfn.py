@@ -1,8 +1,8 @@
 # plotfn.py - pall and possibly other plot routines
 #
-# v 1.4.0
-# rev 2012-11-07 (SL: Slightly streamlined, mostly file based, reads *actual* files)
-# last major: (MS: Now loads raw spec data and uses pspec() to plot spec data)
+# v 1.4.3
+# rev 2012-11-14 (SL: Minor)
+# last major: (SL: Slightly streamlined, mostly file based, reads *actual* files)
 
 from pdipole import pdipole
 from spec import pspec
@@ -15,7 +15,6 @@ from multiprocessing import Pool
 
 # terrible handling of variables
 def pkernel(ddir, f_param, f_spk, f_dpl, f_spec, key_types):
-# def pkernel(ddir, p_dict, f_spk, f_dpl, f_spec, key_types, gid_dict, tstop):
     gid_dict, p_dict = paramrw.read(f_param)
     tstop = p_dict['tstop']
 

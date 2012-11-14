@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # s1run.py - primary run function for s1 project
 #
-# v 1.4.0
-# rev 2012-11-07 (SL: Implemented N_trials)
-# last major: (SL: reading params based on flat non-python file)
+# v 1.4.3
+# rev 2012-11-14 (SL: changed a class name for ExpParams)
+# last major: (SL: Implemented N_trials)
 
 import os
 import time
@@ -64,7 +64,7 @@ def exec_runsim(f_psim):
     rank = int(pc.id())
 
     # creates p_exp.sim_prefix and other param structures
-    p_exp = paramrw.exp_params(f_psim)
+    p_exp = paramrw.ExpParams(f_psim)
 
     # project directory
     dproj = '/repo/data/s1'

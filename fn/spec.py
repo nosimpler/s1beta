@@ -1,8 +1,8 @@
 # spec.py - Average time-frequency energy representation using Morlet wavelet method
 #
-# v 1.4.1
-# rev 2012-11-07 (MS: For now, raw spec data saved as .npz file - makes plotting easier)
-# last major: (SL: Reading and writing file names more standardly)
+# v 1.4.3
+# rev 2012-11-14 (SL: Minor)
+# last major: (MS: For now, raw spec data saved as .npz file - makes plotting easier)
 
 import os
 import numpy as np
@@ -49,8 +49,6 @@ class MorletSpec():
             # Write data to file
             np.savez_compressed(fdata_spec, time = self.timevec, freq = self.freqvec, TFR = self.TFR)
             # np.savetxt(file_write, self.TFR, fmt = "%5.4f")
-
-            # self.plot()
 
         else:
             print "tstop not greater than 150ms. Skipping wavelet analysis."
@@ -190,12 +188,10 @@ def spec_analysis(ddir, p_exp):
     # create list of spec output names
     sim_prefix_list = [fio.strip_extprefix(fparam) for fparam in param_list]
     spec_list = [ddir.create_filename('rawspec', sim_prefix) for sim_prefix in sim_prefix_list]
-    # spec_names = [ddir.create_filename('rawspec', p_exp.sim_prefix + '-%03d' % i) for i in range(p_exp.N_sims)]
 
     pl = Pool()
     for fparam, fdpl, fspec in it.izip(param_list, dpl_list, spec_list):
         pl.apply_async(MorletSpec, (fparam, fdpl, fspec))
-        # pl.apply_async(MorletSpec, (file_dpl, file_spec, p_dict))
  
     pl.close()
     pl.join()

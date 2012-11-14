@@ -1,8 +1,8 @@
 # axes_create.py - simple axis creation
 #
-# v 1.4.2
-# rev 2012-11-09 (SL: Added fig_psth)
-# last major: (MS: Added class fig_spec)
+# v 1.4.3
+# rev 2012-11-14 (SL: added fig_psthgrid)
+# last major: (SL: Added fig_psth)
 
 # usage:
 # testfig = fig_std()
@@ -143,6 +143,71 @@ class fig_psth():
     def close(self):
         plt.close(self.f)
 
+# create a grid of psth figures, and rasters(?)
+class fig_psthgrid():
+    def __init__(self, N_rows, N_cols, tstop):
+        self.tstop = tstop
+
+        # changes over rows and cols to inches (?) and scales
+        self.f = plt.figure(figsize=(2*N_cols, 2*N_rows))
+        font_prop = {'size': 8}
+        mpl.rc('font', **font_prop)
+
+        self.grid_list = []
+        self.__create_grids(N_rows, N_cols)
+        # self.__create_grids(4, 5)
+
+        # axes are a list of lists here
+        self.ax = []
+        self.__create_axes()
+
+    def __create_grids(self, N_rows, gs_cols):
+        gs_rows = 3
+        self.grid_list = [gridspec.GridSpec(gs_rows, gs_cols) for i in range(N_rows)]
+        ytop = 0.075
+        ybottom = 0.05
+        ypad = 0.02
+        ypanel = (1 - ytop - ybottom - ypad*(N_rows-1)) / N_rows
+        print ypanel
+
+        i = 0
+        ystart = 1-ytop
+
+        # used to pre-calculate this, but whatever
+        for grid in self.grid_list:
+            # start at the top to order the rows down
+            grid.update(wspace=0.05, hspace=0., bottom=ystart-ypanel, top=ystart)
+            # grid.update(wspace=0.05, hspace=0., bottom=0.05, top=0.95)
+            ystart -= ypanel+ypad
+            i += 1
+
+    # creates a list of lists of axes
+    def __create_axes(self):
+        for grid in self.grid_list:
+            ax_list = []
+            for i in range(grid._ncols):
+                ax_list.append(self.f.add_subplot(grid[:, i:i+1]))
+                ax_list[-1].set_yticks([0, 100., 200., 300., 400., 500.])
+
+                # clear y-tick labels for everyone but the bottom
+                for ax in ax_list:
+                    ax.set_xticklabels('')
+
+            # clear y-tick labels for everyone but the left side
+            for ax in ax_list[1:]:
+                ax.set_yticklabels('')
+            self.ax.append(ax_list)
+
+        # set a timescale for just the last axis
+        self.ax[-1][-1].set_xticks([0., 250., 500.])
+        self.ax[-1][-1].set_xticklabels([0., 250., 500.])
+
+        # testing usage of string in title
+        # self.ax[0][0].set_title(r'$\lambda_i$ = %d' % 0)
+
+    def close(self):
+        plt.close(self.f)
+
 def testfn():
     x = np.random.rand(100)
 
@@ -155,8 +220,11 @@ def testfn():
     # testfig = fig_spec()
     # testfig.ax0.plot(x)
 
-    testfig = fig_psth(100)
-    testfig.ax['L5_extpois'].plot(x)
+    # testfig = fig_psth(100)
+    # testfig.ax['L5_extpois'].plot(x)
+
+    testfig = fig_psthgrid(5, 6, 100)
+    # testfig.ax[0][0].plot(x)
 
     plt.savefig('testing.png')
     testfig.close()

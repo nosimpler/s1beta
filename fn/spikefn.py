@@ -1,8 +1,8 @@
 # spikefn.py - dealing with spikes
 #
-# v 1.4.2
-# rev 2012-11-09 (SL: Added a hist bin optimization function that is/isn't used)
-# last major: (SL: added psth method and merged split functions, some other stuff)
+# v 1.4.3
+# rev 2012-11-14 (SL: manually changed the range of the bin checks ... )
+# last major: (SL: Added a hist bin optimization function that is/isn't used)
 
 import fileio as fio
 import numpy as np
@@ -60,7 +60,7 @@ def split_extrand(s, gid_dict, celltype, exttype):
 # histogram bin optimization
 # Shimazaki and Shinomoto, Neural Comput, 2007
 def hist_bin_opt(x, N_trials):
-    bin_checks = np.linspace(10, 150, 15)
+    bin_checks = np.linspace(150, 300, 16)
     costs = np.zeros(len(bin_checks))
 
     i = 0

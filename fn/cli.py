@@ -1,8 +1,8 @@
 # cli.py - routines for the command line interface console sssh.py
 #
-# v 1.4.2
-# rev 2012-11-09 (SL: Added psth to qnd function)
-# last major: (SL: Minor)
+# v 1.4.3
+# rev 2012-11-14 (SL: Added some plot functions, not following my own bp)
+# last major: (SL: Added psth to qnd function)
 
 from cmd import Cmd
 from datetime import datetime
@@ -16,7 +16,8 @@ import readline as rl
 import paramrw
 import itertools as it
 from praster import praster
-from ppsth import ppsth
+from pdipole import pdipole
+from ppsth import ppsth, ppsth_grid
 
 # def handler(signum, frame):
 #     print '\nKeyboardInterrupt'
@@ -50,6 +51,13 @@ class Console(Cmd):
 
     def do_giddict(self, args):
         pass
+
+    def do_debug(self, args):
+        """Qnd function to test many other functions
+        """
+        self.do_setdate('2012-11-11')
+        self.do_load('inhtone-000')
+        self.do_psthgrid()
 
     def do_open(self, args):
         """Attempts to open a new file of params
@@ -204,6 +212,32 @@ class Console(Cmd):
         else:
             return self.dlist
 
+    def do_pngoptimize(self, args):
+        """Optimizes png figures based on current directory
+        """
+        fio.pngoptimize(self.simpaths.dsim)
+
+    def do_pdipole(self, args):
+        """Regenerates plots in given directory
+        """
+        dfig_dpl = self.simpaths.dfigs['dipole']
+        fparam_list = self.simpaths.filelists['param']
+        fdpl_list = self.simpaths.filelists['rawdpl']
+
+        p_exp = paramrw.ExpParams(self.simpaths.fparam[0])
+        key_types = p_exp.get_key_types()
+
+        pool = multiprocessing.Pool()
+        for fparam, fdpl in it.izip(fparam_list, fdpl_list):
+            # just get the p dict and not the gid dict
+            p = paramrw.read(fparam)[1]
+            # pdipole(fdpl, dfig_dpl, p, key_types)
+            pool.apply_async(pdipole, (fdpl, dfig_dpl, p, key_types))
+
+        pool.close()
+        pool.join()
+
+
     def do_replot(self, args):
         """Regenerates plots in given directory
         """
@@ -226,6 +260,9 @@ class Console(Cmd):
 
         fio.epscompress(dfig_spk, fext_figspk)
 
+    def do_psthgrid(self, args):
+        ppsth_grid(self.simpaths)
+
     def do_psth(self, args):
         # self.do_setdate('2012-11-07')
         # self.do_load('inhtone-001')
@@ -245,11 +282,15 @@ class Console(Cmd):
         """
         try:
             # self.expmts is the kain expmt subfolder
-            cmd = ['mpiexec -n 4 ./s1run.py']
-            # cmd = ['mpiexec -n %i ./s1run.py' % self.nprocs]
-            proc = subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            proc.wait()
-            # self.do_load(self.dir_data)
+            # cmd_list = ['mpiexec -n 4 ./s1run.py param/debug.param']
+            # cmd_list.append('mpiexec -n 4 ./s1run.py param/debug.param')
+            cmd_list = []
+            cmd_list.append('mpiexec -n 8 ./s1run.py param/inhtone.param')
+            cmd_list.append('mpiexec -n 8 ./s1run.py param/test.param')
+
+            for cmd in cmd_list:
+                proc = subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                proc.wait()
 
         except (KeyboardInterrupt):
             print "Caught a break"

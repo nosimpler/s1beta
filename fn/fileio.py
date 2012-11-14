@@ -1,8 +1,8 @@
 # fileio.py - general file input/output functions
 #
-# v 1.4.2
-# rev 2012-11-09 (SL: Now processing sublists of files based on num procs)
-# last rev: (MS: For now, changed rawspec file type to .npz)
+# v 1.4.3
+# rev 2012-11-14 (SL: added separate optipng function for post proc)
+# last rev: (SL: Now processing sublists of files based on num procs)
 
 import datetime, fnmatch, os, shutil, sys
 import itertools as it
@@ -80,7 +80,6 @@ def dir_create(d):
 class SimulationPaths():
     def __init__(self, dsim):
         self.dsim = dsim
-
         self.fparam = file_match(dsim, '.param')
 
         # straight up copy from below
@@ -93,6 +92,7 @@ class SimulationPaths():
             'figspec': '-spec.eps',
             'param': '-param.txt'
         }
+
         self.filelists = self.__getfiles()
         self.dfigs = self.__dfigs_create()
         self.expnames = self.__get_exp_names()
@@ -108,6 +108,7 @@ class SimulationPaths():
 
         return filelists
 
+    # simple path creations for figures
     def __dfigs_create(self):
         return {
             'spikes': os.path.join(self.dsim, 'figspk'),
@@ -115,6 +116,7 @@ class SimulationPaths():
             'spec': os.path.join(self.dsim, 'figspec'),
         }
 
+    # these are the "experiment" names (versus individual trials)
     def __get_exp_names(self):
         expnames = []
         # Reads the unique experiment names
@@ -254,6 +256,13 @@ def cmds_runmulti(cmdlist):
 
             for proc in procs:
                 proc.wait()
+
+# small kernel for png optimization based on fig directory
+def pngoptimize(dfig):
+    local = 0
+    pnglist = file_match(dfig, '.png', local)
+    cmds_opti = [('optipng', pngfile) for pngfile in pnglist]
+    cmds_runmulti(cmds_opti)
 
 # list spike raster eps files and then rasterize them to HQ png files, lossless compress, 
 # reencapsulate as eps, and remove backups when successful

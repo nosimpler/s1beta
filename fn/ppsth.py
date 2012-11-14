@@ -1,8 +1,8 @@
 # ppsth.py - Plots aggregate psth of all trials in an "experiment"
 #
-# v 1.4.2
-# rev 2012-11-09 (SL: created)
-# last rev:
+# v 1.4.3
+# rev 2012-11-14 (SL: Added ppsth_grid, changing around some bin stuff)
+# last rev: (SL: created)
 
 import numpy as np
 import itertools as it
@@ -10,7 +10,117 @@ import matplotlib.pyplot as plt
 import os
 import paramrw, spikefn
 import fileio as fio
-from axes_create import fig_psth
+from axes_create import fig_psth, fig_psthgrid
+
+def ppsth_grid(simpaths):
+    # get filename lists in dictionaries of experiments
+    dict_exp_param = simpaths.exp_files_of_type('param')
+    dict_exp_spk = simpaths.exp_files_of_type('rawspk')
+
+    # recreate the ExpParams object used in the simulation
+    p_exp = paramrw.ExpParams(simpaths.fparam[0])
+
+    # need number of lambda vals (cols) and number of sigma vals (rows)
+    try:
+        N_rows = len(p_exp.p_all['L2Pyr_Gauss_A'])
+    except TypeError:
+        N_rows = 1
+
+    try:
+        N_cols = len(p_exp.p_all['L2Basket_Pois_lamtha'])
+    except TypeError:
+        N_cols = 1
+
+    tstop = p_exp.p_all['tstop']
+
+    print N_rows, N_cols, tstop
+
+    # ugly but slightly less ugly than the index arithmetic i had planned. muahaha
+    f = fig_psthgrid(N_rows, N_cols, tstop)
+    # N_rows = len(f.ax)
+    # N_cols = len(f.ax[0])
+
+    # create coordinates for axes
+    # this is backward-looking for a reason!
+    axes_coords = [(j, i) for i, j in it.product(np.arange(N_cols), np.arange(N_rows))]
+
+    if len(simpaths.expnames) != len(axes_coords):
+        print "um ... see ppsth.py"
+
+    # assumes a match between expnames and the keys of the previous dicts
+    for expname, axis_coord in it.izip(simpaths.expnames, axes_coords):
+        # get the tstop
+        exp_param_list = dict_exp_param[expname]
+        exp_spk_list = dict_exp_spk[expname]
+        gid_dict, p = paramrw.read(exp_param_list[0])
+        tstop = p['tstop']
+        lamtha = p['L2Basket_Pois_lamtha']
+        sigma = p['L2Pyr_Gauss_A']
+
+        # these are total spike dicts for the experiments
+        s_L2Pyr_list = []
+        # s_L5Pyr_list = []
+
+        # iterate through params and spikes for a given experiment
+        for fparam, fspk in it.izip(dict_exp_param[expname], dict_exp_spk[expname]):
+            # get gid dict
+            gid_dict, p = paramrw.read(fparam)
+
+            # get spike dict
+            s_dict = spikefn.spikes_from_file(gid_dict, fspk)
+
+            # add a new entry to list for each different file assoc with an experiment
+            s_L2Pyr_list.append(np.array(list(it.chain.from_iterable(s_dict['L2_pyramidal'].spike_list))))
+            # s_L5Pyr_list.append(np.array(list(it.chain.from_iterable(s_dict['L5_pyramidal'].spike_list))))
+
+        # now aggregate over all spikes
+        s_L2Pyr = np.array(list(it.chain.from_iterable(s_L2Pyr_list)))
+        # s_L5Pyr = np.array(list(it.chain.from_iterable(s_L5Pyr_list)))
+
+        # optimize bins, currently unused for comparison reasons!
+        N_trials = len(fparam)
+        bin_L2 = 250
+        # bin_L5 = 120
+        # bin_L2 = spikefn.hist_bin_opt(s_L2Pyr, N_trials)
+        # bin_L5 = spikefn.hist_bin_opt(s_L5Pyr, N_trials)
+
+        r = axis_coord[0]
+        c = axis_coord[1]
+        # create standard fig and axes
+        f.ax[r][c].hist(s_L2Pyr, bin_L2, facecolor='g', alpha=0.75)
+
+        if r == 0:
+            f.ax[r][c].set_title(r'$\lambda_i$ = %d' % lamtha)
+
+        if c == 0:
+            f.ax[r][c].set_ylabel(r'$A_{gauss}$ = %.3e' % sigma)
+            # f.ax[r][c].set_ylabel(r'$\sigma_{gauss}$ = %d' % sigma)
+
+        # normalize these axes
+        y_L2 = f.ax[r][c].get_ylim()
+        # y_L2 = f.ax['L2_psth'].get_ylim()
+
+        print expname, lamtha, sigma, r, c, y_L2[1]
+
+        f.ax[r][c].set_ylim((0, 250.))
+        # f.ax['L2_psth'].set_ylim((0, 450.))
+        # f.ax['L5_psth'].set_ylim((0, 450.))
+
+        # spikefn.spike_png(f.ax['L2'], s_dict_L2)
+        # spikefn.spike_png(f.ax['L5'], s_dict_L5)
+        # spikefn.spike_png(f.ax['L2_extpois'], s_dict_L2_extpois)
+        # spikefn.spike_png(f.ax['L2_extgauss'], s_dict_L2_extgauss)
+        # spikefn.spike_png(f.ax['L5_extpois'], s_dict_L5_extpois)
+        # spikefn.spike_png(f.ax['L5_extgauss'], s_dict_L5_extgauss)
+
+    # testfig.ax0.plot(t_vec, dp_total)
+    fig_name = os.path.join(simpaths.dsim, 'aggregate.eps')
+
+    plt.savefig(fig_name)
+    f.close()
+
+    # run the compression
+    fio.epscompress(simpaths.dsim, '.eps', 1)
 
 # will take a directory, find the files bin all the psth's, plot a representative spike raster
 def ppsth(simpaths):
@@ -85,10 +195,10 @@ def ppsth(simpaths):
 
         # optimize bins, currently unused for comparison reasons!
         N_trials = len(fparam)
-        bin_L2 = 120
-        bin_L5 = 120
-        # bin_L2 = spikefn.hist_bin_opt(s_L2Pyr, N_trials)
-        # bin_L5 = spikefn.hist_bin_opt(s_L5Pyr, N_trials)
+        # bin_L2 = 120
+        # bin_L5 = 120
+        bin_L2 = spikefn.hist_bin_opt(s_L2Pyr, N_trials)
+        bin_L5 = spikefn.hist_bin_opt(s_L5Pyr, N_trials)
 
         # create standard fig and axes
         f = fig_psth(400.)
@@ -101,8 +211,8 @@ def ppsth(simpaths):
 
         print y_L2, y_L5
 
-        f.ax['L2_psth'].set_ylim((0, 200.))
-        f.ax['L5_psth'].set_ylim((0, 500.))
+        # f.ax['L2_psth'].set_ylim((0, 450.))
+        # f.ax['L5_psth'].set_ylim((0, 450.))
 
         spikefn.spike_png(f.ax['L2'], s_dict_L2)
         spikefn.spike_png(f.ax['L5'], s_dict_L5)
