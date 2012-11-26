@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # s1run.py - primary run function for s1 project
 #
-# v 1.4.3
-# rev 2012-11-14 (SL: changed a class name for ExpParams)
-# last major: (SL: Implemented N_trials)
+# v 1.4.4
+# rev 2012-11-26 (MS: Removed setting of baseline voltage in nrn.finitialize())
+# last major: (SL: changed a class name for ExpParams)
 
 import os
 import time
@@ -155,7 +155,8 @@ def exec_runsim(f_psim):
 
             # set state variables if they have been changed since nrn.finitialize
             # and run the solver
-            nrn.finitialize(-64.7)
+            nrn.finitialize()
+            # nrn.finitialize(-64.7)
             nrn.fcurrent()
             nrn.frecord_init()
 

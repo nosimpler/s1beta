@@ -1,8 +1,8 @@
 # params_default.py - list of default params and values
 #
-# v 1.4.0
-# rev 2012-11-07 (SL: Added param for N_trials)
-# last major: (SL: Added param for poisson lamtha per cell type)
+# v 1.4.4
+# rev 2012-11-26 (MS: Added param to set standard deviation of external alpha feed randomness)
+# last major: (SL: Added param for N_trials)
 
 # flat file of default values
 # tuples for different "experiments"
@@ -72,6 +72,7 @@ params_default = {
     't0_input': 150.,
     'f_input_prox': 10.,
     'f_input_dist': 10.,
+    'f_stand_dev': 20.,
 
     # times for evoked responses
     't_evoked_prox_early': 454.,

@@ -1,8 +1,8 @@
 # class_net.py - establishes the Network class and related methods
 #
-# v 1.2.26
-# rev 2012-11-01 (SL: Added Poisson distributed inputs to all cells)
-# last major: (SL: tstop given to extfeeds)
+# v 1.4.4
+# rev 2012-11-26 (MS: Added __state_init() to initialize cells to baseline potential)
+# last major: (SL: Added Poisson distributed inputs to all cells)
 
 import itertools as it
 import numpy as np
@@ -85,6 +85,7 @@ class Network():
         self.extgauss_list = []
         self.extpois_list = []
         self.__create_all_src()
+        self.__state_init()
 
         # parallel network connector
         self.__parnet_connect()
@@ -352,3 +353,33 @@ class Network():
                 v.record(self.cells_list[n].soma(0.5)._ref_v)
 
                 return v
+
+    def __state_init(self):
+        for cell in self.cells_list:
+           seclist = nrn.SectionList()
+           seclist.wholetree(sec = cell.soma)
+           
+        for sect in seclist:
+            for seg in sect:
+                if cell.celltype == 'L2_pyramidal':
+                    seg.v = -71.46
+
+                elif cell.celltype == 'L5_pyramidal':
+                    if sect.name() == 'L5Pyr_apical_1':
+                        seg.v = -71.32
+
+                    elif sect.name() == 'L5Pyr_apical_2':
+                        seg.v = -69.08
+
+                    elif sect.name() == 'L5Pyr_apical_tuft':
+                        seg.v = -67.30
+
+                    else:
+                        seg.v = -72.
+
+                elif cell.celltype == 'L2_basket':
+                    seg.v = -64.9737
+
+                elif cell.celltype == 'L5_basket':
+                    seg.v = -64.9737
+                 

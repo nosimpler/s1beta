@@ -1,8 +1,8 @@
 # class_feed.py - establishes FeedExt(), FeedProximal() and FeedDistal()
 #
-# v 1.2.26
-# rev 2012-11-01 (SL: added check for lamtha = 0.)
-# last major: (SL: Added ParFeedExtPois())
+# v 1.4.4
+# rev 2012-11-26 (MS: standard deviation used in ParFeedExt() now set in param file)
+# last major: (SL: added check for lamtha = 0.)
 
 import numpy as np
 import itertools as it
@@ -103,6 +103,7 @@ class ParFeedExt():
         # t0 is always defined
         self.t0 = p['t0']
         self.f_input = p['f_input']
+        self.stdev = p['stdev']
 
         # # if f_input is 0, then this is a one-time feed
         # if 'stim' in p.keys():
@@ -135,7 +136,7 @@ class ParFeedExt():
         array_isi = np.arange(self.t0, nrn.tstop, 1000./self.f_input)
 
         # array of single stimulus times -- no doublets 
-        array_times = np.random.normal(np.repeat(array_isi, 10), 20)
+        array_times = np.random.normal(np.repeat(array_isi, 10), self.stdev)
 
         # Two arrays store doublet times
         array_times_low = array_times - 5

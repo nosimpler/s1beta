@@ -67,6 +67,7 @@ gbar_L2Pyr_L5Basket: 2.5e-4
 t0_input: 150.
 f_input_prox: 10.
 f_input_dist: 10.
+f_stand_dev: 20.
 
 # times for evoked responses
 t_evoked_prox_early: 2000.

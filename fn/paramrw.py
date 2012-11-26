@@ -1,8 +1,8 @@
 # paramrw.py - routines for reading the param files
 #
-# v 1.4.3
-# rev 2012-11-14 (SL: changed ExpParams() name
-# last major: (SL: Fixed the imported but never used find_param function)
+# v 1.4.4
+# rev 2012-11-26 (MS: key added to dictionaries in create_pext() to set standard deviation)
+# last major: (SL: changed ExpParams() name)
 
 import re
 import fileio as fio
@@ -240,6 +240,7 @@ def create_pext(p, tstop):
     feed_prox = {
         'f_input': p['f_input_prox'],
         't0': p['t0_input'],
+        'stdev': p['f_stand_dev'],
         'L2Pyr': (4e-5, 0.1),
         'L5Pyr': (4e-5, 1.),
         'L2Basket': (8e-5, 0.1),
@@ -252,6 +253,7 @@ def create_pext(p, tstop):
 
     feed_dist = {
         'f_input': p['f_input_dist'],
+        'stdev': p['f_stand_dev'],
         't0': p['t0_input'],
         'L2Pyr': (4e-5, 5.),
         'L5Pyr': (4e-5, 5.),
