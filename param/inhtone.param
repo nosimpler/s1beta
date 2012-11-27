@@ -79,6 +79,7 @@ t_evoked_prox_late: 2000.
 t_evoked_dist: 2000.
 
 # analysis
+save_spec_data: 0
 spec_max_freq: 41.
 
 # Poisson input

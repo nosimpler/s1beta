@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # s1run.py - primary run function for s1 project
 #
-# v 1.4.4
-# rev 2012-11-26 (MS: Removed setting of baseline voltage in nrn.finitialize())
-# last major: (SL: changed a class name for ExpParams)
+# v 1.4.5
+# rev 2012-11-27 (MS: spec_analysis() returns list of spec data that is passed to plotfn.pall())
+# last major: (MS: Removed setting of baseline voltage in nrn.finitialize())
 
 import os
 import time
@@ -205,19 +205,21 @@ def exec_runsim(f_psim):
 
             t_start_analysis = time.time()
 
-            spec_analysis(ddir, p_exp)
+            spec_results = spec_analysis(ddir, p_exp)
 
             print "time: %4.4f s" % (time.time() - t_start_analysis)
+
             print "Plot ...",
 
             plot_start = time.time()
 
             # run plots and epscompress function
-            plotfn.pall(ddir, p_exp, net.gid_dict, nrn.tstop)
+            plotfn.pall(ddir, p_exp, spec_results, net.gid_dict, nrn.tstop)
             fext_figspk, dfig_spk = ddir.fileinfo['figspk']
             fio.epscompress(dfig_spk, fext_figspk)
 
             print "time: %4.4f s" % (time.time() - plot_start) 
+
         nrn.quit()
 
     else:

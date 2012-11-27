@@ -27,6 +27,7 @@ t_evoked_dist: 6000.
 # t_evoked_dist: 499.
 
 # analysis
+save_spec_data: 1
 spec_max_freq: 41.
 
 # numerics

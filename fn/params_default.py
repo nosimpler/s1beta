@@ -1,8 +1,8 @@
 # params_default.py - list of default params and values
 #
-# v 1.4.4
-# rev 2012-11-26 (MS: Added param to set standard deviation of external alpha feed randomness)
-# last major: (SL: Added param for N_trials)
+# v 1.4.5
+# rev 2012-11-27 (MS: Added param to toggle saving of rawspec data on and off)
+# last major: (MS: Added param to set standard deviation of external alpha feed randomness)
 
 # flat file of default values
 # tuples for different "experiments"
@@ -80,6 +80,7 @@ params_default = {
     't_evoked_dist': 499.,
 
     # analysis
+    'save_spec_data': 0,
     'spec_max_freq': 41.,
 
     # numerics

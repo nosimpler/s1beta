@@ -1,7 +1,7 @@
 # spec.py - Average time-frequency energy representation using Morlet wavelet method
 #
-# v 1.4.3
-# rev 2012-11-14 (SL: Minor)
+# v 1.4.5
+# rev 2012-11-27 (MS: Saving of raw spec data optional. Data for plotting stored in a list) 
 # last major: (MS: For now, raw spec data saved as .npz file - makes plotting easier)
 
 import os
@@ -19,6 +19,9 @@ from axes_create import fig_spec
 class MorletSpec():
     # def __init__(self, fparam, fdata, fdata_spec_output)
     def __init__(self, fparam, fdata, fdata_spec):
+        # Save variable portion of fdata_spec as identifying attribute
+        self.name = fdata_spec.split('/')[-1].split('.')[0]
+
         # function is called this way because paramrw.read() returns 2 outputs
         p_dict = paramrw.read(fparam)[1]
 
@@ -47,7 +50,8 @@ class MorletSpec():
             # self.TFR = np.vstack([self.timevec, self.TFR])
 
             # Write data to file
-            np.savez_compressed(fdata_spec, time = self.timevec, freq = self.freqvec, TFR = self.TFR)
+            if p_dict['save_spec_data']:
+                np.savez_compressed(fdata_spec, time = self.timevec, freq = self.freqvec, TFR = self.TFR)
             # np.savetxt(file_write, self.TFR, fmt = "%5.4f")
 
         else:
@@ -140,22 +144,28 @@ class MorletSpec():
 
         return S
 
-def pspec(file_name, dfig, p_dict, key_types):
+def pspec(dspec, dfig, p_dict, key_types):
+# def pspec(file_name, dfig, p_dict, key_types):
     # Load data from file. First row of array is time.
-    dspec = np.load(file_name)
+    # dspec = np.load(file_name)
     # dspec = np.loadtxt(open(file_name, 'rb'))
 
-    timevec = dspec['time']
-    freqvec = dspec['freq']
-    TFR = dspec['TFR']
+    timevec = dspec.timevec
+    freqvec = dspec.freqvec
+    TFR = dspec.TFR
+
+    # timevec = dspec['time']
+    # freqvec = dspec['freq']
+    # TFR = dspec['TFR']
 
     # timevec = dspec['TFR'][:, 0]
     # freqvec = np.arange(1, dspec['TFR'].shape[0])
     # TFR = np.delete(dspec['TFR'], (0), axis = 0)
 
     # Split to find file prefix
-    file_prefix = file_name.split('/')[-1].split('.')[0]
-    fig_name = os.path.join(dfig, file_prefix+'.png')
+    # file_prefix = file_name.split('/')[-1].split('.')[0]
+    # fig_name = os.path.join(dfig, file_prefix+'.png')
+    fig_name = os.path.join(dfig, dspec.name+'.png')
 
     # Plot data
     f = fig_spec()
@@ -174,6 +184,10 @@ def pspec(file_name, dfig, p_dict, key_types):
     plt.savefig(fig_name)
     f.close()
 
+spec_results = []
+def log_result(spec_obj):
+    spec_results.append(spec_obj)
+
 # Does spec analysis for all files in simulation directory
 def spec_analysis(ddir, p_exp):
     # param info
@@ -189,12 +203,16 @@ def spec_analysis(ddir, p_exp):
     sim_prefix_list = [fio.strip_extprefix(fparam) for fparam in param_list]
     spec_list = [ddir.create_filename('rawspec', sim_prefix) for sim_prefix in sim_prefix_list]
 
+    # create list that will store results of MorletSpec for all dipole files
+
     pl = Pool()
     for fparam, fdpl, fspec in it.izip(param_list, dpl_list, spec_list):
-        pl.apply_async(MorletSpec, (fparam, fdpl, fspec))
+        pl.apply_async(MorletSpec, (fparam, fdpl, fspec), callback = log_result)
  
     pl.close()
     pl.join()
+
+    return sorted(spec_results, key=lambda spec_obj: spec_obj.name)
 
     # for fparam, fdpl, fspec in it.izip(param_list, dpl_list, spec_list):
     #     MorletSpec(fparam, fdpl, fspec)
