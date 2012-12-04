@@ -1,6 +1,6 @@
 # paramrw.py - routines for reading the param files
 #
-# v 1.4.100
+# v 1.4.100a
 # rev 2012-12-04 (SL: added linspace capability to expmts)
 # last major: (SL: added experimental groups)
 
@@ -171,7 +171,6 @@ class ExpParams():
                         # param passed will strip away the curly braces and just pass the linspace
                         val_range = self.__expand_linspace(val[1:-1])
                     else:
-                        # val_list = val[1:-1].split(', ')
                         val_range = self.__expand_array(val)
 
                     # add the expmt_group param to the list if it's not already present
@@ -185,10 +184,6 @@ class ExpParams():
                 # interpret this as a list of vals
                 # type floats to a np array
                 elif val[0] is '[':
-                    # val_list = val[1:-1].split(', ')
-                    # val_range = np.array([float(item) for item in val_list])
-
-                    # p[param] = val_range
                     p[param] = self.__expand_array(val)
 
                 # interpret as a linspace
