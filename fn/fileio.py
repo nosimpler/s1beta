@@ -1,8 +1,8 @@
 # fileio.py - general file input/output functions
 #
-# v 1.4.3
-# rev 2012-11-14 (SL: added separate optipng function for post proc)
-# last rev: (SL: Now processing sublists of files based on num procs)
+# v 1.4.99
+# rev 2012-12-03 (SL: major changes to OutputDataPaths to accomodate experiments)
+# last rev: (SL: added separate optipng function for post proc)
 
 import datetime, fnmatch, os, shutil, sys
 import itertools as it
@@ -142,10 +142,12 @@ class SimulationPaths():
         return d
 
 # creates data dirs and a dictionary of useful types
+# redundant with SimulationPaths()
 class OutputDataPaths():
-    def __init__(self, dproj, sim_prefix='test'):
+    def __init__(self, dproj, expmt_groups, sim_prefix='test'):
         # this is the root directory of the project
         self.dproj = dproj
+        self.expmt_groups = expmt_groups
 
         # prefix for these simulations in both filenames and directory in ddate
         self.sim_prefix = sim_prefix
@@ -163,32 +165,45 @@ class OutputDataPaths():
         }
 
         # create date and sim directories if necessary
-        self.ddate = self.datedir()
-        self.dsim = self.simdir()
+        self.ddate = self.__datedir()
+        self.dsim = self.__simdir()
+        self.dexpmt_dict = self.__create_dexpmt(expmt_groups)
 
-        # create dict and subdirs
-        self.fileinfo = dict.fromkeys(self.__datatypes)
-        self.__create_dict()
+        # dfig is just a record of all the fig directories, per experiment
+        # will only be written to at time of creation, by create_dirs
+        # dfig is a terrible variable name, sorry!
+        self.dfig = self.__ddata_dict_template()
 
-    # def move_spk(self, file_tmp_spk, file_target_spk):
-    #     # dspikes = self.fileinfo['spikes'][1]
-    #     if dir_check(dspikes):
-    #         shutil.move(file_tmp_spk, file_target_spk)
+    # creates a dict of dicts for each experiment and all the datatype directories
+    # this is the empty template that gets filled in later.
+    def __ddata_dict_template(self):
+        dfig = dict.fromkeys(self.expmt_groups)
 
-    # Uses DirData class and returns date directory
-    # this is NOT safe for midnight.
-    def datedir(self):
+        for key in dfig:
+            dfig[key] = dict.fromkeys(self.__datatypes)
+
+        return dfig
+
+    # extern function to create directories
+    def create_dirs(self):
+        # create expmt directories
+        for expmt_group, dexpmt in self.dexpmt_dict.iteritems():
+            dir_create(dexpmt)
+
+            for key in self.__datatypes.keys():
+                ddatatype = os.path.join(dexpmt, key)
+                self.dfig[expmt_group][key] = ddatatype
+                dir_create(ddatatype)
+
+    # Returns date directory
+    # this is NOT safe for midnight
+    def __datedir(self):
         str_date = datetime.datetime.now().strftime("%Y-%m-%d")
         ddate = os.path.join(self.dproj, str_date)
         return ddate
 
-    def create_dirs(self):
-        for key in self.fileinfo.keys():
-            dir_create(self.fileinfo[key][1])
-
-    # simdir_create
-    # creates subdirs too
-    def simdir(self):
+    # returns the directory for the sim
+    def __simdir(self):
         n = 0
         self.sim_name = self.sim_prefix + '-%03d' % n
         dsim = os.path.join(self.ddate, self.sim_name)
@@ -200,30 +215,53 @@ class OutputDataPaths():
 
         return dsim
 
-    # dictionary creation, subdir creation
-    def __create_dict(self):
+    # creates all the experimental directories based on dproj
+    def __create_dexpmt(self, expmt_groups):
+        d = dict.fromkeys(expmt_groups)
+        for expmt_group in d:
+            d[expmt_group] = os.path.join(self.dsim, expmt_group)
+
+        return d
+
+    # dictionary creation
+    # this is specific to a expmt_group
+    def create_dict(self, expmt_group):
+        fileinfo = dict.fromkeys(self.__datatypes)
+
         for key in self.__datatypes.keys():
             # join directory name
-            dtype = os.path.join(self.dsim, key)
+            dtype = os.path.join(self.dexpmt_dict(expmt_group), key)
+            fileinfo[key] = (self.__datatypes[key], dtype)
 
-            self.fileinfo[key] = (self.__datatypes[key], dtype)
+        return fileinfo
 
-    def create_filename(self, key, name_prefix):
+    def create_filename(self, expmt_group, key, name_prefix):
         # some kind of if key in self.fileinfo.keys() catch
-        file_name_raw = name_prefix + self.fileinfo[key][0]
-        file_path_full = os.path.join(self.fileinfo[key][1], file_name_raw)
+        file_name_raw = name_prefix + self.__datatypes[key]
+
+        # grab the whole experimental directory
+        dexpmt = self.dexpmt_dict[expmt_group]
+
+        # create the full path name for the file
+        file_path_full = os.path.join(dexpmt, key, file_name_raw)
 
         return file_path_full
 
     # Get the data files matching file_ext in this directory
     # functionally the same as the previous function but with a local scope
-    def file_match(self, key):
-        fext, dsearch = self.fileinfo[key]
+    def file_match(self, expmt_group, key):
+        # fext, dsearch = self.fileinfo[key]
+
+        # grab the relevant fext
+        fext = self.__datatypes[key]
 
         file_list = []
 
-        if os.path.exists(dsearch):
-            for root, dirnames, filenames in os.walk(dsearch):
+        dexpmt_group = self.dexpmt_dict[expmt_group]
+
+        # search the sim directory for all relevant files
+        if os.path.exists(dexpmt_group):
+            for root, dirnames, filenames in os.walk(dexpmt_group):
                 for fname in fnmatch.filter(filenames, '*'+fext):
                     file_list.append(os.path.join(root, fname))
 

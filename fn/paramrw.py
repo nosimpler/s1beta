@@ -1,16 +1,17 @@
 # paramrw.py - routines for reading the param files
 #
-# v 1.4.4
-# rev 2012-11-26 (MS: key added to dictionaries in create_pext() to set standard deviation)
-# last major: (SL: changed ExpParams() name)
+# v 1.4.99
+# rev 2012-12-03 (SL: added experimental groups)
+# last major: (MS: key added to dictionaries in create_pext() to set standard deviation)
 
 import re
 import fileio as fio
 import numpy as np
+import itertools as it
 from cartesian import cartesian
-from params_default import params_default
+from params_default import get_params_default
 
-# reads params and returns gid dict and p dict
+# reads params from a generated file and returns gid dict and p dict
 def read(fparam):
     lines = fio.clean_lines(fparam)
     p = {}
@@ -38,7 +39,8 @@ def read(fparam):
 
 # write the params to a filename
 # now sorting
-def write(fparam, p, p_ext, gid_list):
+def write(fparam, p, gid_list):
+# def write(fparam, p, p_ext, gid_list):
     # sort the items in the dict by key
     p_sorted = [key for key in p.iteritems()]
     p_sorted.sort(key=lambda x: x[0])
@@ -77,8 +79,8 @@ def find_param(fparam, p):
 
     # return a list of tuples
     return [(param.split(': ')[0], float(param.split(': ')[1])) for param in param_list]
-    # return [(param.split(': ')[0], float(param.split(': ')[1][1:-1])) for param in param_list]
 
+# reads the simgroup name from fparam
 def read_simgroup(fparam):
     lines = fio.clean_lines(fparam)
     param_list = [line for line in lines if line.split(': ')[0].startswith('simgroup')]
@@ -106,9 +108,15 @@ def gen_expmts(f_in):
 # class controlling multiple simulation files (.param)
 class ExpParams():
     def __init__(self, f_psim):
-        # read in params from a file
-        p_all_input = self.read_sim(f_psim)
+        # each group in p_group is a FULL param file (easier to think about?)
+        # self.p_group = {}
+        self.expmt_group_params = []
 
+        # read in params from a file
+        p_all_input = self.__read_sim(f_psim)
+        self.p_template = dict.fromkeys(self.expmt_group_params)
+
+        # create non-exp params dict from default dict
         self.__create_dict_from_default(p_all_input)
 
         # pop off the value for sim_prefix and int(N_trials) then continue
@@ -118,7 +126,7 @@ class ExpParams():
         self.N_sims = len(self.list_params[0][1])
 
     # reads .param file and returns p_all_input dict
-    def read_sim(self, f_psim):
+    def __read_sim(self, f_psim):
         lines = fio.clean_lines(f_psim)
 
         # ignore comments
@@ -134,10 +142,42 @@ class ExpParams():
             if param == 'sim_prefix':
                 p[param] = str(val)
 
+            # expmt_groups must be listed before other vals
+            elif param == 'expmt_groups':
+                # this list will be the preservation of the original order
+                self.expmt_groups = [expmt_group for expmt_group in val[1:-1].split(', ')]
+
+                # this dict here for easy access
+                # p_group saves each of the changed params per group
+                self.p_group = dict.fromkeys(self.expmt_groups)
+
+                # create empty dicts in each
+                for group in self.p_group:
+                    self.p_group[group] = {}
+
+                # p_template is the template for the final dict
+                # empty for now, updated later
+                # self.p_template = dict()
+
+                # self.N_expmt_groups = len(self.expmt_groups)
+
             else:
+                # assign group params first
+                if val[0] is '{':
+                    val_list = val[1:-1].split(', ')
+                    val_range = np.array([float(item) for item in val_list])
+
+                    # add the expmt_group param to the list if it's not already present
+                    if param not in self.expmt_group_params:
+                        self.expmt_group_params.append(param)
+
+                    # parcel out vals to exp groups with assigned param names
+                    for expmt_group, val in it.izip(self.expmt_groups, val_range):
+                        self.p_group[expmt_group][param] = val
+
                 # interpret this as a list of vals
                 # type floats to a np array
-                if val[0] is '[':
+                elif val[0] is '[':
                     val_list = val[1:-1].split(', ')
                     val_range = np.array([float(item) for item in val_list])
 
@@ -158,7 +198,7 @@ class ExpParams():
     # create the dict based on the default param dict
     def __create_dict_from_default(self, p_all_input):
         # create a copy of params_default through which to iterate
-        self.p_all = params_default
+        self.p_all = get_params_default()
 
         # now find ONLY the values that are present in the supplied p_all_input
         # based on the default dict
@@ -166,14 +206,16 @@ class ExpParams():
             if key in p_all_input:
                 # pop val off so the remaining items in p_all_input are extraneous
                 self.p_all[key] = p_all_input.pop(key)
-                # self.p_all[key] = p_all_input[key]
+
             else:
-                print "Param struct missing %s, resorting to default val" % key
+                if key not in self.expmt_group_params:
+                    print "Param struct missing %s, resorting to default val" % key
 
         # now display extraneous keys, if there were any
         if len(p_all_input):
             print "Keys were not found in in default params: %s" % str(p_all_input.keys())
 
+    # creates all combination of non-exp params
     def __create_paramlist(self):
         # p_all is the dict specifying all of the changing params
         plist = []
@@ -186,7 +228,8 @@ class ExpParams():
 
         # grab just the keys (but now in order)
         self.keys_sorted = [item[0] for item in list_sorted]
-        self.p_template = dict.fromkeys(self.keys_sorted)
+        self.p_template.update(dict.fromkeys(self.keys_sorted))
+        # self.p_template = dict.fromkeys(self.keys_sorted)
 
         # grab just the values (but now in order)
         # plist = [item[1] for item in list_sorted]
@@ -197,10 +240,17 @@ class ExpParams():
         return zip(self.keys_sorted, vals_all.transpose())
 
     # return pdict based on that one value, PLUS append the p_ext here ... yes, hack-y
-    def return_pdict(self, i):
+    def return_pdict(self, expmt_group, i):
+        # p_template was always updated to include the ones from exp and others
         p_sim = dict.fromkeys(self.p_template)
-        for param in self.list_params:
-            p_sim[param[0]] = param[1][i]
+
+        # go through params in list_params
+        for param_pair in self.list_params:
+            p_sim[param_pair[0]] = param_pair[1][i]
+
+        # go through the expmt groups
+        for param, val in self.p_group[expmt_group].iteritems():
+            p_sim[param] = val
 
         return p_sim
 
@@ -240,7 +290,7 @@ def create_pext(p, tstop):
     feed_prox = {
         'f_input': p['f_input_prox'],
         't0': p['t0_input'],
-        'stdev': p['f_stand_dev'],
+        'stdev': p['f_stdev'],
         'L2Pyr': (4e-5, 0.1),
         'L5Pyr': (4e-5, 1.),
         'L2Basket': (8e-5, 0.1),
@@ -253,7 +303,7 @@ def create_pext(p, tstop):
 
     feed_dist = {
         'f_input': p['f_input_dist'],
-        'stdev': p['f_stand_dev'],
+        'stdev': p['f_stdev'],
         't0': p['t0_input'],
         'L2Pyr': (4e-5, 5.),
         'L5Pyr': (4e-5, 5.),
@@ -269,7 +319,6 @@ def create_pext(p, tstop):
     evoked_prox_early = {
         'f_input': 0.,
         't0': p['t_evoked_prox_early'],
-        # 't0': 454.,
         'L2Pyr': (1e-3, 0.1),
         'L5Pyr': (5e-4, 1.),
         'L2Basket': (2e-3, 0.1),
@@ -304,6 +353,7 @@ def create_pext(p, tstop):
     }
 
     p_ext = feed_validate(p_ext, evoked_dist, tstop)
+    print p_ext, len(p_ext)
 
     # this needs to create many feeds
     # (amplitude, delay, mu, sigma). ordered this way to preserve compatibility

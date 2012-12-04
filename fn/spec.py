@@ -189,6 +189,7 @@ def log_result(spec_obj):
     spec_results.append(spec_obj)
 
 # Does spec analysis for all files in simulation directory
+# ddir comes from fileio
 def spec_analysis(ddir, p_exp):
     # param info
     fext_param, dparam = ddir.fileinfo['param']
