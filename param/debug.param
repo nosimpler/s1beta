@@ -70,8 +70,8 @@ f_input_prox: 10.
 f_input_dist: 10.
 
 # times for evoked responses
-t_evoked_prox_early: 454.
-t_evoked_prox_late: 564.
+t_evoked_prox_early: {L[30., 70., 3]}
+t_evoked_prox_late: [60., 80.]
 t_evoked_dist: 499.
 
 # analysis

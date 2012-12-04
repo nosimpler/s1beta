@@ -149,8 +149,6 @@ class ParFeedExt():
         input_times = np.append(array_times_low, array_times_high)
         input_times.sort()
 
-        print input_times
-
         # Convert array into nrn vector
         self.eventvec.from_python(input_times)
 

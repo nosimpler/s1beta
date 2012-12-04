@@ -1,8 +1,8 @@
 # class_net.py - establishes the Network class and related methods
 #
-# v 1.4.4
-# rev 2012-11-26 (MS: Added __state_init() to initialize cells to baseline potential)
-# last major: (SL: Added Poisson distributed inputs to all cells)
+# v 1.4.100
+# rev 2012-12-04 (SL: syntax)
+# last major: (MS: Added __state_init() to initialize cells to baseline potential)
 
 import itertools as it
 import numpy as np
@@ -354,10 +354,11 @@ class Network():
 
                 return v
 
+    # initializes the state closer to baseline
     def __state_init(self):
         for cell in self.cells_list:
            seclist = nrn.SectionList()
-           seclist.wholetree(sec = cell.soma)
+           seclist.wholetree(sec=cell.soma)
            
         for sect in seclist:
             for seg in sect:

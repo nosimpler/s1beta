@@ -1,8 +1,8 @@
 # paramrw.py - routines for reading the param files
 #
-# v 1.4.99
-# rev 2012-12-03 (SL: added experimental groups)
-# last major: (MS: key added to dictionaries in create_pext() to set standard deviation)
+# v 1.4.100
+# rev 2012-12-04 (SL: added linspace capability to expmts)
+# last major: (SL: added experimental groups)
 
 import re
 import fileio as fio
@@ -164,8 +164,15 @@ class ExpParams():
             else:
                 # assign group params first
                 if val[0] is '{':
-                    val_list = val[1:-1].split(', ')
-                    val_range = np.array([float(item) for item in val_list])
+                    # check for a linspace as a param!
+                    if val[1] is 'L':
+                        # in this case, val_range must be as long as the correct expmt_group length
+                        # everything beyond that will be truncated by the izip operation below
+                        # param passed will strip away the curly braces and just pass the linspace
+                        val_range = self.__expand_linspace(val[1:-1])
+                    else:
+                        # val_list = val[1:-1].split(', ')
+                        val_range = self.__expand_array(val)
 
                     # add the expmt_group param to the list if it's not already present
                     if param not in self.expmt_group_params:
@@ -178,22 +185,38 @@ class ExpParams():
                 # interpret this as a list of vals
                 # type floats to a np array
                 elif val[0] is '[':
-                    val_list = val[1:-1].split(', ')
-                    val_range = np.array([float(item) for item in val_list])
+                    # val_list = val[1:-1].split(', ')
+                    # val_range = np.array([float(item) for item in val_list])
 
-                    p[param] = val_range
+                    # p[param] = val_range
+                    p[param] = self.__expand_array(val)
 
                 # interpret as a linspace
                 elif val[0] is 'L':
-                    val_list = val[2:-1].split(', ')
-                    val_range = np.linspace(float(val_list[0]), float(val_list[1]), int(val_list[2]))
-
-                    p[param] = val_range
+                    p[param] = self.__expand_linspace(val)
 
                 else:
                     p[param] = float(val)
 
         return p
+
+    # general function to expand a list of values
+    def __expand_array(self, str_val):
+        val_list = str_val[1:-1].split(', ')
+        val_range = np.array([float(item) for item in val_list])
+
+        return val_range
+
+    # general function to expand the linspace
+    def __expand_linspace(self, str_val):
+        # strip away the leading character along with the brackets and split the csv values
+        val_list = str_val[2:-1].split(', ')
+
+        # use the values in val_list as params for np.linspace
+        val_range = np.linspace(float(val_list[0]), float(val_list[1]), int(val_list[2]))
+
+        # return the final linspace expanded
+        return val_range
 
     # create the dict based on the default param dict
     def __create_dict_from_default(self, p_all_input):
@@ -353,7 +376,6 @@ def create_pext(p, tstop):
     }
 
     p_ext = feed_validate(p_ext, evoked_dist, tstop)
-    print p_ext, len(p_ext)
 
     # this needs to create many feeds
     # (amplitude, delay, mu, sigma). ordered this way to preserve compatibility
