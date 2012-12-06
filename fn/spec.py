@@ -1,6 +1,6 @@
 # spec.py - Average time-frequency energy representation using Morlet wavelet method
 #
-# v 1.5.0
+# v 1.5.0b
 # rev 2012-12-06 (SL: fixed spec to work with expmts)
 # last major: (MS: Saving of raw spec data optional. Data for plotting stored in a list) 
 
@@ -195,7 +195,6 @@ def append_spec(spec_obj):
 def analysis(ddir, p_exp):
     # do this per experiment
     for expmt_group in ddir.expmt_groups:
-        print expmt_group
         # get the list of params
         # returns an alpha SORTED list
         param_list = ddir.file_match(expmt_group, 'param')
