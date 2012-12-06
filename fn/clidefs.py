@@ -1,8 +1,8 @@
 # clidefs.py - these are all of the function defs for the cli
 #
-# v 1.2.31
-# rev 2012-11-05 (SL: imported from older project, minimally adapted)
-# last major:
+# v 1.4.101
+# rev 2012-12-05 (SL: added remote data sync function)
+# last major: (SL: imported from older project, minimally adapted)
 
 # Standard modules
 import fnmatch, os, re, sys
@@ -143,32 +143,21 @@ def exec_rates(ddata):
 def regenerate_plots(ddata):
     plotfn.auto(ddata)
 
-def data_root():
-    return '/repo/data/audtc'
-
 # rsync command with excludetype input
-def sync_remote_data(dsubdir, str_exclude):
-    # check on the LOCAL exclude file
-    droot_exclude = '/repo/data/audtc'
+def sync_remote_data(droot, server_remote, dsubdir):
+    # make up the local exclude file name
+    f_exclude = os.path.join(droot, 'exclude_eps.txt')
 
-    # make up the local file name
-    f_exclude = os.path.join(droot_exclude, str_exclude + '.txt')
+    # create remote and local directories, they should look similar
+    dremote = os.path.join(droot, dsubdir)
+    dlocal = os.path.join(droot, 'from_remote')
 
-    # check to see if the file exists, else default to eps, which
-    # probably exists
-    if not os.path.isfile(f_exclude):
-        # go to a default file in this case
-        f_exclude = os.path.join(droot_exclude, 'exclude_eps.txt')
+    # create the rsync command
+    cmd_rsync = "rsync -ruv --exclude-from '%s' -e ssh %s:%s %s" % (f_exclude, server_remote, dremote, dlocal)
 
-    # now let's deal with the subdir
-    dremote = os.path.join('neuromath:/repo/data/audtc/', dsubdir)
-    dlocal = os.path.join('/repo/data/audtc')
+    call(cmd_rsync, shell=True)
 
-    # Create the rsync command
-    rsync_cmd = "rsync -ruv --exclude-from '" + f_exclude + "' " + dremote + " " + dlocal
-
-    call(rsync_cmd, shell=True)
-
+# at the moment broken, i removed the data_root() function
 def copy_to_pub(dsim):
     # check to see if sim dir exists
     # check to see if analogous dir in cppub exists

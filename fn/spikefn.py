@@ -1,12 +1,13 @@
 # spikefn.py - dealing with spikes
 #
-# v 1.4.3
-# rev 2012-11-14 (SL: manually changed the range of the bin checks ... )
-# last major: (SL: Added a hist bin optimization function that is/isn't used)
+# v 1.4.101
+# rev 2012-12-05 (SL: fixed the empty file warning)
+# last major: (SL: manually changed the range of the bin checks ... )
 
 import fileio as fio
 import numpy as np
 import itertools as it
+import os
 
 # meant as a class for ONE cell type
 class Spikes():
@@ -92,7 +93,11 @@ def hist_bin_opt(x, N_trials):
 
 # not "purely" from files
 def spikes_from_file(gid_dict, fspikes):
-    s = np.loadtxt(open(fspikes, 'rb'))
+    # check to see if there are spikes in here, otherwise return an empty array
+    if os.stat(fspikes).st_size:
+        s = np.loadtxt(open(fspikes, 'rb'))
+    else:
+        s = np.array([], dtype='float64')
 
     # get the qnd dict keys from gid_dict
     s_dict = dict.fromkeys(gid_dict)

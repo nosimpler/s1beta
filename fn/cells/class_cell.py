@@ -1,7 +1,7 @@
 # class_cell.py - establish class def for general cell features
 #
 # v 1.4.1
-# rev 2012-11-7 (MS: All properties set using dictionaries passed in as params)
+# rev 2012-11-07 (MS: All properties set using dictionaries passed in as params)
 # last rev: (MS: All synapse creation and biophysics moved to individual cell classes)
 
 import numpy as np
@@ -87,7 +87,6 @@ class Cell():
 
             # these are the positions, including 0 but not L
             pos = np.array([seg.x for seg in sect.allseg()])
-            # pos = np.insert(loc, 0, 0)
 
             # diff in yvals, scaled against the pos np.array. y_long as in longitudinal
             y_scale = (yscale[sect.name()] * sect.L) * pos

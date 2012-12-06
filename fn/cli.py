@@ -1,8 +1,8 @@
 # cli.py - routines for the command line interface console sssh.py
 #
-# v 1.4.3
-# rev 2012-11-14 (SL: Added some plot functions, not following my own bp)
-# last major: (SL: Added psth to qnd function)
+# v 1.4.101
+# rev 2012-12-05 (SL: reorganized, cleaned, and added sync "officially"
+# last major: (SL: Added some plot functions, not following my own bp)
 
 from cmd import Cmd
 from datetime import datetime
@@ -30,7 +30,7 @@ class Console(Cmd):
         self.intro  = "\nThis is the SomatoSensory SHell\n"
         self.droot = '/repo/data/s1'
         self.f_history = '.s1sh_history'
-        self.ddate = []
+        self.ddate = ''
         self.dlast = []
         self.dlist = []
         self.dir_data = []
@@ -41,13 +41,77 @@ class Console(Cmd):
         self.var_list = []
         self.N_sims = 0
 
+        # get initial count of avail processors for subprocess/multiprocessing routines
         self.nprocs = multiprocessing.cpu_count()
 
         # Create the initial datelist
-        # self.datelist = get_subdir_list(self.droot)
+        self.datelist = clidefs.get_subdir_list(self.droot)
 
         # set the date, grabs a dlist
         self.do_setdate(datetime.now().strftime("%Y-%m-%d"))
+
+    def do_setdate(self, args):
+        """Sets the date string to the specified date
+        """
+        if args:
+            dcheck = os.path.join(self.droot, args)
+
+            if os.path.exists(dcheck):
+                self.ddate = args
+            else:
+                self.ddate = 'cppub'
+
+        print "Date set to", self.ddate
+
+    def complete_setdate(self, text, line, j0, J):
+        """complete function for setdate
+        """
+        if text:
+            x = [item for item in self.datelist if item.startswith(text)]
+            if x:
+                return x
+            # else:
+            #     return 0
+        else:
+            return self.datelist
+
+    def do_load(self, args):
+        """Load parameter file and regens all vars
+        """
+        dir_check = os.path.join(self.droot, self.ddate, args)
+
+        if os.path.exists(dir_check):
+            self.dir_data = dir_check
+            self.simpaths = fio.SimulationPaths(self.dir_data)
+
+        else:
+            print dir_check
+            print "Could not find that dir, maybe check your date?"
+
+    def complete_load(self, text, line, j0, J):
+        """complete function for load
+        """
+        if text:
+            x = [item for item in self.dlist if item.startswith(text)]
+            if x:
+                return x
+        else:
+            return self.dlist
+
+    def do_sync(self, args):
+        """Sync with specified remote server
+        """
+        try:
+            list_args = args.split(" ")
+            dsubdir = list_args[0]
+            server_remote = raw_input("Server address: ")
+            clidefs.sync_remote_data(self.droot, server_remote, dsubdir)
+
+            # I recognize that this is redundant
+            dcheck = os.path.join(self.droot, self.ddate, args)
+            self.dlist = get_subdir_list(dcheck)
+        except:
+            print "Something went wrong here."
 
     def do_giddict(self, args):
         pass
@@ -73,12 +137,6 @@ class Console(Cmd):
         """Runs a diff on various data types
         """
         pass
-
-    def do_quickdraw(self, args):
-        self.do_setdate('2012-04-02')
-        # self.do_setdate('cppub')
-        self.do_load('gassembly-002')
-        self.do_pcompare('sim0=11 sim1=11')
 
     def do_testls(self, args):
         # file_list = fio.file_match('../param', '*.param')
@@ -153,64 +211,10 @@ class Console(Cmd):
             print "Cannot find directory"
             return 0
 
-    def do_setdate(self, args):
-        """Sets the date string to the specified date
-        """
-        dcheck = os.path.join(self.droot, args)
-
-        if os.path.exists(dcheck):
-            self.ddate = args
-        else:
-            self.ddate = 'cppub'
-
-        print "Date set to", self.ddate
-        
-        # also get subdir list
-        # somepath = os.path.join(self.droot, self.ddate)
-        # self.dlist = get_subdir_list(os.path.join(somepath))
-
-    def complete_setdate(self, text, line, j0, J):
-        """complete function for setdate
-        """
-        if text:
-            x = [item for item in self.datelist if item.startswith(text)]
-            if x:
-                return x
-            else:
-                return 0
-        else:
-            return self.datelist
-
     def do_checkdate(self, args):
         """Displays the current date
         """
         print self.ddate
-
-    def do_load(self, args):
-        """Load parameter file and regens all vars
-        """
-        dir_check = os.path.join(self.droot, self.ddate, args)
-
-        if os.path.exists(dir_check):
-            self.dir_data = dir_check
-            self.simpaths = fio.SimulationPaths(self.dir_data)
-
-        else:
-            print dir_check
-            print "Could not find that dir, maybe check your date?"
-            return 0
-
-    def complete_load(self, text, line, j0, J):
-        """complete function for load
-        """
-        if text:
-            x = [item for item in self.dlist if item.startswith(text)]
-            if x:
-                return x
-            else:
-                return 0
-        else:
-            return self.dlist
 
     def do_pngoptimize(self, args):
         """Optimizes png figures based on current directory
@@ -237,7 +241,6 @@ class Console(Cmd):
         pool.close()
         pool.join()
 
-
     def do_replot(self, args):
         """Regenerates plots in given directory
         """
@@ -261,21 +264,23 @@ class Console(Cmd):
         fio.epscompress(dfig_spk, fext_figspk)
 
     def do_psthgrid(self, args):
+        """Aggregate plot of psth
+        """
         ppsth_grid(self.simpaths)
 
-    def do_psth(self, args):
-        # self.do_setdate('2012-11-07')
-        # self.do_load('inhtone-001')
-        ppsth(self.simpaths)
+    # def do_psth(self, args):
+    #     # self.do_setdate('2012-11-07')
+    #     # self.do_load('inhtone-001')
+    #     ppsth(self.simpaths)
 
-    def do_summary(self, args):
-        epslist = fio.file_match(self.simpaths.dfigs['spikes'], '.eps')
-        clidefs.pdf_create(self.dir_data, 'testing', epslist)
+    # def do_summary(self, args):
+    #     epslist = fio.file_match(self.simpaths.dfigs['spikes'], '.eps')
+    #     clidefs.pdf_create(self.dir_data, 'testing', epslist)
 
-    def do_save(self, args):
-        """Copies the entire current directory over to the cppub directory
-        """
-        copy_to_pub(self.dir_data)
+    # def do_save(self, args):
+    #     """Copies the entire current directory over to the cppub directory
+    #     """
+    #     copy_to_pub(self.dir_data)
 
     def do_runsim(self, args):
         """Run the simulation code
