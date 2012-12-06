@@ -1,8 +1,8 @@
 # plotfn.py - pall and possibly other plot routines
 #
-# v 1.4.99
-# rev 2012-12-03 (SL: experiments system added, currently broken spec)
-# last major: (MS: Using spec data stored in list rather than reading from data file)
+# v 1.5.0
+# rev 2012-12-06 (SL/MS: fixed spec with expmts)
+# last major: (SL: experiments system added, currently broken spec)
 
 from pdipole import pdipole
 from spec import pspec
@@ -14,8 +14,7 @@ import itertools as it
 from multiprocessing import Pool
 
 # terrible handling of variables
-def pkernel(dfig, f_param, f_spk, f_dpl, key_types):
-# def pkernel(dfig, f_param, f_spk, f_dpl, d_spec, key_types):
+def pkernel(dfig, f_param, f_spk, f_dpl, data_spec, key_types):
     gid_dict, p_dict = paramrw.read(f_param)
     tstop = p_dict['tstop']
 
@@ -27,7 +26,7 @@ def pkernel(dfig, f_param, f_spk, f_dpl, key_types):
     # plot kernels
     praster(gid_dict, tstop, f_spk, dfig_spk)
     pdipole(f_dpl, dfig_dpl, p_dict, key_types)
-    # pspec(d_spec, dfig_spec, p_dict, key_types)
+    pspec(data_spec, dfig_spec, p_dict, key_types)
 
     return 0
 
@@ -37,8 +36,9 @@ def cb(r):
     pass
 
 # plot function - this is sort of a stop-gap and shouldn't live here, really
-def pall(ddir, p_exp, gid_dict, tstop):
-# def pall(ddir, p_exp, spec_results, gid_dict, tstop):
+# reads all data except spec and gid_dict from files
+def pall(ddir, p_exp, spec_results, gid_dict, tstop):
+# def pall(ddir, p_exp, gid_dict, tstop):
     # runtype allows easy (hard coded switching between two modes)
     runtype = 'parallel'
 
@@ -50,22 +50,19 @@ def pall(ddir, p_exp, gid_dict, tstop):
 
         # run each experiment separately
         for expmt_group in ddir.expmt_groups:
+            spec_results_expmt = [spec_result for spec_result in spec_results if expmt_group in spec_result.name]
+
             # these should be equivalent lengths
             param_list = ddir.file_match(expmt_group, 'param')
             dpl_list = ddir.file_match(expmt_group, 'rawdpl')
             spk_list = ddir.file_match(expmt_group, 'rawspk')
-            spec_list = ddir.file_match(expmt_group, 'rawspec')
 
             # print ddir.dfig
             dfig = ddir.dfig[expmt_group]
 
-            # *** spec is disabled here ***
-            # *** remove comment when successfully fixed ***
             pl = Pool()
-            for f_param, f_spk, f_dpl in it.izip(param_list, spk_list, dpl_list):
-            # for f_param, f_spk, f_dpl, d_spec in it.izip(param_list, spk_list, dpl_list, spec_results):
-                pl.apply_async(pkernel, (dfig, f_param, f_spk, f_dpl, key_types), callback=cb)
-                # pl.apply_async(pkernel, (ddir, f_param, f_spk, f_dpl, d_spec, key_types), callback=cb)
+            for f_param, f_spk, f_dpl, data_spec in it.izip(param_list, spk_list, dpl_list, spec_results_expmt):
+                pl.apply_async(pkernel, (dfig, f_param, f_spk, f_dpl, data_spec, key_types), callback=cb)
 
             pl.close()
             pl.join()

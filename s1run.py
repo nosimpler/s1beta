@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # s1run.py - primary run function for s1 project
 #
-# v 1.4.99
-# rev 2012-12-03 (SL: experiments feature)
-# last major: (MS: spec_analysis() returns list of spec data that is passed to plotfn.pall())
+# v 1.5.0
+# rev 2012-12-06 (SL/MS: fixed spec with expmts)
+# last major: (SL: experiments feature)
 
 import os
 import time
@@ -19,8 +19,7 @@ from class_net import Network
 import fn.fileio as fio
 import fn.paramrw as paramrw
 import fn.plotfn as plotfn
-from fn.spec import spec_analysis
-# from fn.spec import MorletSpec, spec_analysis
+import fn.spec as spec
 
 # spike write function
 def spikes_write(net, filename_spikes):
@@ -215,25 +214,25 @@ def exec_runsim(f_psim):
 
             t_start_analysis = time.time()
 
-            # run the spectral analysis, commented out for now, broken with addition of experiments
-            # spec_results = spec_analysis(ddir, p_exp)
+            # run the spectral analysis and temporarily keep data in memory in spec_results
+            spec_results = spec.analysis(ddir, p_exp)
 
             print "time: %4.4f s" % (time.time() - t_start_analysis)
             print "Plot ...",
 
             plot_start = time.time()
 
-            # *** At the moment this completely ignores spec_results ***
-            # *** Please remove comments when resolved ***
             # run plots and epscompress function
-            # plotfn.pall(ddir, p_exp, spec_results, net.gid_dict, nrn.tstop)
-            plotfn.pall(ddir, p_exp, net.gid_dict, nrn.tstop)
+            plotfn.pall(ddir, p_exp, spec_results, net.gid_dict, nrn.tstop)
 
-            # fext_figspk, dfig_spk = ddir.fileinfo['figspk']
+            # for each experimental group, do the relevant png/eps creation and optimization
             for expmt_group in ddir.expmt_groups:
                 dspk = ddir.dfig[expmt_group]['figspk']
-                fext_figspk = '.eps'
-                fio.epscompress(dspk, fext_figspk)
+                dspec = ddir.dfig[expmt_group]['figspec']
+
+                fext_eps = '.eps'
+                fio.epscompress(dspk, fext_eps)
+                fio.epscompress(dspec, fext_eps)
 
             print "time: %4.4f s" % (time.time() - plot_start) 
 
@@ -245,7 +244,7 @@ def exec_runsim(f_psim):
         print "Simulation run time: %4.4f s" % (t1-t0)
 
 if __name__ == "__main__":
-    # starting to use params
+    # reads the specified param file
     try:
         f_psim = sys.argv[1]
 
