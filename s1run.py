@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # s1run.py - primary run function for s1 project
 #
-# v 1.5.0
-# rev 2012-12-06 (SL/MS: fixed spec with expmts)
-# last major: (SL: experiments feature)
+# v 1.5.1
+# rev 2012-12-08 (SL: using SimulationPaths and not OutputDataPaths)
+# last major: (SL/MS: fixed spec with expmts)
 
 import os
 import time
@@ -70,7 +70,9 @@ def exec_runsim(f_psim):
 
     # one directory for all experiments
     if rank == 0:
-        ddir = fio.OutputDataPaths(dproj, p_exp.expmt_groups, p_exp.sim_prefix)
+        ddir = fio.SimulationPaths()
+        ddir.create_new_sim(dproj, p_exp.expmt_groups, p_exp.sim_prefix)
+        # ddir = fio.OutputDataPaths(dproj, p_exp.expmt_groups, p_exp.sim_prefix)
         ddir.create_dirs()
 
         copy_paramfile(ddir.dsim, f_psim)
@@ -223,7 +225,8 @@ def exec_runsim(f_psim):
             plot_start = time.time()
 
             # run plots and epscompress function
-            plotfn.pall(ddir, p_exp, spec_results, net.gid_dict, nrn.tstop)
+            plotfn.pall(ddir, p_exp, spec_results)
+            # plotfn.pall(ddir, p_exp, spec_results, net.gid_dict, nrn.tstop)
 
             # for each experimental group, do the relevant png/eps creation and optimization
             for expmt_group in ddir.expmt_groups:

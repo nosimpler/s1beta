@@ -1,12 +1,13 @@
 # fileio.py - general file input/output functions
 #
-# v 1.4.99
-# rev 2012-12-03 (SL: major changes to OutputDataPaths to accomodate experiments)
-# last rev: (SL: added separate optipng function for post proc)
+# v 1.5.1
+# rev 2012-12-08 (SL: merged OutputDataPaths and SimulationPaths in ONE class)
+# last rev: (SL: major changes to OutputDataPaths to accomodate experiments)
 
 import datetime, fnmatch, os, shutil, sys
 import itertools as it
 import subprocess, multiprocessing
+import paramrw
 
 # Cleans input files
 def clean_lines(file):
@@ -76,82 +77,9 @@ def dir_create(d):
     if not dir_check(d):
         os.makedirs(d)
 
-# redundant with OutputDataPaths() for a little while
-class SimulationPaths():
-    def __init__(self, dsim):
-        self.dsim = dsim
-        self.fparam = file_match(dsim, '.param')
-
-        # straight up copy from below
-        self.datatypes = {
-            'rawspk': '-spk.txt',
-            'rawdpl': '-dpl.txt',
-            'rawspec': '-spec.txt',
-            'figspk': '-spk.eps',
-            'figdpl': '-dpl.eps',
-            'figspec': '-spec.eps',
-            'param': '-param.txt'
-        }
-
-        self.filelists = self.__getfiles()
-        self.dfigs = self.__dfigs_create()
-        self.expnames = self.__get_exp_names()
-
-    # grab lists of non-fig files
-    def __getfiles(self):
-        filelists = {}
-        for key in self.datatypes:
-            if not key.startswith('fig'):
-                subdir = os.path.join(self.dsim, key)
-                fext = self.datatypes[key]
-                filelists[key] = file_match(subdir, fext)
-
-        return filelists
-
-    # simple path creations for figures
-    def __dfigs_create(self):
-        return {
-            'spikes': os.path.join(self.dsim, 'figspk'),
-            'dipole': os.path.join(self.dsim, 'figdpl'),
-            'spec': os.path.join(self.dsim, 'figspec'),
-        }
-
-    # these are the "experiment" names (versus individual trials)
-    def __get_exp_names(self):
-        expnames = []
-        # Reads the unique experiment names
-        for file in self.filelists['param']:
-            # get the parts of the name we care about
-            parts = file.split('/')[-1].split('.')[0].split('-')[:2]
-            name = parts[0] + '-' + parts[1]
-
-            if name not in expnames:
-                expnames.append(name)
-
-        return expnames
-
-    def exp_files_of_type(self, datatype):
-        # create dict of experiments
-        d = dict.fromkeys(self.expnames)
-
-        # create file lists that match the dict keys for only files for this experiment
-        # this all would be nicer with a freaking folder
-        for key in d:
-            d[key] = [file for file in self.filelists[datatype] if key in file.split("/")[-1]]
-
-        return d
-
 # creates data dirs and a dictionary of useful types
-# redundant with SimulationPaths()
-class OutputDataPaths():
-    def __init__(self, dproj, expmt_groups, sim_prefix='test'):
-        # this is the root directory of the project
-        self.dproj = dproj
-        self.expmt_groups = expmt_groups
-
-        # prefix for these simulations in both filenames and directory in ddate
-        self.sim_prefix = sim_prefix
-
+class SimulationPaths():
+    def __init__(self):
         # hard coded data types
         # fig extensions are not currently being used as well as they could be
         self.__datatypes = {
@@ -164,10 +92,37 @@ class OutputDataPaths():
             'param': '-param.txt',
         }
 
+    # reads sim information based on sim directory and param files
+    def read_sim(self, dproj, dsim):
+        self.dproj = dproj
+        self.dsim = dsim
+
+        # match the param from this sim
+        self.fparam = file_match(dsim, '.param')[0]
+        self.expmt_groups = paramrw.read_expmt_groups(self.fparam)
+        self.sim_prefix = paramrw.read_sim_prefix(self.fparam)
+        self.dexpmt_dict = self.__create_dexpmt(self.expmt_groups)
+
+        # create dfig
+        self.dfig = self.__read_dirs()
+
+        # old recipe
+        # self.filelists = self.__getfiles()
+        # self.dfigs = self.__dfigs_create()
+        # self.expnames = self.__get_exp_names()
+
+    # only run for the creation of a new simulation
+    def create_new_sim(self, dproj, expmt_groups, sim_prefix='test'):
+        self.dproj = dproj
+        self.expmt_groups = expmt_groups
+
+        # prefix for these simulations in both filenames and directory in ddate
+        self.sim_prefix = sim_prefix
+
         # create date and sim directories if necessary
         self.ddate = self.__datedir()
         self.dsim = self.__simdir()
-        self.dexpmt_dict = self.__create_dexpmt(expmt_groups)
+        self.dexpmt_dict = self.__create_dexpmt(self.expmt_groups)
 
         # dfig is just a record of all the fig directories, per experiment
         # will only be written to at time of creation, by create_dirs
@@ -181,6 +136,17 @@ class OutputDataPaths():
 
         for key in dfig:
             dfig[key] = dict.fromkeys(self.__datatypes)
+
+        return dfig
+
+    # read directories for an already existing sim
+    def __read_dirs(self):
+        dfig = self.__ddata_dict_template()
+
+        for expmt_group, dexpmt in self.dexpmt_dict.iteritems():
+            for key in self.__datatypes.keys():
+                ddatatype = os.path.join(dexpmt, key)
+                dfig[expmt_group][key] = ddatatype
 
         return dfig
 
@@ -269,6 +235,51 @@ class OutputDataPaths():
         file_list.sort()
 
         return file_list
+
+    # *** OLD METHODS FROM OLD SIMULATIONPATHS ***
+    # grab lists of non-fig files
+    def __getfiles(self):
+        filelists = {}
+        for key in self.datatypes:
+            if not key.startswith('fig'):
+                subdir = os.path.join(self.dsim, key)
+                fext = self.datatypes[key]
+                filelists[key] = file_match(subdir, fext)
+
+        return filelists
+
+    # simple path creations for figures
+    def __dfigs_create(self):
+        return {
+            'spikes': os.path.join(self.dsim, 'figspk'),
+            'dipole': os.path.join(self.dsim, 'figdpl'),
+            'spec': os.path.join(self.dsim, 'figspec'),
+        }
+
+    # these are the "experiment" names (versus individual trials)
+    def __get_exp_names(self):
+        expnames = []
+        # Reads the unique experiment names
+        for file in self.filelists['param']:
+            # get the parts of the name we care about
+            parts = file.split('/')[-1].split('.')[0].split('-')[:2]
+            name = parts[0] + '-' + parts[1]
+
+            if name not in expnames:
+                expnames.append(name)
+
+        return expnames
+
+    def exp_files_of_type(self, datatype):
+        # create dict of experiments
+        d = dict.fromkeys(self.expnames)
+
+        # create file lists that match the dict keys for only files for this experiment
+        # this all would be nicer with a freaking folder
+        for key in d:
+            d[key] = [file for file in self.filelists[datatype] if key in file.split("/")[-1]]
+
+        return d
 
 # Finds and moves files to created subdirectories. 
 def subdir_move(dir_out, name_dir, file_pattern):

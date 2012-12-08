@@ -1,8 +1,8 @@
 # paramrw.py - routines for reading the param files
 #
-# v 1.4.100a
-# rev 2012-12-04 (SL: added linspace capability to expmts)
-# last major: (SL: added experimental groups)
+# v 1.5.1
+# rev 2012-12-08 (SL: read_expmt_groups)
+# last major: (SL: added linspace capability to expmts)
 
 import re
 import fileio as fio
@@ -81,22 +81,22 @@ def find_param(fparam, p):
     return [(param.split(': ')[0], float(param.split(': ')[1])) for param in param_list]
 
 # reads the simgroup name from fparam
-def read_simgroup(fparam):
+def read_sim_prefix(fparam):
     lines = fio.clean_lines(fparam)
-    param_list = [line for line in lines if line.split(': ')[0].startswith('simgroup')]
+    param_list = [line for line in lines if line.split(': ')[0].startswith('sim_prefix')]
 
     # Assume we found something ...
     if param_list:
         return param_list[0].split(" ")[1]
 
     else:
-        print "No simgroup found"
+        print "No sim_prefix found"
         return 0
 
-# Finds the experiments list from the file
-def gen_expmts(f_in):
-    lines = fio.clean_lines(f_in)
-    lines = [line for line in lines if line.split(': ')[0] == 'expmts']
+# Finds the experiments list from the simulation param file (.param)
+def read_expmt_groups(fparam):
+    lines = fio.clean_lines(fparam)
+    lines = [line for line in lines if line.split(': ')[0] == 'expmt_groups']
 
     try:
         return lines[0].split(': ')[1][1:-1].split(', ')

@@ -1,8 +1,8 @@
 # plotfn.py - pall and possibly other plot routines
 #
-# v 1.5.0
-# rev 2012-12-06 (SL/MS: fixed spec with expmts)
-# last major: (SL: experiments system added, currently broken spec)
+# v 1.5.1
+# rev 2012-12-08 (SL: simplified pall)
+# last major: (SL/MS: fixed spec with expmts)
 
 from pdipole import pdipole
 from spec import pspec
@@ -37,7 +37,7 @@ def cb(r):
 
 # plot function - this is sort of a stop-gap and shouldn't live here, really
 # reads all data except spec and gid_dict from files
-def pall(ddir, p_exp, spec_results, gid_dict, tstop):
+def pall(ddir, p_exp, spec_results):
 # def pall(ddir, p_exp, gid_dict, tstop):
     # runtype allows easy (hard coded switching between two modes)
     runtype = 'parallel'

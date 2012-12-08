@@ -1,8 +1,8 @@
 # clidefs.py - these are all of the function defs for the cli
 #
-# v 1.4.101
-# rev 2012-12-05 (SL: added remote data sync function)
-# last major: (SL: imported from older project, minimally adapted)
+# v 1.5.1
+# rev 2012-12-08 (SL: Regenerate plots)
+# last major: (SL: added remote data sync function)
 
 # Standard modules
 import fnmatch, os, re, sys
@@ -17,6 +17,8 @@ from time import time
 import spikefn
 import plotfn
 import fileio as fio
+import paramrw
+import spec
 
 # Returns length of any list
 def number_of_sims(some_list):
@@ -141,7 +143,24 @@ def exec_rates(ddata):
 # Just run the autoplot function independently
 # do_plot
 def regenerate_plots(ddata):
-    plotfn.auto(ddata)
+    # need p_exp, spec_results, gid_dict, and tstop.
+    # fparam = fio.file_match(ddata.dsim, '.param')[0]
+
+    # recreate p_exp ... don't like this.o
+    # ** should be guaranteed to be identical **
+    p_exp = paramrw.ExpParams(ddata.fparam)
+
+    spec_list_total = fio.file_match(ddata.dsim, '-spec.npz')
+    # prettyprint(spec_list_total)
+
+    # generate data if no spec exists here
+    if not spec_list_total:
+        spec_results = spec.analysis(ddata, p_exp)
+
+    else:
+        print "it's going to break ... now!"
+
+    plotfn.pall(ddata, p_exp, spec_results)
 
 # rsync command with excludetype input
 def sync_remote_data(droot, server_remote, dsubdir):
@@ -243,7 +262,7 @@ def view_img(dir_data, ext):
 
     call([app_img + os.path.join(dir_data, 'spec') + ext_img], shell=True)
 
-# Cross platform file viewing over all exmpts
+# Cross platform file viewing over all expmts
 def file_viewer(ddata, expmt):
     if expmt == 'all':
         # Find all of the png files in this directory

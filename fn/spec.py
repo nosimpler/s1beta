@@ -1,8 +1,8 @@
 # spec.py - Average time-frequency energy representation using Morlet wavelet method
 #
-# v 1.5.0b
-# rev 2012-12-06 (SL: fixed spec to work with expmts)
-# last major: (MS: Saving of raw spec data optional. Data for plotting stored in a list) 
+# v 1.5.1
+# rev 2012-12-08 (SL: added from_expmt filter)
+# last major: (SL: fixed spec to work with expmts)
 
 import os
 import numpy as np
@@ -215,3 +215,7 @@ def analysis(ddir, p_exp):
         pl.join()
 
     return sorted(spec_results, key=lambda spec_obj: spec_obj.name)
+
+# returns spec results *only* for a given experimental group
+def from_expmt(spec_result_list, expmt_group):
+    return [spec_result for spec_result in spec_result_list if expmt_group in spec_result.name]

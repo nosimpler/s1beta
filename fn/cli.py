@@ -1,8 +1,8 @@
 # cli.py - routines for the command line interface console sssh.py
 #
-# v 1.4.101
-# rev 2012-12-05 (SL: reorganized, cleaned, and added sync "officially"
-# last major: (SL: Added some plot functions, not following my own bp)
+# v 1.5.1
+# rev 2012-12-08 (SL: Fixed some load routines, some replotting)
+# last major: (SL: reorganized, cleaned, and added sync "officially")
 
 from cmd import Cmd
 from datetime import datetime
@@ -10,30 +10,26 @@ import clidefs
 # import plot.psummary as psum
 import multiprocessing
 import subprocess
-import fileio as fio
 import os, signal
 import readline as rl
-import paramrw
 import itertools as it
+import fileio as fio
+import paramrw
 from praster import praster
 from pdipole import pdipole
 from ppsth import ppsth, ppsth_grid
 
-# def handler(signum, frame):
-#     print '\nKeyboardInterrupt'
-
 class Console(Cmd):
     def __init__(self, file_input=""):
         Cmd.__init__(self)
-        # signal.signal(signal.SIGINT, handler)
         self.prompt = '\033[93m' + "[s1] " + '\033[0m'
         self.intro  = "\nThis is the SomatoSensory SHell\n"
-        self.droot = '/repo/data/s1'
+        self.dproj = '/repo/data/s1'
         self.f_history = '.s1sh_history'
         self.ddate = ''
         self.dlast = []
         self.dlist = []
-        self.dir_data = []
+        self.dsim = []
         self.expmts = []
         self.file_input = file_input
         self.sim_list = []
@@ -45,16 +41,24 @@ class Console(Cmd):
         self.nprocs = multiprocessing.cpu_count()
 
         # Create the initial datelist
-        self.datelist = clidefs.get_subdir_list(self.droot)
+        self.datelist = clidefs.get_subdir_list(self.dproj)
 
         # set the date, grabs a dlist
         self.do_setdate(datetime.now().strftime("%Y-%m-%d"))
+
+    def do_debug(self, args):
+        """Qnd function to test many other functions
+        """
+        self.do_setdate('from_remote/2012-12-05')
+        self.do_load('evoked_test-000')
+        # self.epscompress('spk')
+        # self.do_psthgrid()
 
     def do_setdate(self, args):
         """Sets the date string to the specified date
         """
         if args:
-            dcheck = os.path.join(self.droot, args)
+            dcheck = os.path.join(self.dproj, args)
 
             if os.path.exists(dcheck):
                 self.ddate = args
@@ -78,11 +82,12 @@ class Console(Cmd):
     def do_load(self, args):
         """Load parameter file and regens all vars
         """
-        dir_check = os.path.join(self.droot, self.ddate, args)
+        dir_check = os.path.join(self.dproj, self.ddate, args)
 
         if os.path.exists(dir_check):
-            self.dir_data = dir_check
-            self.simpaths = fio.SimulationPaths(self.dir_data)
+            self.dsim = dir_check
+            self.ddata = fio.SimulationPaths()
+            self.ddata.read_sim(self.dproj, self.dsim)
 
         else:
             print dir_check
@@ -105,23 +110,16 @@ class Console(Cmd):
             list_args = args.split(" ")
             dsubdir = list_args[0]
             server_remote = raw_input("Server address: ")
-            clidefs.sync_remote_data(self.droot, server_remote, dsubdir)
+            clidefs.sync_remote_data(self.dproj, server_remote, dsubdir)
 
             # I recognize that this is redundant
-            dcheck = os.path.join(self.droot, self.ddate, args)
+            dcheck = os.path.join(self.dproj, self.ddate, args)
             self.dlist = get_subdir_list(dcheck)
         except:
             print "Something went wrong here."
 
     def do_giddict(self, args):
         pass
-
-    def do_debug(self, args):
-        """Qnd function to test many other functions
-        """
-        self.do_setdate('2012-11-11')
-        self.do_load('inhtone-000')
-        self.do_psthgrid()
 
     def do_open(self, args):
         """Attempts to open a new file of params
@@ -156,7 +154,7 @@ class Console(Cmd):
 
         if not len(self.expmts):
             print "Attempting to generate expmt list"
-            self.expmts = gen_expmts(self.file_input)
+            self.expmts = paramrw.read_expmt_groups(self.file_input)
 
         prettyprint(self.expmts)
 
@@ -173,7 +171,7 @@ class Console(Cmd):
            but does not commit variables to workspace
         """
         # droot = '/repo/data/audtc'
-        dcheck = os.path.join(self.droot, self.ddate, args)
+        dcheck = os.path.join(self.dproj, self.ddate, args)
 
         if os.path.exists(dcheck):
             # get a list of the .params files
@@ -202,7 +200,7 @@ class Console(Cmd):
         """Lists simulations on a given date
            'args' is a date
         """
-        dcheck = os.path.join(self.droot, args)
+        dcheck = os.path.join(self.dproj, args)
 
         if os.path.exists(dcheck):
             dir_list = [name for name in os.listdir(dcheck) if os.path.isdir(os.path.join(dcheck, name))]
@@ -210,11 +208,6 @@ class Console(Cmd):
         else:
             print "Cannot find directory"
             return 0
-
-    def do_checkdate(self, args):
-        """Displays the current date
-        """
-        print self.ddate
 
     def do_pngoptimize(self, args):
         """Optimizes png figures based on current directory
@@ -241,27 +234,41 @@ class Console(Cmd):
         pool.close()
         pool.join()
 
-    def do_replot(self, args):
+    def do_replot(self):
         """Regenerates plots in given directory
         """
-        # regenerate_plots(self.dir_data)
+        clidefs.regenerate_plots(self.ddata)
 
         # simpaths.filelists is the list of files
-        fparam = self.simpaths.filelists['param'][0]
-        dfig_spk = self.simpaths.dfigs['spikes']
+        # fparam = self.simpaths.filelists['param'][0]
+        # dfig_spk = self.simpaths.dfigs['spikes']
 
-        # same for all spike rasters
-        fext_figspk = self.simpaths.datatypes['figspk']
+        # # same for all spike rasters
+        # fext_figspk = self.simpaths.datatypes['figspk']
 
-        pool = multiprocessing.Pool()
-        for fparam, fspk in it.izip(self.simpaths.filelists['param'], self.simpaths.filelists['rawspk']):
-            gid_dict, p = paramrw.read(fparam)
-            pool.apply_async(praster, (gid_dict, p['tstop'], fspk, dfig_spk))
+        # pool = multiprocessing.Pool()
+        # for fparam, fspk in it.izip(self.simpaths.filelists['param'], self.simpaths.filelists['rawspk']):
+        #     gid_dict, p = paramrw.read(fparam)
+        #     pool.apply_async(praster, (gid_dict, p['tstop'], fspk, dfig_spk))
 
-        pool.close()
-        pool.join()
+        # pool.close()
+        # pool.join()
 
-        fio.epscompress(dfig_spk, fext_figspk)
+        # fio.epscompress(dfig_spk, fext_figspk)
+
+    def do_epscompress(self, args):
+        """Runs the eps compress utils on the specified fig type (currently either spk or spec)
+        """
+        for expmt_group in self.ddata.expmt_groups:
+            if args == 'figspk':
+                d_eps = self.ddata.dfig[expmt_group]['figspk']
+            elif args == 'figspec':
+                d_eps = self.ddata.dfig[expmt_group]['figspec']
+
+            try:
+                fio.epscompress(d_eps, '.eps')
+            except UnboundLocalError:
+                print "oy, this is embarrassing."
 
     def do_psthgrid(self, args):
         """Aggregate plot of psth
@@ -275,12 +282,12 @@ class Console(Cmd):
 
     # def do_summary(self, args):
     #     epslist = fio.file_match(self.simpaths.dfigs['spikes'], '.eps')
-    #     clidefs.pdf_create(self.dir_data, 'testing', epslist)
+    #     clidefs.pdf_create(self.dsim, 'testing', epslist)
 
     # def do_save(self, args):
     #     """Copies the entire current directory over to the cppub directory
     #     """
-    #     copy_to_pub(self.dir_data)
+    #     copy_to_pub(self.dsim)
 
     def do_runsim(self, args):
         """Run the simulation code
@@ -301,30 +308,30 @@ class Console(Cmd):
             print "Caught a break"
 
     def do_runpwr(self, args):
-        exec_pwr(self.dir_data)
+        exec_pwr(self.dsim)
 
     def do_runrates(self, args):
-        exec_rates(self.dir_data)
+        exec_rates(self.dsim)
 
     def do_phist(self, args):
         """Create phase hist plot
         """
-        exec_phist(self.dir_data, args)
+        exec_phist(self.dsim, args)
 
     def do_pphase(self, args):
         """Create phase hist full plot
         """
-        exec_pphase(self.dir_data, args)
+        exec_pphase(self.dsim, args)
 
     def do_pcompare3(self, args):
         """Plot compare 3
         """
-        exec_pcompare3(self.dir_data, args)
+        exec_pcompare3(self.dsim, args)
 
     def do_plotvars(self, args):
         """Customizes plots
         """
-        exec_plotvars(args, self.dir_data)
+        exec_plotvars(args, self.dsim)
 
     def do_hist(self, args):
         """Print a list of commands that have been entered"""
@@ -332,7 +339,7 @@ class Console(Cmd):
 
     def do_pwd(self, args):
         """Displays active dir_data"""
-        print self.dir_data
+        print self.dsim
 
     def do_ls(self, args):
         """Displays active param list"""
@@ -439,7 +446,7 @@ class Console(Cmd):
         n = int(vars[1])
 
         if n < self.N_sims:
-            drates = os.path.join(self.dir_data, expmt, 'rates')
+            drates = os.path.join(self.dsim, expmt, 'rates')
             ratefile_list = fio.file_match(drates, '*.rates')
 
             with open(ratefile_list[n]) as frates:
@@ -468,17 +475,17 @@ class Console(Cmd):
         """Attempt to find the PNGs and open them
         """
         if args == 'all':
-            file_viewer(self.dir_data, 'all')
+            file_viewer(self.dsim, 'all')
         else:
             # pretest to see if the experimental directory exists
-            if not os.path.isdir(os.path.join(self.dir_data, args, 'spec')):
+            if not os.path.isdir(os.path.join(self.dsim, args, 'spec')):
                 print "Defaulting to first. Try one of: "
                 prettyprint(self.expmts)
-                expmt = os.path.join(self.dir_data, self.expmts[0])
+                expmt = os.path.join(self.dsim, self.expmts[0])
             else:
                 expmt = args
 
-            file_viewer(self.dir_data, expmt)
+            file_viewer(self.dsim, expmt)
 
     def complete_pngv(self, text, line, j0, J):
         if text:
