@@ -80,5 +80,7 @@ spec_max_freq: 41.
 
 # numerics
 N_trials: 3
+# prng_state: ''
+prng_state: '/Users/shane/repo/data/s1/prng_states/evoked_test-000-T07-prng.npz'
 tstop: 250.
 dt: 0.025

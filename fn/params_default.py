@@ -1,8 +1,8 @@
 # params_default.py - list of default params and values
 #
-# v 1.4.99
-# rev 2012-12-03 (SL: made this a callable function with simply the return dict)
-# last major: (MS: Added param to toggle saving of rawspec data on and off)
+# v 1.5.3
+# rev 2012-12-09 (SL: Added prng param)
+# last major: (SL: made this a callable function with simply the return dict)
 
 # flat file of default values
 # tuples for different "experiments"
@@ -18,7 +18,7 @@ def get_params_default():
         # 'pois_lamtha': 10.,
         'pois_T': 1000.,
 
-        # amplitudes of individual gaussian random inputs to L2Pyr and L5Pyr
+        # amplitudes of individual Gaussian random inputs to L2Pyr and L5Pyr
         # L2 Basket params
         'L2Basket_Gauss_A': 5.9e-5,
         'L2Basket_Gauss_mu': 200.,
@@ -48,7 +48,7 @@ def get_params_default():
         'L5Basket_Pois_A': 0.,
         'L5Basket_Pois_lamtha': 10.,
 
-        # maxsimal conducatnces for all synapses
+        # maximal conductances for all synapses
         # max conductances TO L2Pyrs
         'gbar_L2Pyr_L2Pyr': 5e-4,
         'gbar_L2Basket_L2Pyr': 5e-2,
@@ -86,6 +86,10 @@ def get_params_default():
         # numerics
         # N_trials of 0 means that seed is set by rank, will still run 1 trial (obviously)
         'N_trials': 0,
+
+        # prng_state is a string for a filename containing the random state one wants to use
+        'prng_state': None,
+
         'tstop': 1000.,
         'dt': 0.025,
     }

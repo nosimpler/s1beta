@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # s1run.py - primary run function for s1 project
 #
-# v 1.5.2
-# rev 2012-12-08 (SL: saving random state stuff)
-# last major: (SL: using SimulationPaths and not OutputDataPaths)
+# v 1.5.3
+# rev 2012-12-09 (SL: prng_state param)
+# last major: (SL: saving random state stuff)
 
 import os
 import time
@@ -60,6 +60,27 @@ def prng_in_a_pickle(filename_prng):
                 pickle.dump(data_prng, f_prng, protocol=pickle.HIGHEST_PROTOCOL)
 
     pc.barrier()
+
+def prng_from_picklejar(filename_prng):
+    pc = nrn.ParallelContext()
+    # for rank in range(int(pc.nhost())):
+    #     if rank == int(pc.id()):
+    with open(filename_prng, 'rb') as f_prng:
+        data_tmp = {
+            'rank': None,
+        }
+
+        while data_tmp['rank'] is not pc.id():
+            try:
+                data_tmp = (pickle.load(f_prng))
+                if data_tmp['rank'] == pc.id():
+                    np.random.set_state(data_tmp['prng_state'])
+            except EOFError:
+                print "This rank was not found among the saved data. Possible mismatch in the number of procs used?"
+                break
+
+    return data_tmp
+    # return data_tmp['prng_state']
 
 # copies param file into root dsim directory
 def copy_paramfile(dsim, f_psim):
@@ -132,6 +153,12 @@ def exec_runsim(f_psim):
                 nrn("dp_total = 0.")
 
                 # Seed pseudorandom number generator
+                # always check to see if one was chosen first!
+                if len(p_exp.prng_state):
+                    # attempt to read this as a file!
+                    test_data = prng_from_picklejar(p_exp.prng_state)
+                    print "In s1run.py:", test_data['rank'], pc.id()
+                    np.random.set_state(test_data['prng_state'])
                 if not p_exp.N_trials:
                     np.random.seed(rank)
 
@@ -142,7 +169,6 @@ def exec_runsim(f_psim):
                 # Set tstop before instantiating any classes
                 nrn.tstop = p['tstop']
                 nrn.dt = p['dt']
-                # nrn.cvode_active(1)
 
                 # Create network from class_net's Network class
                 # Network(gridpyr_x, gridpyr_y)
@@ -211,6 +237,8 @@ def exec_runsim(f_psim):
 
                     # write the params, but add a trial number
                     p['Trial'] = j
+                    p['exp_prefix'] = exp_prefix
+
                     paramrw.write(file_param, p, net.gid_dict)
 
                     if debug:
