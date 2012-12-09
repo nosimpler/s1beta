@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # s1run.py - primary run function for s1 project
 #
-# v 1.5.1
-# rev 2012-12-08 (SL: using SimulationPaths and not OutputDataPaths)
-# last major: (SL/MS: fixed spec with expmts)
+# v 1.5.2
+# rev 2012-12-08 (SL: saving random state stuff)
+# last major: (SL: using SimulationPaths and not OutputDataPaths)
 
 import os
 import time
@@ -11,6 +11,13 @@ import shutil
 import numpy as np
 from mpi4py import MPI
 from multiprocessing import Pool
+
+try:
+    import cPickle as pickle
+
+except ImportError:
+    import pickle
+
 from neuron import h as nrn
 nrn.load_file("stdrun.hoc")
 
@@ -36,6 +43,22 @@ def spikes_write(net, filename_spikes):
                     file_spikes.write('%3.2f\t%d\n' % (net.spiketimes.x[i], net.spikegids.x[i]))
 
     # let all nodes iterate through loop in which only one rank writes
+    pc.barrier()
+
+def prng_in_a_pickle(filename_prng):
+    pc = nrn.ParallelContext()
+    for rank in range(int(pc.nhost())):
+        pc.barrier()
+        if rank == int(pc.id()):
+            # package the rank (processor) and the rand state and dump into the thing
+            data_prng = {
+                'rank': rank,
+                'prng_state': np.random.get_state(),
+            }
+
+            with open(filename_prng, 'ab') as f_prng:
+                pickle.dump(data_prng, f_prng, protocol=pickle.HIGHEST_PROTOCOL)
+
     pc.barrier()
 
 # copies param file into root dsim directory
@@ -111,6 +134,7 @@ def exec_runsim(f_psim):
                 # Seed pseudorandom number generator
                 if not p_exp.N_trials:
                     np.random.seed(rank)
+
                 else:
                     # if there are N_trials, then randomize the seed
                     np.random.seed()
@@ -129,6 +153,11 @@ def exec_runsim(f_psim):
 
                 # spike file needs to be known by all nodes
                 file_spikes_tmp = fio.file_spike_tmp(dproj)
+                file_prng_tmp = fio.file_prng_tmp(dproj)
+
+                # write stupid prng states
+                # should have happened after the seeds (which it does)
+                prng_in_a_pickle(file_prng_tmp)
 
                 # create rotating data files and dirs on ONE central node
                 if rank == 0:
@@ -137,6 +166,10 @@ def exec_runsim(f_psim):
                     file_param = ddir.create_filename(expmt_group, 'param', exp_prefix)
                     file_spikes = ddir.create_filename(expmt_group, 'rawspk', exp_prefix)
                     file_spec = ddir.create_filename(expmt_group, 'rawspec', exp_prefix)
+                    file_prng = ddir.create_filename(expmt_group, 'prngstate', exp_prefix)
+
+                    # move the prng file to the prng dir
+                    shutil.move(file_prng_tmp, file_prng)
 
                 # debug
                 debug = 0
@@ -179,7 +212,6 @@ def exec_runsim(f_psim):
                     # write the params, but add a trial number
                     p['Trial'] = j
                     paramrw.write(file_param, p, net.gid_dict)
-                    # paramrw.write(file_param, p, net.p_ext, net.gid_dict)
 
                     if debug:
                         with open(filename_debug, 'w+') as file_debug:
