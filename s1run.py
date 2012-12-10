@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # s1run.py - primary run function for s1 project
 #
-# v 1.5.3
-# rev 2012-12-09 (SL: prng_state param)
-# last major: (SL: saving random state stuff)
+# v 1.5.4
+# rev 2012-12-10 (SL: fixed prng_state stuff, minimally tested)
+# last major: (SL: prng_state param)
 
 import os
 import time
@@ -63,24 +63,22 @@ def prng_in_a_pickle(filename_prng):
 
 def prng_from_picklejar(filename_prng):
     pc = nrn.ParallelContext()
-    # for rank in range(int(pc.nhost())):
-    #     if rank == int(pc.id()):
+
+    l = []
+
+    # open the prng file in read/binary mode
     with open(filename_prng, 'rb') as f_prng:
-        data_tmp = {
-            'rank': None,
-        }
-
-        while data_tmp['rank'] is not pc.id():
+        # stop the loop when rank is the same as the id
+        # while data_tmp['rank'] is not pc.id():
+        while True:
             try:
-                data_tmp = (pickle.load(f_prng))
-                if data_tmp['rank'] == pc.id():
-                    np.random.set_state(data_tmp['prng_state'])
+                l.append(pickle.load(f_prng))
             except EOFError:
-                print "This rank was not found among the saved data. Possible mismatch in the number of procs used?"
-                break
-
-    return data_tmp
-    # return data_tmp['prng_state']
+                # print "Rank not found among the saved data. Possible mismatch in number of procs used?"
+                right_seed = [prng_state_data for prng_state_data in l if prng_state_data['rank'] is int(pc.id())]
+                if len(right_seed) == 1:
+                    print "ok %i \n" % right_seed[0]['rank']
+                return right_seed[0]
 
 # copies param file into root dsim directory
 def copy_paramfile(dsim, f_psim):
@@ -157,22 +155,20 @@ def exec_runsim(f_psim):
                 if len(p_exp.prng_state):
                     # attempt to read this as a file!
                     test_data = prng_from_picklejar(p_exp.prng_state)
-                    print "In s1run.py:", test_data['rank'], pc.id()
+                    print "%i, %i\n" % (int(pc.id()), test_data['rank'])
                     np.random.set_state(test_data['prng_state'])
-                if not p_exp.N_trials:
-                    np.random.seed(rank)
 
                 else:
-                    # if there are N_trials, then randomize the seed
-                    np.random.seed()
+                    if not p_exp.N_trials:
+                        np.random.seed(rank)
+
+                    else:
+                        # if there are N_trials, then randomize the seed
+                        np.random.seed()
 
                 # Set tstop before instantiating any classes
                 nrn.tstop = p['tstop']
                 nrn.dt = p['dt']
-
-                # Create network from class_net's Network class
-                # Network(gridpyr_x, gridpyr_y)
-                net = Network(p)
 
                 # create prefix for files everyone knows about
                 exp_prefix = "%s-%03d-T%02d" % (p_exp.sim_prefix, i, j)
@@ -184,6 +180,10 @@ def exec_runsim(f_psim):
                 # write stupid prng states
                 # should have happened after the seeds (which it does)
                 prng_in_a_pickle(file_prng_tmp)
+
+                # Create network from class_net's Network class
+                # Network(gridpyr_x, gridpyr_y)
+                net = Network(p)
 
                 # create rotating data files and dirs on ONE central node
                 if rank == 0:
