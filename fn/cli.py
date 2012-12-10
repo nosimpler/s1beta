@@ -1,8 +1,8 @@
 # cli.py - routines for the command line interface console sssh.py
 #
-# v 1.5.1
-# rev 2012-12-08 (SL: Fixed some load routines, some replotting)
-# last major: (SL: reorganized, cleaned, and added sync "officially")
+# v 1.5.5
+# rev 2012-12-10 (SL: Merged file function, updated replot function)
+# last major: (SL: Fixed some load routines, some replotting)
 
 from cmd import Cmd
 from datetime import datetime
@@ -49,8 +49,9 @@ class Console(Cmd):
     def do_debug(self, args):
         """Qnd function to test many other functions
         """
-        self.do_setdate('from_remote/2012-12-05')
+        # self.do_setdate('from_remote/2012-12-05')
         self.do_load('evoked_test-000')
+        self.do_replot('')
         # self.epscompress('spk')
         # self.do_psthgrid()
 
@@ -121,10 +122,12 @@ class Console(Cmd):
     def do_giddict(self, args):
         pass
 
-    def do_open(self, args):
+    def do_file(self, args):
         """Attempts to open a new file of params
         """
-        if os.path.isfile(args):
+        if not args:
+            print self.file_input
+        elif os.path.isfile(args):
             self.file_input = args
             print "New file is:", self.file_input
         else:
@@ -143,10 +146,10 @@ class Console(Cmd):
         print "expmts is:", self.expmts
 
     ## Command definitions ##
-    def do_file(self, args):
-        """Print .params file being read for simulations
-        """
-        print self.file_input
+    # def do_file(self, args):
+    #     """Print .params file being read for simulations
+    #     """
+    #     print self.file_input
 
     def do_expmts(self, args):
         """Show list of experiments
@@ -234,7 +237,7 @@ class Console(Cmd):
         pool.close()
         pool.join()
 
-    def do_replot(self):
+    def do_replot(self, args):
         """Regenerates plots in given directory
         """
         clidefs.regenerate_plots(self.ddata)
@@ -293,16 +296,11 @@ class Console(Cmd):
         """Run the simulation code
         """
         try:
-            # self.expmts is the kain expmt subfolder
-            # cmd_list = ['mpiexec -n 4 ./s1run.py param/debug.param']
-            # cmd_list.append('mpiexec -n 4 ./s1run.py param/debug.param')
             cmd_list = []
-            cmd_list.append('mpiexec -n 8 ./s1run.py param/inhtone.param')
-            cmd_list.append('mpiexec -n 8 ./s1run.py param/test.param')
+            cmd_list.append('mpiexec -n %i ./s1run.py %s' % (self.nprocs, self.file_input))
 
             for cmd in cmd_list:
-                proc = subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                proc.wait()
+                subprocess.call(cmd, shell=True)
 
         except (KeyboardInterrupt):
             print "Caught a break"

@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # s1run.py - primary run function for s1 project
 #
-# v 1.5.4
-# rev 2012-12-10 (SL: fixed prng_state stuff, minimally tested)
-# last major: (SL: prng_state param)
+# v 1.5.5
+# rev 2012-12-10 (SL: cleaned up)
+# last major: (SL: fixed prng_state stuff, minimally tested)
 
 import os
 import time
@@ -76,8 +76,6 @@ def prng_from_picklejar(filename_prng):
             except EOFError:
                 # print "Rank not found among the saved data. Possible mismatch in number of procs used?"
                 right_seed = [prng_state_data for prng_state_data in l if prng_state_data['rank'] is int(pc.id())]
-                if len(right_seed) == 1:
-                    print "ok %i \n" % right_seed[0]['rank']
                 return right_seed[0]
 
 # copies param file into root dsim directory
@@ -155,7 +153,7 @@ def exec_runsim(f_psim):
                 if len(p_exp.prng_state):
                     # attempt to read this as a file!
                     test_data = prng_from_picklejar(p_exp.prng_state)
-                    print "%i, %i\n" % (int(pc.id()), test_data['rank'])
+                    # print "%i, %i\n" % (int(pc.id()), test_data['rank'])
                     np.random.set_state(test_data['prng_state'])
 
                 else:
@@ -286,7 +284,6 @@ def exec_runsim(f_psim):
 
             # run plots and epscompress function
             plotfn.pall(ddir, p_exp, spec_results)
-            # plotfn.pall(ddir, p_exp, spec_results, net.gid_dict, nrn.tstop)
 
             # for each experimental group, do the relevant png/eps creation and optimization
             for expmt_group in ddir.expmt_groups:

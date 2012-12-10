@@ -2,9 +2,9 @@
 
 # s1sh.py - run simulations and create interactive env
 #
-# v 1.2.0
-# rev 2012-09-27 (SL: imported from aush)
-# last major:
+# v 1.5.5
+# rev 2012-12-10 (SL: cleaned up)
+# last major: (SL: imported from aush)
 
 import readline, sys
 from fn.cli import Console
@@ -34,8 +34,4 @@ if __name__ == '__main__':
 
     # Run the console
     console = Console(file_input)
-    # try:
-    #     console.cmdloop()
-    # except (KeyboardInterrupt):
-    #     print "Figure this out!"
     console.cmdloop()
