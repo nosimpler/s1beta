@@ -1,8 +1,8 @@
 # paramrw.py - routines for reading the param files
 #
-# v 1.5.3
-# rev 2012-12-09 (SL: some val string catches and added prng_state param)
-# last major: (SL: read_expmt_groups)
+# v 1.5.6
+# rev 2012-12-10 (SL: Added strength params for thalamic feeds)
+# last major: (SL: some val string catches and added prng_state param)
 
 import re
 import fileio as fio
@@ -309,10 +309,14 @@ def create_pext(p, tstop):
         'f_input': p['f_input_prox'],
         't0': p['t0_input'],
         'stdev': p['f_stdev'],
-        'L2Pyr': (4e-5, 0.1),
-        'L5Pyr': (4e-5, 1.),
-        'L2Basket': (8e-5, 0.1),
-        'L5Basket': (8e-5, 1.),
+        'L2Pyr': (p['input_prox_A_pyr'], 0.1),
+        'L5Pyr': (p['input_prox_A_pyr'], 1.),
+        'L2Basket': (p['input_prox_A_inh'], 0.1),
+        'L5Basket': (p['input_prox_A_inh'], 1.),
+        # 'L2Pyr': (4e-5, 0.1),
+        # 'L5Pyr': (4e-5, 1.),
+        # 'L2Basket': (8e-5, 0.1),
+        # 'L5Basket': (8e-5, 1.),
         'lamtha': 100.,
         'loc': 'proximal'
     }
@@ -323,9 +327,12 @@ def create_pext(p, tstop):
         'f_input': p['f_input_dist'],
         'stdev': p['f_stdev'],
         't0': p['t0_input'],
-        'L2Pyr': (4e-5, 5.),
-        'L5Pyr': (4e-5, 5.),
-        'L2Basket': (4e-5, 5.),
+        'L2Pyr': (p['input_dist_A_pyr'], 5.),
+        'L5Pyr': (p['input_dist_A_pyr'], 5.),
+        'L2Basket': (p['input_dist_A_inh'], 5.),
+        # 'L2Pyr': (4e-5, 5.),
+        # 'L5Pyr': (4e-5, 5.),
+        # 'L2Basket': (4e-5, 5.),
         'lamtha': 100.,
         'loc': 'distal'
     }

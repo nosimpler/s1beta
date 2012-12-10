@@ -70,6 +70,15 @@ f_input_prox: 10.
 f_input_dist: 10.
 f_stdev: 20.
 
+# thalamic input amplitudes
+input_prox_A_pyr: 4e-5
+input_prox_A_inh: 8e-5
+
+# current values, not sure where these distal values come from, need to check
+input_dist_A_pyr: 4e-5
+input_dist_A_inh: 4e-5
+# input_dist_A_inh: 8e-5
+
 # times for evoked responses
 t_evoked_prox_early: 2000.
 t_evoked_prox_late: 2000.

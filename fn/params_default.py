@@ -1,8 +1,8 @@
 # params_default.py - list of default params and values
 #
-# v 1.5.3
-# rev 2012-12-09 (SL: Added prng param)
-# last major: (SL: made this a callable function with simply the return dict)
+# v 1.5.6
+# rev 2012-12-10 (SL: Added strength params for thalamic feeds)
+# last major: (SL: Added prng param)
 
 # flat file of default values
 # tuples for different "experiments"
@@ -73,6 +73,15 @@ def get_params_default():
         'f_input_prox': 10.,
         'f_input_dist': 10.,
         'f_stdev': 20.,
+
+        # thalamic input amplitudes
+        'input_prox_A_pyr': 4e-5,
+        'input_prox_A_inh': 8e-5,
+
+        # current values, not sure where these distal values come from, need to check
+        'input_dist_A_pyr': 4e-5,
+        'input_dist_A_inh': 4e-5,
+        # 'input_dist_A_inh': 8e-5,
 
         # times for evoked responses
         't_evoked_prox_early': 454.,
