@@ -1,8 +1,8 @@
 # cli.py - routines for the command line interface console sssh.py
 #
-# v 1.5.5
-# rev 2012-12-10 (SL: Merged file function, updated replot function)
-# last major: (SL: Fixed some load routines, some replotting)
+# v 1.5.7
+# rev 2012-12-12 (SL: Fixed a few fns)
+# last major: (SL: Merged file function, updated replot function)
 
 from cmd import Cmd
 from datetime import datetime
@@ -113,9 +113,10 @@ class Console(Cmd):
             server_remote = raw_input("Server address: ")
             clidefs.sync_remote_data(self.dproj, server_remote, dsubdir)
 
-            # I recognize that this is redundant
-            dcheck = os.path.join(self.dproj, self.ddate, args)
-            self.dlist = get_subdir_list(dcheck)
+            # path
+            newdir = os.path.join('from_remote', dsubdir)
+            self.do_setdate(newdir)
+
         except:
             print "Something went wrong here."
 
@@ -241,23 +242,6 @@ class Console(Cmd):
         """Regenerates plots in given directory
         """
         clidefs.regenerate_plots(self.ddata)
-
-        # simpaths.filelists is the list of files
-        # fparam = self.simpaths.filelists['param'][0]
-        # dfig_spk = self.simpaths.dfigs['spikes']
-
-        # # same for all spike rasters
-        # fext_figspk = self.simpaths.datatypes['figspk']
-
-        # pool = multiprocessing.Pool()
-        # for fparam, fspk in it.izip(self.simpaths.filelists['param'], self.simpaths.filelists['rawspk']):
-        #     gid_dict, p = paramrw.read(fparam)
-        #     pool.apply_async(praster, (gid_dict, p['tstop'], fspk, dfig_spk))
-
-        # pool.close()
-        # pool.join()
-
-        # fio.epscompress(dfig_spk, fext_figspk)
 
     def do_epscompress(self, args):
         """Runs the eps compress utils on the specified fig type (currently either spk or spec)
