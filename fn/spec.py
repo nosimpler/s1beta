@@ -1,8 +1,8 @@
 # spec.py - Average time-frequency energy representation using Morlet wavelet method
 #
-# v 1.5.1
-# rev 2012-12-08 (SL: added from_expmt filter)
-# last major: (SL: fixed spec to work with expmts)
+# v 1.5.5
+# rev 2012-12-10 (SL: changed pspec to include dipole)
+# last major: (SL: added from_expmt filter)
 
 import os
 import numpy as np
@@ -15,7 +15,7 @@ from multiprocessing import Pool
 from neuron import h as nrn
 
 import fileio as fio
-from axes_create import fig_spec
+from axes_create import FigSpec
 
 # general spec write/read functions
 def write(fdata_spec, t_vec, f_vec, TFR):
@@ -39,10 +39,13 @@ class MorletSpec():
         data_raw = np.loadtxt(open(fdata, 'rb'))
         self.S = data_raw.squeeze()
 
+        # cutoff time in ms
+        self.tmin = 150.
+
         # Check that tstop is greater than 150 ms:
-        if p_dict['tstop'] > 150.:
-            # Remove first 150ms of simulation
-            self.S = self.S[150./p_dict['dt']+1:, 1]
+        if p_dict['tstop'] > self.tmin:
+            # Remove first 150 ms of simulation
+            self.S = self.S[self.tmin / p_dict['dt']+1:, 1]
 
             # Array of frequencies over which to sort
             self.freqvec = np.arange(1., p_dict['spec_max_freq'])
@@ -66,18 +69,20 @@ class MorletSpec():
         else:
             print "tstop not greater than 150ms. Skipping wavelet analysis."
 
+    # also creates self.timevec
     def __traces2TFR(self):
         self.S_trans = self.S.transpose()
 
         # range should probably be 0 to len(self.S_trans)
-        self.timevec = 1000. * np.arange(1, len(self.S_trans)+1)/self.fs
+        # shift tvec to reflect change
+        self.timevec = 1000. * np.arange(1, len(self.S_trans)+1)/self.fs + self.tmin
 
         B = np.zeros((len(self.freqvec), len(self.S_trans)))
  
         if self.S_trans.ndim == 1:
             for j in range(0, len(self.freqvec)):
-                    s = sps.detrend(self.S_trans[:])
-                    B[j,:] = B[j,:] + self.__energyvec(self.freqvec[j], self.__lnr50(s))
+                s = sps.detrend(self.S_trans[:])
+                B[j,:] = B[j,:] + self.__energyvec(self.freqvec[j], self.__lnr50(s))
 
             return B
 
@@ -96,7 +101,7 @@ class MorletSpec():
         sf = f / self.width
         st = 1. / (2.*np.pi*sf)
 
-        t = np.arange(-3.5*st,3.5*st,dt) 
+        t = np.arange(-3.5*st, 3.5*st, dt)
         m = self.__morlet(f, t)
         y = sps.fftconvolve(s, m)
         y = (2. * abs(y) / self.fs)**2
@@ -129,7 +134,7 @@ class MorletSpec():
         if np.ndim(s) == 1:
             Sc = np.zeros(s.shape)
             Sft = self.__ft(s[:], fNoise)
-            Sc[:] = s[:] - abs(Sft) * np.cos(2.*np.pi*fNoise*tv-np.angle(Sft))
+            Sc[:] = s[:] - abs(Sft) * np.cos(2. * np.pi * fNoise * tv - np.angle(Sft))
 
             return Sc
 
@@ -139,7 +144,7 @@ class MorletSpec():
 
             for k in range(0, len(s)):
                 Sft = ft(s[k,:], fNoise)
-                Sc[k,:] = s[k,:] - abs(Sft) * np.cos(2.*np.pi*fNoise*tv-np.angle(Sft))
+                Sc[k,:] = s[k,:] - abs(Sft) * np.cos(2. * np.pi * fNoise * tv - np.angle(Sft))
                 
             return Sc.tranpose()
 
@@ -150,8 +155,10 @@ class MorletSpec():
 
         return S
 
-def pspec(dspec, dfig, p_dict, key_types):
+# Spectral plotting kernel for ONE simulation run
+def pspec(dspec, f_dpl, dfig, p_dict, key_types):
     timevec = dspec.timevec
+
     freqvec = dspec.freqvec
     TFR = dspec.TFR
 
@@ -164,21 +171,34 @@ def pspec(dspec, dfig, p_dict, key_types):
     # TFR = np.delete(dspec['TFR'], (0), axis = 0)
     fprefix = fio.strip_extprefix(dspec.name)
 
-    # Split to find file prefix
-    # file_prefix = file_name.split('/')[-1].split('.')[0]
-    # fig_name = os.path.join(dfig, file_prefix+'.png')
+    # Create the fig name
     fig_name = os.path.join(dfig, fprefix+'.eps')
 
-    # Plot data
-    f = fig_spec()
-    pc = f.ax0.imshow(TFR, extent=[timevec[0], timevec[-1], freqvec[-1], freqvec[0]], aspect='auto', origin='upper')
-    f.f.colorbar(pc)
+    # f.f is the figure handle!
+    f = FigSpec()
+    pc = f.ax['spec'].imshow(TFR, extent=[timevec[0], timevec[-1], freqvec[-1], freqvec[0]], aspect='auto', origin='upper')
+    f.f.colorbar(pc, ax=f.ax['spec'])
 
-    plt.xlabel('Time (ms)')
-    plt.ylabel('Frequency (Hz)')
+    # grab the dipole data
+    data_dipole = np.loadtxt(open(f_dpl, 'r'))
 
-    title = [key + ': %2.1f' %p_dict[key] for key in key_types['dynamic_keys']]
-    plt.title(title)
+    t_dpl = data_dipole[:, 0]
+    dp_total = data_dipole[:, 1]
+
+    f.ax['dipole'].plot(t_dpl, dp_total)
+    x = (150., f.ax['dipole'].get_xlim()[1])
+
+    # for now, set the xlim for the other one, force it!
+    f.ax['dipole'].set_xlim(x)
+    f.ax['spec'].set_xlim(x)
+
+    # axis labels
+    f.ax['spec'].set_xlabel('Time (ms)')
+    f.ax['spec'].set_ylabel('Frequency (Hz)')
+
+    # create title
+    title_str = [key + ': %2.1f' % p_dict[key] for key in key_types['dynamic_keys']]
+    f.f.suptitle(title_str)
 
     plt.savefig(fig_name)
     f.close()
@@ -214,6 +234,7 @@ def analysis(ddir, p_exp):
         pl.close()
         pl.join()
 
+    # sort the spec results by the spec object's name and return
     return sorted(spec_results, key=lambda spec_obj: spec_obj.name)
 
 # returns spec results *only* for a given experimental group

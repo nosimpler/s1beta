@@ -1,8 +1,8 @@
 # cli.py - routines for the command line interface console sssh.py
 #
-# v 1.5.1
-# rev 2012-12-08 (SL: Fixed some load routines, some replotting)
-# last major: (SL: reorganized, cleaned, and added sync "officially")
+# v 1.5.7
+# rev 2012-12-12 (SL: Fixed a few fns)
+# last major: (SL: Merged file function, updated replot function)
 
 from cmd import Cmd
 from datetime import datetime
@@ -49,8 +49,9 @@ class Console(Cmd):
     def do_debug(self, args):
         """Qnd function to test many other functions
         """
-        self.do_setdate('from_remote/2012-12-05')
+        # self.do_setdate('from_remote/2012-12-05')
         self.do_load('evoked_test-000')
+        self.do_replot('')
         # self.epscompress('spk')
         # self.do_psthgrid()
 
@@ -112,19 +113,22 @@ class Console(Cmd):
             server_remote = raw_input("Server address: ")
             clidefs.sync_remote_data(self.dproj, server_remote, dsubdir)
 
-            # I recognize that this is redundant
-            dcheck = os.path.join(self.dproj, self.ddate, args)
-            self.dlist = get_subdir_list(dcheck)
+            # path
+            newdir = os.path.join('from_remote', dsubdir)
+            self.do_setdate(newdir)
+
         except:
             print "Something went wrong here."
 
     def do_giddict(self, args):
         pass
 
-    def do_open(self, args):
+    def do_file(self, args):
         """Attempts to open a new file of params
         """
-        if os.path.isfile(args):
+        if not args:
+            print self.file_input
+        elif os.path.isfile(args):
             self.file_input = args
             print "New file is:", self.file_input
         else:
@@ -143,10 +147,10 @@ class Console(Cmd):
         print "expmts is:", self.expmts
 
     ## Command definitions ##
-    def do_file(self, args):
-        """Print .params file being read for simulations
-        """
-        print self.file_input
+    # def do_file(self, args):
+    #     """Print .params file being read for simulations
+    #     """
+    #     print self.file_input
 
     def do_expmts(self, args):
         """Show list of experiments
@@ -234,27 +238,10 @@ class Console(Cmd):
         pool.close()
         pool.join()
 
-    def do_replot(self):
+    def do_replot(self, args):
         """Regenerates plots in given directory
         """
         clidefs.regenerate_plots(self.ddata)
-
-        # simpaths.filelists is the list of files
-        # fparam = self.simpaths.filelists['param'][0]
-        # dfig_spk = self.simpaths.dfigs['spikes']
-
-        # # same for all spike rasters
-        # fext_figspk = self.simpaths.datatypes['figspk']
-
-        # pool = multiprocessing.Pool()
-        # for fparam, fspk in it.izip(self.simpaths.filelists['param'], self.simpaths.filelists['rawspk']):
-        #     gid_dict, p = paramrw.read(fparam)
-        #     pool.apply_async(praster, (gid_dict, p['tstop'], fspk, dfig_spk))
-
-        # pool.close()
-        # pool.join()
-
-        # fio.epscompress(dfig_spk, fext_figspk)
 
     def do_epscompress(self, args):
         """Runs the eps compress utils on the specified fig type (currently either spk or spec)
@@ -293,16 +280,11 @@ class Console(Cmd):
         """Run the simulation code
         """
         try:
-            # self.expmts is the kain expmt subfolder
-            # cmd_list = ['mpiexec -n 4 ./s1run.py param/debug.param']
-            # cmd_list.append('mpiexec -n 4 ./s1run.py param/debug.param')
             cmd_list = []
-            cmd_list.append('mpiexec -n 8 ./s1run.py param/inhtone.param')
-            cmd_list.append('mpiexec -n 8 ./s1run.py param/test.param')
+            cmd_list.append('mpiexec -n %i ./s1run.py %s' % (self.nprocs, self.file_input))
 
             for cmd in cmd_list:
-                proc = subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                proc.wait()
+                subprocess.call(cmd, shell=True)
 
         except (KeyboardInterrupt):
             print "Caught a break"

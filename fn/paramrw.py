@@ -1,8 +1,8 @@
 # paramrw.py - routines for reading the param files
 #
-# v 1.5.1
-# rev 2012-12-08 (SL: read_expmt_groups)
-# last major: (SL: added linspace capability to expmts)
+# v 1.5.6
+# rev 2012-12-10 (SL: Added strength params for thalamic feeds)
+# last major: (SL: some val string catches and added prng_state param)
 
 import re
 import fileio as fio
@@ -33,14 +33,16 @@ def read(fparam):
                 gid_dict[key] = np.array([])
 
         else:
-            p[key] = float(val)
+            try:
+                p[key] = float(val)
+            except ValueError:
+                p[key] = str(val)
 
     return gid_dict, p
 
 # write the params to a filename
 # now sorting
 def write(fparam, p, gid_list):
-# def write(fparam, p, p_ext, gid_list):
     # sort the items in the dict by key
     p_sorted = [key for key in p.iteritems()]
     p_sorted.sort(key=lambda x: x[0])
@@ -108,8 +110,6 @@ def read_expmt_groups(fparam):
 # class controlling multiple simulation files (.param)
 class ExpParams():
     def __init__(self, f_psim):
-        # each group in p_group is a FULL param file (easier to think about?)
-        # self.p_group = {}
         self.expmt_group_params = []
 
         # read in params from a file
@@ -119,9 +119,12 @@ class ExpParams():
         # create non-exp params dict from default dict
         self.__create_dict_from_default(p_all_input)
 
-        # pop off the value for sim_prefix and int(N_trials) then continue
+        # pop off fixed known vals
         self.sim_prefix = self.p_all.pop('sim_prefix')
         self.N_trials = int(self.p_all.pop('N_trials'))
+        self.prng_state = self.p_all.pop('prng_state')[1:-1]
+
+        # create the list of iterated params
         self.list_params = self.__create_paramlist()
         self.N_sims = len(self.list_params[0][1])
 
@@ -155,12 +158,6 @@ class ExpParams():
                 for group in self.p_group:
                     self.p_group[group] = {}
 
-                # p_template is the template for the final dict
-                # empty for now, updated later
-                # self.p_template = dict()
-
-                # self.N_expmt_groups = len(self.expmt_groups)
-
             else:
                 # assign group params first
                 if val[0] is '{':
@@ -191,7 +188,10 @@ class ExpParams():
                     p[param] = self.__expand_linspace(val)
 
                 else:
-                    p[param] = float(val)
+                    try:
+                        p[param] = float(val)
+                    except ValueError:
+                        p[param] = str(val)
 
         return p
 
@@ -309,10 +309,14 @@ def create_pext(p, tstop):
         'f_input': p['f_input_prox'],
         't0': p['t0_input'],
         'stdev': p['f_stdev'],
-        'L2Pyr': (4e-5, 0.1),
-        'L5Pyr': (4e-5, 1.),
-        'L2Basket': (8e-5, 0.1),
-        'L5Basket': (8e-5, 1.),
+        'L2Pyr': (p['input_prox_A_pyr'], 0.1),
+        'L5Pyr': (p['input_prox_A_pyr'], 1.),
+        'L2Basket': (p['input_prox_A_inh'], 0.1),
+        'L5Basket': (p['input_prox_A_inh'], 1.),
+        # 'L2Pyr': (4e-5, 0.1),
+        # 'L5Pyr': (4e-5, 1.),
+        # 'L2Basket': (8e-5, 0.1),
+        # 'L5Basket': (8e-5, 1.),
         'lamtha': 100.,
         'loc': 'proximal'
     }
@@ -323,9 +327,12 @@ def create_pext(p, tstop):
         'f_input': p['f_input_dist'],
         'stdev': p['f_stdev'],
         't0': p['t0_input'],
-        'L2Pyr': (4e-5, 5.),
-        'L5Pyr': (4e-5, 5.),
-        'L2Basket': (4e-5, 5.),
+        'L2Pyr': (p['input_dist_A_pyr'], 5.),
+        'L5Pyr': (p['input_dist_A_pyr'], 5.),
+        'L2Basket': (p['input_dist_A_inh'], 5.),
+        # 'L2Pyr': (4e-5, 5.),
+        # 'L5Pyr': (4e-5, 5.),
+        # 'L2Basket': (4e-5, 5.),
         'lamtha': 100.,
         'loc': 'distal'
     }

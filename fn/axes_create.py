@@ -1,8 +1,8 @@
 # axes_create.py - simple axis creation
 #
-# v 1.4.3
-# rev 2012-11-14 (SL: added fig_psthgrid)
-# last major: (SL: Added fig_psth)
+# v 1.5.5
+# rev 2012-12-10 (SL: Fixed FigSpec)
+# last major: (SL: added fig_psthgrid)
 
 # usage:
 # testfig = fig_std()
@@ -28,18 +28,33 @@ class fig_std():
     def close(self):
         plt.close(self.f)
 
-class fig_spec():
+# spec plus dipole
+class FigSpec():
     def __init__(self):
         self.f = plt.figure(figsize = (8, 6))
-        font_prop = {'size': 10}
+        font_prop = {'size': 8}
         mpl.rc('font', **font_prop)
 
-        gs0 = gridspec.GridSpec(1, 1)
-        self.ax0 = self.f.add_subplot(gs0[:])
+        # gs0 = gridspec.GridSpec(1, 1)
+        # self.ax0 = self.f.add_subplot(gs0[:])
 
-        # gs0 = gridspec.GridSpec(2, 1, height_ratios=[1,3])
-        # self.ax0 = self.f.add_subplot(gs0[:1, :])
-        # self.ax1 = self.f.add_subplot(gs0[1:2, :])
+        # the right margin is a hack and NOT guaranteed!
+        # it's making space for the stupid colorbar that creates a new grid to replace gs1
+        # when called, and it doesn't update the params of gs1
+        self.gs0 = gridspec.GridSpec(2, 1, height_ratios=[1, 3], bottom=0.65, top=0.95, left=0.1, right=0.82)
+        self.gs1 = gridspec.GridSpec(1, 4, wspace=0.05, hspace=0., bottom=0.10, top=0.60, left=0.1, right=1.)
+
+        self.ax = {}
+        self.ax['dipole'] = self.f.add_subplot(self.gs0[:, :])
+        self.ax['spec'] = self.f.add_subplot(self.gs1[:, :])
+        # self.ax['spec'].set_xlabel('Time')
+        # self.f.suptitle('testing')
+
+        # get the xlim of the dipople
+        # x = self.ax['dipole'].get_xlim()
+
+        # for now, set the xlim for the other one, force it!
+        # self.ax['spec'].set_xlim(x)
 
     def close(self):
         plt.close(self.f)
@@ -71,7 +86,6 @@ class fig_raster():
         self.ax[layer] = self.f.add_subplot(grid[:2, :])
         self.ax[layer+'_extgauss'] = self.f.add_subplot(grid[2:3, :])
         self.ax[layer+'_extpois'] = self.f.add_subplot(grid[3:, :])
-        # self.ax_L2 = self.f.add_subplot(grid[:2, :])
 
     def __bottom_panel_prop(self, ax):
         ax.set_yticklabels('')
@@ -217,14 +231,12 @@ def testfn():
     # testfig = fig_raster(100)
     # testfig.ax['L5'].plot(x)
 
-    # testfig = fig_spec()
+    testfig = FigSpec()
+    testfig.ax['spec'].plot(x)
     # testfig.ax0.plot(x)
 
     # testfig = fig_psth(100)
     # testfig.ax['L5_extpois'].plot(x)
-
-    testfig = fig_psthgrid(5, 6, 100)
-    # testfig.ax[0][0].plot(x)
 
     plt.savefig('testing.png')
     testfig.close()
