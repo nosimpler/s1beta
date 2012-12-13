@@ -1,8 +1,8 @@
 # paramrw.py - routines for reading the param files
 #
-# v 1.5.6
-# rev 2012-12-10 (SL: Added strength params for thalamic feeds)
-# last major: (SL: some val string catches and added prng_state param)
+# v 1.5.8
+# rev 2012-12-12 (SL: Changed evoked strengths for non-perceived threshold)
+# last major: (SL: Added strength params for thalamic feeds)
 
 import re
 import fileio as fio
@@ -341,6 +341,8 @@ def create_pext(p, tstop):
 
     # Create evoked response parameters
     # f_input needs to be defined as 0
+    # these vals correspond to non-perceived max 
+    #   conductance threshold in uS (Jones et al. 2007)
     evoked_prox_early = {
         'f_input': 0.,
         't0': p['t_evoked_prox_early'],
@@ -357,10 +359,10 @@ def create_pext(p, tstop):
     evoked_prox_late = {
         'f_input': 0.,
         't0': p['t_evoked_prox_late'],
-        'L2Pyr': (6.89e-3, 0.1),
-        'L5Pyr': (3.471e-3, 5.),
-        'L2Basket': (6.89e-3, 0.1),
-        'L5Basket': (3.471e-3, 5.),
+        'L2Pyr': (5.3e-3, 0.1),
+        'L5Pyr': (2.7e-3, 5.),
+        'L2Basket': (5.3e-3, 0.1),
+        'L5Basket': (2.7e-3, 5.),
         'lamtha': 3.,
         'loc': 'proximal'
     }
@@ -370,9 +372,9 @@ def create_pext(p, tstop):
     evoked_dist = {
         'f_input': 0.,
         't0': p['t_evoked_dist'],
-        'L2Pyr': (1.05e-3, 0.1),
-        'L5Pyr': (1.05e-3, 0.1),
-        'L2Basket': (5.02e-4, 0.1),
+        'L2Pyr': (1e-3, 0.1),
+        'L5Pyr': (1e-3, 0.1),
+        'L2Basket': (5e-4, 0.1),
         'lamtha': 3.,
         'loc': 'distal'
     }
