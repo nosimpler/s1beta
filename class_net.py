@@ -1,8 +1,8 @@
 # class_net.py - establishes the Network class and related methods
 #
-# v 1.4.100
-# rev 2012-12-04 (SL: syntax)
-# last major: (MS: Added __state_init() to initialize cells to baseline potential)
+# v 1.5.8a
+# rev 2012-12-13 (SL: cleanup)
+# last major: (SL: syntax)
 
 import itertools as it
 import numpy as np
@@ -283,7 +283,7 @@ class Network():
                     # to find param index, take difference between REAL gid here and gid start point of the items
                     p_ind = gid - self.gid_dict['extinput'][0]
 
-                   # now use the param index in the params and create the cell and artificial NetCon
+                    # now use the param index in the params and create the cell and artificial NetCon
                     # what is self.t_evoked?
                     # self.t_evoked = nrn.Vector([10.])
                     self.extinput_list.append(ParFeedExt(self.origin, self.p_ext[p_ind]))

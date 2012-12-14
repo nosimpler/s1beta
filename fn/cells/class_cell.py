@@ -1,8 +1,8 @@
 # class_cell.py - establish class def for general cell features
 #
-# v 1.4.1
-# rev 2012-11-07 (MS: All properties set using dictionaries passed in as params)
-# last rev: (MS: All synapse creation and biophysics moved to individual cell classes)
+# v 1.5.8a
+# rev 2012-12-13 (SL: cleanup)
+# last rev: (MS: All properties set using dictionaries passed in as params)
 
 import numpy as np
 import itertools as it
@@ -24,22 +24,12 @@ class Cell():
         self.diam = soma_props['diam']
         self.pos = soma_props['pos']
 
-        # self.L = L_soma
-        # self.diam = diam_soma
-        # self.pos = pos
-
         # create soma and set geometry
         self.soma = nrn.Section(cell=self, name=soma_props['name']+'_soma')
         self.soma.L = soma_props['L']
         self.soma.diam = soma_props['diam']
         self.soma.Ra = soma_props['Ra']
         self.soma.cm = soma_props['cm']
-
-        # self.soma = nrn.Section(cell=self, name=cell_name+'_soma')
-        # self.soma.L = L_soma
-        # self.soma.diam = diam_soma
-        # self.soma.Ra = 200
-        # self.soma.cm = cm
 
         # par: create arbitrary lists of connections FROM other cells TO this cell instantiation
         # these lists are allowed to be empty
@@ -314,14 +304,6 @@ class Pyr(Cell):
             self.list_dend[-1].diam = dend_props[sect_name]['diam']
             self.list_dend[-1].Ra = soma_props['Ra']
             self.list_dend[-1].cm = soma_props['cm']
-
-        # for sec_name, L, diam in dend_props:
-        #     self.list_dend.append(nrn.Section(name=self.name+'_'+sec_name))
-        #     self.list_dend[-1].L = L
-        #     self.list_dend[-1].diam = diam
-        #     self.list_dend[-1].Ra = 200
-        #     self.list_dend[-1].cm = cm
-
 
             # set nseg for each dend
             if dend_props[sect_name]['L'] > 100:

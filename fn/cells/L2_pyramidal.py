@@ -1,8 +1,8 @@
 # L2_pyramidal.py - est class def for layer 2 pyramidal cells
 #
-# v 1.4.1
-# rev 2012-11-07 (MS: Soma properties, dend properties set in dictionaries. Reorganized)
-# last rev: (MS: Synapse creation and biophysics moved from class_cell.py to here)
+# v 1.5.8a
+# rev 2012-12-13 (SL: clean up)
+# last rev: (MS: Soma properties, dend properties set in dictionaries. Reorganized)
 
 from neuron import h as nrn
 from class_cell import Pyr
@@ -21,16 +21,7 @@ class L2Pyr(Pyr):
 
         # usage: Pyr.__init__(self, soma_props)
         Pyr.__init__(self, soma_props)
-        # Pyr.__init__(self, pos, 22.1, 23.4, 0.6195, 'L2Pyr')
         self.celltype = 'L2_pyramidal'
-
-        # prealloc namespace for dend properties
-        # set in dend_props()
-        # self.dend_names = []
-        # self.dend_L = []
-        # self.dend_diam = []
-        # self.dend_cm = soma_props['cm']
-        # self.cm = 0.6195
 
         # geometry
         # creates self.list_dend
@@ -65,53 +56,20 @@ class L2Pyr(Pyr):
     def __set_dend_props(self):
         # Hardcode dend properties
         dend_props = {
-            'apical_trunk': {
-                'L': 59.5,
-                'diam': 4.25,
-            },
-            'apical_1': {
-                'L': 306.,
-                'diam': 4.08,
-            },
-            'apical_tuft': {
-                'L': 238.,
-                'diam': 3.4,
-            },
-            'apical_oblique': {
-                'L': 340.,
-                'diam': 3.91,
-            },
-            'basal_1': {
-                'L': 85.,
-                'diam': 4.25,
-            },
-            'basal_2': {
-                'L': 255.,
-                'diam': 2.72,
-            },
-            'basal_3': {
-                'L': 255.,
-                'diam': 2.72,
-            },
+            'apical_trunk': {'L': 59.5, 'diam': 4.25},
+            'apical_1': {'L': 306., 'diam': 4.08},
+            'apical_tuft': {'L': 238., 'diam': 3.4},
+            'apical_oblique': {'L': 340., 'diam': 3.91},
+            'basal_1': {'L': 85., 'diam': 4.25},
+            'basal_2': {'L': 255., 'diam': 2.72},
+            'basal_3': {'L': 255., 'diam': 2.72},
         }
 
-        # These MUST match above keys in exact order!
-        dend_names = ['apical_trunk', 'apical_1', 'apical_tuft', 'apical_oblique', 
+        # This order matters!
+        dend_order = ['apical_trunk', 'apical_1', 'apical_tuft', 'apical_oblique',
                       'basal_1', 'basal_2', 'basal_3']
 
-        return dend_props, dend_names
-
-        # self.dend_L = [59.5, 306, 238, 340, 85, 255, 255]
-        # self.dend_diam = [4.25, 4.08, 3.40, 3.91, 4.25, 2.72, 2.72]
-        # 
-        # # check lengths for congruity
-        # if len(self.dend_L) == len(self.dend_diam):
-        #     # Zip above lists together
-        #     self.dend_props = it.izip(self.dend_names, self.dend_L, self.dend_diam)        
-        # else:   
-        #     print "self.dend_L and self.dend_diam are not the same length"
-        #     print "please fix in L5_pyramidal.py"
-        #     sys.exit()
+        return dend_props, dend_order
 
     # Connects sections of THIS cell together
     def __connect_sections(self):
@@ -170,7 +128,6 @@ class L2Pyr(Pyr):
             # Units: pS/um^2
             sec.insert('km')
             sec.gbar_km = 250
-
 
     def __synapse_create(self):
         # creates synapses onto this cell 
@@ -258,8 +215,6 @@ class L2Pyr(Pyr):
                     self.ncfrom_extinput.append(self.parconnect_from_src(gid_src, nc_dict, self.basal2_ampa))
                     self.ncfrom_extinput.append(self.parconnect_from_src(gid_src, nc_dict, self.basal3_ampa))
                     self.ncfrom_extinput.append(self.parconnect_from_src(gid_src, nc_dict, self.apicaloblique_ampa))
-
-                    # print self.ncfrom_extinput[-1].syn().g
 
                 elif p_src['loc'] is 'distal':
                     self.ncfrom_extinput.append(self.parconnect_from_src(gid_src, nc_dict, self.apicaltuft_ampa))
