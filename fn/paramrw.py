@@ -272,17 +272,25 @@ class ExpParams():
 
         return p_sim
 
-    # Find keys that change run to run (i.e. have more than one associated value)
+    # Find keys that change anytime during simulation (i.e. have more than one associated value)
     def get_key_types(self):
         key_dict = {
             'dynamic_keys': [],
             'static_keys': [],
         }
 
+        # Save expmt keys as dynamic keys
+        key_dict['dynamic_keys'] = self.expmt_group_params
+
+        # Find keys that change run to run within experiments
         for key in self.p_all.keys():
+            # if key has length associated with it, must change run to run
             try:
                 len(self.p_all[key])
-                key_dict['dynamic_keys'].append(key)
+
+                # Before storing key, check to make sure it has not already been stored
+                if key not in key_dict['dynamic_keys']:
+                    key_dict['dynamic_keys'].append(key)
 
             except TypeError:
                 key_dict['static_keys'].append(key)

@@ -92,6 +92,7 @@ class SimulationPaths():
             'rawspk': '-spk.txt',
             'rawdpl': '-dpl.txt',
             'rawspec': '-spec.npz',
+            'rawinput': '-input.txt',
             'figspk': '-spk.eps',
             'figdpl': '-dpl.eps',
             'figspec': '-spec.eps',
