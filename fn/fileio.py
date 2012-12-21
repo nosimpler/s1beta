@@ -1,8 +1,8 @@
 # fileio.py - general file input/output functions
 #
-# v 1.5.2
-# rev 2012-12-08 (SL: saves prng state)
-# last rev: (SL: merged OutputDataPaths and SimulationPaths in ONE class)
+# v 1.5.9
+# rev 2012-12-20 (MS: added rawinputs file for later use when saving ext feed input times)
+# last rev: (SL: saves prng state)
 
 import datetime, fnmatch, os, shutil, sys
 import itertools as it

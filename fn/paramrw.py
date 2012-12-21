@@ -1,8 +1,8 @@
 # paramrw.py - routines for reading the param files
 #
-# v 1.5.8
-# rev 2012-12-12 (SL: Changed evoked strengths for non-perceived threshold)
-# last major: (SL: Added strength params for thalamic feeds)
+# v 1.5.9
+# rev 2012-12-20 (MS: Updated get_key_types() to include keys that change expmt to expmt)
+# last major: (SL: Changed evoked strengths for non-perceived threshold)
 
 import re
 import fileio as fio

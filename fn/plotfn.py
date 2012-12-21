@@ -1,8 +1,8 @@
 # plotfn.py - pall and possibly other plot routines
 #
-# v 1.5.5
-# rev 2012-12-10 (SL: fixed debug mode, made changes in pspec code to add dipole)
-# last major: (SL: simplified pall)
+# v 1.5.9
+# rev 2012-12-20 (MS: pall() now plots all data at once instead of per exmpt)
+# last major: (SL: fixed debug mode, made changes in pspec code to add dipole)
 
 from pdipole import pdipole
 from spec import pspec
@@ -47,24 +47,49 @@ def pall(ddir, p_exp, spec_results):
 
         key_types = p_exp.get_key_types()
 
-        # run each experiment separately
+        # preallocate lists for use below
+        param_list = []
+        dpl_list = []
+        spk_list = []
+        dfig_list = []
+
+        # agregate all file types from individual expmts into lists 
         for expmt_group in ddir.expmt_groups:
-            spec_results_expmt = [spec_result for spec_result in spec_results if expmt_group in spec_result.name]
-
             # these should be equivalent lengths
-            param_list = ddir.file_match(expmt_group, 'param')
-            dpl_list = ddir.file_match(expmt_group, 'rawdpl')
-            spk_list = ddir.file_match(expmt_group, 'rawspk')
+            param_list.extend(ddir.file_match(expmt_group, 'param'))
+            dpl_list.extend(ddir.file_match(expmt_group, 'rawdpl'))
+            spk_list.extend(ddir.file_match(expmt_group, 'rawspk'))
 
-            # print ddir.dfig
-            dfig = ddir.dfig[expmt_group]
+            # append as many copies of epxt dfig dict as there were runs in expmt 
+            for i in range(len(ddir.file_match(expmt_group, 'param'))):
+                dfig_list.append(ddir.dfig[expmt_group])
 
-            pl = Pool()
-            for f_param, f_spk, f_dpl, data_spec in it.izip(param_list, spk_list, dpl_list, spec_results_expmt):
-                pl.apply_async(pkernel, (dfig, f_param, f_spk, f_dpl, data_spec, key_types), callback=cb)
+        # apply async to compiled lists
+        pl = Pool()
+        for dfig, f_param, f_spk, f_dpl, data_spec in it.izip(dfig_list, param_list, spk_list, dpl_list, spec_results):
+            pl.apply_async(pkernel, (dfig, f_param, f_spk, f_dpl, data_spec, key_types), callback=cb)
 
-            pl.close()
-            pl.join()
+        pl.close()
+        pl.join()
+
+        # run each experiment separately
+        # for expmt_group in ddir.expmt_groups:
+        #     spec_results_expmt = [spec_result for spec_result in spec_results if expmt_group in spec_result.name]
+
+        #     # these should be equivalent lengths
+        #     param_list = ddir.file_match(expmt_group, 'param')
+        #     dpl_list = ddir.file_match(expmt_group, 'rawdpl')
+        #     spk_list = ddir.file_match(expmt_group, 'rawspk')
+
+        #     # print ddir.dfig
+        #     dfig = ddir.dfig[expmt_group]
+
+        #     pl = Pool()
+        #     for f_param, f_spk, f_dpl, data_spec in it.izip(param_list, spk_list, dpl_list, spec_results_expmt):
+        #         pl.apply_async(pkernel, (dfig, f_param, f_spk, f_dpl, data_spec, key_types), callback=cb)
+
+        #     pl.close()
+        #     pl.join()
 
     elif runtype is 'debug':
         dsim = ddir.dsim

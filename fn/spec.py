@@ -1,10 +1,11 @@
 # spec.py - Average time-frequency energy representation using Morlet wavelet method
 #
-# v 1.5.5
-# rev 2012-12-10 (SL: changed pspec to include dipole)
-# last major: (SL: added from_expmt filter)
+# v 1.5.9
+# rev 2012-12-20 (MS: analysis() now analyses all dipole data at once instead of per expmt)
+# last major: (SL: changed pspec to include dipole)
 
 import os
+import sys
 import numpy as np
 import scipy.signal as sps
 import itertools as it
@@ -171,8 +172,12 @@ def pspec(dspec, f_dpl, dfig, p_dict, key_types):
     # TFR = np.delete(dspec['TFR'], (0), axis = 0)
     fprefix = fio.strip_extprefix(dspec.name)
 
-    # Create the fig name
-    fig_name = os.path.join(dfig, fprefix+'.eps')
+    # Create the fig name in platform dependent manner. If OS, use eps. If linux, use png.
+    if sys.platform.startswith('darwin'):
+        fig_name = os.path.join(dfig, fprefix+'.eps')
+
+    elif sys.platform.startswith('linux'):
+        fig_name = os.path.join(dfig, fprefix+'.png')
 
     # f.f is the figure handle!
     f = FigSpec()
@@ -213,29 +218,64 @@ def append_spec(spec_obj):
 # Does spec analysis for all files in simulation directory
 # ddir comes from fileio
 def analysis(ddir, p_exp):
-    # do this per experiment
+    # preallocate lists for use below
+    param_list = []
+    dpl_list = []
+    spec_list = []
+
+    # aggregrate all file from individual expmts into lists
     for expmt_group in ddir.expmt_groups:
         # get the list of params
         # returns an alpha SORTED list
-        param_list = ddir.file_match(expmt_group, 'param')
+        # store expmt param list temporarily for use below
+        param_tmp = ddir.file_match(expmt_group, 'param')
+
+        # add param_tmp to list of all param files
+        param_list.extend(param_tmp)
 
         # get the list of dipoles
-        dpl_list = ddir.file_match(expmt_group, 'rawdpl')
+        dpl_list.extend(ddir.file_match(expmt_group, 'rawdpl'))
 
         # create list of spec output names
         # this is sorted because of file_match
-        exp_prefix_list = [fio.strip_extprefix(fparam) for fparam in param_list]
-        spec_list = [ddir.create_filename(expmt_group, 'rawspec', exp_prefix) for exp_prefix in exp_prefix_list]
+        exp_prefix_list = [fio.strip_extprefix(fparam) for fparam in param_tmp]
+        spec_list.extend([ddir.create_filename(expmt_group, 'rawspec', exp_prefix) for exp_prefix in exp_prefix_list])
 
-        pl = Pool()
-        for fparam, fdpl, fspec in it.izip(param_list, dpl_list, spec_list):
-            pl.apply_async(MorletSpec, (fparam, fdpl, fspec), callback=append_spec)
+    # perform analysis on all runs from all exmpts at same time
+    pl = Pool()
+    for fparam, fdpl, fspec in it.izip(param_list, dpl_list, spec_list):
+        pl.apply_async(MorletSpec, (fparam, fdpl, fspec), callback=append_spec)
 
-        pl.close()
-        pl.join()
+    pl.close()
+    pl.join()
 
     # sort the spec results by the spec object's name and return
     return sorted(spec_results, key=lambda spec_obj: spec_obj.name)
+
+# def analysis(ddir, p_exp):
+#     # do this per experiment
+#     for expmt_group in ddir.expmt_groups:
+#         # get the list of params
+#         # returns an alpha SORTED list
+#         param_list = ddir.file_match(expmt_group, 'param')
+# 
+#         # get the list of dipoles
+#         dpl_list = ddir.file_match(expmt_group, 'rawdpl')
+# 
+#         # create list of spec output names
+#         # this is sorted because of file_match
+#         exp_prefix_list = [fio.strip_extprefix(fparam) for fparam in param_list]
+#         spec_list = [ddir.create_filename(expmt_group, 'rawspec', exp_prefix) for exp_prefix in exp_prefix_list]
+# 
+#         pl = Pool()
+#         for fparam, fdpl, fspec in it.izip(param_list, dpl_list, spec_list):
+#             pl.apply_async(MorletSpec, (fparam, fdpl, fspec), callback=append_spec)
+# 
+#         pl.close()
+#         pl.join()
+# 
+#     # sort the spec results by the spec object's name and return
+#     return sorted(spec_results, key=lambda spec_obj: spec_obj.name)
 
 # returns spec results *only* for a given experimental group
 def from_expmt(spec_result_list, expmt_group):

@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 # s1run.py - primary run function for s1 project
 #
-# v 1.5.5
-# rev 2012-12-10 (SL: cleaned up)
-# last major: (SL: fixed prng_state stuff, minimally tested)
+# v 1.5.9
+# rev 2012-12-20 (MS: execution of epscompress() is platform dependent)
+# last major: (SL: cleaned up)
 
 import os
+import sys
 import time
 import shutil
 import numpy as np
@@ -286,13 +287,15 @@ def exec_runsim(f_psim):
             plotfn.pall(ddir, p_exp, spec_results)
 
             # for each experimental group, do the relevant png/eps creation and optimization
-            for expmt_group in ddir.expmt_groups:
-                dspk = ddir.dfig[expmt_group]['figspk']
-                dspec = ddir.dfig[expmt_group]['figspec']
+            # for now, only perform this action on OS machines
+            if sys.platform.startswith('darwin'):
+                for expmt_group in ddir.expmt_groups:
+                    dspk = ddir.dfig[expmt_group]['figspk']
+                    dspec = ddir.dfig[expmt_group]['figspec']
 
-                fext_eps = '.eps'
-                fio.epscompress(dspk, fext_eps)
-                fio.epscompress(dspec, fext_eps)
+                    fext_eps = '.eps'
+                    fio.epscompress(dspk, fext_eps)
+                    fio.epscompress(dspec, fext_eps)
 
             print "time: %4.4f s" % (time.time() - plot_start) 
 
