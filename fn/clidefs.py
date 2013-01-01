@@ -1,8 +1,8 @@
 # clidefs.py - these are all of the function defs for the cli
 #
-# v 1.5.1
-# rev 2012-12-08 (SL: Regenerate plots)
-# last major: (SL: added remote data sync function)
+# v 1.5.10
+# rev 2012-12-31 (MS: Regenerate spec data) 
+# last major: (SL: Regenerate plots)
 
 # Standard modules
 import fnmatch, os, re, sys
@@ -142,6 +142,14 @@ def exec_rates(ddata):
 
 # Just run the autoplot function independently
 # do_plot
+def regenerate_spec_data(ddata):
+    # regenerates and saves spec data
+
+    p_exp = paramrw.ExpParams(ddata.fparam)
+    spec_results = spec.analysis(ddata, p_exp, save_data=1)
+
+    return spec_results
+
 def regenerate_plots(ddata):
     # need p_exp, spec_results, gid_dict, and tstop.
     # fparam = fio.file_match(ddata.dsim, '.param')[0]
@@ -150,15 +158,18 @@ def regenerate_plots(ddata):
     # ** should be guaranteed to be identical **
     p_exp = paramrw.ExpParams(ddata.fparam)
 
-    spec_list_total = fio.file_match(ddata.dsim, '-spec.npz')
+    spec_results = fio.file_match(ddata.dsim, '-spec.npz')
     # prettyprint(spec_list_total)
 
     # generate data if no spec exists here
-    if not spec_list_total:
-        spec_results = spec.analysis(ddata, p_exp)
+    if not spec_results:
+        print "No saved spec data found. Preforming spec anaylsis...",
+        spec_results = regenerate_spec_data(ddata)
+        
+        print "now plotting"
 
-    else:
-        print "it's going to break ... now!"
+    # else:
+    #     print "it's going to break ... now!"
 
     plotfn.pall(ddata, p_exp, spec_results)
 

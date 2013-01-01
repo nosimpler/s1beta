@@ -1,8 +1,8 @@
 # cli.py - routines for the command line interface console sssh.py
 #
-# v 1.5.7
-# rev 2012-12-12 (SL: Fixed a few fns)
-# last major: (SL: Merged file function, updated replot function)
+# v 1.5.10
+# rev 2012-12-31 (MS: Added fn to redo spec analysis and save results) 
+# last major: (SL: Fixed a few fns)
 
 from cmd import Cmd
 from datetime import datetime
@@ -217,6 +217,11 @@ class Console(Cmd):
         """Optimizes png figures based on current directory
         """
         fio.pngoptimize(self.simpaths.dsim)
+
+    def do_specanalysis(self, args):
+        """Regenerates spec data and saves it to proper exmpt directories
+        """
+        self.spec_results = clidefs.regenerate_spec_data(self.ddata)
 
     def do_pdipole(self, args):
         """Regenerates plots in given directory

@@ -65,7 +65,7 @@ gbar_L2Pyr_L5Basket: 2.5e-4
 
 # Ongoing alpha rhythms
 t0_input: 150.
-f_stdev: {20.}
+f_stdev: 20.
 f_input_prox: {10., 20.}
 f_input_dist: [10., 20.]
 

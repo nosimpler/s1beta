@@ -1,8 +1,8 @@
 # spec.py - Average time-frequency energy representation using Morlet wavelet method
 #
-# v 1.5.9
-# rev 2012-12-20 (MS: analysis() now analyses all dipole data at once instead of per expmt)
-# last major: (SL: changed pspec to include dipole)
+# v 1.5.10
+# rev 2012-12-31 (MS: Morlet spec now takes paremeter to toggle saving of data. pspec updated to take either raw data or path to raw data files as input)
+# last major: (MS: analysis() now analyses all dipole data at once instead of per expmt)
 
 import os
 import sys
@@ -29,7 +29,7 @@ def read(fdata_spec):
 
 class MorletSpec():
     # fdata_spec will be created based on fparam and fdata, a general time series
-    def __init__(self, fparam, fdata, fdata_spec):
+    def __init__(self, fparam, fdata, fdata_spec, save_data):
         # Save variable portion of fdata_spec as identifying attribute
         self.name = fdata_spec
 
@@ -64,7 +64,7 @@ class MorletSpec():
             # self.TFR = np.vstack([self.timevec, self.TFR])
 
             # Write data to file
-            if p_dict['save_spec_data']:
+            if p_dict['save_spec_data'] or save_data:
                 write(fdata_spec, self.timevec, self.freqvec, self.TFR)
 
         else:
@@ -158,19 +158,25 @@ class MorletSpec():
 
 # Spectral plotting kernel for ONE simulation run
 def pspec(dspec, f_dpl, dfig, p_dict, key_types):
-    timevec = dspec.timevec
+    # if dspec is an instance of MorletSpec,  get data from object
+    if isinstance(dspec, MorletSpec):
+        timevec = dspec.timevec
+        freqvec = dspec.freqvec
+        TFR = dspec.TFR
 
-    freqvec = dspec.freqvec
-    TFR = dspec.TFR
+        # Generate file prefix
+        fprefix = fio.strip_extprefix(dspec.name) + '-spec'
 
-    # timevec = dspec['time']
-    # freqvec = dspec['freq']
-    # TFR = dspec['TFR']
+    # otherwise dspec is path name and data must be loaded from file
+    else:
+        data_spec = np.load(dspec)
 
-    # timevec = dspec['TFR'][:, 0]
-    # freqvec = np.arange(1, dspec['TFR'].shape[0])
-    # TFR = np.delete(dspec['TFR'], (0), axis = 0)
-    fprefix = fio.strip_extprefix(dspec.name)
+        timevec = data_spec['time']
+        freqvec = data_spec['freq']
+        TFR = data_spec['TFR']
+
+        # Generate file prefix 
+        fprefix = dspec.split('/')[-1].split('.')[0]
 
     # Create the fig name in platform dependent manner. If OS, use eps. If linux, use png.
     if sys.platform.startswith('darwin'):
@@ -217,7 +223,7 @@ def append_spec(spec_obj):
 
 # Does spec analysis for all files in simulation directory
 # ddir comes from fileio
-def analysis(ddir, p_exp):
+def analysis(ddir, p_exp, save_data=0):
     # preallocate lists for use below
     param_list = []
     dpl_list = []
@@ -244,38 +250,13 @@ def analysis(ddir, p_exp):
     # perform analysis on all runs from all exmpts at same time
     pl = Pool()
     for fparam, fdpl, fspec in it.izip(param_list, dpl_list, spec_list):
-        pl.apply_async(MorletSpec, (fparam, fdpl, fspec), callback=append_spec)
+        pl.apply_async(MorletSpec, (fparam, fdpl, fspec, save_data), callback=append_spec)
 
     pl.close()
     pl.join()
 
     # sort the spec results by the spec object's name and return
     return sorted(spec_results, key=lambda spec_obj: spec_obj.name)
-
-# def analysis(ddir, p_exp):
-#     # do this per experiment
-#     for expmt_group in ddir.expmt_groups:
-#         # get the list of params
-#         # returns an alpha SORTED list
-#         param_list = ddir.file_match(expmt_group, 'param')
-# 
-#         # get the list of dipoles
-#         dpl_list = ddir.file_match(expmt_group, 'rawdpl')
-# 
-#         # create list of spec output names
-#         # this is sorted because of file_match
-#         exp_prefix_list = [fio.strip_extprefix(fparam) for fparam in param_list]
-#         spec_list = [ddir.create_filename(expmt_group, 'rawspec', exp_prefix) for exp_prefix in exp_prefix_list]
-# 
-#         pl = Pool()
-#         for fparam, fdpl, fspec in it.izip(param_list, dpl_list, spec_list):
-#             pl.apply_async(MorletSpec, (fparam, fdpl, fspec), callback=append_spec)
-# 
-#         pl.close()
-#         pl.join()
-# 
-#     # sort the spec results by the spec object's name and return
-#     return sorted(spec_results, key=lambda spec_obj: spec_obj.name)
 
 # returns spec results *only* for a given experimental group
 def from_expmt(spec_result_list, expmt_group):
