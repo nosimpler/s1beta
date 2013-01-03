@@ -1,8 +1,8 @@
 # axes_create.py - simple axis creation
 #
-# v 1.5.5
-# rev 2012-12-10 (SL: Fixed FigSpec)
-# last major: (SL: added fig_psthgrid)
+# v 1.5.11
+# rev 2013-01-02 (MS: Added save fn to fig_std)
+# last major: (SL: Fixed FigSpec)
 
 # usage:
 # testfig = fig_std()
@@ -24,6 +24,9 @@ class fig_std():
 
         gs0 = gridspec.GridSpec(1, 1)
         self.ax0 = self.f.add_subplot(gs0[:])
+
+    def save(self, file_name):
+        plt.savefig(file_name)
 
     def close(self):
         plt.close(self.f)

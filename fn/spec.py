@@ -1,8 +1,8 @@
 # spec.py - Average time-frequency energy representation using Morlet wavelet method
 #
-# v 1.5.10
-# rev 2012-12-31 (MS: Morlet spec now takes paremeter to toggle saving of data. pspec updated to take either raw data or path to raw data files as input)
-# last major: (MS: analysis() now analyses all dipole data at once instead of per expmt)
+# v 1.5.11
+# rev 2013-01-02 (MS: added freqpwr analysis fn and plot kernel fn for freqpwr analysis data)
+# last major: (MS: Morlet spec now takes paremeter to toggle saving of data. pspec updated to take either raw data or path to raw data files as input)
 
 import os
 import sys
@@ -16,7 +16,7 @@ from multiprocessing import Pool
 from neuron import h as nrn
 
 import fileio as fio
-from axes_create import FigSpec
+from axes_create import FigSpec, fig_std
 
 # general spec write/read functions
 def write(fdata_spec, t_vec, f_vec, TFR):
@@ -261,3 +261,55 @@ def analysis(ddir, p_exp, save_data=0):
 # returns spec results *only* for a given experimental group
 def from_expmt(spec_result_list, expmt_group):
     return [spec_result for spec_result in spec_result_list if expmt_group in spec_result.name]
+
+# Averages spec power over time, returning an array of average pwr per frequency 
+def freqpwr_analysis(dspec):
+    # dspec may be either raw spec data or pathway to saved spec data
+
+    # if dspec is an instance of MorletSpec,  get data from object
+    if isinstance(dspec, MorletSpec):
+        timevec = dspec.timevec
+        freqvec = dspec.freqvec
+        TFR = dspec.TFR
+
+        # get experiment name
+        expmt = dspec.name.split('/')[6].split('.')[0]
+
+    # otherwise dspec is path name and data must be loaded from file
+    else:
+        data_spec = np.load(dspec)
+
+        timevec = data_spec['time']
+        freqvec = data_spec['freq']
+        TFR = data_spec['TFR']
+
+        # get experiment name
+        expmt = dspec.split('/')[6].split('.')[0]
+
+    avg_pwr = TFR.sum(axis=1) / len(timevec)
+
+    return {
+        'avg_pwr': avg_pwr,
+        'freq': freqvec,
+        'expmt': expmt
+    }
+
+def pfreqpwr(file_name, results_list, fparam_list, key_types):
+    f = fig_std()
+    f.ax0.hold(True)
+
+    legend_list = []
+
+    for result, fparam in it.izip(results_list, fparam_list):
+        f.ax0.plot(result['freq'], result['avg_pwr'])
+
+        p = paramrw.read(fparam)[1]
+        lgd_temp = [key + ': %2.1f' %p[key] for key in key_types['dynamic_keys']]
+        legend_list.append(reduce(lambda x, y: x+', '+y, lgd_temp[:]))
+
+    f.ax0.legend(legend_list, loc = 'upper right')
+
+    f.ax0.set_xlabel('Freq (Hz)')
+    f.ax0.set_ylabel('Avg_pwr')
+
+    f.save(file_name)

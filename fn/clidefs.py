@@ -1,8 +1,8 @@
 # clidefs.py - these are all of the function defs for the cli
 #
-# v 1.5.10
-# rev 2012-12-31 (MS: Regenerate spec data) 
-# last major: (SL: Regenerate plots)
+# v 1.5.11
+# rev 2013-01-02 (MS: Frequency-power analysis for spec data)
+# last major: (MS: Regenerate spec data) 
 
 # Standard modules
 import fnmatch, os, re, sys
@@ -149,6 +149,56 @@ def regenerate_spec_data(ddata):
     spec_results = spec.analysis(ddata, p_exp, save_data=1)
 
     return spec_results
+
+def freqpwr_analysis(ddata, dsim):
+    # Averages spec power over time and plots it
+
+    # Prompt user for type of analysis (per exmpt or whole sim) 
+    analysis_type = raw_input('Would you like analysis per exmpt or for whole sim? (expmt or sim): ')
+
+    spec_results = fio.file_match(ddata.dsim, '-spec.npz')
+    fparam_list = fio.file_match(ddata.dsim, '-param.txt')
+
+    p_exp = paramrw.ExpParams(ddata.fparam)
+    key_types = p_exp.get_key_types()
+
+    # If no save spec reslts exist, redo spec analysis
+    if not spec_results:
+        print "No saved spec data found. Perfomring spec analysis..."
+        spec_results = regenerate_spec_data(ddata)
+
+        print "now doing spec freq-pwr analysis"
+
+    # perform freqpwr analysis
+    freqpwr_results_list = [spec.freqpwr_analysis(dspec) for dspec in spec_results]
+
+    # plot for whole simulation
+    if analysis_type == 'sim':
+
+        file_name = os.path.join(dsim, 'freqpwr.png')
+        spec.pfreqpwr(file_name, freqpwr_results_list, fparam_list, key_types)
+
+    # plot per exmpt
+    if analysis_type == 'expmt':
+        for expmt_group in ddata.expmt_groups:
+            # # fig directory pathway
+            # fig_dir = os.path.join(dsim, expmt_group, 'figfreqpwr')
+
+            # # make fig directory if it does not exist
+            # if not os.path.isdir(fig_dir):
+            #     os.makedirs(fig_dir)
+            
+            # create name for figure. Figure saved to exmpt directory
+            file_name = os.path.join(dsim, expmt_group, 'freqpwr.png')
+            # file_name = os.path.join(dsim, expmt_group, 'figfreqpwr', 'freqpwr.png')
+
+            # compile list of freqpwr results and param pathways for exmpt
+            partial_results_list = [result for result in freqpwr_results_list if result['expmt']==expmt_group]
+            partial_fparam_list = [fparam for fparam in fparam_list if expmt_group in fparam]
+
+            # plot results
+            spec.pfreqpwr(file_name, partial_results_list, partial_fparam_list, key_types)
+
 
 def regenerate_plots(ddata):
     # need p_exp, spec_results, gid_dict, and tstop.

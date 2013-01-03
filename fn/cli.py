@@ -1,8 +1,8 @@
 # cli.py - routines for the command line interface console sssh.py
 #
-# v 1.5.10
-# rev 2012-12-31 (MS: Added fn to redo spec analysis and save results) 
-# last major: (SL: Fixed a few fns)
+# v 1.5.11
+# rev 2013-01-02 (MS: Added freqpwr analysis fn)
+# last major: (MS: Added fn to redo spec analysis and save results) 
 
 from cmd import Cmd
 from datetime import datetime
@@ -15,6 +15,7 @@ import readline as rl
 import itertools as it
 import fileio as fio
 import paramrw
+import spec
 from praster import praster
 from pdipole import pdipole
 from ppsth import ppsth, ppsth_grid
@@ -222,6 +223,12 @@ class Console(Cmd):
         """Regenerates spec data and saves it to proper exmpt directories
         """
         self.spec_results = clidefs.regenerate_spec_data(self.ddata)
+
+    def do_freqpwr(self, args):
+        """Averages spec power over time and plots freq vs power. Fn can act per expmt over over entire simulation
+        """
+        clidefs.freqpwr_analysis(self.ddata, self.dsim)
+        # avg_pwr, freqvec = spec.freqpwr(self.spec_results[0]) 
 
     def do_pdipole(self, args):
         """Regenerates plots in given directory
