@@ -1,8 +1,8 @@
 # L5_basket.py - establish class def for layer 5 basket cells
 #
-# v 1.2.33
-# rev 2012-11-06 (MS: Synapse creation and biophysics moved from class_cell.py to here)
-# last rev: (SL: Basket to BasketSingle)
+# v 1.5.12
+# rev 2013-01-05 (SL: Added parreceive_evprox)
+# last rev: (MS: Synapse creation and biophysics moved from class_cell.py to here)
 
 import itertools as it
 from neuron import h as nrn
@@ -80,6 +80,20 @@ class L5Basket(BasketSingle):
                 }
 
                 self.ncfrom_extinput.append(self.parconnect_from_src(gid_src, nc_dict, self.soma_ampa))
+
+    # evprox
+    def parreceive_evprox(self, gid, gid_dict, pos_dict, p_evprox):
+        if self.celltype in p_evprox.keys():
+            gid_evprox = gid + gid_dict['evprox'][0]
+
+            nc_dict = {
+                'pos_src': pos_dict['evprox'][gid],
+                'A_weight': p_evprox[self.celltype][0],
+                'A_delay': p_evprox[self.celltype][1],
+                'lamtha': p_evprox['lamtha_space']
+            }
+
+            self.ncfrom_evprox.append(self.parconnect_from_src(gid_evprox, nc_dict, self.soma_ampa))
 
     def parreceive_gauss(self, gid, gid_dict, pos_dict, p_ext_gauss):
         # gid is this cell's gid

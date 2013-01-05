@@ -1,7 +1,7 @@
 # L2_pyramidal.py - est class def for layer 2 pyramidal cells
 #
-# v 1.5.8a
-# rev 2012-12-13 (SL: clean up)
+# v 1.5.12
+# rev 2013-01-05 (SL: added parreceive_evprox)
 # last rev: (MS: Soma properties, dend properties set in dictionaries. Reorganized)
 
 from neuron import h as nrn
@@ -222,6 +222,22 @@ class L2Pyr(Pyr):
                     # if this evoked, do nmda
                     if not p_src['f_input']:
                         self.ncfrom_extinput.append(self.parconnect_from_src(gid_src, nc_dict, self.apicaltuft_nmda))
+
+    # evprox
+    def parreceive_evprox(self, gid, gid_dict, pos_dict, p_evprox):
+        if self.celltype in p_evprox.keys():
+            gid_evprox = gid + gid_dict['evprox'][0]
+
+            nc_dict = {
+                'pos_src': pos_dict['evprox'][gid],
+                'A_weight': p_evprox[self.celltype][0],
+                'A_delay': p_evprox[self.celltype][1],
+                'lamtha': p_evprox['lamtha_space']
+            }
+
+            self.ncfrom_evprox.append(self.parconnect_from_src(gid_evprox, nc_dict, self.basal2_ampa))
+            self.ncfrom_evprox.append(self.parconnect_from_src(gid_evprox, nc_dict, self.basal3_ampa))
+            self.ncfrom_evprox.append(self.parconnect_from_src(gid_evprox, nc_dict, self.apicaloblique_ampa))
 
     def parreceive_gauss(self, gid, gid_dict, pos_dict, p_ext_gauss):
         # gid is this cell's gid

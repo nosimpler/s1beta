@@ -1,8 +1,8 @@
 # L5_pyramidal.py - establish class def for layer 5 pyramidal cells
 #
-# v 1.4.1
-# rev 2012-11-07 (MS: Soma props, dend props set in dictionaries. Reorganized)
-# last rev: (MS: Synapse creation and biophysics moved from class_cell.py to here)
+# v 1.5.12
+# rev 2013-01-05 (SL: added parreceive_evprox)
+# last rev: (MS: Soma props, dend props set in dictionaries. Reorganized)
 
 from neuron import h as nrn
 from class_cell import Pyr
@@ -341,6 +341,22 @@ class L5Pyr(Pyr):
                     # nmda only if on the evoked input
                     if not p_src['f_input']:
                         self.ncfrom_extinput.append(self.parconnect_from_src(gid_src, nc_dict, self.apicaltuft_nmda))
+
+    # evprox
+    def parreceive_evprox(self, gid, gid_dict, pos_dict, p_evprox):
+        if self.celltype in p_evprox.keys():
+            gid_evprox = gid + gid_dict['evprox'][0]
+
+            nc_dict = {
+                'pos_src': pos_dict['evprox'][gid],
+                'A_weight': p_evprox[self.celltype][0],
+                'A_delay': p_evprox[self.celltype][1],
+                'lamtha': p_evprox['lamtha_space']
+            }
+
+            self.ncfrom_evprox.append(self.parconnect_from_src(gid_evprox, nc_dict, self.basal2_ampa))
+            self.ncfrom_evprox.append(self.parconnect_from_src(gid_evprox, nc_dict, self.basal3_ampa))
+            self.ncfrom_evprox.append(self.parconnect_from_src(gid_evprox, nc_dict, self.apicaloblique_ampa))
 
     # PROXIMAL ONLY FOR NOW
     def parreceive_gauss(self, gid, gid_dict, pos_dict, p_ext_gauss):

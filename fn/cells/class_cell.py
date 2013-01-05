@@ -1,7 +1,7 @@
 # class_cell.py - establish class def for general cell features
 #
-# v 1.5.8a
-# rev 2012-12-13 (SL: cleanup)
+# v 1.5.12
+# rev 2013-01-05 (SL: added nc list for evprox)
 # last rev: (MS: All properties set using dictionaries passed in as params)
 
 import numpy as np
@@ -40,6 +40,7 @@ class Cell():
         self.ncfrom_extinput = []
         self.ncfrom_extgauss = []
         self.ncfrom_extpois = []
+        self.ncfrom_evprox = []
 
     # two things need to happen here for nrn:
     # 1. dipole needs to be inserted into each section

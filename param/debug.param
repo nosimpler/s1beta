@@ -8,8 +8,8 @@ sim_prefix: test
 expmt_groups: {testing0, testing1}
 
 # numbers of cells making up the pyramidal grids
-N_pyr_x: 1
-N_pyr_y: 1
+N_pyr_x: 2
+N_pyr_y: 2
 
 # Poisson input
 pois_T: 1000.

@@ -1,8 +1,8 @@
 # class_feed.py - establishes FeedExt(), FeedProximal() and FeedDistal()
 #
-# v 1.4.99
-# rev 2012-12-03 (SL: changed the passing of the param to work)
-# last major: (MS: standard deviation used in ParFeedExt() now set in param file)
+# v 1.5.12
+# rev 2013-01-05 (SL: added ParFeedEvoked)
+# last major: (SL: changed the passing of the param to work)
 
 import numpy as np
 import itertools as it
@@ -62,6 +62,35 @@ class ParFeedExtPois():
 
         return nc
 
+class ParFeedEvoked():
+    # mu and sigma vals come from p
+    def __init__(self, mu, sigma):
+        self.eventvec = nrn.Vector()
+        self.vs = nrn.VecStim()
+
+        # if a non-zero sigma is specified
+        if sigma:
+            val_evoked = np.random.normal(mu, sigma, 1)
+
+        else:
+            # if sigma is specified at 0
+            val_evoked = np.array([mu])
+
+        val_evoked = val_evoked[val_evoked > 0]
+
+        # vals must be sorted
+        val_evoked.sort()
+
+        self.eventvec.from_python(val_evoked)
+        self.vs.play(self.eventvec)
+
+    # for parallel, maybe be that postsyn for this is just nil (None)
+    def connect_to_target(self):
+        nc = nrn.NetCon(self.vs, None)
+        nc.threshold = 0
+
+        return nc
+
 # this seems wasteful but necessary
 class ParFeedExtGauss():
     def __init__(self, mu, sigma):
@@ -72,7 +101,6 @@ class ParFeedExtGauss():
         # one single value from Gaussian dist.
         # values MUST be sorted for VecStim()!
         val_gauss = np.random.normal(mu, sigma, 50)
-        # val_gauss = np.random.normal(p['mu'], p['sigma'], 50)
 
         # remove non-zero values brute force-ly
         val_gauss = val_gauss[val_gauss > 0]
