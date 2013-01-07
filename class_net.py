@@ -111,7 +111,7 @@ class Network():
 
         # grab the keys for the unique set of inputs and sort the names
         # append them to the src list along with the number of cells
-        unique_keys = sorted(self.p_unique.keys(), key=lambda x: x[0])
+        unique_keys = sorted(self.p_unique.keys())
         self.extname_list += unique_keys
 
         # return one final source list
