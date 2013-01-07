@@ -1,8 +1,8 @@
 # class_feed.py - establishes FeedExt(), ParFeedAll()
 #
-# v 1.6.0ev
-# rev 2013-01-07 (SL: now ParFeedAll)
-# last major: (SL: added ParFeedEvoked)
+# v 1.6.2ev
+# rev 2013-01-07 (SL: Added evdist)
+# last major: (SL: now ParFeedAll)
 
 import numpy as np
 import itertools as it
@@ -28,8 +28,8 @@ class ParFeedAll():
         if type == 'extpois':
             self.__create_extpois()
 
-        elif type == 'evprox':
-            self.__create_evprox()
+        elif type in ['evprox', 'evdist']:
+            self.__create_evoked()
 
         elif type == 'extgauss':
             self.__create_extgauss()
@@ -74,26 +74,30 @@ class ParFeedAll():
         self.eventvec.from_python(val_pois)
 
     # mu and sigma vals come from p
-    def __create_evprox(self):
-    # def __create_evprox(self, mu, sigma):
-        # assign the params
-        mu = self.p_ext['t0']
-        sigma = self.p_ext[self.celltype][2]
+    def __create_evoked(self):
+        if self.celltype in self.p_ext.keys():
+            # assign the params
+            mu = self.p_ext['t0']
+            sigma = self.p_ext[self.celltype][2]
 
-        # if a non-zero sigma is specified
-        if sigma:
-            val_evoked = np.random.normal(mu, sigma, 1)
+            # if a non-zero sigma is specified
+            if sigma:
+                val_evoked = np.random.normal(mu, sigma, 1)
+
+            else:
+                # if sigma is specified at 0
+                val_evoked = np.array([mu])
+
+            val_evoked = val_evoked[val_evoked > 0]
+
+            # vals must be sorted
+            val_evoked.sort()
+
+            self.eventvec.from_python(val_evoked)
 
         else:
-            # if sigma is specified at 0
-            val_evoked = np.array([mu])
-
-        val_evoked = val_evoked[val_evoked > 0]
-
-        # vals must be sorted
-        val_evoked.sort()
-
-        self.eventvec.from_python(val_evoked)
+            # return an empty eventvec list
+            self.eventvec.from_python([])
 
     def __create_extgauss(self):
         # assign the params

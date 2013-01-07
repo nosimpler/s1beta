@@ -1,8 +1,8 @@
 # L2_pyramidal.py - est class def for layer 2 pyramidal cells
 #
-# v 1.6.0ev
-# rev 2013-01-07 (SL: changed parreceives)
-# last rev: (SL: added parreceive_evprox)
+# v 1.6.2ev
+# rev 2013-01-07 (SL: Added evdist)
+# last rev: (SL: changed parreceives)
 
 from neuron import h as nrn
 from class_cell import Pyr
@@ -226,20 +226,20 @@ class L2Pyr(Pyr):
     # one parreceive function to handle all types of external parreceives
     # types must be defined explicitly here
     def parreceive_ext(self, type, gid, gid_dict, pos_dict, p_ext):
-        if type == 'evprox':
+        if type in ['evprox', 'evdist']:
             if self.celltype in p_ext.keys():
-                gid_evprox = gid + gid_dict['evprox'][0]
+                gid_ev = gid + gid_dict[type][0]
 
                 nc_dict = {
-                    'pos_src': pos_dict['evprox'][gid],
+                    'pos_src': pos_dict[type][gid],
                     'A_weight': p_ext[self.celltype][0],
                     'A_delay': p_ext[self.celltype][1],
                     'lamtha': p_ext['lamtha_space']
                 }
 
-                self.ncfrom_evprox.append(self.parconnect_from_src(gid_evprox, nc_dict, self.basal2_ampa))
-                self.ncfrom_evprox.append(self.parconnect_from_src(gid_evprox, nc_dict, self.basal3_ampa))
-                self.ncfrom_evprox.append(self.parconnect_from_src(gid_evprox, nc_dict, self.apicaloblique_ampa))
+                self.ncfrom_ev.append(self.parconnect_from_src(gid_ev, nc_dict, self.basal2_ampa))
+                self.ncfrom_ev.append(self.parconnect_from_src(gid_ev, nc_dict, self.basal3_ampa))
+                self.ncfrom_ev.append(self.parconnect_from_src(gid_ev, nc_dict, self.apicaloblique_ampa))
 
         elif type == 'extgauss':
             # gid is this cell's gid

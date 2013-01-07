@@ -1,8 +1,8 @@
 # paramrw.py - routines for reading the param files
 #
-# v 1.6.0ev
-# rev 2013-01-07 (SL: changed params for reorganization)
-# last major: (SL: changed some ext inputs to p_unique)
+# v 1.6.2ev
+# rev 2013-01-07 (SL: changed evdist params)
+# last major: (SL: changed params for reorganization)
 
 import re
 import fileio as fio
@@ -368,17 +368,15 @@ def create_pext(p, tstop):
     #     'loc': 'proximal'
     # }
 
-    # p_unique['evdist'] = {
-    #     'f_input': 0.,
-    #     't0': p['t_evoked_dist'],
-    #     'L2Pyr': (1e-3, 0.1),
-    #     'L5Pyr': (1e-3, 0.1),
-    #     'L2Basket': (5e-4, 0.1),
-    #     'lamtha': 3.,
-    #     'loc': 'distal'
-    # }
-
-    # p_ext = feed_validate(p_ext, evoked_dist, tstop)
+    p_unique['evdist'] = {
+        'f_input': 0.,
+        't0': p['t_evoked_dist'],
+        'L2_pyramidal': (1e-3, 0.1, 0.),
+        'L5_pyramidal': (1e-3, 0.1, 0.),
+        'L2_basket': (5e-4, 0.1, 0.),
+        'lamtha_space': 3.,
+        'loc': 'distal'
+    }
 
     # this needs to create many feeds
     # (amplitude, delay, mu, sigma). ordered this way to preserve compatibility

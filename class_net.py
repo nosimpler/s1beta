@@ -1,8 +1,8 @@
 # class_net.py - establishes the Network class and related methods
 #
-# v 1.6.0ev
-# rev 2013-01-07 (SL: Massive reorganization of unique inputs)
-# last major: (SL: makes evprox input per cell for randomness)
+# v 1.6.2ev
+# rev 2013-01-07 (SL: cleanup old functions)
+# last major: (SL: Massive reorganization of unique inputs)
 
 import itertools as it
 import numpy as np
@@ -10,7 +10,6 @@ import sys
 
 from neuron import h as nrn
 from fn.class_feed import ParFeedExt, ParFeedAll
-# from fn.class_feed import ParFeedExt, ParFeedExtGauss, ParFeedExtPois, ParFeedEvoked
 from fn.cells.L5_pyramidal import L5Pyr
 from fn.cells.L2_pyramidal import L2Pyr
 from fn.cells.L2_basket import L2Basket
@@ -247,34 +246,6 @@ class Network():
         for gidtype, gids in self.gid_dict.iteritems():
             if gid in gids:
                 return gidtype
-
-    # attempting to make a general function for all evoked params
-    def __create_ev_params(self, gid_ev):
-        gid_post = gid_ev - self.gid_dict['evprox'][0]
-        cell_type = self.gid_to_type(gid_post)
-
-        # return the first 2 values (values through value 2)
-        return (self.p_unique['evprox']['t0'], self.p_unique['evprox'][cell_type][2])
-
-    # creates the external feed appropriate for this gid
-    # only mu and sigma really get read here, dependent upon postsynaptic cell type
-    def __create_extgauss_params(self, gid_extgauss):
-        # linear shift from corresponding cell gid
-        gid_post = gid_extgauss - self.gid_dict['extgauss'][0]
-        type = self.gid_to_type(gid_post)
-
-        # should only return a cell type
-        # return values 2 and 3 of the tuple of this cell type and assign to mu and sigma
-        return self.p_unique['extgauss'][type][2:4]
-
-    # returns the lamtha related to the postsynaptic cell type
-    def __create_extpois_params(self, gid_extpois):
-        # linear shift from corresponding cell gid
-        gid_post = gid_extpois - self.gid_dict['extpois'][0]
-        type = self.gid_to_type(gid_post)
-
-        # return the lamtha related to this celltype
-        return self.p_unique['extpois'][type][2]
 
     # parallel create cells AND external inputs (feeds)
     # these are spike SOURCES but cells are also targets

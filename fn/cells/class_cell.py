@@ -1,8 +1,8 @@
 # class_cell.py - establish class def for general cell features
 #
-# v 1.6.0ev
-# rev 2013-01-07 (SL: changed parreceives)
-# last rev: (SL: added nc list for evprox)
+# v 1.6.2ev
+# rev 2013-01-07 (SL: changed nclist)
+# last rev: (SL: changed parreceives)
 
 import numpy as np
 import itertools as it
@@ -40,7 +40,7 @@ class Cell():
         self.ncfrom_extinput = []
         self.ncfrom_extgauss = []
         self.ncfrom_extpois = []
-        self.ncfrom_evprox = []
+        self.ncfrom_ev = []
 
     # two things need to happen here for nrn:
     # 1. dipole needs to be inserted into each section
