@@ -1,8 +1,8 @@
 # L5_pyramidal.py - establish class def for layer 5 pyramidal cells
 #
-# v 1.6.2ev
-# rev 2013-01-07 (SL: added evdist)
-# last rev: (SL: changed parreceives)
+# v 1.6.3ev
+# rev 2013-01-07 (SL: Fixed evdist)
+# last rev: (SL: added evdist)
 
 from neuron import h as nrn
 from class_cell import Pyr
@@ -355,9 +355,15 @@ class L5Pyr(Pyr):
                     'lamtha': p_ext['lamtha_space']
                 }
 
-                self.ncfrom_ev.append(self.parconnect_from_src(gid_ev, nc_dict, self.basal2_ampa))
-                self.ncfrom_ev.append(self.parconnect_from_src(gid_ev, nc_dict, self.basal3_ampa))
-                self.ncfrom_ev.append(self.parconnect_from_src(gid_ev, nc_dict, self.apicaloblique_ampa))
+                if p_ext['loc'] is 'proximal':
+                    self.ncfrom_ev.append(self.parconnect_from_src(gid_ev, nc_dict, self.basal2_ampa))
+                    self.ncfrom_ev.append(self.parconnect_from_src(gid_ev, nc_dict, self.basal3_ampa))
+                    self.ncfrom_ev.append(self.parconnect_from_src(gid_ev, nc_dict, self.apicaloblique_ampa))
+
+                elif p_ext['loc'] is 'distal':
+                    # apical tuft
+                    self.ncfrom_ev.append(self.parconnect_from_src(gid_ev, nc_dict, self.apicaltuft_ampa))
+                    self.ncfrom_ev.append(self.parconnect_from_src(gid_ev, nc_dict, self.apicaltuft_nmda))
 
         elif type == 'extgauss':
             # gid is this cell's gid

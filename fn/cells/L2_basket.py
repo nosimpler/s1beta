@@ -1,8 +1,8 @@
 # L2_basket.py - establish class def for layer 2 basket cells
 #
-# v 1.6.2ev
-# rev 2013-01-07 (SL: added evdist)
-# last rev: (SL: changed parreceives)
+# v 1.6.3ev
+# rev 2013-01-07 (SL: Fixed evdist)
+# last rev: (SL: added evdist)
 
 import itertools as it
 from neuron import h as nrn
@@ -98,7 +98,13 @@ class L2Basket(BasketSingle):
                     'lamtha': p_ext['lamtha_space'],
                 }
 
-                self.ncfrom_ev.append(self.parconnect_from_src(gid_ev, nc_dict, self.soma_ampa))
+                # connections depend on location of input
+                if p_ext['loc'] is 'proximal':
+                    self.ncfrom_ev.append(self.parconnect_from_src(gid_ev, nc_dict, self.soma_ampa))
+
+                elif p_ext['loc'] is 'distal':
+                    self.ncfrom_ev.append(self.parconnect_from_src(gid_ev, nc_dict, self.soma_ampa))
+                    self.ncfrom_ev.append(self.parconnect_from_src(gid_ev, nc_dict, self.soma_nmda))
 
         elif type == 'extgauss':
             # gid is this cell's gid

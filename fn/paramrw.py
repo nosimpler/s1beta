@@ -1,8 +1,8 @@
 # paramrw.py - routines for reading the param files
 #
-# v 1.6.2ev
-# rev 2013-01-07 (SL: changed evdist params)
-# last major: (SL: changed params for reorganization)
+# v 1.6.3ev
+# rev 2013-01-07 (SL: Removed f_input from evprox and evdist)
+# last major: (SL: changed evdist params)
 
 import re
 import fileio as fio
@@ -369,7 +369,6 @@ def create_pext(p, tstop):
     # }
 
     p_unique['evdist'] = {
-        'f_input': 0.,
         't0': p['t_evoked_dist'],
         'L2_pyramidal': (1e-3, 0.1, 0.),
         'L5_pyramidal': (1e-3, 0.1, 0.),
