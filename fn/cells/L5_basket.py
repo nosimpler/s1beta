@@ -1,8 +1,8 @@
 # L5_basket.py - establish class def for layer 5 basket cells
 #
-# v 1.6.2ev
-# rev 2013-01-07 (SL: added evdist)
-# last rev: (SL: changed parreceives)
+# v 1.6.4ev
+# rev 2013-01-07 (SL: made evprox/dist more flexible)
+# last rev: (SL: added evdist)
 
 import itertools as it
 from neuron import h as nrn
@@ -84,7 +84,7 @@ class L5Basket(BasketSingle):
     # one parreceive function to handle all types of external parreceives
     # types must be defined explicitly here
     def parreceive_ext(self, type, gid, gid_dict, pos_dict, p_ext):
-        if type in ['evprox', 'evdist']:
+        if type.startswith(('evprox', 'evdist')):
             if self.celltype in p_ext.keys():
                 gid_ev = gid + gid_dict[type][0]
 

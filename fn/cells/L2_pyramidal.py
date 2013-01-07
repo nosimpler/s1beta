@@ -1,8 +1,8 @@
 # L2_pyramidal.py - est class def for layer 2 pyramidal cells
 #
-# v 1.6.3ev
-# rev 2013-01-07 (SL: fixed evdist)
-# last rev: (SL: Added evdist)
+# v 1.6.4ev
+# rev 2013-01-07 (SL: made evprox/dist more flexible)
+# last rev: (SL: fixed evdist)
 
 from neuron import h as nrn
 from class_cell import Pyr
@@ -226,7 +226,7 @@ class L2Pyr(Pyr):
     # one parreceive function to handle all types of external parreceives
     # types must be defined explicitly here
     def parreceive_ext(self, type, gid, gid_dict, pos_dict, p_ext):
-        if type in ['evprox', 'evdist']:
+        if type.startswith(('evprox', 'evdist')):
             if self.celltype in p_ext.keys():
                 gid_ev = gid + gid_dict[type][0]
 

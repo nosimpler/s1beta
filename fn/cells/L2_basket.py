@@ -1,8 +1,8 @@
 # L2_basket.py - establish class def for layer 2 basket cells
 #
-# v 1.6.3ev
-# rev 2013-01-07 (SL: Fixed evdist)
-# last rev: (SL: added evdist)
+# v 1.6.4ev
+# rev 2013-01-07 (SL: Made evprox/dist more flexible)
+# last rev: (SL: Fixed evdist)
 
 import itertools as it
 from neuron import h as nrn
@@ -87,7 +87,7 @@ class L2Basket(BasketSingle):
     # one parreceive function to handle all types of external parreceives
     # types must be defined explicitly here
     def parreceive_ext(self, type, gid, gid_dict, pos_dict, p_ext):
-        if type in ['evprox', 'evdist']:
+        if type.startswith(('evprox', 'evdist')):
             if self.celltype in p_ext.keys():
                 gid_ev = gid + gid_dict[type][0]
 

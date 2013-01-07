@@ -1,8 +1,8 @@
 # paramrw.py - routines for reading the param files
 #
-# v 1.6.3ev
-# rev 2013-01-07 (SL: Removed f_input from evprox and evdist)
-# last major: (SL: changed evdist params)
+# v 1.6.4ev
+# rev 2013-01-07 (SL: Made evprox/dist more flexible)
+# last major: (SL: Removed f_input from evprox and evdist)
 
 import re
 import fileio as fio
@@ -347,7 +347,7 @@ def create_pext(p, tstop):
     # f_input needs to be defined as 0
     # these vals correspond to non-perceived max 
     # conductance threshold in uS (Jones et al. 2007)
-    p_unique['evprox'] = {
+    p_unique['evprox0'] = {
         't0': p['t_evoked_prox_early'],
         'L2_pyramidal': (1e-3, 0.1, 0.),
         'L5_pyramidal': (5e-4, 1., 0.),
@@ -357,16 +357,15 @@ def create_pext(p, tstop):
         'loc': 'proximal'
     }
 
-    # p_unique['evprox1'] = {
-    #     'f_input': 0.,
-    #     't0': p['t_evoked_prox_late'],
-    #     'L2_pyramidal': (5.3e-3, 0.1, 0.),
-    #     'L5_pyramidal': (2.7e-3, 5., 0.),
-    #     'L2_basket': (5.3e-3, 0.1, 0.),
-    #     'L5_basket': (2.7e-3, 5., 0.),
-    #     'lamtha_space': 3.,
-    #     'loc': 'proximal'
-    # }
+    p_unique['evprox1'] = {
+        't0': p['t_evoked_prox_late'],
+        'L2_pyramidal': (5.3e-3, 0.1, 0.),
+        'L5_pyramidal': (2.7e-3, 5., 0.),
+        'L2_basket': (5.3e-3, 0.1, 0.),
+        'L5_basket': (2.7e-3, 5., 0.),
+        'lamtha_space': 3.,
+        'loc': 'proximal'
+    }
 
     p_unique['evdist'] = {
         't0': p['t_evoked_dist'],

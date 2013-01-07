@@ -1,8 +1,8 @@
 # class_feed.py - establishes FeedExt(), ParFeedAll()
 #
-# v 1.6.2ev
-# rev 2013-01-07 (SL: Added evdist)
-# last major: (SL: now ParFeedAll)
+# v 1.6.4ev
+# rev 2013-01-07 (SL: made evdist/evprox a bit more flexible)
+# last major: (SL: Added evdist)
 
 import numpy as np
 import itertools as it
@@ -28,7 +28,8 @@ class ParFeedAll():
         if type == 'extpois':
             self.__create_extpois()
 
-        elif type in ['evprox', 'evdist']:
+        elif type.startswith(('evprox', 'evdist')):
+        # elif type in ['evprox', 'evdist']:
             self.__create_evoked()
 
         elif type == 'extgauss':
