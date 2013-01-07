@@ -1,8 +1,8 @@
-# class_feed.py - establishes FeedExt(), FeedProximal() and FeedDistal()
+# class_feed.py - establishes FeedExt(), ParFeedAll()
 #
-# v 1.5.12
-# rev 2013-01-05 (SL: added ParFeedEvoked)
-# last major: (SL: changed the passing of the param to work)
+# v 1.6.0ev
+# rev 2013-01-07 (SL: now ParFeedAll)
+# last major: (SL: added ParFeedEvoked)
 
 import numpy as np
 import itertools as it
@@ -14,14 +14,35 @@ from neuron import h as nrn
 def t_wait(lamtha):
     return -1000. * np.log(1. - np.random.rand()) / lamtha
 
-class ParFeedExtPois():
-    def __init__(self, lamtha, t_interval):
+class ParFeedAll():
+    def __init__(self, type, celltype, p_ext):
+        # vecstim setup
         self.eventvec = nrn.Vector()
         self.vs = nrn.VecStim()
 
+        # self.p_unique = p_unique[type]
+        self.p_ext = p_ext
+        self.celltype = celltype
+
+        # each of these methods creates self.eventvec for playback
+        if type == 'extpois':
+            self.__create_extpois()
+
+        elif type == 'evprox':
+            self.__create_evprox()
+
+        elif type == 'extgauss':
+            self.__create_extgauss()
+
+        # load eventvec into VecStim object
+        self.vs.play(self.eventvec)
+
+    # new external pois designation
+    def __create_extpois(self):
         # check the t interval
-        t0 = t_interval[0]
-        T = t_interval[1]
+        t0 = self.p_ext['t_interval'][0]
+        T = self.p_ext['t_interval'][1]
+        lamtha = self.p_ext[self.celltype][2]
 
         # mu and sigma values come from p
         # one single value from Gaussian dist.
@@ -52,21 +73,12 @@ class ParFeedExtPois():
         # Convert array into nrn vector
         self.eventvec.from_python(val_pois)
 
-        # load eventvec into VecStim object
-        self.vs.play(self.eventvec)
-
-    # for parallel, maybe be that postsyn for this is just nil (None)
-    def connect_to_target(self):
-        nc = nrn.NetCon(self.vs, None)
-        nc.threshold = 0
-
-        return nc
-
-class ParFeedEvoked():
     # mu and sigma vals come from p
-    def __init__(self, mu, sigma):
-        self.eventvec = nrn.Vector()
-        self.vs = nrn.VecStim()
+    def __create_evprox(self):
+    # def __create_evprox(self, mu, sigma):
+        # assign the params
+        mu = self.p_ext['t0']
+        sigma = self.p_ext[self.celltype][2]
 
         # if a non-zero sigma is specified
         if sigma:
@@ -82,20 +94,11 @@ class ParFeedEvoked():
         val_evoked.sort()
 
         self.eventvec.from_python(val_evoked)
-        self.vs.play(self.eventvec)
 
-    # for parallel, maybe be that postsyn for this is just nil (None)
-    def connect_to_target(self):
-        nc = nrn.NetCon(self.vs, None)
-        nc.threshold = 0
-
-        return nc
-
-# this seems wasteful but necessary
-class ParFeedExtGauss():
-    def __init__(self, mu, sigma):
-        self.eventvec = nrn.Vector()
-        self.vs = nrn.VecStim()
+    def __create_extgauss(self):
+        # assign the params
+        mu = self.p_ext[self.celltype][2]
+        sigma = self.p_ext[self.celltype][3]
 
         # mu and sigma values come from p
         # one single value from Gaussian dist.
@@ -110,9 +113,6 @@ class ParFeedExtGauss():
 
         # Convert array into nrn vector
         self.eventvec.from_python(val_gauss)
-
-        # load eventvec into VecStim object
-        self.vs.play(self.eventvec)
 
     # for parallel, maybe be that postsyn for this is just nil (None)
     def connect_to_target(self):

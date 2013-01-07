@@ -1,8 +1,8 @@
 # L2_pyramidal.py - est class def for layer 2 pyramidal cells
 #
-# v 1.5.12
-# rev 2013-01-05 (SL: added parreceive_evprox)
-# last rev: (MS: Soma properties, dend properties set in dictionaries. Reorganized)
+# v 1.6.0ev
+# rev 2013-01-07 (SL: changed parreceives)
+# last rev: (SL: added parreceive_evprox)
 
 from neuron import h as nrn
 from class_cell import Pyr
@@ -223,46 +223,67 @@ class L2Pyr(Pyr):
                     if not p_src['f_input']:
                         self.ncfrom_extinput.append(self.parconnect_from_src(gid_src, nc_dict, self.apicaltuft_nmda))
 
-    # evprox
-    def parreceive_evprox(self, gid, gid_dict, pos_dict, p_evprox):
-        if self.celltype in p_evprox.keys():
-            gid_evprox = gid + gid_dict['evprox'][0]
+    # one parreceive function to handle all types of external parreceives
+    # types must be defined explicitly here
+    def parreceive_ext(self, type, gid, gid_dict, pos_dict, p_ext):
+        if type == 'evprox':
+            if self.celltype in p_ext.keys():
+                gid_evprox = gid + gid_dict['evprox'][0]
 
-            nc_dict = {
-                'pos_src': pos_dict['evprox'][gid],
-                'A_weight': p_evprox[self.celltype][0],
-                'A_delay': p_evprox[self.celltype][1],
-                'lamtha': p_evprox['lamtha_space']
-            }
+                nc_dict = {
+                    'pos_src': pos_dict['evprox'][gid],
+                    'A_weight': p_ext[self.celltype][0],
+                    'A_delay': p_ext[self.celltype][1],
+                    'lamtha': p_ext['lamtha_space']
+                }
 
-            self.ncfrom_evprox.append(self.parconnect_from_src(gid_evprox, nc_dict, self.basal2_ampa))
-            self.ncfrom_evprox.append(self.parconnect_from_src(gid_evprox, nc_dict, self.basal3_ampa))
-            self.ncfrom_evprox.append(self.parconnect_from_src(gid_evprox, nc_dict, self.apicaloblique_ampa))
+                self.ncfrom_evprox.append(self.parconnect_from_src(gid_evprox, nc_dict, self.basal2_ampa))
+                self.ncfrom_evprox.append(self.parconnect_from_src(gid_evprox, nc_dict, self.basal3_ampa))
+                self.ncfrom_evprox.append(self.parconnect_from_src(gid_evprox, nc_dict, self.apicaloblique_ampa))
 
-    def parreceive_gauss(self, gid, gid_dict, pos_dict, p_ext_gauss):
-        # gid is this cell's gid
-        # gid_dict is the whole dictionary, including the gids of the extgauss
-        # pos_list is also the pos of the extgauss (net origin)
-        # p_ext_gauss are the params (strength, etc.)
+        elif type == 'extgauss':
+            # gid is this cell's gid
+            # gid_dict is the whole dictionary, including the gids of the extgauss
+            # pos_list is also the pos of the extgauss (net origin)
+            # p_ext_gauss are the params (strength, etc.)
 
-        # gid shift is based on L2_pyramidal cells NOT L5
-        # I recognize this is ugly (hack)
-        # gid_shift = gid_dict['extgauss'][0] - gid_dict['L2_pyramidal'][0]
-        if 'L2_pyramidal' in p_ext_gauss.keys():
-            gid_extgauss = gid + gid_dict['extgauss'][0]
+            # gid shift is based on L2_pyramidal cells NOT L5
+            # I recognize this is ugly (hack)
+            # gid_shift = gid_dict['extgauss'][0] - gid_dict['L2_pyramidal'][0]
+            if 'L2_pyramidal' in p_ext.keys():
+                gid_extgauss = gid + gid_dict['extgauss'][0]
 
-            nc_dict = {
-                'pos_src': pos_dict['extgauss'][gid],
-                'A_weight': p_ext_gauss['L2_pyramidal'][0],
-                'A_delay': p_ext_gauss['L2_pyramidal'][1],
-                'lamtha': p_ext_gauss['lamtha']
-            }
+                nc_dict = {
+                    'pos_src': pos_dict['extgauss'][gid],
+                    'A_weight': p_ext['L2_pyramidal'][0],
+                    'A_delay': p_ext['L2_pyramidal'][1],
+                    'lamtha': p_ext['lamtha']
+                }
 
-            self.ncfrom_extgauss.append(self.parconnect_from_src(gid_extgauss, nc_dict, self.basal2_ampa))
-            self.ncfrom_extgauss.append(self.parconnect_from_src(gid_extgauss, nc_dict, self.basal3_ampa))
-            self.ncfrom_extgauss.append(self.parconnect_from_src(gid_extgauss, nc_dict, self.apicaloblique_ampa))
+                self.ncfrom_extgauss.append(self.parconnect_from_src(gid_extgauss, nc_dict, self.basal2_ampa))
+                self.ncfrom_extgauss.append(self.parconnect_from_src(gid_extgauss, nc_dict, self.basal3_ampa))
+                self.ncfrom_extgauss.append(self.parconnect_from_src(gid_extgauss, nc_dict, self.apicaloblique_ampa))
 
-        # Define 3D shape and position of cell. By default neuron uses xy plane for
+        elif type == 'extpois':
+            if self.celltype in p_ext.keys():
+                gid_extpois = gid + gid_dict['extpois'][0]
+
+                nc_dict = {
+                    'pos_src': pos_dict['extpois'][gid],
+                    'A_weight': p_ext[self.celltype][0],
+                    'A_delay': p_ext[self.celltype][1],
+                    'lamtha': p_ext['lamtha_space']
+                }
+
+
+                self.ncfrom_extpois.append(self.parconnect_from_src(gid_extpois, nc_dict, self.basal2_ampa))
+                self.ncfrom_extpois.append(self.parconnect_from_src(gid_extpois, nc_dict, self.basal3_ampa))
+                self.ncfrom_extpois.append(self.parconnect_from_src(gid_extpois, nc_dict, self.apicaloblique_ampa))
+
+        else:
+            print "Warning, ext type def does not exist in L2Pyr"
+
+    # Define 3D shape and position of cell. By default neuron uses xy plane for
     # height and xz plane for depth. This is opposite for model as a whole, but
     # convention is followed in this function for ease use of gui. 
     def __set_3Dshape(self):

@@ -1,8 +1,8 @@
 # class_cell.py - establish class def for general cell features
 #
-# v 1.5.12
-# rev 2013-01-05 (SL: added nc list for evprox)
-# last rev: (MS: All properties set using dictionaries passed in as params)
+# v 1.6.0ev
+# rev 2013-01-07 (SL: changed parreceives)
+# last rev: (SL: added nc list for evprox)
 
 import numpy as np
 import itertools as it
@@ -214,7 +214,6 @@ class BasketSingle(Cell):
             'Ra': 200.,
             'name': 'L2Basket',
         }
-            
 
     # Define 3D shape and position of cell. By default neuron uses xy plane for
     # height and xz plane for depth. This is opposite for model as a whole, but
@@ -229,20 +228,6 @@ class BasketSingle(Cell):
 
         nrn.pop_section()
 
-    # parreceive_pois is going to be based on the self.celltype!
-    def parreceive_pois(self, gid, gid_dict, pos_dict, p_ext_pois):
-        if self.celltype in p_ext_pois.keys():
-            gid_extpois = gid + gid_dict['extpois'][0]
-
-            nc_dict = {
-                'pos_src': pos_dict['extpois'][gid],
-                'A_weight': p_ext_pois[self.celltype][0],
-                'A_delay': p_ext_pois[self.celltype][1],
-                'lamtha': p_ext_pois['lamtha_space']
-            }
-
-            self.ncfrom_extpois.append(self.parconnect_from_src(gid_extpois, nc_dict, self.soma_ampa))
-
 # General Pyramidal cell class
 class Pyr(Cell):
     def __init__(self, soma_props):
@@ -254,22 +239,6 @@ class Pyr(Cell):
         
         # preallocate list to store dends
         self.list_dend = []
-
-    # parreceive_pois is going to be based on the self.celltype!
-    def parreceive_pois(self, gid, gid_dict, pos_dict, p_ext_pois):
-        if self.celltype in p_ext_pois.keys():
-            gid_extpois = gid + gid_dict['extpois'][0]
-
-            nc_dict = {
-                'pos_src': pos_dict['extpois'][gid],
-                'A_weight': p_ext_pois[self.celltype][0],
-                'A_delay': p_ext_pois[self.celltype][1],
-                'lamtha': p_ext_pois['lamtha_space']
-            }
-
-            self.ncfrom_extpois.append(self.parconnect_from_src(gid_extpois, nc_dict, self.basal2_ampa))
-            self.ncfrom_extpois.append(self.parconnect_from_src(gid_extpois, nc_dict, self.basal3_ampa))
-            self.ncfrom_extpois.append(self.parconnect_from_src(gid_extpois, nc_dict, self.apicaloblique_ampa))
 
     # Create dictionary of section names with entries to scale section lengths to length along z-axis
     def get_sectnames(self):

@@ -1,8 +1,8 @@
 # L5_basket.py - establish class def for layer 5 basket cells
 #
-# v 1.5.12
-# rev 2013-01-05 (SL: Added parreceive_evprox)
-# last rev: (MS: Synapse creation and biophysics moved from class_cell.py to here)
+# v 1.6.0ev
+# rev 2013-01-07 (SL: changed parreceives)
+# last rev: (SL: Added parreceive_evprox)
 
 import itertools as it
 from neuron import h as nrn
@@ -81,33 +81,51 @@ class L5Basket(BasketSingle):
 
                 self.ncfrom_extinput.append(self.parconnect_from_src(gid_src, nc_dict, self.soma_ampa))
 
-    # evprox
-    def parreceive_evprox(self, gid, gid_dict, pos_dict, p_evprox):
-        if self.celltype in p_evprox.keys():
-            gid_evprox = gid + gid_dict['evprox'][0]
+    # one parreceive function to handle all types of external parreceives
+    # types must be defined explicitly here
+    def parreceive_ext(self, type, gid, gid_dict, pos_dict, p_ext):
+        if type == 'evprox':
+            if self.celltype in p_ext.keys():
+                gid_evprox = gid + gid_dict['evprox'][0]
 
-            nc_dict = {
-                'pos_src': pos_dict['evprox'][gid],
-                'A_weight': p_evprox[self.celltype][0],
-                'A_delay': p_evprox[self.celltype][1],
-                'lamtha': p_evprox['lamtha_space']
-            }
+                nc_dict = {
+                    'pos_src': pos_dict['evprox'][gid],
+                    'A_weight': p_ext[self.celltype][0],
+                    'A_delay': p_ext[self.celltype][1],
+                    'lamtha': p_ext['lamtha_space']
+                }
 
-            self.ncfrom_evprox.append(self.parconnect_from_src(gid_evprox, nc_dict, self.soma_ampa))
+                self.ncfrom_evprox.append(self.parconnect_from_src(gid_evprox, nc_dict, self.soma_ampa))
 
-    def parreceive_gauss(self, gid, gid_dict, pos_dict, p_ext_gauss):
-        # gid is this cell's gid
-        # gid_dict is the whole dictionary, including the gids of the extgauss
-        # pos_dict is also the pos of the extgauss (net origin)
-        # p_ext_gauss are the params (strength, etc.)
-        if 'L5_basket' in p_ext_gauss.keys():
-            gid_extgauss = gid + gid_dict['extgauss'][0]
+        elif type == 'extgauss':
+            # gid is this cell's gid
+            # gid_dict is the whole dictionary, including the gids of the extgauss
+            # pos_dict is also the pos of the extgauss (net origin)
+            # p_ext_gauss are the params (strength, etc.)
+            if 'L5_basket' in p_ext.keys():
+                gid_extgauss = gid + gid_dict['extgauss'][0]
 
-            nc_dict = {
-                'pos_src': pos_dict['extgauss'][gid],
-                'A_weight': p_ext_gauss['L5_basket'][0],
-                'A_delay': p_ext_gauss['L5_basket'][1],
-                'lamtha': p_ext_gauss['lamtha']
-            }
+                nc_dict = {
+                    'pos_src': pos_dict['extgauss'][gid],
+                    'A_weight': p_ext['L5_basket'][0],
+                    'A_delay': p_ext['L5_basket'][1],
+                    'lamtha': p_ext['lamtha']
+                }
 
-            self.ncfrom_extgauss.append(self.parconnect_from_src(gid_extgauss, nc_dict, self.soma_ampa))
+                self.ncfrom_extgauss.append(self.parconnect_from_src(gid_extgauss, nc_dict, self.soma_ampa))
+
+        elif type == 'extpois':
+            if self.celltype in p_ext.keys():
+                gid_extpois = gid + gid_dict['extpois'][0]
+
+                nc_dict = {
+                    'pos_src': pos_dict['extpois'][gid],
+                    'A_weight': p_ext[self.celltype][0],
+                    'A_delay': p_ext[self.celltype][1],
+                    'lamtha': p_ext['lamtha_space']
+                }
+
+                self.ncfrom_extpois.append(self.parconnect_from_src(gid_extpois, nc_dict, self.soma_ampa))
+
+        else:
+            print "Warning, type def not specified in L2Basket"

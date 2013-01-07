@@ -1,15 +1,16 @@
 # class_net.py - establishes the Network class and related methods
 #
-# v 1.5.12
-# rev 2013-01-05 (SL: makes evprox input per cell for randomness)
-# last major: (SL: cleanup)
+# v 1.6.0ev
+# rev 2013-01-07 (SL: Massive reorganization of unique inputs)
+# last major: (SL: makes evprox input per cell for randomness)
 
 import itertools as it
 import numpy as np
 import sys
 
 from neuron import h as nrn
-from fn.class_feed import ParFeedExt, ParFeedExtGauss, ParFeedExtPois, ParFeedEvoked
+from fn.class_feed import ParFeedExt, ParFeedAll
+# from fn.class_feed import ParFeedExt, ParFeedExtGauss, ParFeedExtPois, ParFeedEvoked
 from fn.cells.L5_pyramidal import L5Pyr
 from fn.cells.L2_pyramidal import L2Pyr
 from fn.cells.L2_basket import L2Basket
@@ -32,56 +33,35 @@ class Network():
         self.rank = int(self.pc.id())
         self.N_src = 0
 
+        # numbers of sources
+        self.N = {}
+
         # zdiff is expressed as a positive DEPTH of L5 relative to L2
         # this is a deviation from the original, where L5 was defined at 0
         # this should not change interlaminar weight/delay calculations
         self.zdiff = 1307.4 
 
-        # all params of external inputs in p_ext
+        # params of external inputs in p_ext
         # Global number of external inputs ... automatic counting makes more sense
+        # p_unique represent ext inputs that are going to go to each cell
         self.p_ext, self.p_unique = paramrw.create_pext(self.p, nrn.tstop)
-        # self.p_ext, self.p_ext_gauss, self.p_ext_pois = paramrw.create_pext(self.p, nrn.tstop)
         self.N_extinput = len(self.p_ext)
 
-        # absolute source list of keys on which everything gets created
-        # alpha order HERE matters but cannot in dicts
-        self.src_list = [
-            'L2_basket',
-            'L2_pyramidal',
-            'L5_basket',
-            'L5_pyramidal',
-            'extinput',
-        ]
-
-        # adds inputs to the self.src_list
-        self.__append_inputs_unique()
+        # Source list of names, in particular order (cells, extinput, alpha names of unique inputs)
+        self.src_list_new = self.__create_src_list()
 
         # cell position lists, also will give counts: must be known by ALL nodes
         # extinput positions are all located at origin. This is sort of a hack bc of redundancy
-        self.pos_dict = dict.fromkeys(self.src_list)
+        self.pos_dict = dict.fromkeys(self.src_list_new)
 
-        # create coords and counts in self.N_{celltype} variables
+        # create coords in pos_dict for all cells first
         self.__create_coords_pyr()
         self.__create_coords_basket()
+        self.__count_cells()
 
-        # also creates coords for the extgauss
-        self.N_cells = self.N_L2_pyr + self.N_L5_pyr + self.N_L2_basket + self.N_L5_basket
-        self.N_evprox = self.N_extgauss = self.N_extpois = self.N_cells
-        # self.N_extgauss = self.N_cells
-        # self.N_extpois = self.N_cells
+        # create coords for all other sources
         self.__create_coords_extinput()
-
-        # ugly for now
-        self.src_counts = (
-            self.N_L2_basket,
-            self.N_L2_pyr,
-            self.N_L5_basket,
-            self.N_L5_pyr,
-            self.N_evprox,
-            self.N_extinput,
-            self.N_extgauss,
-            self.N_extpois,
-        )
+        self.__count_extsrcs()
 
         # create dictionary of GIDs according to cell type
         # global dictionary of gid and cell type
@@ -94,10 +74,16 @@ class Network():
 
         # create cells (and create self.origin in create_cells_pyr())
         self.cells_list = []
-        self.evprox_list = []
         self.extinput_list = []
-        self.extgauss_list = []
-        self.extpois_list = []
+
+        # external unique input list dictionary
+        self.ext_list = dict.fromkeys(self.p_unique)
+
+        # initialize the lists in the dict
+        for key in self.ext_list.keys():
+            self.ext_list[key] = []
+
+        # create sources and init
         self.__create_all_src()
         self.__state_init()
 
@@ -109,12 +95,28 @@ class Network():
         self.spikegids = nrn.Vector()
         self.__record_spikes()
 
-    # appends an alpha sorted list of inputs
-    def __append_inputs_unique(self):
-        list_keys = self.p_unique.keys()
+    # creates the immutable source list along with corresponding numbers of cells
+    def __create_src_list(self):
+        # base source list of tuples, name and number, in this order
+        self.cellname_list = [
+            'L2_basket',
+            'L2_pyramidal',
+            'L5_basket',
+            'L5_pyramidal',
+        ]
 
-        # lamba sort and append to src_list
-        self.src_list += sorted(list_keys, key=lambda pos: pos[0])
+        # add the legacy extinput here
+        self.extname_list = []
+        self.extname_list.append('extinput')
+
+        # grab the keys for the unique set of inputs and sort the names
+        # append them to the src list along with the number of cells
+        unique_keys = sorted(self.p_unique.keys(), key=lambda x: x[0])
+        self.extname_list += unique_keys
+
+        # return one final source list
+        src_list = self.cellname_list + self.extname_list
+        return src_list
 
     # Creates cells and grid
     # pyr grid is the immutable grid, origin now calculated in relation to feed
@@ -125,9 +127,6 @@ class Network():
         # create list of tuples/coords, (x, y, z)
         self.pos_dict['L2_pyramidal'] = [pos for pos in it.product(xrange, yrange, [0])]
         self.pos_dict['L5_pyramidal'] = [pos for pos in it.product(xrange, yrange, [self.zdiff])]
-
-        self.N_L2_pyr = len(self.pos_dict['L2_pyramidal'])
-        self.N_L5_pyr = len(self.pos_dict['L5_pyramidal'])
 
     def __create_coords_basket(self):
         # define relevant x spacings for basket cells
@@ -147,11 +146,8 @@ class Network():
         self.pos_dict['L2_basket'] = [pos_xy + (0,) for pos_xy in coords_sorted]
         self.pos_dict['L5_basket'] = [pos_xy + (self.zdiff,) for pos_xy in coords_sorted]
 
-        # number of cells
-        self.N_L2_basket = len(self.pos_dict['L2_basket'])
-        self.N_L5_basket = len(self.pos_dict['L5_basket'])
-
-    # creates origin AND creates external input coords (same thing for now but won't fix because could change)
+    # creates origin AND creates external input coords 
+    # (same thing for now but won't fix because could change)
     def __create_coords_extinput(self):
         xrange = np.arange(self.gridpyr['x'])
         yrange = np.arange(self.gridpyr['y'])
@@ -164,9 +160,31 @@ class Network():
         self.origin = (origin_x, origin_y, origin_z)
 
         self.pos_dict['extinput'] = [self.origin for i in range(self.N_extinput)]
-        self.pos_dict['evprox'] = [self.origin for i in range(self.N_evprox)]
-        self.pos_dict['extgauss'] = [self.origin for i in range(self.N_extgauss)]
-        self.pos_dict['extpois'] = [self.origin for i in range(self.N_extpois)]
+
+        # at this time, each of the unique inputs is per cell
+        for key in self.p_unique.keys():
+            # create the pos_dict for all the sources
+            self.pos_dict[key] = [self.origin for i in range(self.N_cells)]
+
+    # cell counting routine
+    def __count_cells(self):
+        # init self.N_cells
+        self.N_cells = 0
+
+        # cellname list is used *only* for this purpose for now
+        for src in self.cellname_list:
+            # if it's a cell, then add the number to total number of cells
+            self.N[src] = len(self.pos_dict[src])
+            self.N_cells += self.N[src]
+
+    # general counting method requires pos_dict is correct for each source
+    # and that all sources are represented
+    def __count_extsrcs(self):
+        # all src numbers are based off of length of pos_dict entry
+        # generally done here in lieu of upstream changes
+
+        for src in self.extname_list:
+            self.N[src] = len(self.pos_dict[src])
 
     # creates gid dicts and pos_lists
     def __create_gid_dict(self):
@@ -174,50 +192,44 @@ class Network():
         gid_ind = [0]
 
         # append a new gid_ind based on previous and next cell count
-        for i in range(len(self.src_counts)):
-            gid_ind.append(gid_ind[i]+self.src_counts[i])
+        # order is guaranteed by self.src_list_new
+        for i in range(len(self.src_list_new)):
+            # N = self.src_list_new[i][1]
+            # grab the src name in ordered list src_list_new
+            src = self.src_list_new[i]
+            
+            # query the N dict for that number and append here to gid_ind, based on previous entry
+            gid_ind.append(gid_ind[i]+self.N[src])
 
-        # gid order is guaranteed HERE
-        # alpha order here but NOT guaranteed for dict
-        self.gid_dict = {
-            'L2_basket': range(gid_ind[0], gid_ind[1]),
-            'L2_pyramidal': range(gid_ind[1], gid_ind[2]),
-            'L5_basket': range(gid_ind[2], gid_ind[3]),
-            'L5_pyramidal': range(gid_ind[3], gid_ind[4]),
-            'evprox': range(gid_ind[4], gid_ind[5]),
-            'extinput': range(gid_ind[5], gid_ind[6]),
-            'extgauss': range(gid_ind[6], gid_ind[7]),
-            'extpois': range(gid_ind[7], gid_ind[8]),
-        }
+            # accumulate total source count
+            self.N_src += self.N[src]
 
-        for count in self.src_counts:
-            self.N_src += count
+        # dictionary of gids for each source
+        self.gid_dict = {}
+
+        # now actually assign the ranges
+        for i in range(len(self.src_list_new)):
+            src = self.src_list_new[i]
+            self.gid_dict[src] = range(gid_ind[i], gid_ind[i+1])
 
     # this happens on EACH node
     # creates self.__gid_list for THIS node
     def __gid_assign(self):
         # round robin assignment of gids
         for gid in range(self.rank, self.N_cells, self.n_hosts):
-        # for gid in range(self.rank, self.N_src, self.n_hosts):
             # set the cell gid
             self.pc.set_gid2node(gid, self.rank)
             self.__gid_list.append(gid)
 
-            # calculate gid for the evprox and assign to same rank
-            gid_evprox = self.gid_dict['evprox'][0] + gid
-            self.pc.set_gid2node(gid_evprox, self.rank)
-            self.__gid_list.append(gid_evprox)
+            # now to do the cell-specific external input gids on the same proc
+            # these are guaranteed to exist because all of these inputs were created
+            # for each cell
+            for key in self.p_unique.keys():
+                gid_input = gid + self.gid_dict[key][0]
+                self.pc.set_gid2node(gid_input, self.rank)
+                self.__gid_list.append(gid_input)
 
-            # calculate gid for the extgauss and assign to same rank
-            gid_extgauss = self.gid_dict['extgauss'][0] + gid
-            self.pc.set_gid2node(gid_extgauss, self.rank)
-            self.__gid_list.append(gid_extgauss)
-
-            # calculate gid for the extpois and assign to same rank
-            gid_extpois = self.gid_dict['extpois'][0] + gid
-            self.pc.set_gid2node(gid_extpois, self.rank)
-            self.__gid_list.append(gid_extpois)
-
+        # legacy handling of the external inputs
         # NOT perfectly balanced for now
         for gid_base in range(self.rank, self.N_extinput, self.n_hosts):
             # shift the gid_base to the extinput gid
@@ -231,7 +243,6 @@ class Network():
         self.__gid_list.sort()
 
     # reverse lookup of gid to type
-    # there may be a better, more general way to do this
     def gid_to_type(self, gid):
         for gidtype, gids in self.gid_dict.iteritems():
             if gid in gids:
@@ -254,7 +265,7 @@ class Network():
 
         # should only return a cell type
         # return values 2 and 3 of the tuple of this cell type and assign to mu and sigma
-        return self.p_unique['ext_gauss'][type][2:4]
+        return self.p_unique['extgauss'][type][2:4]
 
     # returns the lamtha related to the postsynaptic cell type
     def __create_extpois_params(self, gid_extpois):
@@ -263,7 +274,7 @@ class Network():
         type = self.gid_to_type(gid_post)
 
         # return the lamtha related to this celltype
-        return self.p_unique['ext_pois'][type][2]
+        return self.p_unique['extpois'][type][2]
 
     # parallel create cells AND external inputs (feeds)
     # these are spike SOURCES but cells are also targets
@@ -298,12 +309,6 @@ class Network():
                     self.cells_list.append(L5Basket(pos))
                     self.pc.cell(gid, self.cells_list[-1].connect_to_target(None))
 
-                elif type == 'evprox':
-                    # use self.p_evprox to create these gids
-                    mu, sigma = self.__create_ev_params(gid)
-                    self.evprox_list.append(ParFeedEvoked(mu, sigma))
-                    self.pc.cell(gid, self.evprox_list[-1].connect_to_target())
-
                 elif type == 'extinput':
                     # to find param index, take difference between REAL gid here and gid start point of the items
                     p_ind = gid - self.gid_dict['extinput'][0]
@@ -314,19 +319,13 @@ class Network():
                     self.extinput_list.append(ParFeedExt(self.origin, self.p_ext[p_ind]))
                     self.pc.cell(gid, self.extinput_list[-1].connect_to_target())
 
-                elif type == 'extgauss':
-                    # use self.p_ext_gauss to create these gids
-                    mu, sigma = self.__create_extgauss_params(gid)
-                    self.extgauss_list.append(ParFeedExtGauss(mu, sigma))
-                    self.pc.cell(gid, self.extgauss_list[-1].connect_to_target())
+                elif type in self.p_unique.keys():
+                    gid_post = gid - self.gid_dict[type][0]
+                    cell_type = self.gid_to_type(gid_post)
 
-                elif type == 'extpois':
-                    lamtha = self.__create_extpois_params(gid)
-                    # lamtha = self.p_ext_pois['lamtha']
-                    t_interval = self.p_unique['ext_pois']['t_interval']
-
-                    self.extpois_list.append(ParFeedExtPois(lamtha, t_interval))
-                    self.pc.cell(gid, self.extpois_list[-1].connect_to_target())
+                    # create dictionary entry, append to list
+                    self.ext_list[type].append(ParFeedAll(type, cell_type, self.p_unique[type]))
+                    self.pc.cell(gid, self.ext_list[type][-1].connect_to_target())
 
                 else:
                     print "None of these types in Net()"
@@ -354,10 +353,10 @@ class Network():
                 cell.parconnect(gid, self.gid_dict, self.pos_dict, self.p)
                 cell.parreceive(gid, self.gid_dict, self.pos_dict, self.p_ext)
 
-                # now do the gaussian inputs specific to these cells
-                cell.parreceive_evprox(gid, self.gid_dict, self.pos_dict, self.p_unique['evprox'])
-                cell.parreceive_gauss(gid, self.gid_dict, self.pos_dict, self.p_unique['ext_gauss'])
-                cell.parreceive_pois(gid, self.gid_dict, self.pos_dict, self.p_unique['ext_pois'])
+                # now do the unique inputs specific to these cells
+                for type in self.p_unique.keys():
+                    p_type = self.p_unique[type]
+                    cell.parreceive_ext(type, gid, self.gid_dict, self.pos_dict, p_type)
 
     # setup spike recording for this node
     def __record_spikes(self):
@@ -409,4 +408,3 @@ class Network():
 
                 elif cell.celltype == 'L5_basket':
                     seg.v = -64.9737
-                 

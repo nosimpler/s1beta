@@ -1,8 +1,8 @@
 # paramrw.py - routines for reading the param files
 #
-# v 1.5.12
-# rev 2013-01-05 (SL: changed some ext inputs to p_unique)
-# last major: (MS: Updated get_key_types() to include keys that change expmt to expmt)
+# v 1.6.0ev
+# rev 2013-01-07 (SL: changed params for reorganization)
+# last major: (SL: changed some ext inputs to p_unique)
 
 import re
 import fileio as fio
@@ -346,7 +346,7 @@ def create_pext(p, tstop):
     # Create evoked response parameters
     # f_input needs to be defined as 0
     # these vals correspond to non-perceived max 
-    #   conductance threshold in uS (Jones et al. 2007)
+    # conductance threshold in uS (Jones et al. 2007)
     p_unique['evprox'] = {
         't0': p['t_evoked_prox_early'],
         'L2_pyramidal': (1e-3, 0.1, 0.),
@@ -357,20 +357,18 @@ def create_pext(p, tstop):
         'loc': 'proximal'
     }
 
-    # evoked_prox_late = {
+    # p_unique['evprox1'] = {
     #     'f_input': 0.,
     #     't0': p['t_evoked_prox_late'],
-    #     'L2Pyr': (5.3e-3, 0.1),
-    #     'L5Pyr': (2.7e-3, 5.),
-    #     'L2Basket': (5.3e-3, 0.1),
-    #     'L5Basket': (2.7e-3, 5.),
-    #     'lamtha': 3.,
+    #     'L2_pyramidal': (5.3e-3, 0.1, 0.),
+    #     'L5_pyramidal': (2.7e-3, 5., 0.),
+    #     'L2_basket': (5.3e-3, 0.1, 0.),
+    #     'L5_basket': (2.7e-3, 5., 0.),
+    #     'lamtha_space': 3.,
     #     'loc': 'proximal'
     # }
 
-    # p_ext = feed_validate(p_ext, evoked_prox_late, tstop)
-
-    # evoked_dist = {
+    # p_unique['evdist'] = {
     #     'f_input': 0.,
     #     't0': p['t_evoked_dist'],
     #     'L2Pyr': (1e-3, 0.1),
@@ -384,7 +382,7 @@ def create_pext(p, tstop):
 
     # this needs to create many feeds
     # (amplitude, delay, mu, sigma). ordered this way to preserve compatibility
-    p_unique['ext_gauss'] = {
+    p_unique['extgauss'] = {
         'stim': 'gaussian',
         'L2_basket': (p['L2Basket_Gauss_A'], 1., p['L2Basket_Gauss_mu'], p['L2Basket_Gauss_sigma']),
         'L2_pyramidal': (p['L2Pyr_Gauss_A'], 0.1, p['L2Pyr_Gauss_mu'], p['L2Pyr_Gauss_sigma']),
@@ -395,7 +393,7 @@ def create_pext(p, tstop):
     }
 
     # Poisson distributed inputs to proximal
-    p_unique['ext_pois'] = {
+    p_unique['extpois'] = {
         'stim': 'poisson',
         'L2_basket': (p['L2Basket_Pois_A'], 1., p['L2Basket_Pois_lamtha']),
         'L2_pyramidal': (p['L2Pyr_Pois_A'], 0.1, p['L2Pyr_Pois_lamtha']),

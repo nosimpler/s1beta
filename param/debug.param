@@ -64,7 +64,7 @@ gbar_L5Pyr_L5Basket: 5e-4
 gbar_L2Pyr_L5Basket: 2.5e-4
 
 # Ongoing alpha rhythms
-t0_input: 150.
+t0_input: 1500.
 f_stdev: 20.
 f_input_prox: {10., 20.}
 f_input_dist: [10., 20.]
@@ -79,7 +79,7 @@ input_dist_A_inh: 4e-5
 # input_dist_A_inh: 8e-5
 
 # times for evoked responses
-t_evoked_prox_early: 6000.
+t_evoked_prox_early: 150.
 t_evoked_prox_late: 6000.
 t_evoked_dist: 6000.
 
