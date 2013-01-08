@@ -19,12 +19,12 @@ f_stand_dev: 0.1
 # f_input_dist: [10.]
 
 # times for evoked responses
-t_evoked_prox_early: 6000.
-t_evoked_prox_late: 6000.
-t_evoked_dist: 6000.
-# t_evoked_prox_early: 454.
-# t_evoked_prox_late: 564.
-# t_evoked_dist: 499.
+t_evprox_early: 6000.
+t_evprox_late: 6000.
+t_evdist: 6000.
+# t_evprox_early: 454.
+# t_evprox_late: 564.
+# t_evdist: 499.
 
 # analysis
 save_spec_data: 1

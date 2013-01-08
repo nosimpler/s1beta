@@ -80,12 +80,12 @@ input_dist_A_inh: 4e-5
 # input_dist_A_inh: 8e-5
 
 # times for evoked responses
-t_evoked_prox_early: 2000.
-t_evoked_prox_late: 2000.
-t_evoked_dist: 2000.
-# t_evoked_prox_early: 454.
-# t_evoked_prox_late: 564.
-# t_evoked_dist: 499.
+t_evprox_early: 2000.
+t_evprox_late: 2000.
+t_evdist: 2000.
+# t_evprox_early: 454.
+# t_evprox_late: 564.
+# t_evdist: 499.
 
 # analysis
 save_spec_data: 0

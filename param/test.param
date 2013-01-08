@@ -73,9 +73,9 @@ f_input_prox: 10.
 f_input_dist: 10.
 
 # times for evoked responses
-t_evoked_prox_early: 2000.
-t_evoked_prox_late: 2000.
-t_evoked_dist: 2000.
+t_evprox_early: 2000.
+t_evprox_late: 2000.
+t_evdist: 2000.
 
 # analysis
 save_spec_data: 0

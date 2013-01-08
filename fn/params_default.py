@@ -1,8 +1,8 @@
 # params_default.py - list of default params and values
 #
-# v 1.5.6
-# rev 2012-12-10 (SL: Added strength params for thalamic feeds)
-# last major: (SL: Added prng param)
+# v 1.6.5ev
+# rev 2012-12-08 (SL: changed param names for evoked)
+# last major: (SL: Added strength params for thalamic feeds)
 
 # flat file of default values
 # tuples for different "experiments"
@@ -84,9 +84,9 @@ def get_params_default():
         # 'input_dist_A_inh': 8e-5,
 
         # times for evoked responses
-        't_evoked_prox_early': 454.,
-        't_evoked_prox_late': 564.,
-        't_evoked_dist': 499.,
+        't_evprox_early': 454.,
+        't_evprox_late': 564.,
+        't_evdist': 499.,
 
         # analysis
         'save_spec_data': 0,

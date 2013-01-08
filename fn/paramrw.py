@@ -1,8 +1,8 @@
 # paramrw.py - routines for reading the param files
 #
-# v 1.6.4ev
-# rev 2013-01-07 (SL: Made evprox/dist more flexible)
-# last major: (SL: Removed f_input from evprox and evdist)
+# v 1.6.5ev
+# rev 2013-01-08 (SL: changing variable names for evoked)
+# last major: (SL: Made evprox/dist more flexible)
 
 import re
 import fileio as fio
@@ -348,7 +348,7 @@ def create_pext(p, tstop):
     # these vals correspond to non-perceived max 
     # conductance threshold in uS (Jones et al. 2007)
     p_unique['evprox0'] = {
-        't0': p['t_evoked_prox_early'],
+        't0': p['t_evprox_early'],
         'L2_pyramidal': (1e-3, 0.1, 0.),
         'L5_pyramidal': (5e-4, 1., 0.),
         'L2_basket': (2e-3, 0.1, 0.),
@@ -358,7 +358,7 @@ def create_pext(p, tstop):
     }
 
     p_unique['evprox1'] = {
-        't0': p['t_evoked_prox_late'],
+        't0': p['t_evprox_late'],
         'L2_pyramidal': (5.3e-3, 0.1, 0.),
         'L5_pyramidal': (2.7e-3, 5., 0.),
         'L2_basket': (5.3e-3, 0.1, 0.),
@@ -368,7 +368,7 @@ def create_pext(p, tstop):
     }
 
     p_unique['evdist'] = {
-        't0': p['t_evoked_dist'],
+        't0': p['t_evdist'],
         'L2_pyramidal': (1e-3, 0.1, 0.),
         'L5_pyramidal': (1e-3, 0.1, 0.),
         'L2_basket': (5e-4, 0.1, 0.),
