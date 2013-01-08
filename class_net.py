@@ -353,29 +353,29 @@ class Network():
     # initializes the state closer to baseline
     def __state_init(self):
         for cell in self.cells_list:
-           seclist = nrn.SectionList()
-           seclist.wholetree(sec=cell.soma)
+            seclist = nrn.SectionList()
+            seclist.wholetree(sec=cell.soma)
            
-        for sect in seclist:
-            for seg in sect:
-                if cell.celltype == 'L2_pyramidal':
-                    seg.v = -71.46
+            for sect in seclist:
+                for seg in sect:
+                    if cell.celltype == 'L2_pyramidal':
+                        seg.v = -71.46
 
-                elif cell.celltype == 'L5_pyramidal':
-                    if sect.name() == 'L5Pyr_apical_1':
-                        seg.v = -71.32
+                    elif cell.celltype == 'L5_pyramidal':
+                        if sect.name() == 'L5Pyr_apical_1':
+                            seg.v = -71.32
 
-                    elif sect.name() == 'L5Pyr_apical_2':
-                        seg.v = -69.08
+                        elif sect.name() == 'L5Pyr_apical_2':
+                            seg.v = -69.08
 
-                    elif sect.name() == 'L5Pyr_apical_tuft':
-                        seg.v = -67.30
+                        elif sect.name() == 'L5Pyr_apical_tuft':
+                            seg.v = -67.30
 
-                    else:
-                        seg.v = -72.
+                        else:
+                            seg.v = -72.
 
-                elif cell.celltype == 'L2_basket':
-                    seg.v = -64.9737
+                    elif cell.celltype == 'L2_basket':
+                        seg.v = -64.9737
 
-                elif cell.celltype == 'L5_basket':
-                    seg.v = -64.9737
+                    elif cell.celltype == 'L5_basket':
+                        seg.v = -64.9737
