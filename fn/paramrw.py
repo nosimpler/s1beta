@@ -1,8 +1,8 @@
 # paramrw.py - routines for reading the param files
 #
-# v 1.6.5ev
-# rev 2013-01-08 (SL: changing variable names for evoked)
-# last major: (SL: Made evprox/dist more flexible)
+# v 1.6.6ev
+# rev 2013-01-08 (SL: Added st dev "sigma" params)
+# last major: (SL: changing variable names for evoked)
 
 import re
 import fileio as fio
@@ -349,29 +349,33 @@ def create_pext(p, tstop):
     # conductance threshold in uS (Jones et al. 2007)
     p_unique['evprox0'] = {
         't0': p['t_evprox_early'],
-        'L2_pyramidal': (1e-3, 0.1, 0.),
-        'L5_pyramidal': (5e-4, 1., 0.),
-        'L2_basket': (2e-3, 0.1, 0.),
-        'L5_basket': (1e-3, 1., 0.),
+        'L2_pyramidal': (1e-3, 0.1, p['sigma_t_evprox_early']),
+        'L5_pyramidal': (5e-4, 1., p['sigma_t_evprox_early']),
+        'L2_basket': (2e-3, 0.1, p['sigma_t_evprox_early']),
+        'L5_basket': (1e-3, 1., p['sigma_t_evprox_early']),
         'lamtha_space': 3.,
         'loc': 'proximal'
     }
 
     p_unique['evprox1'] = {
         't0': p['t_evprox_late'],
-        'L2_pyramidal': (5.3e-3, 0.1, 0.),
-        'L5_pyramidal': (2.7e-3, 5., 0.),
-        'L2_basket': (5.3e-3, 0.1, 0.),
-        'L5_basket': (2.7e-3, 5., 0.),
+        # 'L2_pyramidal': (6.89e-3, 0.1, p['sigma_t_evprox_late']),
+        # 'L5_pyramidal': (3.471e-3, 5., p['sigma_t_evprox_late']),
+        # 'L2_basket': (6.89e-3, 0.1, p['sigma_t_evprox_late']),
+        # 'L5_basket': (3.471e-3, 5., p['sigma_t_evprox_late']),
+        'L2_pyramidal': (5.3e-3, 0.1, p['sigma_t_evprox_late']),
+        'L5_pyramidal': (2.7e-3, 5., p['sigma_t_evprox_late']),
+        'L2_basket': (5.3e-3, 0.1, p['sigma_t_evprox_late']),
+        'L5_basket': (2.7e-3, 5., p['sigma_t_evprox_late']),
         'lamtha_space': 3.,
         'loc': 'proximal'
     }
 
     p_unique['evdist'] = {
         't0': p['t_evdist'],
-        'L2_pyramidal': (1e-3, 0.1, 0.),
-        'L5_pyramidal': (1e-3, 0.1, 0.),
-        'L2_basket': (5e-4, 0.1, 0.),
+        'L2_pyramidal': (1e-3, 0.1, p['sigma_t_evdist']),
+        'L5_pyramidal': (1e-3, 0.1, p['sigma_t_evdist']),
+        'L2_basket': (5e-4, 0.1, p['sigma_t_evdist']),
         'lamtha_space': 3.,
         'loc': 'distal'
     }

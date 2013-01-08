@@ -1,8 +1,8 @@
 # params_default.py - list of default params and values
 #
-# v 1.6.5ev
-# rev 2012-12-08 (SL: changed param names for evoked)
-# last major: (SL: Added strength params for thalamic feeds)
+# v 1.6.6ev
+# rev 2012-12-08 (SL: parameterized st dev (sigma))
+# last major: (SL: changed param names for evoked)
 
 # flat file of default values
 # tuples for different "experiments"
@@ -83,10 +83,13 @@ def get_params_default():
         'input_dist_A_inh': 4e-5,
         # 'input_dist_A_inh': 8e-5,
 
-        # times for evoked responses
+        # times and stdevs for evoked responses
         't_evprox_early': 454.,
+        'sigma_t_evprox_early': 2.5,
         't_evprox_late': 564.,
+        'sigma_t_evprox_late': 7.,
         't_evdist': 499.,
+        'sigma_t_evdist': 6.,
 
         # analysis
         'save_spec_data': 0,
