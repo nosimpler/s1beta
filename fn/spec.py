@@ -1,8 +1,8 @@
 # spec.py - Average time-frequency energy representation using Morlet wavelet method
 #
-# v 1.5.11
-# rev 2013-01-02 (MS: added freqpwr analysis fn and plot kernel fn for freqpwr analysis data)
-# last major: (MS: Morlet spec now takes paremeter to toggle saving of data. pspec updated to take either raw data or path to raw data files as input)
+# v 1.6.9
+# rev 2013-01-02 (MS: Added plot kernel to plot freq at which max avg pwr occurs vs. input freq)
+# last major: (MS: added freqpwr analysis fn and plot kernel fn for freqpwr analysis data)
 
 import os
 import sys
@@ -287,9 +287,13 @@ def freqpwr_analysis(dspec):
         expmt = dspec.split('/')[6].split('.')[0]
 
     avg_pwr = TFR.sum(axis=1) / len(timevec)
+    max_pwr = avg_pwr.max()
+    freq_at_max = freqvec[avg_pwr==max_pwr]
 
     return {
         'avg_pwr': avg_pwr,
+        'max_pwr': max_pwr,
+        'freq_at_max': freq_at_max,
         'freq': freqvec,
         'expmt': expmt
     }
@@ -313,3 +317,33 @@ def pfreqpwr(file_name, results_list, fparam_list, key_types):
     f.ax0.set_ylabel('Avg_pwr')
 
     f.save(file_name)
+
+def pmaxpwr(file_name, results_list, fparam_list):
+    f = fig_std()
+    f.ax0.hold(True)
+
+    # instantiate lists for storing x and y data
+    x_data = []
+    y_data = []
+
+    # plot points
+    for result, fparam in it.izip(results_list, fparam_list):
+        p = paramrw.read(fparam)[1]
+
+        x_data.append(p['f_input_prox'])
+        y_data.extend(result['freq_at_max'])
+
+        f.ax0.plot(x_data[-1], y_data[-1], 'kx')
+
+    # add trendline
+    fit = np.polyfit(x_data, y_data, 1)
+    fit_fn = np.poly1d(fit)
+
+    f.ax0.plot(x_data, fit_fn(x_data), 'k-')
+
+    # Axis stuff
+    f.ax0.set_xlabel('Proximal/Distal Input Freq (Hz)')
+    f.ax0.set_ylabel('Freq at which max avg power occurs (Hz)')
+
+    f.save(file_name)
+

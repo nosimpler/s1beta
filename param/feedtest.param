@@ -4,7 +4,8 @@
 # np.arrays for everything else?
 # turns out some whitespace is valid for dicts!
 
-sim_prefix: prox-6-7-8-dist-12-14-16-stdev-0
+sim_prefix: 1-by-1
+expmt_groups: {test0}
 
 # numbers of cells making up the pyramidal grids
 N_pyr_x: 1
@@ -12,9 +13,9 @@ N_pyr_y: 1
 
 # Ongoing alpha rhythms
 t0_input: 150.
-f_input_prox: [6., 7., 8.]
-f_input_dist: [12., 14., 16.]
-f_stand_dev: 0.1
+f_stdev: 20
+f_input_prox: [10., 20.]
+f_input_dist: [10., 20.]
 # f_input_prox: [10.]
 # f_input_dist: [10.]
 
@@ -32,6 +33,7 @@ spec_max_freq: 41.
 
 # numerics
 N_trials: 0
+prng_state: ''
 tstop: 5000.
 dt: 0.025
 
@@ -88,3 +90,10 @@ gbar_L5Basket_L5Basket: 2e-2
 gbar_L5Pyr_L5Basket: 5e-4
 gbar_L2Pyr_L5Basket: 2.5e-4
 
+# thalamic input amplitudes
+input_prox_A_pyr: 4e-5
+input_prox_A_inh: 8e-5
+
+# current values, not sure where these distal values come from, need to check
+input_dist_A_pyr: 4e-5
+input_dist_A_inh: 4e-5

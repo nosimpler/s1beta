@@ -1,8 +1,8 @@
 # cli.py - routines for the command line interface console sssh.py
 #
-# v 1.5.11
-# rev 2013-01-02 (MS: Added freqpwr analysis fn)
-# last major: (MS: Added fn to redo spec analysis and save results) 
+# v 1.6.9
+# rev 2013-01-06 (MS: Added option to freqpwr to plot freq at which max avg pwr occurs vs. input freq)
+# last major: (MS: Added freqpwr analysis fn)
 
 from cmd import Cmd
 from datetime import datetime
@@ -225,10 +225,13 @@ class Console(Cmd):
         self.spec_results = clidefs.regenerate_spec_data(self.ddata)
 
     def do_freqpwr(self, args):
-        """Averages spec power over time and plots freq vs power. Fn can act per expmt over over entire simulation
+        """Averages spec power over time and plots freq vs power. Fn can act per expmt over over entire simulation. If maxpwr supplied as arg, also plots freq at which max avg pwr occurs v.s input freq
         """
-        clidefs.freqpwr_analysis(self.ddata, self.dsim)
-        # avg_pwr, freqvec = spec.freqpwr(self.spec_results[0]) 
+        if args == 'maxpwr':
+            clidefs.freqpwr_analysis(self.ddata, self.dsim, maxpwr=1)
+
+        else:
+            clidefs.freqpwr_analysis(self.ddata, self.dsim, maxpwr=0)
 
     def do_pdipole(self, args):
         """Regenerates plots in given directory

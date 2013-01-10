@@ -1,8 +1,8 @@
 # clidefs.py - these are all of the function defs for the cli
 #
-# v 1.5.11
-# rev 2013-01-02 (MS: Frequency-power analysis for spec data)
-# last major: (MS: Regenerate spec data) 
+# v 1.6.9
+# rev 2013-01-02 (MS: freqpwr_analysis also can do maxpwr analysis)
+# last major: (MS: Frequency-power analysis for spec data)
 
 # Standard modules
 import fnmatch, os, re, sys
@@ -150,7 +150,7 @@ def regenerate_spec_data(ddata):
 
     return spec_results
 
-def freqpwr_analysis(ddata, dsim):
+def freqpwr_analysis(ddata, dsim, maxpwr):
     # Averages spec power over time and plots it
 
     # Prompt user for type of analysis (per exmpt or whole sim) 
@@ -164,7 +164,7 @@ def freqpwr_analysis(ddata, dsim):
 
     # If no save spec reslts exist, redo spec analysis
     if not spec_results:
-        print "No saved spec data found. Perfomring spec analysis..."
+        print "No saved spec data found. Performing spec analysis...",
         spec_results = regenerate_spec_data(ddata)
 
         print "now doing spec freq-pwr analysis"
@@ -177,6 +177,11 @@ def freqpwr_analysis(ddata, dsim):
 
         file_name = os.path.join(dsim, 'freqpwr.png')
         spec.pfreqpwr(file_name, freqpwr_results_list, fparam_list, key_types)
+
+        # if maxpwr plot indicated
+        if maxpwr:
+            f_name = os.path.join(dsim, 'maxpwr.png')
+            spec.pmaxpwr(f_name, freqpwr_results_list, fparam_list)
 
     # plot per exmpt
     if analysis_type == 'expmt':
@@ -199,6 +204,10 @@ def freqpwr_analysis(ddata, dsim):
             # plot results
             spec.pfreqpwr(file_name, partial_results_list, partial_fparam_list, key_types)
 
+            # if maxpwr plot indicated
+            if maxpwr:
+                f_name = os.path.join(dsim, expmt_group, 'maxpwr.png')
+                spec.pmaxpwr(f_name, partial_results_list, partial_fparam_list)
 
 def regenerate_plots(ddata):
     # need p_exp, spec_results, gid_dict, and tstop.
