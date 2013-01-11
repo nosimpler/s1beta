@@ -1,13 +1,12 @@
 # cli.py - routines for the command line interface console sssh.py
 #
-# v 1.6.9
-# rev 2013-01-06 (MS: Added option to freqpwr to plot freq at which max avg pwr occurs vs. input freq)
-# last major: (MS: Added freqpwr analysis fn)
+# v 1.6.10
+# rev 2013-01-10 (SL: Added aggregate pdipole option)
+# last major: (MS: Added option to freqpwr to plot freq at which max avg pwr occurs vs. input freq)
 
 from cmd import Cmd
 from datetime import datetime
 import clidefs
-# import plot.psummary as psum
 import multiprocessing
 import subprocess
 import os, signal
@@ -17,7 +16,7 @@ import fileio as fio
 import paramrw
 import spec
 from praster import praster
-from pdipole import pdipole
+from pdipole import pdipole, pdipole_exp
 from ppsth import ppsth, ppsth_grid
 
 class Console(Cmd):
@@ -50,9 +49,10 @@ class Console(Cmd):
     def do_debug(self, args):
         """Qnd function to test many other functions
         """
-        # self.do_setdate('from_remote/2012-12-05')
-        self.do_load('evoked_test-000')
-        self.do_replot('')
+        self.do_setdate('from_remote/2013-01-08')
+        self.do_load('baseline-ev-000')
+        self.do_pdipole('agg')
+        # self.do_replot('')
         # self.epscompress('spk')
         # self.do_psthgrid()
 
@@ -236,22 +236,27 @@ class Console(Cmd):
     def do_pdipole(self, args):
         """Regenerates plots in given directory
         """
-        dfig_dpl = self.simpaths.dfigs['dipole']
-        fparam_list = self.simpaths.filelists['param']
-        fdpl_list = self.simpaths.filelists['rawdpl']
+        if args == 'agg':
+            # run the aggregate dipole
+            # using simpaths
+            pdipole_exp(self.ddata)
 
-        p_exp = paramrw.ExpParams(self.simpaths.fparam[0])
-        key_types = p_exp.get_key_types()
+        else:
+            dfig_dpl = self.simpaths.dfigs['dipole']
+            fparam_list = self.simpaths.filelists['param']
+            fdpl_list = self.simpaths.filelists['rawdpl']
 
-        pool = multiprocessing.Pool()
-        for fparam, fdpl in it.izip(fparam_list, fdpl_list):
-            # just get the p dict and not the gid dict
-            p = paramrw.read(fparam)[1]
-            # pdipole(fdpl, dfig_dpl, p, key_types)
-            pool.apply_async(pdipole, (fdpl, dfig_dpl, p, key_types))
+            p_exp = paramrw.ExpParams(self.simpaths.fparam[0])
+            key_types = p_exp.get_key_types()
 
-        pool.close()
-        pool.join()
+            pool = multiprocessing.Pool()
+            for fparam, fdpl in it.izip(fparam_list, fdpl_list):
+                # just get the p dict and not the gid dict
+                p = paramrw.read(fparam)[1]
+                pool.apply_async(pdipole, (fdpl, dfig_dpl, p, key_types))
+
+            pool.close()
+            pool.join()
 
     def do_replot(self, args):
         """Regenerates plots in given directory

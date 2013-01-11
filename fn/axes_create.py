@@ -1,8 +1,8 @@
 # axes_create.py - simple axis creation
 #
-# v 1.5.11
-# rev 2013-01-02 (MS: Added save fn to fig_std)
-# last major: (SL: Fixed FigSpec)
+# v 1.6.10
+# rev 2013-01-02 (SL: added png routine to fig_std)
+# last major: (MS: Added save fn to fig_std)
 
 # usage:
 # testfig = fig_std()
@@ -26,7 +26,10 @@ class fig_std():
         self.ax0 = self.f.add_subplot(gs0[:])
 
     def save(self, file_name):
-        plt.savefig(file_name)
+        self.f.savefig(file_name)
+
+    def savepng(self, file_name, dpi_set=300):
+        self.f.savefig(file_name, dpi=dpi_set)
 
     def close(self):
         plt.close(self.f)

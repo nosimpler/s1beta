@@ -1,8 +1,8 @@
 # clidefs.py - these are all of the function defs for the cli
 #
-# v 1.6.9
-# rev 2013-01-02 (MS: freqpwr_analysis also can do maxpwr analysis)
-# last major: (MS: Frequency-power analysis for spec data)
+# v 1.6.10
+# rev 2013-01-10 (SL: minor cleanup)
+# last major: (MS: freqpwr_analysis also can do maxpwr analysis)
 
 # Standard modules
 import fnmatch, os, re, sys
@@ -11,9 +11,6 @@ from glob import iglob
 from time import time
 
 # my runa1 module
-# import psdfn as pwr
-# import plot.psummary as psum
-# import pylib.psdfn as pwr
 import spikefn
 import plotfn
 import fileio as fio
@@ -131,7 +128,6 @@ def exec_phist(ddata, args):
     args_split = args.split(" ")
     N_sim = args_split[0]
     N_bins = int(args_split[1])
-    # print N_sim, N_bins
     psum.pphase_hist(ddata, N_sim, N_bins)
 
 def exec_pwr(ddata):
@@ -144,7 +140,6 @@ def exec_rates(ddata):
 # do_plot
 def regenerate_spec_data(ddata):
     # regenerates and saves spec data
-
     p_exp = paramrw.ExpParams(ddata.fparam)
     spec_results = spec.analysis(ddata, p_exp, save_data=1)
 
@@ -213,22 +208,16 @@ def regenerate_plots(ddata):
     # need p_exp, spec_results, gid_dict, and tstop.
     # fparam = fio.file_match(ddata.dsim, '.param')[0]
 
-    # recreate p_exp ... don't like this.o
+    # recreate p_exp ... don't like this
     # ** should be guaranteed to be identical **
     p_exp = paramrw.ExpParams(ddata.fparam)
 
     spec_results = fio.file_match(ddata.dsim, '-spec.npz')
-    # prettyprint(spec_list_total)
 
     # generate data if no spec exists here
     if not spec_results:
-        print "No saved spec data found. Preforming spec anaylsis...",
+        print "No saved spec data found. Performing spec anaylsis ...",
         spec_results = regenerate_spec_data(ddata)
-        
-        print "now plotting"
-
-    # else:
-    #     print "it's going to break ... now!"
 
     plotfn.pall(ddata, p_exp, spec_results)
 

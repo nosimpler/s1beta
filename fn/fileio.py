@@ -1,8 +1,8 @@
 # fileio.py - general file input/output functions
 #
-# v 1.5.9
-# rev 2012-12-20 (MS: added rawinputs file for later use when saving ext feed input times)
-# last rev: (SL: saves prng state)
+# v 1.6.10
+# rev 2013-01-10 (SL: changed file_match in SimulationPaths to search locally by key)
+# last rev: (MS: added rawinputs file for later use when saving ext feed input times)
 
 import datetime, fnmatch, os, shutil, sys
 import itertools as it
@@ -209,6 +209,7 @@ class SimulationPaths():
 
         return fileinfo
 
+    # requires dict lookup
     def create_filename(self, expmt_group, key, name_prefix):
         # some kind of if key in self.fileinfo.keys() catch
         file_name_raw = name_prefix + self.__datatypes[key]
@@ -224,18 +225,20 @@ class SimulationPaths():
     # Get the data files matching file_ext in this directory
     # functionally the same as the previous function but with a local scope
     def file_match(self, expmt_group, key):
-        # fext, dsearch = self.fileinfo[key]
 
         # grab the relevant fext
         fext = self.__datatypes[key]
 
         file_list = []
 
-        dexpmt_group = self.dexpmt_dict[expmt_group]
+        # dexpmt_group = self.dexpmt_dict[expmt_group]
+        ddata = self.dfig[expmt_group][key]
 
         # search the sim directory for all relevant files
-        if os.path.exists(dexpmt_group):
-            for root, dirnames, filenames in os.walk(dexpmt_group):
+        if os.path.exists(ddata):
+        # if os.path.exists(dexpmt_group):
+            for root, dirnames, filenames in os.walk(ddata):
+            # for root, dirnames, filenames in os.walk(dexpmt_group):
                 for fname in fnmatch.filter(filenames, '*'+fext):
                     file_list.append(os.path.join(root, fname))
 
@@ -280,7 +283,8 @@ class SimulationPaths():
 
     def exp_files_of_type(self, datatype):
         # create dict of experiments
-        d = dict.fromkeys(self.expnames)
+        d = dict.fromkeys(self.expmt_groups)
+        # d = dict.fromkeys(self.expnames)
 
         # create file lists that match the dict keys for only files for this experiment
         # this all would be nicer with a freaking folder
