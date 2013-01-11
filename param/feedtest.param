@@ -4,25 +4,30 @@
 # np.arrays for everything else?
 # turns out some whitespace is valid for dicts!
 
-sim_prefix: 1-by-1
-expmt_groups: {test0}
+sim_prefix: ff-fb-30Hz-10trials
+expmt_groups: {testing0}
 
 # numbers of cells making up the pyramidal grids
-N_pyr_x: 1
-N_pyr_y: 1
+N_pyr_x: 2
+N_pyr_y: 2
 
 # Ongoing alpha rhythms
 t0_input: 150.
 f_stdev: 20
-f_input_prox: [10., 20.]
-f_input_dist: [10., 20.]
+f_input_prox: [30.]
+f_input_dist: [30.]
 # f_input_prox: [10.]
 # f_input_dist: [10.]
 
 # times for evoked responses
 t_evprox_early: 6000.
+sigma_t_evprox_early: 2.5
+
 t_evprox_late: 6000.
+sigma_t_evprox_late: 7.
+
 t_evdist: 6000.
+sigma_t_evdist: 6.
 # t_evprox_early: 454.
 # t_evprox_late: 564.
 # t_evdist: 499.
@@ -32,7 +37,7 @@ save_spec_data: 1
 spec_max_freq: 41.
 
 # numerics
-N_trials: 0
+N_trials: 10
 prng_state: ''
 tstop: 5000.
 dt: 0.025

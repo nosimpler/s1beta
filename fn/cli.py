@@ -219,6 +219,11 @@ class Console(Cmd):
         """
         fio.pngoptimize(self.simpaths.dsim)
 
+    def do_avgtrials(self, args):
+        """Averages raw dipole data over all trials
+        """
+        clidefs.avg_over_trials(self.ddata, self.dsim, args)
+
     def do_specanalysis(self, args):
         """Regenerates spec data and saves it to proper exmpt directories
         """
@@ -262,6 +267,11 @@ class Console(Cmd):
         """Regenerates plots in given directory
         """
         clidefs.regenerate_plots(self.ddata)
+
+    def do_plotaverages(self, args):
+        """Creates plots of averaged data
+        """
+        clidefs.plot_avg_data(self.ddata)
 
     def do_epscompress(self, args):
         """Runs the eps compress utils on the specified fig type (currently either spk or spec)

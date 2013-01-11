@@ -7,6 +7,7 @@
 import datetime, fnmatch, os, shutil, sys
 import itertools as it
 import subprocess, multiprocessing
+import numpy as np
 import paramrw
 
 # Cleans input files
@@ -69,6 +70,33 @@ def file_match(dsearch, file_ext, local=0):
     file_list.sort()
 
     return file_list
+
+# Get raw data files (i.e. only files produced by simulation) matching file_ext in this directory
+def file_match_rawdata(dsearch, file_ext):
+    file_list = [path for path in file_match(dsearch, file_ext) if path.split('/')[-2]!='avgdpl' and path.slit('/')[-2]!='avgspec']
+
+    return file_list
+
+# Get avgeraged data files matching file_ext in this directory
+def file_match_avgdata(desearch, file_ext):
+    file_list = [path for path in file_match(dsearch, file_ext) if path.split('/')[-2]=='avgdpl' or path.slit('/')[-2]=='avgspec']
+
+    return file_list
+
+# Get minimum list of param dicts (i.e. excludes duplicates due to N_trials > 1)
+def fparam_match_minimal(dsim, p_exp):
+    # Complete list of all param dicts used in simulation
+    fparam_list_complete = file_match(dsim, '-param.txt')
+
+    # List of indeces from which to pull param dicts from fparam_list_complete
+    N_trials = p_exp.N_trials
+    indeces = np.arange(0, len(fparam_list_complete), N_trials)
+
+    # Pull unique param dicts from fparam_list_complete
+    fparam_list_minimal = [fparam_list_complete[ind] for ind in indeces]
+
+    return fparam_list_minimal
+    
 
 # check any directory
 def dir_check(d):

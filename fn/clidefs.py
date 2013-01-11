@@ -6,6 +6,9 @@
 
 # Standard modules
 import fnmatch, os, re, sys
+import itertools as it
+import numpy as np
+from multiprocessing import Pool
 from subprocess import call
 from glob import iglob
 from time import time
@@ -16,6 +19,7 @@ import plotfn
 import fileio as fio
 import paramrw
 import spec
+import pdipole
 
 # Returns length of any list
 def number_of_sims(some_list):
@@ -138,6 +142,69 @@ def exec_rates(ddata):
 
 # Just run the autoplot function independently
 # do_plot
+
+def avg_over_trials(ddata, dsim, dtype):
+    # averages raw dipole or raw spec over all trials
+
+    # compile paths to saved data
+    if dtype == 'dpl':
+        file_list = fio.file_match(ddata.dsim, '-dpl.txt')
+
+    elif dtype == 'spec':
+        file_list = fio.file_match(ddata.dsim, '-spec.npz')
+        
+        if not file_list:
+            print "No saved spec data found. Please execute specanalysis"
+            return 0
+
+    # Averaging must be done per expmt
+    for expmt_group in ddata.expmt_groups:
+        # create avg'ed data directory
+        dname = os.path.join(dsim, expmt_group, 'raw'+dtype, 'avg'+dtype)
+
+        try:
+            os.makedirs(dname)
+
+        except OSError:
+            print "Averaged %s data already exits. Quitting now..." %dtype
+            break
+
+        # list of files in expmt
+        expmt_file_list = [path for path in file_list if expmt_group in path]
+
+        # all trials in expmt - includes duplicates
+        total_trials_list = [path.split('/')[-1].split('T')[0] for path in expmt_file_list]
+
+        # all trials without duplicates
+        trials_list = list(set(total_trials_list))
+
+        # Average data for each trial
+        for trial in trials_list:
+            paths_for_avg = [path for path in expmt_file_list if trial in path]
+
+            # average dipole data
+            if dtype == 'dpl':
+                file_name = os.path.join(dsim, expmt_group, 'rawdpl', 'avgdpl', trial+'avgdpl.txt') 
+
+                # load data into numpy array and avg by summing and dividing by n_trials
+                data_for_avg = np.array([np.loadtxt(path) for path in paths_for_avg])
+                avg_data = data_for_avg.sum(axis=0)/data_for_avg.shape[0]
+
+                np.savetxt(file_name, avg_data, '%5.4f')
+
+            # average spec data
+            elif dtype == 'spec':
+                file_name = os.path.join(dsim, expmt_group, 'rawspec', 'avgspec', trial+'avgspec.npz') 
+                # load TFR data into np array and avg by summing and dividing by n_trials 
+                data_for_avg = np.array([np.load(path)['TFR'] for path in paths_for_avg])
+                avg_data = data_for_avg.sum(axis=0)/data_for_avg.shape[0]
+
+                # load time and freq vectors for to be saved with avg TFR data
+                timevec = np.load(paths_for_avg[0])['time']
+                freqvec = np.load(paths_for_avg[0])['freq']
+
+                np.savez_compressed(file_name, time=timevec, freq=freqvec, TFR=avg_data)
+
 def regenerate_spec_data(ddata):
     # regenerates and saves spec data
     p_exp = paramrw.ExpParams(ddata.fparam)
@@ -152,6 +219,7 @@ def freqpwr_analysis(ddata, dsim, maxpwr):
     analysis_type = raw_input('Would you like analysis per exmpt or for whole sim? (expmt or sim): ')
 
     spec_results = fio.file_match(ddata.dsim, '-spec.npz')
+    spec_results_avged = fio.file_match(ddata.dsim, '-avgspec.npz')
     fparam_list = fio.file_match(ddata.dsim, '-param.txt')
 
     p_exp = paramrw.ExpParams(ddata.fparam)
@@ -181,13 +249,6 @@ def freqpwr_analysis(ddata, dsim, maxpwr):
     # plot per exmpt
     if analysis_type == 'expmt':
         for expmt_group in ddata.expmt_groups:
-            # # fig directory pathway
-            # fig_dir = os.path.join(dsim, expmt_group, 'figfreqpwr')
-
-            # # make fig directory if it does not exist
-            # if not os.path.isdir(fig_dir):
-            #     os.makedirs(fig_dir)
-            
             # create name for figure. Figure saved to exmpt directory
             file_name = os.path.join(dsim, expmt_group, 'freqpwr.png')
             # file_name = os.path.join(dsim, expmt_group, 'figfreqpwr', 'freqpwr.png')
@@ -203,6 +264,45 @@ def freqpwr_analysis(ddata, dsim, maxpwr):
             if maxpwr:
                 f_name = os.path.join(dsim, expmt_group, 'maxpwr.png')
                 spec.pmaxpwr(f_name, partial_results_list, partial_fparam_list)
+
+    if spec_results_avged:
+        # perform freqpwr analysis
+        freqpwr_results_list = [spec.freqpwr_analysis(dspec) for dspec in spec_results_avged]
+
+        # create fparam list to match avg'ed data
+        N_trials = p_exp.N_trials
+        nums = np.arange(0, len(fparam_list), N_trials)
+        fparam_list = [fparam_list[num] for num in nums]
+ 
+        # plot for whole simulation
+        if analysis_type == 'sim':
+
+            file_name = os.path.join(dsim, 'freqpwr-avg.png')
+            spec.pfreqpwr(file_name, freqpwr_results_list, fparam_list, key_types)
+
+            # if maxpwr plot indicated
+            if maxpwr:
+                f_name = os.path.join(dsim, 'maxpwr-avg.png')
+                spec.pmaxpwr(f_name, freqpwr_results_list, fparam_list)
+
+        # plot per exmpt
+        if analysis_type == 'expmt':
+            for expmt_group in ddata.expmt_groups:
+                # create name for figure. Figure saved to exmpt directory
+                file_name = os.path.join(dsim, expmt_group, 'freqpwr-avg.png')
+                # file_name = os.path.join(dsim, expmt_group, 'figfreqpwr', 'freqpwr.png')
+
+                # compile list of freqpwr results and param pathways for exmpt
+                partial_results_list = [result for result in freqpwr_results_list if result['expmt']==expmt_group]
+                partial_fparam_list = [fparam for fparam in fparam_list if expmt_group in fparam]
+
+                # plot results
+                spec.pfreqpwr(file_name, partial_results_list, partial_fparam_list, key_types)
+
+                # if maxpwr plot indicated
+                if maxpwr:
+                    f_name = os.path.join(dsim, expmt_group, 'maxpwr-avg.png')
+                    spec.pmaxpwr(f_name, partial_results_list, partial_fparam_list)
 
 def regenerate_plots(ddata):
     # need p_exp, spec_results, gid_dict, and tstop.
@@ -221,6 +321,68 @@ def regenerate_plots(ddata):
 
     plotfn.pall(ddata, p_exp, spec_results)
 
+# plot data averaged over trials
+def plot_avg_data(ddata):
+    # avgdpl and avgspec data paths
+    dpl_list = fio.file_match(ddata.dsim, '-avgdpl.txt')
+    spec_list = fio.file_match(ddata.dsim, '-avgspec.npz')
+
+    print dpl_list
+
+    p_exp = paramrw.ExpParams(ddata.fparam)
+    key_types = p_exp.get_key_types()
+
+    # param list to match avg data lists
+    fparam_list = fio.fparam_match_minimal(ddata.dsim, p_exp) 
+    pdict_list = [paramrw.read(f_param)[1] for f_param in fparam_list]
+
+    dfig_list = []
+
+    # append as many copies of expmt dfig dicts as necessary
+    for expmt_group in ddata.expmt_groups:
+        dfig_list.extend([ddata.dfig[expmt_group] for path in dpl_list if expmt_group in path])
+
+    # construct list of names fig dirs for each data type
+    dfig_dpl_list = [os.path.join(dfig['figdpl'], 'avgdpl') for dfig in dfig_list]
+    dfig_spec_list = [os.path.join(dfig['figspec'], 'avgspec') for dfig in dfig_list]
+
+    # if avg dpl data exists
+    if dpl_list:
+        # directory creation
+        for dfig_dpl in dfig_dpl_list:
+            if not os.path.exists(dfig_dpl):
+                os.makedirs(dfig_dpl)
+
+        # plot avg dpl
+        pl = Pool()
+        for dfig_dpl, p_dict, f_dpl in it.izip(dfig_dpl_list, pdict_list, dpl_list):
+            pl.apply_async(pdipole.pdipole, (f_dpl, dfig_dpl, p_dict, key_types))
+
+        pl.close()
+        pl.join()
+
+    else:
+        print "No averaged dpl data found. Cannot continue without it. Run avgtrials()."
+        return 0
+
+    # if avg spec data exists
+    if spec_list:
+        # directory creation
+        for dfig_spec in dfig_spec_list:
+            if not os.path.exists(dfig_spec):
+                os.makedirs(dfig_spec)
+
+        # plot avg spec
+        pl = Pool()
+        for dfig_spec, p_dict, f_spec, f_dpl in it.izip(dfig_spec_list, pdict_list, spec_list, dpl_list):
+            pl.apply_async(spec.pspec, (f_spec, f_dpl, dfig_spec, p_dict, key_types))
+
+        pl.close()
+        pl.join()
+
+    else:
+        print "No averaged sped data found either. Run avgtrials()."
+
 # rsync command with excludetype input
 def sync_remote_data(droot, server_remote, dsubdir):
     # make up the local exclude file name
@@ -230,7 +392,7 @@ def sync_remote_data(droot, server_remote, dsubdir):
     dremote = os.path.join(droot, dsubdir)
     dlocal = os.path.join(droot, 'from_remote')
 
-    # create the rsync command
+    # creat the rsync command
     cmd_rsync = "rsync -ruv --exclude-from '%s' -e ssh %s:%s %s" % (f_exclude, server_remote, dremote, dlocal)
 
     call(cmd_rsync, shell=True)
