@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # s1run.py - primary run function for s1 project
 #
-# v 1.6.12
-# rev 2013-01-12 (SL: Fixing the finitialize)
-# last major: (MS: execution of epscompress() is platform dependent)
+# v 1.6.13
+# rev 2013-01-12 (SL: removed epscompress stuff BUT included optimizer)
+# last major: (SL: Fixing the finitialize)
 
 import os
 import sys
@@ -286,16 +286,8 @@ def exec_runsim(f_psim):
             # run plots and epscompress function
             plotfn.pall(ddir, p_exp, spec_results)
 
-            # for each experimental group, do the relevant png/eps creation and optimization
-            # for now, only perform this action on OS machines
-            if sys.platform.startswith('darwin'):
-                for expmt_group in ddir.expmt_groups:
-                    dspk = ddir.dfig[expmt_group]['figspk']
-                    dspec = ddir.dfig[expmt_group]['figspec']
-
-                    fext_eps = '.eps'
-                    fio.epscompress(dspk, fext_eps)
-                    fio.epscompress(dspec, fext_eps)
+            # do the relevant png optimization
+            fio.pngoptimize(ddir.dsim)
 
             print "time: %4.4f s" % (time.time() - plot_start) 
 

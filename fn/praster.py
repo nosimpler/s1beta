@@ -1,8 +1,8 @@
 # praster.py - plot dipole function
 #
-# v 1.2.31
-# rev 2012-11-05 (SL: fixed file name)
-# last major: (SL: plotting pois input)
+# v 1.6.13
+# rev 2013-01-12 (SL: set png res)
+# last major: (SL: fixed file name)
 
 import os
 import numpy as np
@@ -61,7 +61,8 @@ def praster(gid_dict, tstop, file_spk, dfig):
     spikefn.spike_png(f.ax['L5_extgauss'], s_dict_L5_extgauss)
 
     # testfig.ax0.plot(t_vec, dp_total)
-    fig_name = os.path.join(dfig, file_prefix+'.eps')
+    fig_name = os.path.join(dfig, file_prefix+'.png')
+    # fig_name = os.path.join(dfig, file_prefix+'.eps')
 
-    plt.savefig(fig_name)
+    plt.savefig(fig_name, dpi=300)
     f.close()

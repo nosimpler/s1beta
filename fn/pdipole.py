@@ -1,8 +1,8 @@
 # pdipole.py - plot dipole function
 #
-# v 1.6.10
-# rev 2013-01-10 (SL: Added aggregate dipole calc)
-# last major: (SL: changed figure handle locally)
+# v 1.6.13
+# rev 2013-01-12 (SL: fixed my averaging bug and now setting png res)
+# last major: (SL: Added aggregate dipole calc)
 
 import os
 import itertools as it
@@ -32,7 +32,7 @@ def pdipole(file_name, dfig, p_dict, key_types):
 
     fig_name = os.path.join(dfig, file_prefix+'.png')
 
-    plt.savefig(fig_name)
+    plt.savefig(fig_name, dpi=300)
     f.close()
 
 # for a given ddata (SimulationPaths object), find the mean dipole
@@ -52,7 +52,7 @@ def pdipole_exp(ddata):
         dpl_list = ddata.file_match(expmt_group, 'rawdpl')
 
         for file in dpl_list:
-            x_tmp = np.loadtxt(open(dpl_list[0], 'r'))
+            x_tmp = np.loadtxt(open(file, 'r'))
             if file is dpl_list[0]:
                 # assume time vec stays the same throughout
                 t_vec = x_tmp[:, 0]

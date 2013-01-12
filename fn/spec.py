@@ -1,8 +1,8 @@
 # spec.py - Average time-frequency energy representation using Morlet wavelet method
 #
-# v 1.6.9
-# rev 2013-01-02 (MS: Added plot kernel to plot freq at which max avg pwr occurs vs. input freq)
-# last major: (MS: added freqpwr analysis fn and plot kernel fn for freqpwr analysis data)
+# v 1.6.13
+# rev 2013-01-12 (SL: changed png res)
+# last major: (MS: Added plot kernel to plot freq at which max avg pwr occurs vs. input freq)
 
 import os
 import sys
@@ -178,12 +178,9 @@ def pspec(dspec, f_dpl, dfig, p_dict, key_types):
         # Generate file prefix 
         fprefix = dspec.split('/')[-1].split('.')[0]
 
-    # Create the fig name in platform dependent manner. If OS, use eps. If linux, use png.
-    if sys.platform.startswith('darwin'):
-        fig_name = os.path.join(dfig, fprefix+'.eps')
-
-    elif sys.platform.startswith('linux'):
-        fig_name = os.path.join(dfig, fprefix+'.png')
+    # using png for now
+    # fig_name = os.path.join(dfig, fprefix+'.eps')
+    fig_name = os.path.join(dfig, fprefix+'.png')
 
     # f.f is the figure handle!
     f = FigSpec()
@@ -211,7 +208,7 @@ def pspec(dspec, f_dpl, dfig, p_dict, key_types):
     title_str = [key + ': %2.1f' % p_dict[key] for key in key_types['dynamic_keys']]
     f.f.suptitle(title_str)
 
-    plt.savefig(fig_name)
+    plt.savefig(fig_name, dpi=300)
     f.close()
 
 # this must be globally available for callback function append_spec

@@ -1,8 +1,8 @@
 # cli.py - routines for the command line interface console sssh.py
 #
-# v 1.6.10
-# rev 2013-01-10 (SL: Added aggregate pdipole option)
-# last major: (MS: Added option to freqpwr to plot freq at which max avg pwr occurs vs. input freq)
+# v 1.6.13
+# rev 2013-01-12 (SL: just changed debug)
+# last major: (SL: Added aggregate pdipole option)
 
 from cmd import Cmd
 from datetime import datetime
@@ -49,8 +49,8 @@ class Console(Cmd):
     def do_debug(self, args):
         """Qnd function to test many other functions
         """
-        self.do_setdate('from_remote/2013-01-08')
-        self.do_load('baseline-ev-000')
+        self.do_setdate('from_remote/2013-01-12')
+        self.do_load('testdist-ev-002')
         self.do_pdipole('agg')
         # self.do_replot('')
         # self.epscompress('spk')
