@@ -5,14 +5,14 @@
 # [ ] list comma separated values
 
 sim_prefix: test
-expmt_groups: {testing0, testing1}
+expmt_groups: {testing0}
 
 # numbers of cells making up the pyramidal grids
-N_pyr_x: 2
-N_pyr_y: 2
+N_pyr_x: 1
+N_pyr_y: 1
 
 # Poisson input
-pois_T: 1000.
+pois_T: 2000.
 
 # amplitudes of individual gaussian random inputs to L2Pyr and L5Pyr
 # L2 Basket params
@@ -64,10 +64,10 @@ gbar_L5Pyr_L5Basket: 5e-4
 gbar_L2Pyr_L5Basket: 2.5e-4
 
 # Ongoing alpha rhythms
-t0_input: 1500.
+t0_input: 2000.
 f_stdev: 20.
-f_input_prox: {10., 20.}
-f_input_dist: [10., 20.]
+f_input_prox: 10.
+f_input_dist: 10.
 
 # thalamic input amplitudes
 input_prox_A_pyr: 4e-5
@@ -79,9 +79,13 @@ input_dist_A_inh: 4e-5
 # input_dist_A_inh: 8e-5
 
 # times for evoked responses
-t_evprox_early: 150.
-t_evprox_late: 6000.
+t_evprox_early: 6000.
 t_evdist: 6000.
+t_evprox_late: 6000.
+
+sigma_t_evprox_early: 2.5
+sigma_t_evdist: 6.
+sigma_t_evprox_late: 7.
 
 # analysis
 save_spec_data: 0
@@ -91,5 +95,5 @@ spec_max_freq: 41.
 N_trials: 0
 prng_state: ''
 # prng_state: '/repo/data/s1/2012-12-09/test-000/testing0/prngstate/test-000-T00-prng.npz'
-tstop: 250.
+tstop: 1000.
 dt: 0.025

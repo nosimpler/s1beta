@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # s1run.py - primary run function for s1 project
 #
-# v 1.5.9
-# rev 2012-12-20 (MS: execution of epscompress() is platform dependent)
-# last major: (SL: cleaned up)
+# v 1.6.12
+# rev 2013-01-12 (SL: Fixing the finitialize)
+# last major: (MS: execution of epscompress() is platform dependent)
 
 import os
 import sys
@@ -218,7 +218,7 @@ def exec_runsim(f_psim):
 
                 # set state variables if they have been changed since nrn.finitialize
                 # and run the solver
-                nrn.finitialize(-64.7)
+                nrn.finitialize()
                 nrn.fcurrent()
                 nrn.frecord_init()
 
