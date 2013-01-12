@@ -318,8 +318,9 @@ def create_pext(p, tstop):
     # default params
     feed_prox = {
         'f_input': p['f_input_prox'],
-        't0': p['t0_input'],
-        'stdev': p['f_stdev'],
+        't0': p['t0_input_prox'],
+        'tstop': p['tstop_input_prox'],
+        'stdev': p['f_stdev_prox'],
         'L2Pyr': (p['input_prox_A_pyr'], 0.1),
         'L5Pyr': (p['input_prox_A_pyr'], 1.),
         'L2Basket': (p['input_prox_A_inh'], 0.1),
@@ -332,8 +333,9 @@ def create_pext(p, tstop):
 
     feed_dist = {
         'f_input': p['f_input_dist'],
-        'stdev': p['f_stdev'],
-        't0': p['t0_input'],
+        't0': p['t0_input_dist'],
+        'tstop': p['tstop_input_dist'],
+        'stdev': p['f_stdev_dist'],
         'L2Pyr': (p['input_dist_A_pyr'], 5.),
         'L5Pyr': (p['input_dist_A_pyr'], 5.),
         'L2Basket': (p['input_dist_A_inh'], 5.),

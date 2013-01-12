@@ -5,7 +5,7 @@
 # [ ] list comma separated values
 
 sim_prefix: test
-expmt_groups: {testing0, testing1}
+expmt_groups: {testing0}
 
 # numbers of cells making up the pyramidal grids
 N_pyr_x: 2
@@ -63,11 +63,17 @@ gbar_L5Basket_L5Basket: 2e-2
 gbar_L5Pyr_L5Basket: 5e-4
 gbar_L2Pyr_L5Basket: 2.5e-4
 
-# Ongoing alpha rhythms
-t0_input: 1500.
-f_stdev: 20.
-f_input_prox: {10., 20.}
-f_input_dist: [10., 20.]
+# Ongoing proximal alpha rhythm
+t0_input_prox: [200.]
+tstop_input_prox: 210.
+f_input_prox: 10.
+f_stdev_prox: 20.
+
+# Ongoing distal alpha rhythm
+t0_input_dist: [650.]
+tstop_input_dist: 660 
+f_input_dist: 10.
+f_stdev_dist: 20.
 
 # thalamic input amplitudes
 input_prox_A_pyr: 4e-5
@@ -79,9 +85,14 @@ input_dist_A_inh: 4e-5
 # input_dist_A_inh: 8e-5
 
 # times for evoked responses
-t_evprox_early: 150.
-t_evprox_late: 6000.
-t_evdist: 6000.
+t_evprox_early: 5000.
+sigma_t_evprox_early: 2.5
+
+t_evdist: 5000.
+sigma_t_evdist: 6.
+
+t_evprox_late: 5000.
+sigma_t_evprox_late: 7.
 
 # analysis
 save_spec_data: 0
@@ -91,5 +102,5 @@ spec_max_freq: 41.
 N_trials: 0
 prng_state: ''
 # prng_state: '/repo/data/s1/2012-12-09/test-000/testing0/prngstate/test-000-T00-prng.npz'
-tstop: 250.
+tstop: 1000.
 dt: 0.025

@@ -68,11 +68,17 @@ def get_params_default():
         'gbar_L5Pyr_L5Basket': 5e-4,
         'gbar_L2Pyr_L5Basket': 2.5e-4,
 
-        # Ongoing alpha rhythms
-        't0_input': 150.,
+        # Ongoing proximal alpha rhythm
+        't0_input_prox': 150.,
+        'tstop_input_prox': 250.,
         'f_input_prox': 10.,
+        'f_stdev_prox': 20.,
+
+        # Ongoing distal alpha rhythm
+        't0_input_dist': 150.,
+        'tstop_input_dist': 250.,
         'f_input_dist': 10.,
-        'f_stdev': 20.,
+        'f_stdev_dist': 20.,
 
         # thalamic input amplitudes
         'input_prox_A_pyr': 4e-5,

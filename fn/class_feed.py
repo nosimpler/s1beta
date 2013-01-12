@@ -135,7 +135,6 @@ class ParFeedExt():
         # t0 is always defined
         self.t0 = p['t0']
         self.f_input = p['f_input']
-        # self.stdev = p['f_stdev']
 
         # # if f_input is 0, then this is a one-time feed
         # if 'stim' in p.keys():
@@ -165,11 +164,11 @@ class ParFeedExt():
     # only used in feeds
     def __create_eventvec(self, p):
         # array of mean stimulus times, starts at t0
-        array_isi = np.arange(self.t0, nrn.tstop, 1000./self.f_input)
+        array_isi = np.arange(self.t0, p['tstop'], 1000./self.f_input)
+        print (self.f_input, array_isi)
 
         # array of single stimulus times -- no doublets 
         array_times = np.random.normal(np.repeat(array_isi, 10), p['stdev'])
-        # array_times = np.random.normal(np.repeat(array_isi, 10), self.stdev)
 
         # Two arrays store doublet times
         array_times_low = array_times - 5
