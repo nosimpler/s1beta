@@ -1,8 +1,8 @@
 # fileio.py - general file input/output functions
 #
-# v 1.6.10
-# rev 2013-01-10 (SL: changed file_match in SimulationPaths to search locally by key)
-# last rev: (MS: added rawinputs file for later use when saving ext feed input times)
+# v 1.6.14af
+# rev 2013-01-12 (MS: Added set_current_sim() to give procs != 0 acces to sim dir info)
+# last rev: (SL: changed file_match in SimulationPaths to search locally by key)
 
 import datetime, fnmatch, os, shutil, sys
 import itertools as it
@@ -147,6 +147,26 @@ class SimulationPaths():
         # self.dfigs = self.__dfigs_create()
         # self.expnames = self.__get_exp_names()
 
+    # sets dir info for a simulation currently being executed
+    # No dir creation!
+    def set_current_sim(self, dproj, expmt_groups, sim_prefix='test'):
+        self.dproj = dproj
+        self.expmt_groups = expmt_groups
+
+        # prefix for these simulations in both filenames and directory in ddate
+        self.sim_prefix = sim_prefix
+
+        # create date and sim directories if necessary
+        # __datedir() REALLY not safe for midnight here
+        self.ddate = self.__datedir()
+        self.dsim = self.__current_simdir()
+        self.dexpmt_dict = self.__create_dexpmt(self.expmt_groups)
+
+        # dfig is just a record of all the fig directories, per experiment
+        # will only be written to at time of creation, by create_dirs
+        # dfig is a terrible variable name, sorry!
+        self.dfig = self.__ddata_dict_template()
+
     # only run for the creation of a new simulation
     def create_new_sim(self, dproj, expmt_groups, sim_prefix='test'):
         self.dproj = dproj
@@ -216,6 +236,22 @@ class SimulationPaths():
             dsim = os.path.join(self.ddate, self.sim_name)
 
         return dsim
+
+    # returns the directory for current simulation (i.e. sim dir has alread been established)
+    def __current_simdir(self):
+        dsim_list = []
+
+        n = 0
+        self.sim_name = self.sim_prefix + '-%03d' % n
+        dsim_list.append(os.path.join(self.ddate, self.sim_name))
+
+        while dir_check(dsim_list[-1]):
+            n += 1
+            self.sim_name = self.sim_prefix + '-%03d' % n
+            dsim_list.append(os.path.join(self.ddate, self.sim_name))
+
+        # current sim dir will be second to last in dsim_list
+        return dsim_list[-2]
 
     # creates all the experimental directories based on dproj
     def __create_dexpmt(self, expmt_groups):

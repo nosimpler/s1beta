@@ -1,8 +1,8 @@
 # paramrw.py - routines for reading the param files
 #
-# v 1.6.6ev
-# rev 2013-01-08 (SL: Added st dev "sigma" params)
-# last major: (SL: changing variable names for evoked)
+# v 1.6.14af
+# rev 2013-01-12 (MS: Alpha feed dicts now have exmpt_group and exp_prefix keys)
+# last major: (SL: Added st dev "sigma" params)
 
 import re
 import fileio as fio
@@ -317,6 +317,8 @@ def create_pext(p, tstop):
 
     # default params
     feed_prox = {
+        'expmt_group': p['expmt_group'],
+        'exp_prefix': p['exp_prefix'],
         'f_input': p['f_input_prox'],
         't0': p['t0_input_prox'],
         'tstop': p['tstop_input_prox'],
@@ -332,6 +334,8 @@ def create_pext(p, tstop):
     p_ext = feed_validate(p_ext, feed_prox, tstop)
 
     feed_dist = {
+        'expmt_group': p['expmt_group'],
+        'exp_prefix': p['exp_prefix'],
         'f_input': p['f_input_dist'],
         't0': p['t0_input_dist'],
         'tstop': p['tstop_input_dist'],

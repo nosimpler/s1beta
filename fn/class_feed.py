@@ -1,8 +1,8 @@
 # class_feed.py - establishes FeedExt(), ParFeedAll()
 #
-# v 1.6.6ev
-# rev 2013-01-08 (SL: cleanup)
-# last major: (SL: made evdist/evprox a bit more flexible)
+# v 1.6.14af
+# rev 2013-01-12 (MS: ParFeedExt() now saves input times. Requires ddir to be taken as arg)
+# last major: (SL: cleanup)
 
 import numpy as np
 import itertools as it
@@ -126,7 +126,7 @@ class ParFeedAll():
 
 class ParFeedExt():
     # the p here is actually p_ext elsewhere
-    def __init__(self, net_origin, p):
+    def __init__(self, net_origin, p, ddir):
         # create eventvec and VecStim objects
         self.eventvec = nrn.Vector()
         self.vs = nrn.VecStim()
@@ -150,7 +150,7 @@ class ParFeedExt():
 
         else:
             # Use create_eventvec() to create based on the frequency otherwise
-            self.__create_eventvec(p)
+            self.__create_eventvec(p, ddir)
 
     # for parallel, maybe be that postsyn for this is just nil (None)
     def connect_to_target(self):
@@ -162,10 +162,9 @@ class ParFeedExt():
     # Create nrn vector with ALL stimulus times for an input type (e.g. proximal or distal) 
     # and load vector into VecStim object
     # only used in feeds
-    def __create_eventvec(self, p):
+    def __create_eventvec(self, p, ddir):
         # array of mean stimulus times, starts at t0
         array_isi = np.arange(self.t0, p['tstop'], 1000./self.f_input)
-        print (self.f_input, array_isi)
 
         # array of single stimulus times -- no doublets 
         array_times = np.random.normal(np.repeat(array_isi, 10), p['stdev'])
@@ -178,6 +177,10 @@ class ParFeedExt():
         # np.append concatenates two np arrays
         input_times = np.append(array_times_low, array_times_high)
         input_times.sort()
+
+        # save list of input times
+        file_name = ddir.create_filename(p['expmt_group'], 'rawinput', p['exp_prefix']+'-'+p['loc'])
+        np.savetxt(file_name, input_times, fmt='%5.4f')
 
         # Convert array into nrn vector
         self.eventvec.from_python(input_times)
