@@ -87,6 +87,27 @@ t_evdist: 2000.
 # t_evprox_late: 564.
 # t_evdist: 499.
 
+sigma_t_evprox_early: 2.5
+sigma_t_evprox_late: 6.
+sigma_t_evdist: 7.
+
+# evprox (early) feed strength
+gbar_evprox_early_L2Pyr: 1e-3
+gbar_evprox_early_L5Pyr: 5e-4
+gbar_evprox_early_L2Basket: 2e-3
+gbar_evprox_early_L5Basket: 1e-3
+
+# evprox (late) feed strength
+gbar_evprox_late_L2Pyr: 5e-3
+gbar_evprox_late_L5Pyr: 2.7e-3
+gbar_evprox_late_L2Basket: 2e-3
+gbar_evprox_late_L5Basket: 1e-3
+
+# evdist feed strengths
+gbar_evdist_L2Pyr: 1e-3
+gbar_evdist_L5Pyr: 1e-3
+gbar_evdist_L2Basket: 5e-4
+
 # analysis
 save_spec_data: 0
 spec_max_freq: 41.

@@ -72,10 +72,28 @@ t0_input: 2000.
 f_input_prox: 10.
 f_input_dist: 10.
 
-# times for evoked responses
-t_evprox_early: 2000.
+# evprox (early) feed strength
+t_evprox_early: 50.
+sigma_t_evprox_early: 2.5
+gbar_evprox_early_L2Pyr: 1e-3
+gbar_evprox_early_L5Pyr: 5e-4
+gbar_evprox_early_L2Basket: 2e-3
+gbar_evprox_early_L5Basket: 1e-3
+
+# evprox (late) feed strength
 t_evprox_late: 2000.
+sigma_t_evprox_late: 6.
+gbar_evprox_late_L2Pyr: 5e-3
+gbar_evprox_late_L5Pyr: 2.7e-3
+gbar_evprox_late_L2Basket: 2e-3
+gbar_evprox_late_L5Basket: 1e-3
+
+# evdist feed strengths
 t_evdist: 2000.
+sigma_t_evdist: 7.
+gbar_evdist_L2Pyr: 1e-3
+gbar_evdist_L5Pyr: 1e-3
+gbar_evdist_L2Basket: 5e-4
 
 # analysis
 save_spec_data: 0
@@ -85,6 +103,6 @@ spec_max_freq: 41.
 pois_T: 500.
 
 # numerics
-N_trials: 0
+N_trials: 5
 tstop: 500.
 dt: 0.025

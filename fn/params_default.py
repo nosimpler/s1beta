@@ -1,8 +1,8 @@
 # params_default.py - list of default params and values
 #
-# v 1.6.6ev
-# rev 2012-12-08 (SL: parameterized st dev (sigma))
-# last major: (SL: changed param names for evoked)
+# v 1.6.14
+# rev 2013-01-13 (SL: added strength params)
+# last major: (SL: parameterized st dev (sigma))
 
 # flat file of default values
 # tuples for different "experiments"
@@ -83,11 +83,30 @@ def get_params_default():
         'input_dist_A_inh': 4e-5,
         # 'input_dist_A_inh': 8e-5,
 
+        # evprox (early) feed strength
+        'gbar_evprox_early_L2Pyr': 1e-3,
+        'gbar_evprox_early_L5Pyr': 5e-4,
+        'gbar_evprox_early_L2Basket': 2e-3,
+        'gbar_evprox_early_L5Basket': 1e-3,
+
+        # evprox (late) feed strength
+        'gbar_evprox_late_L2Pyr': 5e-3,
+        'gbar_evprox_late_L5Pyr': 2.7e-3,
+        'gbar_evprox_late_L2Basket': 2e-3,
+        'gbar_evprox_late_L5Basket': 1e-3,
+
+        # evdist feed strengths
+        'gbar_evdist_L2Pyr': 1e-3,
+        'gbar_evdist_L5Pyr': 1e-3,
+        'gbar_evdist_L2Basket': 5e-4,
+
         # times and stdevs for evoked responses
         't_evprox_early': 454.,
         'sigma_t_evprox_early': 2.5,
+
         't_evprox_late': 564.,
         'sigma_t_evprox_late': 7.,
+
         't_evdist': 499.,
         'sigma_t_evdist': 6.,
 

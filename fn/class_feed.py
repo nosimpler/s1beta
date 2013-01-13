@@ -135,13 +135,6 @@ class ParFeedExt():
         # t0 is always defined
         self.t0 = p['t0']
         self.f_input = p['f_input']
-        # self.stdev = p['f_stdev']
-
-        # # if f_input is 0, then this is a one-time feed
-        # if 'stim' in p.keys():
-        #     # check on this feed.
-        #     if p['stim'] is 'gaussian':
-        #         pass
 
         if not self.f_input:
             # use VecStim().play() in this case
@@ -168,7 +161,7 @@ class ParFeedExt():
         array_isi = np.arange(self.t0, nrn.tstop, 1000./self.f_input)
 
         # array of single stimulus times -- no doublets 
-        array_times = np.random.normal(np.repeat(array_isi, 10), p['stdev'])
+        array_times = np.random.normal(np.repeat(array_isi, 10), p['f_stdev'])
         # array_times = np.random.normal(np.repeat(array_isi, 10), self.stdev)
 
         # Two arrays store doublet times
@@ -178,6 +171,9 @@ class ParFeedExt():
         # Array with ALL stimulus times for input 
         # np.append concatenates two np arrays
         input_times = np.append(array_times_low, array_times_high)
+
+        # brute force remove non-zero times. Might result in fewer vals than desired
+        input_times = input_times[input_times > 0]
         input_times.sort()
 
         # Convert array into nrn vector
