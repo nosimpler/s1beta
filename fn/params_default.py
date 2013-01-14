@@ -1,7 +1,7 @@
 # params_default.py - list of default params and values
 #
-# v 1.6.6ev
-# rev 2012-12-08 (SL: parameterized st dev (sigma))
+# v 1.6.15af
+# rev 2013-01-13 (MS: Revert to 1.6.13af)
 # last major: (SL: changed param names for evoked)
 
 # flat file of default values

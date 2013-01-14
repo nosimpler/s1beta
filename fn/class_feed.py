@@ -1,8 +1,8 @@
 # class_feed.py - establishes FeedExt(), ParFeedAll()
 #
-# v 1.6.6ev
-# rev 2013-01-08 (SL: cleanup)
-# last major: (SL: made evdist/evprox a bit more flexible)
+# v 1.6.15af
+# rev 2013-01-13 (MS: Revert to 1.6.13af)
+# last major: (MS: ParFeedExt() now saves input times. Requires ddir to be taken as arg)
 
 import numpy as np
 import itertools as it

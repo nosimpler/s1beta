@@ -1,8 +1,8 @@
 # fileio.py - general file input/output functions
 #
-# v 1.6.10
-# rev 2013-01-10 (SL: changed file_match in SimulationPaths to search locally by key)
-# last rev: (MS: added rawinputs file for later use when saving ext feed input times)
+# v 1.6.15af
+# rev 2013-01-13 (MS: Removed datatype 'rawinputs' b/c unnessary. Part of revert to 1.6.13af)
+# last rev: (SL: changed file_match in SimulationPaths to search locally by key)
 
 import datetime, fnmatch, os, shutil, sys
 import itertools as it
@@ -120,7 +120,6 @@ class SimulationPaths():
             'rawspk': '-spk.txt',
             'rawdpl': '-dpl.txt',
             'rawspec': '-spec.npz',
-            'rawinput': '-input.txt',
             'figspk': '-spk.eps',
             'figdpl': '-dpl.eps',
             'figspec': '-spec.eps',

@@ -1,8 +1,8 @@
 # paramrw.py - routines for reading the param files
 #
-# v 1.6.6ev
-# rev 2013-01-08 (SL: Added st dev "sigma" params)
-# last major: (SL: changing variable names for evoked)
+# v 1.6.15af
+# rev 2013-01-13 (MS: Revert to 1.6.13af)
+# last major: (MS: Alpha feed dicts now have exmpt_group and exp_prefix key)
 
 import re
 import fileio as fio
