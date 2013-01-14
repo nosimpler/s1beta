@@ -1,8 +1,8 @@
 # class_net.py - establishes the Network class and related methods
 #
-# v 1.6.14af
-# rev 2013-01-12 (MS: Now takes ddir as input to pass to ParFeedExt())
-# last major: (SL: cleanup old functions)
+# v 1.6.2ev
+# rev 2013-01-07 (SL: cleanup old functions)
+# last major: (SL: Massive reorganization of unique inputs)
 
 import itertools as it
 import numpy as np
@@ -18,11 +18,10 @@ import fn.paramrw as paramrw
 
 # create Network class
 class Network():
-    def __init__(self, p, ddir):
+    def __init__(self, p):
         # set the params internally for this net
         # better than passing it around like ...
         self.p = p
-        self.ddir = ddir
 
         # int variables for grid of pyramidal cells (for now in both L2 and L5)
         self.gridpyr = {'x': self.p['N_pyr_x'], 'y': self.p['N_pyr_y']}
@@ -288,7 +287,7 @@ class Network():
                     # now use the param index in the params and create the cell and artificial NetCon
                     # what is self.t_evoked?
                     # self.t_evoked = nrn.Vector([10.])
-                    self.extinput_list.append(ParFeedExt(self.origin, self.p_ext[p_ind], self.ddir))
+                    self.extinput_list.append(ParFeedExt(self.origin, self.p_ext[p_ind]))
                     self.pc.cell(gid, self.extinput_list[-1].connect_to_target())
 
                 elif type in self.p_unique.keys():

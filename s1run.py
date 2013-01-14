@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # s1run.py - primary run function for s1 project
 #
-# v 1.6.14af
-# rev 2012-01-12: (MS: ddir instantiated on procs != 0. Param dict now has expmt_group key)
-# last major: (MS: execution of epscompress() is platform dependent)
+# v 1.5.9
+# rev 2012-12-20 (MS: execution of epscompress() is platform dependent)
+# last major: (SL: cleaned up)
 
 import os
 import sys
@@ -110,21 +110,13 @@ def exec_runsim(f_psim):
     dproj = '/repo/data/s1'
 
     # one directory for all experiments
-    # dir creation only on proc 0
     if rank == 0:
         ddir = fio.SimulationPaths()
         ddir.create_new_sim(dproj, p_exp.expmt_groups, p_exp.sim_prefix)
+        # ddir = fio.OutputDataPaths(dproj, p_exp.expmt_groups, p_exp.sim_prefix)
         ddir.create_dirs()
 
         copy_paramfile(ddir.dsim, f_psim)
-
-    # Ensure dir creation before continuing
-    pc.barrier()
-
-    # dir info on all other procs
-    if rank != 0:
-        ddir = fio.SimulationPaths()
-        ddir.set_current_sim(dproj, p_exp.expmt_groups, p_exp.sim_prefix)
 
     # iterate through groups and through params in the group
     for expmt_group in p_exp.expmt_groups:
@@ -180,11 +172,6 @@ def exec_runsim(f_psim):
                 # create prefix for files everyone knows about
                 exp_prefix = "%s-%03d-T%02d" % (p_exp.sim_prefix, i, j)
 
-                # Add expmt_group, exp_prefix, trial number to param dict
-                p['expmt_group'] = expmt_group
-                p['exp_prefix'] = exp_prefix
-                p['Trial'] = j
-
                 # spike file needs to be known by all nodes
                 file_spikes_tmp = fio.file_spike_tmp(dproj)
                 file_prng_tmp = fio.file_prng_tmp(dproj)
@@ -195,7 +182,7 @@ def exec_runsim(f_psim):
 
                 # Create network from class_net's Network class
                 # Network(gridpyr_x, gridpyr_y)
-                net = Network(p, ddir)
+                net = Network(p)
 
                 # create rotating data files and dirs on ONE central node
                 if rank == 0:
@@ -231,7 +218,7 @@ def exec_runsim(f_psim):
 
                 # set state variables if they have been changed since nrn.finitialize
                 # and run the solver
-                nrn.finitialize()
+                nrn.finitialize(-64.7)
                 nrn.fcurrent()
                 nrn.frecord_init()
 
@@ -248,8 +235,8 @@ def exec_runsim(f_psim):
                             f.write("%03.3f\t%5.4f\n" % (t_vec.x[k], dp_rec.x[k]))
 
                     # write the params, but add a trial number
-                    # p['Trial'] = j
-                    # p['exp_prefix'] = exp_prefix
+                    p['Trial'] = j
+                    p['exp_prefix'] = exp_prefix
 
                     paramrw.write(file_param, p, net.gid_dict)
 
