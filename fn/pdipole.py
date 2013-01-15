@@ -1,15 +1,16 @@
 # pdipole.py - plot dipole function
 #
-# v 1.6.10
-# rev 2013-01-10 (SL: Added aggregate dipole calc)
-# last major: (SL: changed figure handle locally)
+# v 1.6.16af
+# rev 2013-01-14 (MS: added kernel to plot dipole with alpha feed histogram)
+# last major: (SL: Added aggregate dipole calc)
 
 import os
 import itertools as it
 import matplotlib.pyplot as plt
 import numpy as np
 from neuron import h as nrn
-from axes_create import fig_std
+from axes_create import fig_std, FigDpl_with_hist
+from spikefn import spikes_from_file
 
 # file_info is (rootdir, subdir, 
 def pdipole(file_name, dfig, p_dict, key_types):
@@ -31,6 +32,47 @@ def pdipole(file_name, dfig, p_dict, key_types):
     plt.title(title)
 
     fig_name = os.path.join(dfig, file_prefix+'.png')
+
+    plt.savefig(fig_name)
+    f.close()
+
+# Plots dipole with histogram of alpha feed inputs
+def pdipole_with_hist(f_dpl, f_spk, dfig, p_dict, gid_dict, key_types):
+    # ddipole is dipole data
+    ddipole = np.loadtxt(f_dpl)
+
+    # split to find file prefix
+    file_prefix = f_dpl.split('/')[-1].split('.')[0]
+
+    # these are the vectors for now, but this is going to change
+    t_vec = ddipole[:, 0]
+    dp_total = ddipole[:, 1]
+
+    # get feed input times. spikes_from_file() imported from spikefn.py
+    s_dict = spikes_from_file(gid_dict, f_spk)
+
+    # Plotting
+    f = FigDpl_with_hist()
+
+    # dipole
+    f.ax['dipole'].plot(t_vec, dp_total)
+
+    # Proximal feed
+    f.ax['feed_prox'].hist(s_dict['alpha_feed_prox'].spike_list, bins=150, range=[t_vec[0], t_vec[-1]], color='red', label='Proximal feed')
+
+    # Distal feed
+    f.ax['feed_dist'].hist(s_dict['alpha_feed_dist'].spike_list, bins=150, range=[t_vec[0], t_vec[-1]], color='green', label='Distal feed')
+
+    # Add legend to histogram
+    for key in f.ax.keys():
+        if 'feed' in key:
+            f.ax[key].legend()
+
+    title = [key + ': %2.1f' % p_dict[key] for key in key_types['dynamic_keys']]
+    plt.title(title)
+
+    fig_name = os.path.join(dfig, file_prefix+'.png')
+    # fig_name = 'hist_test.png'
 
     plt.savefig(fig_name)
     f.close()

@@ -1,8 +1,8 @@
 # spec.py - Average time-frequency energy representation using Morlet wavelet method
 #
-# v 1.6.9
-# rev 2013-01-02 (MS: Added plot kernel to plot freq at which max avg pwr occurs vs. input freq)
-# last major: (MS: added freqpwr analysis fn and plot kernel fn for freqpwr analysis data)
+# v 1.6.16af
+# rev 2013-01-14 (MS: Added plot kernel to plot spec with alpha feed histogram)
+# last major: (MS: Added plot kernel to plot freq at which max avg pwr occurs vs. input freq)
 
 import os
 import sys
@@ -16,7 +16,8 @@ from multiprocessing import Pool
 from neuron import h as nrn
 
 import fileio as fio
-from axes_create import FigSpec, fig_std
+from spikefn import spikes_from_file
+from axes_create import FigSpec, FigSpec_with_hist, fig_std
 
 # general spec write/read functions
 def write(fdata_spec, t_vec, f_vec, TFR):
@@ -206,6 +207,80 @@ def pspec(dspec, f_dpl, dfig, p_dict, key_types):
     # axis labels
     f.ax['spec'].set_xlabel('Time (ms)')
     f.ax['spec'].set_ylabel('Frequency (Hz)')
+
+    # create title
+    title_str = [key + ': %2.1f' % p_dict[key] for key in key_types['dynamic_keys']]
+    f.f.suptitle(title_str)
+
+    plt.savefig(fig_name)
+    f.close()
+
+# Spectral plotting kernel with alpha feed histogram for ONE simulation run
+def pspec_with_hist(dspec, f_dpl, f_spk, dfig, p_dict, gid_dict, key_types):
+    # if dspec is an instance of MorletSpec,  get data from object
+    if isinstance(dspec, MorletSpec):
+        timevec = dspec.timevec
+        freqvec = dspec.freqvec
+        TFR = dspec.TFR
+
+        # Generate file prefix
+        fprefix = fio.strip_extprefix(dspec.name) + '-spec'
+
+    # otherwise dspec is path name and data must be loaded from file
+    else:
+        data_spec = np.load(dspec)
+
+        timevec = data_spec['time']
+        freqvec = data_spec['freq']
+        TFR = data_spec['TFR']
+
+        # Generate file prefix 
+        fprefix = dspec.split('/')[-1].split('.')[0]
+
+    # Create the fig name in platform dependent manner. If OS, use eps. If linux, use png.
+    if sys.platform.startswith('darwin'):
+        fig_name = os.path.join(dfig, fprefix+'.eps')
+
+    elif sys.platform.startswith('linux'):
+        fig_name = os.path.join(dfig, fprefix+'.png')
+
+    # f.f is the figure handle!
+    f = FigSpec_with_hist()
+    pc = f.ax['spec'].imshow(TFR, extent=[timevec[0], timevec[-1], freqvec[-1], freqvec[0]], aspect='auto', origin='upper')
+    f.f.colorbar(pc, ax=f.ax['spec'])
+
+    # grab the dipole data
+    data_dipole = np.loadtxt(open(f_dpl, 'r'))
+
+    t_dpl = data_dipole[:, 0]
+    dp_total = data_dipole[:, 1]
+
+    f.ax['dipole'].plot(t_dpl, dp_total)
+    x = (150., f.ax['dipole'].get_xlim()[1])
+
+    # grab alpha feed data. spikes_from_file() from spikefn.py
+    s_dict = spikes_from_file(gid_dict, f_spk)
+
+    # Proximal feed
+    f.ax['feed_prox'].hist(s_dict['alpha_feed_prox'].spike_list, bins=150, range=[timevec[0], timevec[-1]], color='red', label='Proximal feed')
+
+    # Distal feed
+    f.ax['feed_dist'].hist(s_dict['alpha_feed_dist'].spike_list, bins=150, range=[timevec[0], timevec[-1]], color='green', label='Distal feed')
+
+    # for now, set the xlim for the other one, force it!
+    f.ax['dipole'].set_xlim(x)
+    f.ax['spec'].set_xlim(x)
+    f.ax['feed_prox'].set_xlim(x)
+    f.ax['feed_dist'].set_xlim(x)
+
+    # axis labels
+    f.ax['spec'].set_xlabel('Time (ms)')
+    f.ax['spec'].set_ylabel('Frequency (Hz)')
+
+    # Add legend to histogram
+    for key in f.ax.keys():
+        if 'feed' in key:
+            f.ax[key].legend()
 
     # create title
     title_str = [key + ': %2.1f' % p_dict[key] for key in key_types['dynamic_keys']]

@@ -1,8 +1,8 @@
 # class_feed.py - establishes FeedExt(), ParFeedAll()
 #
-# v 1.6.15af
-# rev 2013-01-13 (MS: Revert to 1.6.13af)
-# last major: (MS: ParFeedExt() now saves input times. Requires ddir to be taken as arg)
+# v 1.6.16af
+# rev 2013-01-14 (MS: clean up)
+# last major: (MS: Revert to 1.6.13af)
 
 import numpy as np
 import itertools as it
@@ -165,7 +165,6 @@ class ParFeedExt():
     def __create_eventvec(self, p):
         # array of mean stimulus times, starts at t0
         array_isi = np.arange(self.t0, p['tstop'], 1000./self.f_input)
-        print (self.f_input, array_isi)
 
         # array of single stimulus times -- no doublets 
         array_times = np.random.normal(np.repeat(array_isi, 10), p['stdev'])

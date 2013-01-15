@@ -1,8 +1,8 @@
 # fileio.py - general file input/output functions
 #
-# v 1.6.15af
-# rev 2013-01-13 (MS: Removed datatype 'rawinputs' b/c unnessary. Part of revert to 1.6.13af)
-# last rev: (SL: changed file_match in SimulationPaths to search locally by key)
+# v 1.6.16af
+# rev 2013-01-14 (MS: Clean up)
+# last rev: (MS: Removed datatype 'rawinputs' b/c unnessary. Part of revert to 1.6.13af)
 
 import datetime, fnmatch, os, shutil, sys
 import itertools as it
@@ -68,18 +68,6 @@ def file_match(dsearch, file_ext, local=0):
 
     # sort file list? untested
     file_list.sort()
-
-    return file_list
-
-# Get raw data files (i.e. only files produced by simulation) matching file_ext in this directory
-def file_match_rawdata(dsearch, file_ext):
-    file_list = [path for path in file_match(dsearch, file_ext) if path.split('/')[-2]!='avgdpl' and path.slit('/')[-2]!='avgspec']
-
-    return file_list
-
-# Get avgeraged data files matching file_ext in this directory
-def file_match_avgdata(desearch, file_ext):
-    file_list = [path for path in file_match(dsearch, file_ext) if path.split('/')[-2]=='avgdpl' or path.slit('/')[-2]=='avgspec']
 
     return file_list
 

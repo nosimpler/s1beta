@@ -1,8 +1,8 @@
 # axes_create.py - simple axis creation
 #
-# v 1.6.10
-# rev 2013-01-02 (SL: added png routine to fig_std)
-# last major: (MS: Added save fn to fig_std)
+# v 1.6.16af
+# rev 2013-01-14 (MS: added axes definitions for dipole and spec with alpha feed histograms)
+# last major: (SL: added png routine to fig_std)
 
 # usage:
 # testfig = fig_std()
@@ -34,7 +34,76 @@ class fig_std():
     def close(self):
         plt.close(self.f)
 
+class FigDpl_with_hist():
+    def __init__(self):
+        self.f = plt.figure(figsize = (12, 6))
+        font_prop = {'size': 8}
+        mpl.rc('font', **font_prop)
+
+        # dipole gridpec
+        self.gs0 = gridspec.GridSpec(1, 1, wspace=0.05, hspace=0, bottom=0.10, top=0.55, left = 0.1, right = 0.90)
+
+        # hist gridspec
+        self.gs1 = gridspec.GridSpec(2, 1, hspace=0.08 , bottom=0.60, top=0.95, left = 0.1, right = 0.90)
+
+        # create axes
+        self.ax = {}
+        self.ax['dipole'] = self.f.add_subplot(self.gs0[:, :])
+        self.ax['feed_prox'] = self.f.add_subplot(self.gs1[1, :])
+        self.ax['feed_dist'] = self.f.add_subplot(self.gs1[0, :])
+
+        self.__set_hist_props()
+
+        # self.ax['feed_prox'].set_xticklabels('')
+        # self.ax['feed_dist'].set_xticklabels('')
+
+    def __set_hist_props(self):
+        for key in self.ax.keys():
+            if 'feed_dist' in key:
+                self.ax[key].set_xticklabels('')
+                # self.ax[key].set_yticklabels
+
+    def save(self, file_name):
+        self.f.savefig(file_name)
+
+    def savepng(self, file_name, dpi_set=300):
+        self.f.savefig(file_name, dpi=dpi_set)
+
+    def close(self):
+        plt.close(self.f)
+
 # spec plus dipole
+class FigSpec_with_hist():
+    def __init__(self):
+        self.f = plt.figure(figsize = (8, 8))
+        font_prop = {'size': 8}
+        mpl.rc('font', **font_prop)
+
+        # the right margin is a hack and NOT guaranteed!
+        # it's making space for the stupid colorbar that creates a new grid to replace gs1
+        # when called, and it doesn't update the params of gs1
+        self.gs0 = gridspec.GridSpec(1, 4, wspace=0.05, hspace=0., bottom=0.05, top=0.45, left=0.1, right=1.)
+        self.gs1 = gridspec.GridSpec(2, 1, height_ratios=[1, 3], bottom=0.50, top=0.70, left=0.1, right=0.82)
+        self.gs2 = gridspec.GridSpec(2, 1, hspace=0.08 , bottom=0.75, top=0.95, left = 0.1, right = 0.82)
+
+        self.ax = {}
+        self.ax['spec'] = self.f.add_subplot(self.gs0[:, :])
+        self.ax['dipole'] = self.f.add_subplot(self.gs1[:, :])
+        self.ax['feed_prox'] = self.f.add_subplot(self.gs2[1, :])
+        self.ax['feed_dist'] = self.f.add_subplot(self.gs2[0, :])
+
+        self.__set_hist_props()
+
+    def __set_hist_props(self):
+        for key in self.ax.keys():
+            if 'feed_dist' in key:
+                self.ax[key].set_xticklabels('')
+                # self.ax[key].set_yticklabels
+
+    def close(self):
+        plt.close(self.f)
+
+# spec plus dipole plus alpha feed histograms
 class FigSpec():
     def __init__(self):
         self.f = plt.figure(figsize = (8, 6))
@@ -237,7 +306,7 @@ def testfn():
     # testfig = fig_raster(100)
     # testfig.ax['L5'].plot(x)
 
-    testfig = FigSpec()
+    testfig = FigSpec_with_hist()
     testfig.ax['spec'].plot(x)
     # testfig.ax0.plot(x)
 

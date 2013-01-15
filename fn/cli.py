@@ -1,8 +1,8 @@
 # cli.py - routines for the command line interface console sssh.py
 #
-# v 1.6.10
-# rev 2013-01-10 (SL: Added aggregate pdipole option)
-# last major: (MS: Added option to freqpwr to plot freq at which max avg pwr occurs vs. input freq)
+# v 1.6.16af
+# rev 2013-01-14 (MS: Added plot dipole and spec with alpha feed histogram option)
+# last major: (SL: Added aggregate pdipole option)
 
 from cmd import Cmd
 from datetime import datetime
@@ -267,6 +267,11 @@ class Console(Cmd):
         """Regenerates plots in given directory
         """
         clidefs.regenerate_plots(self.ddata)
+
+    def do_addalphahist(self, args):
+        """Adds histogram of alpha feed input times to dpl and spec plots
+        """
+        clidefs.add_alpha_feed_hist(self.ddata)
 
     def do_plotaverages(self, args):
         """Creates plots of averaged data
