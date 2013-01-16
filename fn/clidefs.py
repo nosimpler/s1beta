@@ -1,8 +1,8 @@
 # clidefs.py - these are all of the function defs for the cli
 #
-# v 1.6.10
-# rev 2013-01-10 (SL: minor cleanup)
-# last major: (MS: freqpwr_analysis also can do maxpwr analysis)
+# v 1.6.20
+# rev 2013-01-16 (SL: completing merge of alpha feeds)
+# last major: (MS: add_alpha_feed_hist adds alpha feed histogram to dpl and spec plots)
 
 # Standard modules
 import fnmatch, os, re, sys
@@ -20,6 +20,7 @@ import fileio as fio
 import paramrw
 import spec
 import pdipole
+import axes_create
 
 # Returns length of any list
 def number_of_sims(some_list):
@@ -320,6 +321,18 @@ def regenerate_plots(ddata):
         spec_results = regenerate_spec_data(ddata)
 
     plotfn.pall(ddata, p_exp, spec_results)
+
+def add_alpha_feed_hist(ddata):
+    p_exp = paramrw.ExpParams(ddata.fparam)
+
+    spec_results = fio.file_match(ddata.dsim, '-spec.npz')
+
+    # generate data if no spec exists here
+    if not spec_results:
+        print "No saved spec data found. Performing spec anaylsis ...",
+        spec_results = regenerate_spec_data(ddata)
+
+    plotfn.pdpl_pspec_with_hist(ddata, p_exp, spec_results)
 
 # plot data averaged over trials
 def plot_avg_data(ddata):

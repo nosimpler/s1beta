@@ -1,11 +1,11 @@
 # plotfn.py - pall and possibly other plot routines
 #
-# v 1.5.10
-# rev 2012-12-31 (MS: Updated debug routine to plot all data at once instead of per exmpt)
-# last major: (MS: pall() now plots all data at once instead of per exmpt)
+# v 1.6.20
+# rev 2013-01-16 (SL: completing merge of alpha feeds)
+# last major: (MS: Added plot routine and kernel to plot dpl and spec with alpha feed hist)
 
-from pdipole import pdipole
-from spec import pspec
+from pdipole import pdipole, pdipole_with_hist
+from spec import pspec, pspec_with_hist
 from praster import praster
 import paramrw
 import itertools as it
@@ -27,6 +27,22 @@ def pkernel(dfig, f_param, f_spk, f_dpl, data_spec, key_types):
     praster(gid_dict, tstop, f_spk, dfig_spk)
     pdipole(f_dpl, dfig_dpl, p_dict, key_types)
     pspec(data_spec, f_dpl, dfig_spec, p_dict, key_types)
+
+    return 0
+
+# Kernel for plotting dipole and spec with alpha feed histograms
+def pkernel_with_hist(dfig, f_param, f_spk, f_dpl, data_spec, key_types):
+    gid_dict, p_dict = paramrw.read(f_param)
+    tstop = p_dict['tstop']
+
+    # fig dirs
+    dfig_dpl = dfig['figdpl']
+    dfig_spec = dfig['figspec']
+    dfig_spk = dfig['figspk']
+
+    # plot kernels
+    pdipole_with_hist(f_dpl, f_spk, dfig_dpl, p_dict, gid_dict, key_types)
+    pspec_with_hist(data_spec, f_dpl, f_spk, dfig_spec, p_dict, gid_dict, key_types)
 
     return 0
 
@@ -97,6 +113,35 @@ def pall(ddir, p_exp, spec_results):
         # apply async to compiled lists
         for dfig, f_param, f_spk, f_dpl, data_spec in it.izip(dfig_list, param_list, spk_list, dpl_list, spec_results):
            pkernel(dfig, f_param, f_spk, f_dpl, data_spec, key_types)
+
+# Plots dipole and spec with alpha feed histograms
+def pdpl_pspec_with_hist(ddir, p_exp, spec_results):
+    # preallocate lists for use below
+    param_list = []
+    dpl_list = []
+    spk_list = []
+    dfig_list = []
+
+    # Grab all necessary data in aggregated lists
+    for expmt_group in ddir.expmt_groups:
+        # these should be equivalent lengths
+        param_list.extend(ddir.file_match(expmt_group, 'param'))
+        dpl_list.extend(ddir.file_match(expmt_group, 'rawdpl'))
+        spk_list.extend(ddir.file_match(expmt_group, 'rawspk'))
+
+        # append as many copies of epxt dfig dict as there were runs in expmt 
+        for i in range(len(ddir.file_match(expmt_group, 'param'))):
+            dfig_list.append(ddir.dfig[expmt_group])
+
+    key_types = p_exp.get_key_types()
+
+    # apply async to compiled lists
+    pl = Pool()
+    for dfig, f_param, f_spk, f_dpl, data_spec in it.izip(dfig_list, param_list, spk_list, dpl_list, spec_results):
+        pl.apply_async(pkernel_with_hist, (dfig, f_param, f_spk, f_dpl, data_spec, key_types), callback=cb)
+
+    pl.close()
+    pl.join()
 
 #         # run each experiment separately
 #         for expmt_group in ddir.expmt_groups:

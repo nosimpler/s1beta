@@ -1,8 +1,8 @@
 # class_feed.py - establishes FeedExt(), ParFeedAll()
 #
-# v 1.6.6ev
-# rev 2013-01-08 (SL: cleanup)
-# last major: (SL: made evdist/evprox a bit more flexible)
+# v 1.6.20
+# rev 2013-01-16 (SL: completing merge of alpha feeds)
+# last major: (MS: Passing freq of 0 to ParFeedExt now creates empty event vector)
 
 import numpy as np
 import itertools as it
@@ -136,15 +136,17 @@ class ParFeedExt():
         self.t0 = p['t0']
         self.f_input = p['f_input']
 
-        if not self.f_input:
-            # use VecStim().play() in this case
-            # should write to eventvec here
-            self.t_evoked = nrn.Vector([self.t0])
-            self.vs.play(self.t_evoked)
+        # Create vector of input times
+        self.__create_eventvec(p)
 
-        else:
+        # if not self.f_input:
+        #     # use VecStim().play() in this case
+        #     # should write to eventvec here
+        #     self.t_evoked = nrn.Vector([self.t0])
+        #     self.vs.play(self.t_evoked)
+
+        # else:
             # Use create_eventvec() to create based on the frequency otherwise
-            self.__create_eventvec(p)
 
     # for parallel, maybe be that postsyn for this is just nil (None)
     def connect_to_target(self):
@@ -157,24 +159,28 @@ class ParFeedExt():
     # and load vector into VecStim object
     # only used in feeds
     def __create_eventvec(self, p):
-        # array of mean stimulus times, starts at t0
-        array_isi = np.arange(self.t0, nrn.tstop, 1000./self.f_input)
+        # If frequency is 0, create empty vector if input times
+        if not self.f_input:
+            input_times = []
 
-        # array of single stimulus times -- no doublets 
-        array_times = np.random.normal(np.repeat(array_isi, 10), p['f_stdev'])
-        # array_times = np.random.normal(np.repeat(array_isi, 10), self.stdev)
+        else:
+            # array of mean stimulus times, starts at t0
+            array_isi = np.arange(self.t0, p['tstop'], 1000./self.f_input)
 
-        # Two arrays store doublet times
-        array_times_low = array_times - 5
-        array_times_high = array_times + 5
+            # array of single stimulus times -- no doublets 
+            array_times = np.random.normal(np.repeat(array_isi, 10), p['stdev'])
 
-        # Array with ALL stimulus times for input 
-        # np.append concatenates two np arrays
-        input_times = np.append(array_times_low, array_times_high)
+            # Two arrays store doublet times
+            array_times_low = array_times - 5
+            array_times_high = array_times + 5
 
-        # brute force remove non-zero times. Might result in fewer vals than desired
-        input_times = input_times[input_times > 0]
-        input_times.sort()
+            # Array with ALL stimulus times for input 
+            # np.append concatenates two np arrays
+            input_times = np.append(array_times_low, array_times_high)
+
+            # brute force remove non-zero times. Might result in fewer vals than desired
+            input_times = input_times[input_times > 0]
+            input_times.sort()
 
         # Convert array into nrn vector
         self.eventvec.from_python(input_times)

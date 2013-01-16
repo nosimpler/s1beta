@@ -1,8 +1,8 @@
 # spec.py - Average time-frequency energy representation using Morlet wavelet method
 #
-# v 1.6.13
-# rev 2013-01-12 (SL: changed png res)
-# last major: (MS: Added plot kernel to plot freq at which max avg pwr occurs vs. input freq)
+# v 1.6.20
+# rev 2013-01-16 (SL: completing merge of alpha feeds)
+# last major: (MS: Possible contribution of delays accounted for in feed times)
 
 import os
 import sys
@@ -16,7 +16,8 @@ from multiprocessing import Pool
 from neuron import h as nrn
 
 import fileio as fio
-from axes_create import FigSpec, fig_std
+from spikefn import spikes_from_file, add_delay_times
+from axes_create import FigSpec, FigSpecWithHist, fig_std
 
 # general spec write/read functions
 def write(fdata_spec, t_vec, f_vec, TFR):
@@ -211,6 +212,86 @@ def pspec(dspec, f_dpl, dfig, p_dict, key_types):
     plt.savefig(fig_name, dpi=300)
     f.close()
 
+# Spectral plotting kernel with alpha feed histogram for ONE simulation run
+def pspec_with_hist(dspec, f_dpl, f_spk, dfig, p_dict, gid_dict, key_types):
+    # if dspec is an instance of MorletSpec,  get data from object
+    if isinstance(dspec, MorletSpec):
+        timevec = dspec.timevec
+        freqvec = dspec.freqvec
+        TFR = dspec.TFR
+
+        # Generate file prefix
+        fprefix = fio.strip_extprefix(dspec.name) + '-spec'
+
+    # otherwise dspec is path name and data must be loaded from file
+    else:
+        data_spec = np.load(dspec)
+
+        timevec = data_spec['time']
+        freqvec = data_spec['freq']
+        TFR = data_spec['TFR']
+
+        # Generate file prefix 
+        fprefix = dspec.split('/')[-1].split('.')[0]
+
+    # Create the fig name in platform dependent manner. If OS, use eps. If linux, use png.
+    if sys.platform.startswith('darwin'):
+        fig_name = os.path.join(dfig, fprefix+'.eps')
+
+    elif sys.platform.startswith('linux'):
+        fig_name = os.path.join(dfig, fprefix+'.png')
+
+    # f.f is the figure handle!
+    f = FigSpecWithHist()
+    pc = f.ax['spec'].imshow(TFR, extent=[timevec[0], timevec[-1], freqvec[-1], freqvec[0]], aspect='auto', origin='upper')
+    f.f.colorbar(pc, ax=f.ax['spec'])
+
+    # grab the dipole data
+    data_dipole = np.loadtxt(open(f_dpl, 'r'))
+
+    t_dpl = data_dipole[:, 0]
+    dp_total = data_dipole[:, 1]
+
+    f.ax['dipole'].plot(t_dpl, dp_total)
+    x = (150., f.ax['dipole'].get_xlim()[1])
+
+    # grab alpha feed data. spikes_from_file() from spikefn.py
+    s_dict = spikes_from_file(gid_dict, f_spk)
+
+    # Account for possible delays
+    s_dict = add_delay_times(s_dict, p_dict)
+
+    # set number of bins (150 bins/1000ms)
+    bins = 150. * p_dict['tstop'] / 1000.
+
+    # Proximal feed
+    f.ax['feed_prox'].hist(s_dict['alpha_feed_prox'].spike_list, bins, range=[timevec[0], timevec[-1]], color='red', label='Proximal feed')
+
+    # Distal feed
+    f.ax['feed_dist'].hist(s_dict['alpha_feed_dist'].spike_list, bins, range=[timevec[0], timevec[-1]], color='green', label='Distal feed')
+
+    # for now, set the xlim for the other one, force it!
+    f.ax['dipole'].set_xlim(x)
+    f.ax['spec'].set_xlim(x)
+    f.ax['feed_prox'].set_xlim(x)
+    f.ax['feed_dist'].set_xlim(x)
+
+    # axis labels
+    f.ax['spec'].set_xlabel('Time (ms)')
+    f.ax['spec'].set_ylabel('Frequency (Hz)')
+
+    # Add legend to histogram
+    for key in f.ax.keys():
+        if 'feed' in key:
+            f.ax[key].legend()
+
+    # create title
+    title_str = [key + ': %2.1f' % p_dict[key] for key in key_types['dynamic_keys']]
+    f.f.suptitle(title_str)
+
+    plt.savefig(fig_name)
+    f.close()
+
 # this must be globally available for callback function append_spec
 spec_results = []
 
@@ -343,4 +424,3 @@ def pmaxpwr(file_name, results_list, fparam_list):
     f.ax0.set_ylabel('Freq at which max avg power occurs (Hz)')
 
     f.save(file_name)
-

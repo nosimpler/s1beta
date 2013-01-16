@@ -1,8 +1,8 @@
 # paramrw.py - routines for reading the param files
 #
-# v 1.6.14
-# rev 2013-01-13 (SL: Added evoked strength params, changed f_stdev name)
-# last major: (SL: Added st dev "sigma" params)
+# v 1.6.20
+# rev 2013-01-16 (SL: completing merge of alpha feeds)
+# last major: (SL: Added evoked strength params, changed f_stdev name)
 
 import re
 import fileio as fio
@@ -318,12 +318,13 @@ def create_pext(p, tstop):
     # default params
     feed_prox = {
         'f_input': p['f_input_prox'],
-        't0': p['t0_input'],
-        'f_stdev': p['f_stdev'],
-        'L2Pyr': (p['input_prox_A_pyr'], 0.1),
-        'L5Pyr': (p['input_prox_A_pyr'], 1.),
-        'L2Basket': (p['input_prox_A_inh'], 0.1),
-        'L5Basket': (p['input_prox_A_inh'], 1.),
+        't0': p['t0_input_prox'],
+        'tstop': p['tstop_input_prox'],
+        'stdev': p['f_stdev_prox'],
+        'L2Pyr': (p['input_prox_A_pyr'], p['input_prox_D_L2']),
+        'L5Pyr': (p['input_prox_A_pyr'], p['input_prox_D_L5']),
+        'L2Basket': (p['input_prox_A_inh'], p['input_prox_D_L2']),
+        'L5Basket': (p['input_prox_A_inh'], p['input_prox_D_L5']),
         'lamtha': 100.,
         'loc': 'proximal'
     }
@@ -332,11 +333,12 @@ def create_pext(p, tstop):
 
     feed_dist = {
         'f_input': p['f_input_dist'],
-        'f_stdev': p['f_stdev'],
-        't0': p['t0_input'],
-        'L2Pyr': (p['input_dist_A_pyr'], 5.),
-        'L5Pyr': (p['input_dist_A_pyr'], 5.),
-        'L2Basket': (p['input_dist_A_inh'], 5.),
+        't0': p['t0_input_dist'],
+        'tstop': p['tstop_input_dist'],
+        'stdev': p['f_stdev_dist'],
+        'L2Pyr': (p['input_dist_A_pyr'], p['input_dist_D_L2']),
+        'L5Pyr': (p['input_dist_A_pyr'], p['input_dist_D_L5']),
+        'L2Basket': (p['input_dist_A_inh'], p['input_dist_D_L2']),
         'lamtha': 100.,
         'loc': 'distal'
     }

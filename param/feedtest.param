@@ -4,20 +4,41 @@
 # np.arrays for everything else?
 # turns out some whitespace is valid for dicts!
 
-sim_prefix: ff-fb-30Hz-10trials
-expmt_groups: {testing0}
+sim_prefix: ff-fb-phase
+expmt_groups: {same}
 
 # numbers of cells making up the pyramidal grids
 N_pyr_x: 2
 N_pyr_y: 2
 
-# Ongoing alpha rhythms
-t0_input: 150.
-f_stdev: 20
-f_input_prox: [30.]
-f_input_dist: [30.]
-# f_input_prox: [10.]
-# f_input_dist: [10.]
+# Ongoing proximal alpha rhythm
+t0_input_prox: [500.]
+tstop_input_prox: 510.
+f_input_prox: 10.
+# f_input_prox: 0.
+f_stdev_prox: {20.}
+# f_stdev_prox: 20.
+
+# Ongoing distal alpha rhythm
+# t0_input_dist: 500.
+t0_input_dist: [500.]
+tstop_input_dist: 560.
+f_input_dist: 10.
+# f_input_dist: 0.
+f_stdev_dist: {20.}
+# f_stdev_dist: {30., 40., 50}
+
+# thalamic input amplitudes and delays
+input_prox_A_pyr: 4e-5
+input_prox_A_inh: 8e-5
+input_prox_D_L2: 0.1
+input_prox_D_L5: 1.0
+
+# current values, not sure where these distal values come from, need to check
+input_dist_A_pyr: 4e-5
+input_dist_A_inh: 4e-5
+input_dist_D_L2: 5.0
+input_dist_D_L5: 5.0
 
 # times for evoked responses
 t_evprox_early: 6000.
@@ -28,9 +49,6 @@ sigma_t_evprox_late: 7.
 
 t_evdist: 6000.
 sigma_t_evdist: 6.
-# t_evprox_early: 454.
-# t_evprox_late: 564.
-# t_evdist: 499.
 
 # evoked response strengths
 # evprox (early) feed strength
@@ -55,9 +73,9 @@ save_spec_data: 1
 spec_max_freq: 41.
 
 # numerics
-N_trials: 10
+N_trials: 0
 prng_state: ''
-tstop: 5000.
+tstop: 1000.
 dt: 0.025
 
 # Poisson input
@@ -113,10 +131,3 @@ gbar_L5Basket_L5Basket: 2e-2
 gbar_L5Pyr_L5Basket: 5e-4
 gbar_L2Pyr_L5Basket: 2.5e-4
 
-# thalamic input amplitudes
-input_prox_A_pyr: 4e-5
-input_prox_A_inh: 8e-5
-
-# current values, not sure where these distal values come from, need to check
-input_dist_A_pyr: 4e-5
-input_dist_A_inh: 4e-5

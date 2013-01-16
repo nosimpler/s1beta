@@ -1,8 +1,8 @@
 # spikefn.py - dealing with spikes
 #
-# v 1.4.101
-# rev 2012-12-05 (SL: fixed the empty file warning)
-# last major: (SL: manually changed the range of the bin checks ... )
+# v 1.6.20
+# rev 2013-01-16 (SL: completing merge of alpha feeds)
+# last major: (MS: Added fn add_delay_times to add delay times to raw alpha feed input times)
 
 import fileio as fio
 import numpy as np
@@ -40,6 +40,7 @@ class Spikes():
         s_agg = np.array(list(it.chain.from_iterable(self.spike_list)))
 
         # plot histogram to axis 'a'
+        bins = hist_bin_opt(s_agg, 1)
         a.hist(s_agg, bins, normed=True, facecolor='g', alpha=0.75)
 
 # splits ext gauss by supplied cell type
@@ -102,7 +103,7 @@ def spikes_from_file(gid_dict, fspikes):
     # get the qnd dict keys from gid_dict
     s_dict = dict.fromkeys(gid_dict)
 
-    # remove extgauss from keys, going to be replaced with a bunch for different types
+    # remove extgauss, extpois from keys, going to be replaced with different types
     del s_dict['extgauss']
     del s_dict['extpois']
 
@@ -112,7 +113,7 @@ def spikes_from_file(gid_dict, fspikes):
         s_dict[key] = Spikes(s, gid_dict[key])
 
         if key not in 'extinput':
-            # figure out its extgauss feed
+        # figure out its extgauss feed
             newkey_gauss = 'extgauss_' + key
             s_dict[newkey_gauss] = split_extrand(s, gid_dict, key, 'extgauss')
             # s_dict[newkey_gauss] = split_extgauss(s, gid_dict, key)
@@ -121,6 +122,16 @@ def spikes_from_file(gid_dict, fspikes):
             newkey_pois = 'extpois_' + key
             s_dict[newkey_pois] = split_extrand(s, gid_dict, key, 'extpois')
             # s_dict[newkey_pois] = split_extpois(s, gid_dict, key)
+
+    # Deal with alpha feeds (extinputs)
+    # order guaranteed by order of inputs in p_ext in paramrw and by details of gid creation in class_net
+    # A little cloodgy to deal with the fact that one might not exist
+    if len(gid_dict['extinput']) > 1:
+        s_dict['alpha_feed_prox'] = Spikes(s, [gid_dict['extinput'][0]])
+        s_dict['alpha_feed_dist'] = Spikes(s, [gid_dict['extinput'][1]])
+
+        # Add 5ms to all times in distal alpha feed list to account for 5ms synaptic delay
+        # s_dict['alpha_feed_dist'].spike_list = [num+5. for num in s_dict['alpha_feed_dist'].spike_list]
 
     return s_dict
 
@@ -186,3 +197,16 @@ def spike_png(a, s_dict):
 
     a.set_ylim([0, 1])
     a.grid()
+
+# Add synaptic delays to alpha input times if applicable:
+def add_delay_times(s_dict, p_dict):
+    # Only add delays if delay is same for L2 and L5
+    # Proximal feed
+    if p_dict['input_prox_D_L2'] == p_dict['input_prox_D_L5']:
+        s_dict['alpha_feed_prox'].spike_list = [num+p_dict['input_prox_D_L2'] for num in s_dict['alpha_feed_prox'].spike_list]
+
+    # Distal
+    if p_dict['input_dist_D_L2'] == p_dict['input_dist_D_L5']: 
+        s_dict['alpha_feed_dist'].spike_list = [num+p_dict['input_dist_D_L2'] for num in s_dict['alpha_feed_dist'].spike_list]
+
+    return s_dict

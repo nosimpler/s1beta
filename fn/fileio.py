@@ -1,8 +1,8 @@
 # fileio.py - general file input/output functions
 #
-# v 1.6.10
-# rev 2013-01-10 (SL: changed file_match in SimulationPaths to search locally by key)
-# last rev: (MS: added rawinputs file for later use when saving ext feed input times)
+# v 1.6.20
+# rev 2013-01-16 (SL: completing merge of alpha feeds)
+# last rev: (MS: Clean up)
 
 import datetime, fnmatch, os, shutil, sys
 import itertools as it
@@ -71,18 +71,6 @@ def file_match(dsearch, file_ext, local=0):
 
     return file_list
 
-# Get raw data files (i.e. only files produced by simulation) matching file_ext in this directory
-def file_match_rawdata(dsearch, file_ext):
-    file_list = [path for path in file_match(dsearch, file_ext) if path.split('/')[-2]!='avgdpl' and path.slit('/')[-2]!='avgspec']
-
-    return file_list
-
-# Get avgeraged data files matching file_ext in this directory
-def file_match_avgdata(desearch, file_ext):
-    file_list = [path for path in file_match(dsearch, file_ext) if path.split('/')[-2]=='avgdpl' or path.slit('/')[-2]=='avgspec']
-
-    return file_list
-
 # Get minimum list of param dicts (i.e. excludes duplicates due to N_trials > 1)
 def fparam_match_minimal(dsim, p_exp):
     # Complete list of all param dicts used in simulation
@@ -120,7 +108,6 @@ class SimulationPaths():
             'rawspk': '-spk.txt',
             'rawdpl': '-dpl.txt',
             'rawspec': '-spec.npz',
-            'rawinput': '-input.txt',
             'figspk': '-spk.eps',
             'figdpl': '-dpl.eps',
             'figspec': '-spec.eps',
