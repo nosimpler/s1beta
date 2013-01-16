@@ -1,8 +1,8 @@
 # axes_create.py - simple axis creation
 #
-# v 1.6.16af
-# rev 2013-01-14 (MS: added axes definitions for dipole and spec with alpha feed histograms)
-# last major: (SL: added png routine to fig_std)
+# v 1.6.19af
+# rev 2013-01-16 (MS: minor)
+# last major: (MS: added axes definitions for dipole and spec with alpha feed histograms)
 
 # usage:
 # testfig = fig_std()
@@ -34,7 +34,7 @@ class fig_std():
     def close(self):
         plt.close(self.f)
 
-class FigDpl_with_hist():
+class FigDplWithHist():
     def __init__(self):
         self.f = plt.figure(figsize = (12, 6))
         font_prop = {'size': 8}
@@ -73,9 +73,9 @@ class FigDpl_with_hist():
         plt.close(self.f)
 
 # spec plus dipole
-class FigSpec_with_hist():
+class FigSpecWithHist():
     def __init__(self):
-        self.f = plt.figure(figsize = (8, 8))
+        self.f = plt.figure(figsize=(8, 8))
         font_prop = {'size': 8}
         mpl.rc('font', **font_prop)
 
@@ -306,7 +306,7 @@ def testfn():
     # testfig = fig_raster(100)
     # testfig.ax['L5'].plot(x)
 
-    testfig = FigSpec_with_hist()
+    testfig = FigSpecWithHist()
     testfig.ax['spec'].plot(x)
     # testfig.ax0.plot(x)
 

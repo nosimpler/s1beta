@@ -64,20 +64,29 @@ gbar_L5Basket_L5Basket: 2e-2
 gbar_L5Pyr_L5Basket: 5e-4
 gbar_L2Pyr_L5Basket: 2.5e-4
 
-# Ongoing alpha rhythms
-t0_input: 2000.
-f_stdev: 20.
+# Ongoing proximal alpha rhythm
+t0_input_prox: 150.
+tstop_input_prox: 1000.
 f_input_prox: 10.
-f_input_dist: 10.
+f_stdev_prox: 20.
 
-# thalamic input amplitudes
+# Ongoing distal alpha rhythm
+t0_input_dist: 150.
+tstop_input_dist: 1000.
+f_input_dist: 10.
+f_stdev_dist: 20.
+
+# thalamic input amplitudes and delays
 input_prox_A_pyr: 4e-5
 input_prox_A_inh: 8e-5
+input_prox_D_L2: 0.1
+input_prox_D_L5: 1.0
 
 # current values, not sure where these distal values come from, need to check
 input_dist_A_pyr: 4e-5
 input_dist_A_inh: 4e-5
-# input_dist_A_inh: 8e-5
+input_dist_D_L2: 5.0
+input_dist_D_L5: 5.0
 
 # times for evoked responses
 t_evprox_early: 454.

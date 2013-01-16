@@ -1,15 +1,15 @@
 # pdipole.py - plot dipole function
 #
-# v 1.6.18af
-# rev 2013-01-16 (MS: possible contribution of delays accounted for in feed times)
-# last major: (MS: added kernel to plot dipole with alpha feed histogram)
+# v 1.6.19af
+# rev 2013-01-16 (MS: minor)
+# last major: (MS: possible contribution of delays accounted for in feed times)
 
 import os
 import itertools as it
 import matplotlib.pyplot as plt
 import numpy as np
 from neuron import h as nrn
-from axes_create import fig_std, FigDpl_with_hist
+from axes_create import fig_std, FigDplWithHist
 from spikefn import spikes_from_file, add_delay_times
 
 # file_info is (rootdir, subdir, 
@@ -58,7 +58,7 @@ def pdipole_with_hist(f_dpl, f_spk, dfig, p_dict, gid_dict, key_types):
     bins = 150. * p_dict['tstop'] / 1000.
 
     # Plotting
-    f = FigDpl_with_hist()
+    f = FigDplWithHist()
 
     # dipole
     f.ax['dipole'].plot(t_vec, dp_total)
