@@ -1,8 +1,8 @@
 # pdipole.py - plot dipole function
 #
-# v 1.6.20
-# rev 2013-01-16 (SL: completing merge of alpha feeds)
-# last major: (MS: possible contribution of delays accounted for in feed times)
+# v 1.6.21
+# rev 2013-01-16 (MS: yaxis ticks of alpha feed hist set externally based on bin sizes)
+# last major: (SL: completing merge of alpha feeds)
 
 import os
 import itertools as it
@@ -63,11 +63,15 @@ def pdipole_with_hist(f_dpl, f_spk, dfig, p_dict, gid_dict, key_types):
     # dipole
     f.ax['dipole'].plot(t_vec, dp_total)
 
+    hist = {}
     # Proximal feed
-    f.ax['feed_prox'].hist(s_dict['alpha_feed_prox'].spike_list, bins, range=[t_vec[0], t_vec[-1]], color='red', label='Proximal feed')
+    hist['feed_prox'] = f.ax['feed_prox'].hist(s_dict['alpha_feed_prox'].spike_list, bins, range=[t_vec[0], t_vec[-1]], color='red', label='Proximal feed')
 
     # Distal feed
-    f.ax['feed_dist'].hist(s_dict['alpha_feed_dist'].spike_list, bins, range=[t_vec[0], t_vec[-1]], color='green', label='Distal feed')
+    hist['feed_dist'] = f.ax['feed_dist'].hist(s_dict['alpha_feed_dist'].spike_list, bins, range=[t_vec[0], t_vec[-1]], color='green', label='Distal feed')
+
+    # set hist axis properties
+    f.set_hist_props(hist)
 
     # Add legend to histogram
     for key in f.ax.keys():

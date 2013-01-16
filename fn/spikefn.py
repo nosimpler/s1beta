@@ -1,8 +1,8 @@
 # spikefn.py - dealing with spikes
 #
-# v 1.6.20
-# rev 2013-01-16 (SL: completing merge of alpha feeds)
-# last major: (MS: Added fn add_delay_times to add delay times to raw alpha feed input times)
+# v 1.6.21
+# rev 2013-01-16 (MS: minor)
+# last major: (SL: completing merge of alpha feeds)
 
 import fileio as fio
 import numpy as np
@@ -202,11 +202,11 @@ def spike_png(a, s_dict):
 def add_delay_times(s_dict, p_dict):
     # Only add delays if delay is same for L2 and L5
     # Proximal feed
-    if p_dict['input_prox_D_L2'] == p_dict['input_prox_D_L5']:
-        s_dict['alpha_feed_prox'].spike_list = [num+p_dict['input_prox_D_L2'] for num in s_dict['alpha_feed_prox'].spike_list]
+    if p_dict['input_prox_A_delay_L2'] == p_dict['input_prox_A_delay_L5']:
+        s_dict['alpha_feed_prox'].spike_list = [num+p_dict['input_prox_A_delay_L2'] for num in s_dict['alpha_feed_prox'].spike_list]
 
     # Distal
-    if p_dict['input_dist_D_L2'] == p_dict['input_dist_D_L5']: 
-        s_dict['alpha_feed_dist'].spike_list = [num+p_dict['input_dist_D_L2'] for num in s_dict['alpha_feed_dist'].spike_list]
+    if p_dict['input_dist_A_delay_L2'] == p_dict['input_dist_A_delay_L5']: 
+        s_dict['alpha_feed_dist'].spike_list = [num+p_dict['input_dist_A_delay_L2'] for num in s_dict['alpha_feed_dist'].spike_list]
 
     return s_dict

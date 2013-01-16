@@ -1,8 +1,8 @@
 # spec.py - Average time-frequency energy representation using Morlet wavelet method
 #
-# v 1.6.20
-# rev 2013-01-16 (SL: completing merge of alpha feeds)
-# last major: (MS: Possible contribution of delays accounted for in feed times)
+# v 1.6.21
+# rev 2013-01-16 (MS: yaxis ticks of alpha feed hist set externally based on bin sizes)
+# last major: (SL: completing merge of alpha feeds)
 
 import os
 import sys
@@ -264,17 +264,22 @@ def pspec_with_hist(dspec, f_dpl, f_spk, dfig, p_dict, gid_dict, key_types):
     # set number of bins (150 bins/1000ms)
     bins = 150. * p_dict['tstop'] / 1000.
 
+    hist = {}
+
     # Proximal feed
-    f.ax['feed_prox'].hist(s_dict['alpha_feed_prox'].spike_list, bins, range=[timevec[0], timevec[-1]], color='red', label='Proximal feed')
+    hist['feed_prox'] = f.ax['feed_prox'].hist(s_dict['alpha_feed_prox'].spike_list, bins, range=[timevec[0], timevec[-1]], color='red', label='Proximal feed')
 
     # Distal feed
-    f.ax['feed_dist'].hist(s_dict['alpha_feed_dist'].spike_list, bins, range=[timevec[0], timevec[-1]], color='green', label='Distal feed')
+    hist['feed_dist'] = f.ax['feed_dist'].hist(s_dict['alpha_feed_dist'].spike_list, bins, range=[timevec[0], timevec[-1]], color='green', label='Distal feed')
 
     # for now, set the xlim for the other one, force it!
     f.ax['dipole'].set_xlim(x)
     f.ax['spec'].set_xlim(x)
     f.ax['feed_prox'].set_xlim(x)
     f.ax['feed_dist'].set_xlim(x)
+
+    # set hist axis props
+    f.set_hist_props(hist)
 
     # axis labels
     f.ax['spec'].set_xlabel('Time (ms)')

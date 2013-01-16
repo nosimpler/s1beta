@@ -1,8 +1,8 @@
 # paramrw.py - routines for reading the param files
 #
-# v 1.6.20
-# rev 2013-01-16 (SL: completing merge of alpha feeds)
-# last major: (SL: Added evoked strength params, changed f_stdev name)
+# v 1.6.21
+# rev 2013-01-16 (MS: Some names changed in dicts of p_ext to be congruous with later usage)
+# last major: (SL: completing merge of alpha feeds)
 
 import re
 import fileio as fio
@@ -321,10 +321,10 @@ def create_pext(p, tstop):
         't0': p['t0_input_prox'],
         'tstop': p['tstop_input_prox'],
         'stdev': p['f_stdev_prox'],
-        'L2Pyr': (p['input_prox_A_pyr'], p['input_prox_D_L2']),
-        'L5Pyr': (p['input_prox_A_pyr'], p['input_prox_D_L5']),
-        'L2Basket': (p['input_prox_A_inh'], p['input_prox_D_L2']),
-        'L5Basket': (p['input_prox_A_inh'], p['input_prox_D_L5']),
+        'L2Pyr': (p['input_prox_A_weight_pyr'], p['input_prox_A_delay_L2']),
+        'L5Pyr': (p['input_prox_A_weight_pyr'], p['input_prox_A_delay_L5']),
+        'L2Basket': (p['input_prox_A_weight_inh'], p['input_prox_A_delay_L2']),
+        'L5Basket': (p['input_prox_A_weight_inh'], p['input_prox_A_delay_L5']),
         'lamtha': 100.,
         'loc': 'proximal'
     }
@@ -336,9 +336,9 @@ def create_pext(p, tstop):
         't0': p['t0_input_dist'],
         'tstop': p['tstop_input_dist'],
         'stdev': p['f_stdev_dist'],
-        'L2Pyr': (p['input_dist_A_pyr'], p['input_dist_D_L2']),
-        'L5Pyr': (p['input_dist_A_pyr'], p['input_dist_D_L5']),
-        'L2Basket': (p['input_dist_A_inh'], p['input_dist_D_L2']),
+        'L2Pyr': (p['input_dist_A_weight_pyr'], p['input_dist_A_delay_L2']),
+        'L5Pyr': (p['input_dist_A_weight_pyr'], p['input_dist_A_delay_L5']),
+        'L2Basket': (p['input_dist_A_weight_inh'], p['input_dist_A_delay_L2']),
         'lamtha': 100.,
         'loc': 'distal'
     }
@@ -393,10 +393,10 @@ def create_pext(p, tstop):
     # (amplitude, delay, mu, sigma). ordered this way to preserve compatibility
     p_unique['extgauss'] = {
         'stim': 'gaussian',
-        'L2_basket': (p['L2Basket_Gauss_A'], 1., p['L2Basket_Gauss_mu'], p['L2Basket_Gauss_sigma']),
-        'L2_pyramidal': (p['L2Pyr_Gauss_A'], 0.1, p['L2Pyr_Gauss_mu'], p['L2Pyr_Gauss_sigma']),
-        'L5_basket': (p['L5Basket_Gauss_A'], 1., p['L5Basket_Gauss_mu'], p['L5Basket_Gauss_sigma']),
-        'L5_pyramidal': (p['L5Pyr_Gauss_A'], 1., p['L5Pyr_Gauss_mu'], p['L5Pyr_Gauss_sigma']),
+        'L2_basket': (p['L2Basket_Gauss_A_weight'], 1., p['L2Basket_Gauss_mu'], p['L2Basket_Gauss_sigma']),
+        'L2_pyramidal': (p['L2Pyr_Gauss_A_weight'], 0.1, p['L2Pyr_Gauss_mu'], p['L2Pyr_Gauss_sigma']),
+        'L5_basket': (p['L5Basket_Gauss_A_weight'], 1., p['L5Basket_Gauss_mu'], p['L5Basket_Gauss_sigma']),
+        'L5_pyramidal': (p['L5Pyr_Gauss_A_weight'], 1., p['L5Pyr_Gauss_mu'], p['L5Pyr_Gauss_sigma']),
         'lamtha': 100.,
         'loc': 'proximal'
     }
@@ -404,10 +404,10 @@ def create_pext(p, tstop):
     # Poisson distributed inputs to proximal
     p_unique['extpois'] = {
         'stim': 'poisson',
-        'L2_basket': (p['L2Basket_Pois_A'], 1., p['L2Basket_Pois_lamtha']),
-        'L2_pyramidal': (p['L2Pyr_Pois_A'], 0.1, p['L2Pyr_Pois_lamtha']),
-        'L5_basket': (p['L5Basket_Pois_A'], 1., p['L5Basket_Pois_lamtha']),
-        'L5_pyramidal': (p['L5Pyr_Pois_A'], 1., p['L5Pyr_Pois_lamtha']),
+        'L2_basket': (p['L2Basket_Pois_A_weight'], 1., p['L2Basket_Pois_lamtha']),
+        'L2_pyramidal': (p['L2Pyr_Pois_A_weight'], 0.1, p['L2Pyr_Pois_lamtha']),
+        'L5_basket': (p['L5Basket_Pois_A_weight'], 1., p['L5Basket_Pois_lamtha']),
+        'L5_pyramidal': (p['L5Pyr_Pois_A_weight'], 1., p['L5Pyr_Pois_lamtha']),
         'lamtha_space': 100.,
         't_interval': (0., p['pois_T']),
         'loc': 'proximal'

@@ -1,8 +1,8 @@
 # axes_create.py - simple axis creation
 #
-# v 1.6.20
-# rev 2013-01-16 (SL: completing merge of alpha feeds)
-# last major: (MS: minor)
+# v 1.6.21
+# rev 2013-01-16 (MS: alpha feed hist y-axis ticks set based on bin size)
+# last major: (SL: completing merge of alpha feeds)
 
 # usage:
 # testfig = fig_std()
@@ -52,16 +52,25 @@ class FigDplWithHist():
         self.ax['feed_prox'] = self.f.add_subplot(self.gs1[1, :])
         self.ax['feed_dist'] = self.f.add_subplot(self.gs1[0, :])
 
-        self.__set_hist_props()
+        # self.__set_hist_props()
 
         # self.ax['feed_prox'].set_xticklabels('')
         # self.ax['feed_dist'].set_xticklabels('')
 
-    def __set_hist_props(self):
+    def set_hist_props(self, hist_data):
         for key in self.ax.keys():
+            if 'feed' in key:
+                max_n = max(hist_data[key][0])
+                self.ax[key].set_yticks(np.arange(1, max_n+1, np.ceil(max_n/4)))
+
             if 'feed_dist' in key:
                 self.ax[key].set_xticklabels('')
-                # self.ax[key].set_yticklabels
+
+    # def __set_hist_props(self):
+    #     for key in self.ax.keys():
+    #         if 'feed_dist' in key:
+    #             self.ax[key].set_xticklabels('')
+    #             # self.ax[key].set_yticklabels
 
     def save(self, file_name):
         self.f.savefig(file_name)
@@ -92,13 +101,16 @@ class FigSpecWithHist():
         self.ax['feed_prox'] = self.f.add_subplot(self.gs2[1, :])
         self.ax['feed_dist'] = self.f.add_subplot(self.gs2[0, :])
 
-        self.__set_hist_props()
+        # self.__set_hist_props()
 
-    def __set_hist_props(self):
+    def set_hist_props(self, hist_data):
         for key in self.ax.keys():
+            if 'feed' in key:
+                max_n = max(hist_data[key][0])
+                self.ax[key].set_yticks(np.arange(1, max_n+2, np.ceil(max_n/4)))
+
             if 'feed_dist' in key:
                 self.ax[key].set_xticklabels('')
-                # self.ax[key].set_yticklabels
 
     def close(self):
         plt.close(self.f)

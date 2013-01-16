@@ -1,8 +1,8 @@
 # ppsth.py - Plots aggregate psth of all trials in an "experiment"
 #
-# v 1.4.3
-# rev 2012-11-14 (SL: Added ppsth_grid, changing around some bin stuff)
-# last rev: (SL: created)
+# v 1.6.21
+# rev 2013-01-16 (MS: minor)
+# last rev: (SL: Added ppsth_grid, changing around some bin stuff)
 
 import numpy as np
 import itertools as it
@@ -22,7 +22,7 @@ def ppsth_grid(simpaths):
 
     # need number of lambda vals (cols) and number of sigma vals (rows)
     try:
-        N_rows = len(p_exp.p_all['L2Pyr_Gauss_A'])
+        N_rows = len(p_exp.p_all['L2Pyr_Gauss_A_weight'])
     except TypeError:
         N_rows = 1
 
@@ -55,7 +55,7 @@ def ppsth_grid(simpaths):
         gid_dict, p = paramrw.read(exp_param_list[0])
         tstop = p['tstop']
         lamtha = p['L2Basket_Pois_lamtha']
-        sigma = p['L2Pyr_Gauss_A']
+        sigma = p['L2Pyr_Gauss_A_weight']
 
         # these are total spike dicts for the experiments
         s_L2Pyr_list = []

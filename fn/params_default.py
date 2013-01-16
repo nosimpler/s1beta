@@ -1,8 +1,8 @@
 # params_default.py - list of default params and values
 #
-# v 1.6.20
-# rev 2013-01-16 (SL: completing merge of alpha feeds)
-# last major: (SL: added strength params)
+# v 1.6.21
+# rev 2013-01-16 (MS: Some name changes to be congruous with later usage)
+# last major: (SL: completing merge of alpha feeds)
 
 # flat file of default values
 # tuples for different "experiments"
@@ -20,32 +20,32 @@ def get_params_default():
 
         # amplitudes of individual Gaussian random inputs to L2Pyr and L5Pyr
         # L2 Basket params
-        'L2Basket_Gauss_A': 5.9e-5,
+        'L2Basket_Gauss_A_weight': 5.9e-5,
         'L2Basket_Gauss_mu': 200.,
         'L2Basket_Gauss_sigma': 3.6,
-        'L2Basket_Pois_A': 0.,
+        'L2Basket_Pois_A_weight': 0.,
         'L2Basket_Pois_lamtha': 10.,
 
         # L2 Pyr params
-        'L2Pyr_Gauss_A': 1.8e-5,
+        'L2Pyr_Gauss_A_weight': 1.8e-5,
         'L2Pyr_Gauss_mu': 150.,
         'L2Pyr_Gauss_sigma': 3.6,
-        'L2Pyr_Pois_A': 0.,
+        'L2Pyr_Pois_A_weight': 0.,
         'L2Pyr_Pois_lamtha': 10.,
 
         # L5 Pyr params
-        'L5Pyr_Gauss_A': 5.83e-5,
+        'L5Pyr_Gauss_A_weight': 5.83e-5,
         'L5Pyr_Gauss_mu': 500.,
         'L5Pyr_Gauss_sigma': 4.8,
-        'L5Pyr_Pois_A': 0.,
+        'L5Pyr_Pois_A_weight': 0.,
         'L5Pyr_Pois_lamtha': 10.,
 
         # L5 Basket params
-        'L5Basket_Gauss_A': 0.,
+        'L5Basket_Gauss_A_weight': 0.,
         # 'L5Basket_Gauss_A': 7.3e-5,
         'L5Basket_Gauss_mu': 500.,
         'L5Basket_Gauss_sigma': 2.,
-        'L5Basket_Pois_A': 0.,
+        'L5Basket_Pois_A_weight': 0.,
         'L5Basket_Pois_lamtha': 10.,
 
         # maximal conductances for all synapses
@@ -81,16 +81,16 @@ def get_params_default():
         'f_stdev_dist': 20.,
 
         # thalamic input amplitudes abd delays
-        'input_prox_A_pyr': 4e-5,
-        'input_prox_A_inh': 8e-5,
-        'input_prox_D_L2': 0.1,
-        'input_prox_D_L5': 1.0,
+        'input_prox_A_weight_pyr': 4e-5,
+        'input_prox_A_weight_inh': 8e-5,
+        'input_prox_A_delay_L2': 0.1,
+        'input_prox_A_delay_L5': 1.0,
 
         # current values, not sure where these distal values come from, need to check
-        'input_dist_A_pyr': 4e-5,
-        'input_dist_A_inh': 4e-5,
-        'input_dist_D_L2': 5.0,
-        'input_dist_D_L5': 5.0,
+        'input_dist_A_weight_pyr': 4e-5,
+        'input_dist_A_weight_inh': 4e-5,
+        'input_dist_A_delay_L2': 5.0,
+        'input_dist_A_delay_L5': 5.0,
         # 'input_dist_A_inh': 8e-5,
 
         # evprox (early) feed strength
