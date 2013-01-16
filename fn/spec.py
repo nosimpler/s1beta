@@ -1,8 +1,8 @@
 # spec.py - Average time-frequency energy representation using Morlet wavelet method
 #
-# v 1.6.17af
-# rev 2013-01-16 (MS: Alpha feed hist bin size set based on length of simulation)
-# last major: (MS: Added plot kernel to plot spec with alpha feed histogram)
+# v 1.6.18af
+# rev 2013-01-16 (MS: Possible contribution of delays accounted for in feed times)
+# last major: (MS: Alpha feed hist bin size set based on length of simulation)
 
 import os
 import sys
@@ -16,7 +16,7 @@ from multiprocessing import Pool
 from neuron import h as nrn
 
 import fileio as fio
-from spikefn import spikes_from_file
+from spikefn import spikes_from_file, add_delay_times
 from axes_create import FigSpec, FigSpec_with_hist, fig_std
 
 # general spec write/read functions
@@ -260,6 +260,9 @@ def pspec_with_hist(dspec, f_dpl, f_spk, dfig, p_dict, gid_dict, key_types):
 
     # grab alpha feed data. spikes_from_file() from spikefn.py
     s_dict = spikes_from_file(gid_dict, f_spk)
+
+    # Account for possible delays
+    s_dict = add_delay_times(s_dict, p_dict)
 
     # set number of bins (150 bins/1000ms)
     bins = 150. * p_dict['tstop'] / 1000.

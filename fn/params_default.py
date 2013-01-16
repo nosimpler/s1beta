@@ -1,8 +1,8 @@
 # params_default.py - list of default params and values
 #
-# v 1.6.15af
-# rev 2013-01-13 (MS: Revert to 1.6.13af)
-# last major: (SL: changed param names for evoked)
+# v 1.6.18af
+# rev 2013-01-16 (MS: Added alpha feed delay params)
+# last major: (MS: Revert to 1.6.13af)
 
 # flat file of default values
 # tuples for different "experiments"
@@ -80,13 +80,17 @@ def get_params_default():
         'f_input_dist': 10.,
         'f_stdev_dist': 20.,
 
-        # thalamic input amplitudes
+        # thalamic input amplitudes abd delays
         'input_prox_A_pyr': 4e-5,
         'input_prox_A_inh': 8e-5,
+        'input_prox_D_L2': 0.1,
+        'input_prox_D_L5': 1.0,
 
         # current values, not sure where these distal values come from, need to check
         'input_dist_A_pyr': 4e-5,
         'input_dist_A_inh': 4e-5,
+        'input_dist_D_L2': 5.0,
+        'input_dist_D_L5': 5.0,
         # 'input_dist_A_inh': 8e-5,
 
         # times and stdevs for evoked responses

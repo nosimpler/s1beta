@@ -1,8 +1,8 @@
 # paramrw.py - routines for reading the param files
 #
-# v 1.6.15af
-# rev 2013-01-13 (MS: Revert to 1.6.13af)
-# last major: (MS: Alpha feed dicts now have exmpt_group and exp_prefix key)
+# v 1.6.18af
+# rev 2013-01-16 (MS: Alpha feed delays set externally in param file)
+# last major: (MS: Revert to 1.6.13af)
 
 import re
 import fileio as fio
@@ -321,10 +321,10 @@ def create_pext(p, tstop):
         't0': p['t0_input_prox'],
         'tstop': p['tstop_input_prox'],
         'stdev': p['f_stdev_prox'],
-        'L2Pyr': (p['input_prox_A_pyr'], 0.1),
-        'L5Pyr': (p['input_prox_A_pyr'], 1.),
-        'L2Basket': (p['input_prox_A_inh'], 0.1),
-        'L5Basket': (p['input_prox_A_inh'], 1.),
+        'L2Pyr': (p['input_prox_A_pyr'], p['input_prox_D_L2']),
+        'L5Pyr': (p['input_prox_A_pyr'], p['input_prox_D_L5']),
+        'L2Basket': (p['input_prox_A_inh'], p['input_prox_D_L2']),
+        'L5Basket': (p['input_prox_A_inh'], p['input_prox_D_L5']),
         'lamtha': 100.,
         'loc': 'proximal'
     }
@@ -336,9 +336,9 @@ def create_pext(p, tstop):
         't0': p['t0_input_dist'],
         'tstop': p['tstop_input_dist'],
         'stdev': p['f_stdev_dist'],
-        'L2Pyr': (p['input_dist_A_pyr'], 5.),
-        'L5Pyr': (p['input_dist_A_pyr'], 5.),
-        'L2Basket': (p['input_dist_A_inh'], 5.),
+        'L2Pyr': (p['input_dist_A_pyr'], p['input_dist_D_L2']),
+        'L5Pyr': (p['input_dist_A_pyr'], p['input_dist_D_L5']),
+        'L2Basket': (p['input_dist_A_inh'], p['input_dist_D_L2']),
         'lamtha': 100.,
         'loc': 'distal'
     }

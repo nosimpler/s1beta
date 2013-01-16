@@ -75,13 +75,17 @@ tstop_input_dist: 660
 f_input_dist: 0
 f_stdev_dist: 20.
 
-# thalamic input amplitudes
+# thalamic input amplitudes and delays
 input_prox_A_pyr: 4e-5
 input_prox_A_inh: 8e-5
+input_prox_D_L2: 0.1
+input_prox_D_L5: 1.0
 
 # current values, not sure where these distal values come from, need to check
 input_dist_A_pyr: 4e-5
 input_dist_A_inh: 4e-5
+input_dist_D_L2: 5.0
+input_dist_D_L5: 5.0
 # input_dist_A_inh: 8e-5
 
 # times for evoked responses

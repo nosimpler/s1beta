@@ -1,8 +1,8 @@
 # pdipole.py - plot dipole function
 #
-# v 1.6.16af
-# rev 2013-01-14 (MS: added kernel to plot dipole with alpha feed histogram)
-# last major: (SL: Added aggregate dipole calc)
+# v 1.6.18af
+# rev 2013-01-16 (MS: possible contribution of delays accounted for in feed times)
+# last major: (MS: added kernel to plot dipole with alpha feed histogram)
 
 import os
 import itertools as it
@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from neuron import h as nrn
 from axes_create import fig_std, FigDpl_with_hist
-from spikefn import spikes_from_file
+from spikefn import spikes_from_file, add_delay_times
 
 # file_info is (rootdir, subdir, 
 def pdipole(file_name, dfig, p_dict, key_types):
@@ -51,6 +51,12 @@ def pdipole_with_hist(f_dpl, f_spk, dfig, p_dict, gid_dict, key_types):
     # get feed input times. spikes_from_file() imported from spikefn.py
     s_dict = spikes_from_file(gid_dict, f_spk)
 
+    # Account for possible delays
+    s_dict = add_delay_times(s_dict, p_dict)
+
+    # set number of bins for hist (150 bins/1000ms)
+    bins = 150. * p_dict['tstop'] / 1000.
+
     # Plotting
     f = FigDpl_with_hist()
 
@@ -58,10 +64,10 @@ def pdipole_with_hist(f_dpl, f_spk, dfig, p_dict, gid_dict, key_types):
     f.ax['dipole'].plot(t_vec, dp_total)
 
     # Proximal feed
-    f.ax['feed_prox'].hist(s_dict['alpha_feed_prox'].spike_list, bins=150, range=[t_vec[0], t_vec[-1]], color='red', label='Proximal feed')
+    f.ax['feed_prox'].hist(s_dict['alpha_feed_prox'].spike_list, bins, range=[t_vec[0], t_vec[-1]], color='red', label='Proximal feed')
 
     # Distal feed
-    f.ax['feed_dist'].hist(s_dict['alpha_feed_dist'].spike_list, bins=150, range=[t_vec[0], t_vec[-1]], color='green', label='Distal feed')
+    f.ax['feed_dist'].hist(s_dict['alpha_feed_dist'].spike_list, bins, range=[t_vec[0], t_vec[-1]], color='green', label='Distal feed')
 
     # Add legend to histogram
     for key in f.ax.keys():

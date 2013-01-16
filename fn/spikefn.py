@@ -1,8 +1,8 @@
 # spikefn.py - dealing with spikes
 #
-# v 1.6.17af
-# rev 2013-01-14 (MS: spikes_from_file only returns alpha feed keys if both exist)
-# last major: (MS: spikes_from_file now separates proximal and distal alpha feeds)
+# v 1.6.18af
+# rev 2013-01-16 (MS: Addef fn add_delay_times to add delay times to raw alpha feed input times)
+# last major: (MS: spikes_from_file only returns alpha feed keys if both exist)
 
 import fileio as fio
 import numpy as np
@@ -131,7 +131,7 @@ def spikes_from_file(gid_dict, fspikes):
         s_dict['alpha_feed_dist'] = Spikes(s, [gid_dict['extinput'][1]])
 
         # Add 5ms to all times in distal alpha feed list to account for 5ms synaptic delay
-        s_dict['alpha_feed_dist'].spike_list = [num+5. for num in s_dict['alpha_feed_dist'].spike_list]
+        # s_dict['alpha_feed_dist'].spike_list = [num+5. for num in s_dict['alpha_feed_dist'].spike_list]
 
     return s_dict
 
@@ -197,3 +197,16 @@ def spike_png(a, s_dict):
 
     a.set_ylim([0, 1])
     a.grid()
+
+# Add synaptic delays to alpha input times if applicable:
+def add_delay_times(s_dict, p_dict):
+    # Only add delays if delay is same for L2 and L5
+    # Proximal feed
+    if p_dict['input_prox_D_L2'] == p_dict['input_prox_D_L5']:
+        s_dict['alpha_feed_prox'].spike_list = [num+p_dict['input_prox_D_L2'] for num in s_dict['alpha_feed_prox'].spike_list]
+
+    # Distal
+    if p_dict['input_dist_D_L2'] == p_dict['input_dist_D_L5']: 
+        s_dict['alpha_feed_dist'].spike_list = [num+p_dict['input_dist_D_L2'] for num in s_dict['alpha_feed_dist'].spike_list]
+
+    return s_dict
