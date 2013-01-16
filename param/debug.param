@@ -72,7 +72,7 @@ f_stdev_prox: 20.
 # Ongoing distal alpha rhythm
 t0_input_dist: [650.]
 tstop_input_dist: 660 
-f_input_dist: 10.
+f_input_dist: 0
 f_stdev_dist: 20.
 
 # thalamic input amplitudes

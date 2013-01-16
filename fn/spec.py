@@ -1,8 +1,8 @@
 # spec.py - Average time-frequency energy representation using Morlet wavelet method
 #
-# v 1.6.16af
-# rev 2013-01-14 (MS: Added plot kernel to plot spec with alpha feed histogram)
-# last major: (MS: Added plot kernel to plot freq at which max avg pwr occurs vs. input freq)
+# v 1.6.17af
+# rev 2013-01-16 (MS: Alpha feed hist bin size set based on length of simulation)
+# last major: (MS: Added plot kernel to plot spec with alpha feed histogram)
 
 import os
 import sys
@@ -261,11 +261,14 @@ def pspec_with_hist(dspec, f_dpl, f_spk, dfig, p_dict, gid_dict, key_types):
     # grab alpha feed data. spikes_from_file() from spikefn.py
     s_dict = spikes_from_file(gid_dict, f_spk)
 
+    # set number of bins (150 bins/1000ms)
+    bins = 150. * p_dict['tstop'] / 1000.
+
     # Proximal feed
-    f.ax['feed_prox'].hist(s_dict['alpha_feed_prox'].spike_list, bins=150, range=[timevec[0], timevec[-1]], color='red', label='Proximal feed')
+    f.ax['feed_prox'].hist(s_dict['alpha_feed_prox'].spike_list, bins, range=[timevec[0], timevec[-1]], color='red', label='Proximal feed')
 
     # Distal feed
-    f.ax['feed_dist'].hist(s_dict['alpha_feed_dist'].spike_list, bins=150, range=[timevec[0], timevec[-1]], color='green', label='Distal feed')
+    f.ax['feed_dist'].hist(s_dict['alpha_feed_dist'].spike_list, bins, range=[timevec[0], timevec[-1]], color='green', label='Distal feed')
 
     # for now, set the xlim for the other one, force it!
     f.ax['dipole'].set_xlim(x)
