@@ -2,9 +2,9 @@
 
 # s1sh.py - run simulations and create interactive env
 #
-# v 1.6.22
-# rev 2013-01-21 (SL: local history file)
-# last major: (SL: cleaned up)
+# v 1.6.23
+# rev 2013-01-21 (SL: minor order change)
+# last major: (SL: local history file)
 
 import os, readline, shutil, sys
 from fn.cli import Console
@@ -19,9 +19,9 @@ if __name__ == '__main__':
         sys.exit(1)
 
     # Force Readline stuff
+    readline.parse_and_bind('set editing-mode vi')
     readline.parse_and_bind('\C-l: clear-screen')
     readline.parse_and_bind('tab: complete')
-    readline.parse_and_bind('set editing-mode vi')
 
     # local and default
     fhist_default = '.s1sh_history'

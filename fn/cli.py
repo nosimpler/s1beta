@@ -1,8 +1,8 @@
 # cli.py - routines for the command line interface console sssh.py
 #
-# v 1.6.22
-# rev 2013-01-21 (SL: local history file)
-# last major: (SL: completing merge of alpha feeds)
+# v 1.6.23
+# rev 2013-01-21 (SL: fixed prettyprint-based functions)
+# last major: (SL: local history file)
 
 from cmd import Cmd
 from datetime import datetime
@@ -73,11 +73,10 @@ class Console(Cmd):
         """complete function for setdate
         """
         if text:
+            print text
             x = [item for item in self.datelist if item.startswith(text)]
             if x:
                 return x
-            # else:
-            #     return 0
         else:
             return self.datelist
 
@@ -161,7 +160,7 @@ class Console(Cmd):
             print "Attempting to generate expmt list"
             self.expmts = paramrw.read_expmt_groups(self.file_input)
 
-        prettyprint(self.expmts)
+        clidefs.prettyprint(self.expmts)
 
     def do_vars(self, args):
         """Show variables in simulation and their values
@@ -184,8 +183,8 @@ class Console(Cmd):
             expmts = gen_expmts(sim_list[0])
             var_list = changed_vars(sim_list)
 
-            prettyprint(sim_list)
-            prettyprint(expmts)
+            clidefs.prettyprint(sim_list)
+            clidefs.prettyprint(expmts)
             for var in var_list:
                 print var[0]+":", var[1]
 
@@ -205,11 +204,14 @@ class Console(Cmd):
         """Lists simulations on a given date
            'args' is a date
         """
-        dcheck = os.path.join(self.dproj, args)
+        if not args:
+            dcheck = os.path.join(self.dproj, self.ddate)
+        else:
+            dcheck = os.path.join(self.dproj, args)
 
         if os.path.exists(dcheck):
             dir_list = [name for name in os.listdir(dcheck) if os.path.isdir(os.path.join(dcheck, name))]
-            prettyprint(dir_list)
+            clidefs.prettyprint(dir_list)
         else:
             print "Cannot find directory"
             return 0
@@ -360,7 +362,7 @@ class Console(Cmd):
 
     def do_ls(self, args):
         """Displays active param list"""
-        prettyprint(self.param_list)
+        clidefs.prettyprint(self.param_list)
 
     # This is somewhat of a hack -- couldn't get multiple args working
     def do_show(self, args):
@@ -431,7 +433,7 @@ class Console(Cmd):
                     lines = (line.rstrip() for line in f_params)
                     lines = [line for line in lines if line]
 
-                prettyprint(lines)
+                clidefs.prettyprint(lines)
             else:
                 print "No such simulation"
                 return 0
@@ -442,7 +444,7 @@ class Console(Cmd):
                     lines = (line.rstrip() for line in f_params)
                     lines = [line for line in lines if line.startswith(prange)]
 
-                prettyprint(lines)
+                clidefs.prettyprint(lines)
             else:
                 print "No such simulation"
                 return 0
@@ -470,7 +472,7 @@ class Console(Cmd):
                 lines = (line.rstrip() for line in frates)
                 lines = [line for line in lines if line]
 
-            prettyprint(lines)
+            clidefs.prettyprint(lines)
         else:
             print "In do_showf in cli: out of range?"
             return 0
@@ -497,7 +499,7 @@ class Console(Cmd):
             # pretest to see if the experimental directory exists
             if not os.path.isdir(os.path.join(self.dsim, args, 'spec')):
                 print "Defaulting to first. Try one of: "
-                prettyprint(self.expmts)
+                clidefs.prettyprint(self.expmts)
                 expmt = os.path.join(self.dsim, self.expmts[0])
             else:
                 expmt = args
