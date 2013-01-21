@@ -2,6 +2,6 @@
 *.png
 *.eps
 *.dat
-.s1sh_history
+.s1sh_hist_local
 .DS_Store
 x86_64/

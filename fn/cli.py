@@ -1,8 +1,8 @@
 # cli.py - routines for the command line interface console sssh.py
 #
-# v 1.6.20
-# rev 2013-01-16 (SL: completing merge of alpha feeds)
-# last major: (SL: just changed debug)
+# v 1.6.22
+# rev 2013-01-21 (SL: local history file)
+# last major: (SL: completing merge of alpha feeds)
 
 from cmd import Cmd
 from datetime import datetime
@@ -25,7 +25,7 @@ class Console(Cmd):
         self.prompt = '\033[93m' + "[s1] " + '\033[0m'
         self.intro  = "\nThis is the SomatoSensory SHell\n"
         self.dproj = '/repo/data/s1'
-        self.f_history = '.s1sh_history'
+        self.f_history = '.s1sh_hist_local'
         self.ddate = ''
         self.dlast = []
         self.dlist = []

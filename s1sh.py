@@ -2,11 +2,11 @@
 
 # s1sh.py - run simulations and create interactive env
 #
-# v 1.5.5
-# rev 2012-12-10 (SL: cleaned up)
-# last major: (SL: imported from aush)
+# v 1.6.22
+# rev 2013-01-21 (SL: local history file)
+# last major: (SL: cleaned up)
 
-import readline, sys
+import os, readline, shutil, sys
 from fn.cli import Console
 
 # Main Fn starts here
@@ -22,7 +22,18 @@ if __name__ == '__main__':
     readline.parse_and_bind('\C-l: clear-screen')
     readline.parse_and_bind('tab: complete')
     readline.parse_and_bind('set editing-mode vi')
-    readline.read_history_file('.s1sh_history')
+
+    # local and default
+    fhist_default = '.s1sh_history'
+    fhist_local = '.s1sh_hist_local'
+
+    # check if the local file exists
+    # and if not, copy the default over
+    if not os.path.isfile(fhist_local):
+        shutil.copyfile(fhist_default, fhist_local)
+
+    # set the readline history file to fhist_local
+    readline.read_history_file(fhist_local)
 
     if sys.platform.startswith('darwin'):
         readline.parse_and_bind('"^[[A": history-search-backward')
