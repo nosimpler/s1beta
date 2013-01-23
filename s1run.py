@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # s1run.py - primary run function for s1 project
 #
-# v 1.7.3
-# rev 2013-01-23 (SL: fixed random gen, removed more remnants of prng_state)
-# last major: (SL: feeds should now work independently of nproc)
+# v 1.7.4
+# rev 2013-01-23 (SL: fixed bug in prng seed, fixed timers)
+# last major: (SL: fixed random gen, removed more remnants of prng_state)
 
 import os
 import sys
@@ -86,25 +86,43 @@ def exec_runsim(f_psim):
         copy_paramfile(ddir.dsim, f_psim)
 
     # iterate through groups and through params in the group
+    if rank == 0:
+        N_expmt_groups = len(p_exp.expmt_groups)
+        s = '%i total experimental group'
+
+        # purely for vanity
+        if N_expmt_groups > 1:
+            s+='s'
+
+        print s % N_expmt_groups
+
+    # Set number of trials per unique simulation per experiment
+    # if N_trials is set to 0, run 1 anyway!
+    if not p_exp.N_trials:
+        N_trialruns = 1
+
+    else:
+        N_trialruns = p_exp.N_trials
+
+    # core iterator through experimental groups
     for expmt_group in p_exp.expmt_groups:
         if rank == 0:
             print "Experimental group: %s" % expmt_group
+            N_total_runs = p_exp.N_sims * N_trialruns
 
+            # simulation times, to get a qnd avg
+            t_sims = np.zeros(N_total_runs)
+
+        # iterate through number of unique simulations
         for i in range(p_exp.N_sims):
             if rank == 0:
-                run_start = time.time()
+                t_expmt_start = time.time()
+                # run_start = time.time()
                 # Tells run number, prints total runs
-                print "Run %i of %i" % (i, p_exp.N_sims-1),
+                # print "Run %i of %i" % (i, p_exp.N_sims-1),
 
             # return the param dict for this simulation
             p = p_exp.return_pdict(expmt_group, i)
-
-            # if N_trials is set to 0, run 1 anyway!
-            if not p_exp.N_trials:
-                N_trialruns = 1
-
-            else:
-                N_trialruns = p_exp.N_trials
 
             # iterate through trialruns
             for j in range(N_trialruns):
@@ -112,6 +130,17 @@ def exec_runsim(f_psim):
                 # tries to ensure we're all running the same params at the same time!
                 pc.barrier()
                 pc.gid_clear()
+
+                if rank == 0:
+                    # create a compound index for all sims
+                    n = i*N_trialruns+j
+
+                    # trial start time
+                    t_trial_start = time.time()
+
+                    # print the run number
+                    print "Run %i of %i" % (n, N_total_runs-1),
+                    # print "Run %i of %i" % (i*N_trialruns+j, N_total_runs-1),
 
                 # global variable bs, should be node-independent
                 nrn("dp_total = 0.")
@@ -129,9 +158,14 @@ def exec_runsim(f_psim):
                     prng_tmp = np.random.RandomState()
 
                     if rank == 0:
+                        # initialize vector to 1 element, with a 0
+                        # v = nrn.Vector(Length, Init)
                         r = nrn.Vector(1, 0)
-                        r.x[i] = prng_tmp.randint(1e9)
+
+                        # Create a random seed value
+                        r.x[0] = prng_tmp.randint(1e9)
                     else:
+                        # create the vector 'r' but don't change its init value
                         r = nrn.Vector(1, 0)
 
                     # broadcast random seed value in r to everyone
@@ -139,7 +173,7 @@ def exec_runsim(f_psim):
 
                     # set object prngbase to random state for the seed value
                     # other random seeds here will then be based on the gid
-                    prng_base = np.random.RandomState(int(r.x[i]))
+                    prng_base = np.random.RandomState(int(r.x[0]))
 
                 # seed list is now a list of seeds to be changed on each run
                 # otherwise, its originally set value will remain
@@ -228,10 +262,15 @@ def exec_runsim(f_psim):
                 # move the spike file to the spike dir
                 if rank == 0:
                     shutil.move(file_spikes_tmp, file_spikes)
-                    print "... finished in: %4.4f s" % (time.time() - run_start)
+                    t_sims[n] = time.time() - t_trial_start
+                    print "... finished in: %4.4f s" % (t_sims[n])
+                    # print "... finished in: %4.4f s" % (time.time() - run_start)
 
         # completely superficial
         if rank == 0:
+            # print qnd mean
+            print "Total runtime: %4.4f s, Mean runtime: %4.4f s" % (np.sum(t_sims), np.mean(t_sims))
+
             # this prints a newline without having to specify it.
             print ""
 
