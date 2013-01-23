@@ -4,15 +4,105 @@
 # L() defines a linspace range
 # [ ] list comma separated values
 
-sim_prefix: test
-expmt_groups: {testing0}
+sim_prefix: mubaseline
+expmt_groups: {mu}
 
 # numbers of cells making up the pyramidal grids
-N_pyr_x: 1
-N_pyr_y: 1
+N_pyr_x: 10
+N_pyr_y: 10
 
 # Poisson input
 pois_T: 2000.
+
+# maximal conductacnes for all synapses
+# max conductances TO L2Pyrs
+gbar_L2Pyr_L2Pyr: 5e-4
+gbar_L2Basket_L2Pyr: 5e-2
+
+# max conductances TO L2Baskets
+gbar_L2Pyr_L2Basket: 5e-4
+gbar_L2Basket_L2Basket: 2e-2
+
+# max conductances TO L5Pyrs
+gbar_L5Pyr_L5Pyr: 5e-4
+gbar_L2Pyr_L5Pyr: 2.5e-4
+gbar_L2Basket_L5Pyr: 1e-3
+gbar_L5Basket_L5Pyr: 2.5e-2
+
+# max conductances TO L5Baskets
+gbar_L5Basket_L5Basket: 2e-2
+gbar_L5Pyr_L5Basket: 5e-4
+gbar_L2Pyr_L5Basket: 2.5e-4
+
+# Ongoing proximal alpha rhythm
+t0_input_prox: 50.
+tstop_input_prox: 1000.
+f_input_prox: 10.
+f_stdev_prox: 20.
+
+# Ongoing distal alpha rhythm
+t0_input_dist: 50.
+tstop_input_dist: 1000.
+f_input_dist: 10
+f_stdev_dist: 20.
+
+# thalamic input amplitudes and delays
+input_prox_A_weight_pyr: 4e-5
+input_prox_A_weight_inh: 8e-5
+input_prox_A_delay_L2: 0.1
+input_prox_A_delay_L5: 1.0
+
+# current values, not sure where these distal values come from, need to check
+input_dist_A_weight_pyr: 4e-5
+input_dist_A_weight_inh: 4e-5
+input_dist_A_delay_L2: 5.0
+input_dist_A_delay_L5: 5.0
+# input_dist_A_inh: 8e-5
+
+# evoked response strengths
+# evprox (early) feed strength
+t_evprox_early: 6000.
+sigma_t_evprox_early: 2.5
+gbar_evprox_early_L2Pyr: 1e-3
+gbar_evprox_early_L5Pyr: 5e-4
+gbar_evprox_early_L2Basket: 2e-3
+gbar_evprox_early_L5Basket: 1e-3
+
+# evprox (late) feed strength
+t_evprox_late: 6000.
+sigma_t_evprox_late: 7.
+gbar_evprox_late_L2Pyr: 5e-3
+gbar_evprox_late_L5Pyr: 2.7e-3
+gbar_evprox_late_L2Basket: 2e-3
+gbar_evprox_late_L5Basket: 1e-3
+
+# evdist feed strengths
+t_evdist: 6000.
+sigma_t_evdist: 6.
+gbar_evdist_L2Pyr: 1e-3
+gbar_evdist_L5Pyr: 1e-3
+gbar_evdist_L2Basket: 5e-4
+
+# analysis
+save_spec_data: 0
+spec_max_freq: 41.
+
+# N_trials
+N_trials: 25
+
+# these values will only be used with N_trials = 0
+# and when these values are not -1
+prng_seedcore_input_prox: -1
+prng_seedcore_input_dist: -1
+prng_seedcore_extpois: 0
+prng_seedcore_extgauss: 0
+prng_seedcore_evprox_early: 0
+prng_seedcore_evdist: 0
+prng_seedcore_evprox_late: 0
+
+# Numerics
+tstop: 1000.
+dt: 0.025
 
 # amplitudes of individual gaussian random inputs to L2Pyr and L5Pyr
 # L2 Basket params
@@ -42,93 +132,3 @@ L5Basket_Gauss_mu: 2000.
 L5Basket_Gauss_sigma: 2.
 L5Basket_Pois_A_weight: 0.
 L5Basket_Pois_lamtha: 0.
-
-# maximal conductacnes for all synapses
-# max conductances TO L2Pyrs
-gbar_L2Pyr_L2Pyr: 5e-4
-gbar_L2Basket_L2Pyr: 5e-2
-
-# max conductances TO L2Baskets
-gbar_L2Pyr_L2Basket: 5e-4
-gbar_L2Basket_L2Basket: 2e-2
-
-# max conductances TO L5Pyrs
-gbar_L5Pyr_L5Pyr: 5e-4
-gbar_L2Pyr_L5Pyr: 2.5e-4
-gbar_L2Basket_L5Pyr: 1e-3
-gbar_L5Basket_L5Pyr: 2.5e-2
-
-# max conductances TO L5Baskets
-gbar_L5Basket_L5Basket: 2e-2
-gbar_L5Pyr_L5Basket: 5e-4
-gbar_L2Pyr_L5Basket: 2.5e-4
-
-# Ongoing proximal alpha rhythm
-t0_input_prox: [200.]
-tstop_input_prox: 210.
-f_input_prox: 10.
-f_stdev_prox: 20.
-
-# Ongoing distal alpha rhythm
-t0_input_dist: [650.]
-tstop_input_dist: 660 
-f_input_dist: 0
-f_stdev_dist: 20.
-
-# thalamic input amplitudes and delays
-input_prox_A_weight_pyr: 4e-5
-input_prox_A_weight_inh: 8e-5
-input_prox_A_delay_L2: 0.1
-input_prox_A_delay_L5: 1.0
-
-# current values, not sure where these distal values come from, need to check
-input_dist_A_weight_pyr: 4e-5
-input_dist_A_weight_inh: 4e-5
-input_dist_A_delay_L2: 5.0
-input_dist_A_delay_L5: 5.0
-# input_dist_A_inh: 8e-5
-
-# evoked response strengths
-# evprox (early) feed strength
-t_evprox_early: 50.
-sigma_t_evprox_early: 2.5
-gbar_evprox_early_L2Pyr: 1e-3
-gbar_evprox_early_L5Pyr: 5e-4
-gbar_evprox_early_L2Basket: 2e-3
-gbar_evprox_early_L5Basket: 1e-3
-
-# evprox (late) feed strength
-t_evprox_late: 6000.
-sigma_t_evprox_late: 7.
-gbar_evprox_late_L2Pyr: 5e-3
-gbar_evprox_late_L5Pyr: 2.7e-3
-gbar_evprox_late_L2Basket: 2e-3
-gbar_evprox_late_L5Basket: 1e-3
-
-# evdist feed strengths
-t_evdist: 6000.
-sigma_t_evdist: 6.
-gbar_evdist_L2Pyr: 1e-3
-gbar_evdist_L5Pyr: 1e-3
-gbar_evdist_L2Basket: 5e-4
-
-# analysis
-save_spec_data: 0
-spec_max_freq: 41.
-
-# N_trials
-N_trials: 0
-
-# these values will only be used with N_trials = 0
-# and when these values are not -1
-prng_seedcore_input_prox: -1
-prng_seedcore_input_dist: 0
-prng_seedcore_extpois: 0
-prng_seedcore_extgauss: 0
-prng_seedcore_evprox_early: 0
-prng_seedcore_evdist: 0
-prng_seedcore_evprox_late: 0
-
-# Numerics
-tstop: 250.
-dt: 0.025

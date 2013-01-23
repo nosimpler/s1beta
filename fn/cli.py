@@ -1,8 +1,8 @@
 # cli.py - routines for the command line interface console sssh.py
 #
-# v 1.6.23
-# rev 2013-01-21 (SL: fixed prettyprint-based functions)
-# last major: (SL: local history file)
+# v 1.7.3
+# rev 2013-01-23 (SL: default param file)
+# last major: (SL: fixed prettyprint-based functions)
 
 from cmd import Cmd
 from datetime import datetime
@@ -31,11 +31,17 @@ class Console(Cmd):
         self.dlist = []
         self.dsim = []
         self.expmts = []
-        self.file_input = file_input
         self.sim_list = []
         self.param_list = []
         self.var_list = []
         self.N_sims = 0
+
+        # check to see if file_input is legit
+        if os.path.isfile(file_input):
+            self.file_input = file_input
+        else:
+            # use a default
+            self.file_input = 'param/debug.param'
 
         # get initial count of avail processors for subprocess/multiprocessing routines
         self.nprocs = multiprocessing.cpu_count()

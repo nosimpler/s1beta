@@ -1,8 +1,8 @@
 # paramrw.py - routines for reading the param files
 #
-# v 1.7.0
-# rev 2013-01-23 (SL: changed random seeds)
-# last major: (MS: Some names changed in dicts of p_ext)
+# v 1.7.3
+# rev 2013-01-23 (SL: only add seeds to list that will change)
+# last major: (SL: changed random seeds)
 
 import re
 import fileio as fio
@@ -166,7 +166,10 @@ class ExpParams():
                 p[param] = int(val)
                 # key = param.split('prng_seedcore_')[-1]
                 # self.prng_seedcore[key] = val
-                self.prng_seed_list.append(param)
+
+                # only add values that will change
+                if p[param] == -1:
+                    self.prng_seed_list.append(param)
 
             else:
                 # assign group params first

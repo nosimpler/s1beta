@@ -2,9 +2,9 @@
 
 # s1sh.py - run simulations and create interactive env
 #
-# v 1.6.23
-# rev 2013-01-21 (SL: minor order change)
-# last major: (SL: local history file)
+# v 1.7.3
+# rev 2013-01-23 (SL: default param file)
+# last major: (SL: minor order change)
 
 import os, readline, shutil, sys
 from fn.cli import Console
@@ -14,9 +14,12 @@ if __name__ == '__main__':
     try:
         file_input = sys.argv[1]
 
-    except:
-        print "Usage:", sys.argv[0], 'file_input'
-        sys.exit(1)
+    except IndexError:
+        file_input = 'param/debug.param'
+
+        print "\nFile not found, attempting to resort to default params ..."
+        print "Usage of %s: %s\n" % (sys.argv[0], 'file_input')
+        # sys.exit(1)
 
     # Force Readline stuff
     readline.parse_and_bind('set editing-mode vi')

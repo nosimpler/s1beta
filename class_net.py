@@ -1,6 +1,6 @@
 # class_net.py - establishes the Network class and related methods
 #
-# v 1.7.0
+# v 1.7.3
 # rev 2013-01-23 (SL: minor)
 # last major: (SL: cleanup old functions)
 
@@ -22,7 +22,6 @@ class Network():
         # set the params internally for this net
         # better than passing it around like ...
         self.p = p
-
         # int variables for grid of pyramidal cells (for now in both L2 and L5)
         self.gridpyr = {'x': self.p['N_pyr_x'], 'y': self.p['N_pyr_y']}
 
@@ -31,6 +30,11 @@ class Network():
         self.n_hosts = int(self.pc.nhost())
         self.rank = int(self.pc.id())
         self.N_src = 0
+
+        # seed debugging
+        # for key, val in self.p.iteritems():
+        #     if key.startswith('prng_seedcore_'):
+        #         print "in net: %i, %s, %i" % (self.rank, key, val)
 
         # numbers of sources
         self.N = {}

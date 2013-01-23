@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # s1run.py - primary run function for s1 project
 #
-# v 1.7.2
-# rev 2013-01-23 (SL: feeds should now work independently of nproc)
-# last major: (SL: now requires all seeds to be set correctly)
+# v 1.7.3
+# rev 2013-01-23 (SL: fixed random gen, removed more remnants of prng_state)
+# last major: (SL: feeds should now work independently of nproc)
 
 import os
 import sys
@@ -127,6 +127,7 @@ def exec_runsim(f_psim):
                     # establishes random seed for the seed seeder (yeah.)
                     # this creates a prng_tmp on each, but only the value from 0 will be used
                     prng_tmp = np.random.RandomState()
+
                     if rank == 0:
                         r = nrn.Vector(1, 0)
                         r.x[i] = prng_tmp.randint(1e9)
@@ -135,17 +136,16 @@ def exec_runsim(f_psim):
 
                     # broadcast random seed value in r to everyone
                     pc.broadcast(r, 0)
-                    # print rank, r.x[i]
 
                     # set object prngbase to random state for the seed value
                     # other random seeds here will then be based on the gid
                     prng_base = np.random.RandomState(int(r.x[i]))
 
-                # try to pull the original value, if it's -1, set a new one
+                # seed list is now a list of seeds to be changed on each run
+                # otherwise, its originally set value will remain
                 # give a random int seed from [0, 1e9]
                 for param in p_exp.prng_seed_list:
-                    if p[param] == -1:
-                        p[param] = prng_base.randint(1e9)
+                    p[param] = prng_base.randint(1e9)
 
                 # Set tstop before instantiating any classes
                 nrn.tstop = p['tstop']
@@ -156,11 +156,6 @@ def exec_runsim(f_psim):
 
                 # spike file needs to be known by all nodes
                 file_spikes_tmp = fio.file_spike_tmp(dproj)
-                # file_prng_tmp = fio.file_prng_tmp(dproj)
-
-                # write stupid prng states
-                # should have happened after the seeds (which it does)
-                # prng_in_a_pickle(file_prng_tmp)
 
                 # Create network from class_net's Network class
                 # Network(gridpyr_x, gridpyr_y)
@@ -173,10 +168,6 @@ def exec_runsim(f_psim):
                     file_param = ddir.create_filename(expmt_group, 'param', exp_prefix)
                     file_spikes = ddir.create_filename(expmt_group, 'rawspk', exp_prefix)
                     file_spec = ddir.create_filename(expmt_group, 'rawspec', exp_prefix)
-                    # file_prng = ddir.create_filename(expmt_group, 'prngstate', exp_prefix)
-
-                    # move the prng file to the prng dir
-                    # shutil.move(file_prng_tmp, file_prng)
 
                 # debug
                 debug = 0
@@ -219,10 +210,6 @@ def exec_runsim(f_psim):
                     # write the params, but add a trial number
                     p['Trial'] = j
                     p['exp_prefix'] = exp_prefix
-
-                    # also write the seeds here
-                    # for key, val in seed_dict.iteritems():
-                    #     p['seed_%s' % key] = val
 
                     paramrw.write(file_param, p, net.gid_dict)
 

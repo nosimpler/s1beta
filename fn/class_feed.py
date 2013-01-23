@@ -1,8 +1,8 @@
 # class_feed.py - establishes FeedExt(), ParFeedAll()
 #
-# v 1.7.0
-# rev 2013-01-23 (SL: unique random seeds for each)
-# last major: (SL: completing merge of alpha feeds)
+# v 1.7.3
+# rev 2013-01-23 (SL: minor)
+# last major: (SL: unique random seeds for each)
 
 import numpy as np
 import itertools as it
@@ -148,15 +148,6 @@ class ParFeedExt():
 
         # Create vector of input times
         self.__create_eventvec(p)
-
-        # if not self.f_input:
-        #     # use VecStim().play() in this case
-        #     # should write to eventvec here
-        #     self.t_evoked = nrn.Vector([self.t0])
-        #     self.vs.play(self.t_evoked)
-
-        # else:
-            # Use create_eventvec() to create based on the frequency otherwise
 
     # for parallel, maybe be that postsyn for this is just nil (None)
     def connect_to_target(self):
