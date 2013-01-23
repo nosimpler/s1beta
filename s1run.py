@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # s1run.py - primary run function for s1 project
 #
-# v 1.7.0
-# rev 2013-01-23 (SL: changed prng system)
-# last major: (SL: removed epscompress stuff BUT included optimizer)
+# v 1.7.2
+# rev 2013-01-23 (SL: feeds should now work independently of nproc)
+# last major: (SL: now requires all seeds to be set correctly)
 
 import os
 import sys
@@ -45,39 +45,6 @@ def spikes_write(net, filename_spikes):
 
     # let all nodes iterate through loop in which only one rank writes
     pc.barrier()
-
-# def prng_in_a_pickle(filename_prng):
-#     pc = nrn.ParallelContext()
-#     for rank in range(int(pc.nhost())):
-#         pc.barrier()
-#         if rank == int(pc.id()):
-#             # package the rank (processor) and the rand state and dump into the thing
-#             data_prng = {
-#                 'rank': rank,
-#                 'prng_state': np.random.get_state(),
-#             }
-#
-#             with open(filename_prng, 'ab') as f_prng:
-#                 pickle.dump(data_prng, f_prng, protocol=pickle.HIGHEST_PROTOCOL)
-#
-#     pc.barrier()
-#
-# def prng_from_picklejar(filename_prng):
-#     pc = nrn.ParallelContext()
-#
-#     l = []
-#
-#     # open the prng file in read/binary mode
-#     with open(filename_prng, 'rb') as f_prng:
-#         # stop the loop when rank is the same as the id
-#         # while data_tmp['rank'] is not pc.id():
-#         while True:
-#             try:
-#                 l.append(pickle.load(f_prng))
-#             except EOFError:
-#                 # print "Rank not found among the saved data. Possible mismatch in number of procs used?"
-#                 right_seed = [prng_state_data for prng_state_data in l if prng_state_data['rank'] is int(pc.id())]
-#                 return right_seed[0]
 
 # copies param file into root dsim directory
 def copy_paramfile(dsim, f_psim):
@@ -149,40 +116,35 @@ def exec_runsim(f_psim):
                 # global variable bs, should be node-independent
                 nrn("dp_total = 0.")
 
-                # Seed pseudorandom number generator
-                # always check to see if one was chosen first!
-                # if len(p_exp.prng_state):
-                #     # attempt to read this as a file!
-                #     test_data = prng_from_picklejar(p_exp.prng_state)
-                #     # print "%i, %i\n" % (int(pc.id()), test_data['rank'])
-                #     np.random.set_state(test_data['prng_state'])
-
-                # else:
+                # Different seed logic for N_trials = 0 or not
                 if not p_exp.N_trials:
-                    np.random.seed(rank)
-
                     # seeds that come from prng_base are stereotyped
                     # these are seeded with seed rank! Blerg.
                     prng_base = np.random.RandomState(rank)
 
-                    # establish list of seeds here
-                    # seed_dict = dict.fromkeys(p_exp.prng_seedcore)
-
-                    # try to pull the original value, if it's -1, set a new one
-                    # for key in seed_dict.keys():
-                    for param in p_exp.prng_seed_list:
-                        if p[param] == -1:
-                            p[param] = prng_base.randint(1e6)
-
                 else:
                     # if there are N_trials, then randomize the seed
-                    np.random.seed()
-
                     # establishes random seed for the seed seeder (yeah.)
-                    prng_base = np.random.RandomState()
+                    # this creates a prng_tmp on each, but only the value from 0 will be used
+                    prng_tmp = np.random.RandomState()
+                    if rank == 0:
+                        r = nrn.Vector(1, 0)
+                        r.x[i] = prng_tmp.randint(1e9)
+                    else:
+                        r = nrn.Vector(1, 0)
 
-                    # give a random int seed from [0, 1e9]
-                    for param in p_exp.prng_seed_list:
+                    # broadcast random seed value in r to everyone
+                    pc.broadcast(r, 0)
+                    # print rank, r.x[i]
+
+                    # set object prngbase to random state for the seed value
+                    # other random seeds here will then be based on the gid
+                    prng_base = np.random.RandomState(int(r.x[i]))
+
+                # try to pull the original value, if it's -1, set a new one
+                # give a random int seed from [0, 1e9]
+                for param in p_exp.prng_seed_list:
+                    if p[param] == -1:
                         p[param] = prng_base.randint(1e9)
 
                 # Set tstop before instantiating any classes
