@@ -1,8 +1,8 @@
 # L2_basket.py - establish class def for layer 2 basket cells
 #
-# v 1.6.4ev
-# rev 2013-01-07 (SL: Made evprox/dist more flexible)
-# last rev: (SL: Fixed evdist)
+# v 1.7.0
+# rev 2013-01-23 (SL: clean up)
+# last rev: (SL: Made evprox/dist more flexible)
 
 import itertools as it
 from neuron import h as nrn
@@ -46,12 +46,9 @@ class L2Basket(BasketSingle):
 
         # FROM other L2Basket cells
         for gid_src, pos in it.izip(gid_dict['L2_basket'], pos_dict['L2_basket']):
-        # for gid_src in gid_dict['L2_basket']:
-            # if gid_src != gid:
             nc_dict = {
                 'pos_src': pos,
                 'A_weight': p['gbar_L2Basket_L2Basket'],
-                # 'A_weight': 2e-2,
                 'A_delay': 1.,
                 'lamtha': 20.
             }
@@ -114,7 +111,8 @@ class L2Basket(BasketSingle):
             # I recognize this is ugly (hack)
             if self.celltype in p_ext.keys():
                 # since gid ids are unique, then these will all be shifted.
-                # if order of extgauss random feeds ever matters (likely), then will have to preserve order
+                # if order of extgauss random feeds ever matters (likely)
+                # then will have to preserve order
                 # of creation based on gid ids of the cells
                 # this is a dumb place to put this information
                 gid_extgauss = gid + gid_dict['extgauss'][0]

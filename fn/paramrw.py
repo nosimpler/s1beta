@@ -1,8 +1,8 @@
 # paramrw.py - routines for reading the param files
 #
-# v 1.6.21
-# rev 2013-01-16 (MS: Some names changed in dicts of p_ext to be congruous with later usage)
-# last major: (SL: completing merge of alpha feeds)
+# v 1.7.0
+# rev 2013-01-23 (SL: changed random seeds)
+# last major: (MS: Some names changed in dicts of p_ext)
 
 import re
 import fileio as fio
@@ -49,7 +49,7 @@ def write(fparam, p, gid_list):
 
     # open the file for appending
     with open(fparam, 'a') as f:
-        pstring = '%22s: '
+        pstring = '%26s: '
 
         # write the gid info first
         for key in gid_list.keys():
@@ -112,6 +112,10 @@ class ExpParams():
     def __init__(self, f_psim):
         self.expmt_group_params = []
 
+        # self.prng_seedcore = {}
+        # this list is simply to access these easily
+        self.prng_seed_list = []
+
         # read in params from a file
         p_all_input = self.__read_sim(f_psim)
         self.p_template = dict.fromkeys(self.expmt_group_params)
@@ -122,7 +126,7 @@ class ExpParams():
         # pop off fixed known vals
         self.sim_prefix = self.p_all.pop('sim_prefix')
         self.N_trials = int(self.p_all.pop('N_trials'))
-        self.prng_state = self.p_all.pop('prng_state')[1:-1]
+        # self.prng_state = self.p_all.pop('prng_state')[1:-1]
 
         # create the list of iterated params
         self.list_params = self.__create_paramlist()
@@ -157,6 +161,12 @@ class ExpParams():
                 # create empty dicts in each
                 for group in self.p_group:
                     self.p_group[group] = {}
+
+            elif param.startswith('prng_seedcore_'):
+                p[param] = int(val)
+                # key = param.split('prng_seedcore_')[-1]
+                # self.prng_seedcore[key] = val
+                self.prng_seed_list.append(param)
 
             else:
                 # assign group params first
@@ -247,7 +257,6 @@ class ExpParams():
         # grab just the keys (but now in order)
         self.keys_sorted = [item[0] for item in list_sorted]
         self.p_template.update(dict.fromkeys(self.keys_sorted))
-        # self.p_template = dict.fromkeys(self.keys_sorted)
 
         # grab just the values (but now in order)
         # plist = [item[1] for item in list_sorted]
@@ -263,16 +272,20 @@ class ExpParams():
         p_sim = dict.fromkeys(self.p_template)
 
         # go through params in list_params
-        for param_pair in self.list_params:
-            p_sim[param_pair[0]] = param_pair[1][i]
+        for param, val_list in self.list_params:
+            if param.startswith('prng_seedcore_'):
+                p_sim[param] = int(val_list[i])
+            else:
+                p_sim[param] = val_list[i]
 
-        # go through the expmt groups
+        # go through the expmt group-based params
         for param, val in self.p_group[expmt_group].iteritems():
             p_sim[param] = val
 
         return p_sim
 
-    # Find keys that change anytime during simulation (i.e. have more than one associated value)
+    # Find keys that change anytime during simulation
+    # (i.e. have more than one associated value)
     def get_key_types(self):
         key_dict = {
             'dynamic_keys': [],
@@ -325,8 +338,9 @@ def create_pext(p, tstop):
         'L5Pyr': (p['input_prox_A_weight_pyr'], p['input_prox_A_delay_L5']),
         'L2Basket': (p['input_prox_A_weight_inh'], p['input_prox_A_delay_L2']),
         'L5Basket': (p['input_prox_A_weight_inh'], p['input_prox_A_delay_L5']),
+        'prng_seedcore': int(p['prng_seedcore_input_prox']),
         'lamtha': 100.,
-        'loc': 'proximal'
+        'loc': 'proximal',
     }
 
     p_ext = feed_validate(p_ext, feed_prox, tstop)
@@ -339,8 +353,9 @@ def create_pext(p, tstop):
         'L2Pyr': (p['input_dist_A_weight_pyr'], p['input_dist_A_delay_L2']),
         'L5Pyr': (p['input_dist_A_weight_pyr'], p['input_dist_A_delay_L5']),
         'L2Basket': (p['input_dist_A_weight_inh'], p['input_dist_A_delay_L2']),
+        'prng_seedcore': int(p['prng_seedcore_input_dist']),
         'lamtha': 100.,
-        'loc': 'distal'
+        'loc': 'distal',
     }
 
     p_ext = feed_validate(p_ext, feed_dist, tstop)
@@ -355,24 +370,18 @@ def create_pext(p, tstop):
         'L5_pyramidal': (p['gbar_evprox_early_L5Pyr'], 1., p['sigma_t_evprox_early']),
         'L2_basket': (p['gbar_evprox_early_L2Basket'], 0.1, p['sigma_t_evprox_early']),
         'L5_basket': (p['gbar_evprox_early_L5Basket'], 1., p['sigma_t_evprox_early']),
-        # 'L2_pyramidal': (1e-3, 0.1, p['sigma_t_evprox_early']),
-        # 'L5_pyramidal': (5e-4, 1., p['sigma_t_evprox_early']),
-        # 'L2_basket': (2e-3, 0.1, p['sigma_t_evprox_early']),
-        # 'L5_basket': (1e-3, 1., p['sigma_t_evprox_early']),
+        'prng_seedcore': int(p['prng_seedcore_evprox_early']),
         'lamtha_space': 3.,
         'loc': 'proximal'
     }
 
     p_unique['evprox1'] = {
         't0': p['t_evprox_late'],
-        # 'L2_pyramidal': (6.89e-3, 0.1, p['sigma_t_evprox_late']),
-        # 'L5_pyramidal': (3.471e-3, 5., p['sigma_t_evprox_late']),
-        # 'L2_basket': (6.89e-3, 0.1, p['sigma_t_evprox_late']),
-        # 'L5_basket': (3.471e-3, 5., p['sigma_t_evprox_late']),
         'L2_pyramidal': (p['gbar_evprox_late_L2Pyr'], 0.1, p['sigma_t_evprox_late']),
         'L5_pyramidal': (p['gbar_evprox_late_L5Pyr'], 5., p['sigma_t_evprox_late']),
         'L2_basket': (p['gbar_evprox_late_L2Basket'], 0.1, p['sigma_t_evprox_late']),
         'L5_basket': (p['gbar_evprox_late_L5Basket'], 5., p['sigma_t_evprox_late']),
+        'prng_seedcore': int(p['prng_seedcore_evprox_late']),
         'lamtha_space': 3.,
         'loc': 'proximal'
     }
@@ -382,9 +391,7 @@ def create_pext(p, tstop):
         'L2_pyramidal': (p['gbar_evdist_L2Pyr'], 0.1, p['sigma_t_evdist']),
         'L5_pyramidal': (p['gbar_evdist_L5Pyr'], 0.1, p['sigma_t_evdist']),
         'L2_basket': (p['gbar_evdist_L2Basket'], 0.1, p['sigma_t_evdist']),
-        # 'L2_pyramidal': (1e-3, 0.1, p['sigma_t_evdist']),
-        # 'L5_pyramidal': (1e-3, 0.1, p['sigma_t_evdist']),
-        # 'L2_basket': (5e-4, 0.1, p['sigma_t_evdist']),
+        'prng_seedcore': int(p['prng_seedcore_evdist']),
         'lamtha_space': 3.,
         'loc': 'distal'
     }
@@ -398,6 +405,7 @@ def create_pext(p, tstop):
         'L5_basket': (p['L5Basket_Gauss_A_weight'], 1., p['L5Basket_Gauss_mu'], p['L5Basket_Gauss_sigma']),
         'L5_pyramidal': (p['L5Pyr_Gauss_A_weight'], 1., p['L5Pyr_Gauss_mu'], p['L5Pyr_Gauss_sigma']),
         'lamtha': 100.,
+        'prng_seedcore': int(p['prng_seedcore_extgauss']),
         'loc': 'proximal'
     }
 
@@ -409,6 +417,7 @@ def create_pext(p, tstop):
         'L5_basket': (p['L5Basket_Pois_A_weight'], 1., p['L5Basket_Pois_lamtha']),
         'L5_pyramidal': (p['L5Pyr_Pois_A_weight'], 1., p['L5Pyr_Pois_lamtha']),
         'lamtha_space': 100.,
+        'prng_seedcore': int(p['prng_seedcore_extpois']),
         't_interval': (0., p['pois_T']),
         'loc': 'proximal'
     }

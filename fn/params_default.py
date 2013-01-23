@@ -1,8 +1,8 @@
 # params_default.py - list of default params and values
 #
-# v 1.6.21
-# rev 2013-01-16 (MS: Some name changes to be congruous with later usage)
-# last major: (SL: completing merge of alpha feeds)
+# v 1.7.0
+# rev 2013-01-23 (SL: change prng system)
+# last major: (MS: Some name changes to be congruous with later usage)
 
 # flat file of default values
 # tuples for different "experiments"
@@ -129,7 +129,16 @@ def get_params_default():
         'N_trials': 0,
 
         # prng_state is a string for a filename containing the random state one wants to use
-        'prng_state': None,
+        # prng seed cores are the base integer seed for the specific
+        # prng object for a specific random number stream
+        # 'prng_state': None,
+        'prng_seedcore_input_prox': -1,
+        'prng_seedcore_input_dist': -1,
+        'prng_seedcore_extpois': -1,
+        'prng_seedcore_extgauss': -1,
+        'prng_seedcore_evprox_early': -1,
+        'prng_seedcore_evdist': -1,
+        'prng_seedcore_evprox_late': -1,
 
         'tstop': 1000.,
         'dt': 0.025,

@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # s1run.py - primary run function for s1 project
 #
-# v 1.6.13
-# rev 2013-01-12 (SL: removed epscompress stuff BUT included optimizer)
-# last major: (SL: Fixing the finitialize)
+# v 1.7.0
+# rev 2013-01-23 (SL: changed prng system)
+# last major: (SL: removed epscompress stuff BUT included optimizer)
 
 import os
 import sys
@@ -46,38 +46,38 @@ def spikes_write(net, filename_spikes):
     # let all nodes iterate through loop in which only one rank writes
     pc.barrier()
 
-def prng_in_a_pickle(filename_prng):
-    pc = nrn.ParallelContext()
-    for rank in range(int(pc.nhost())):
-        pc.barrier()
-        if rank == int(pc.id()):
-            # package the rank (processor) and the rand state and dump into the thing
-            data_prng = {
-                'rank': rank,
-                'prng_state': np.random.get_state(),
-            }
-
-            with open(filename_prng, 'ab') as f_prng:
-                pickle.dump(data_prng, f_prng, protocol=pickle.HIGHEST_PROTOCOL)
-
-    pc.barrier()
-
-def prng_from_picklejar(filename_prng):
-    pc = nrn.ParallelContext()
-
-    l = []
-
-    # open the prng file in read/binary mode
-    with open(filename_prng, 'rb') as f_prng:
-        # stop the loop when rank is the same as the id
-        # while data_tmp['rank'] is not pc.id():
-        while True:
-            try:
-                l.append(pickle.load(f_prng))
-            except EOFError:
-                # print "Rank not found among the saved data. Possible mismatch in number of procs used?"
-                right_seed = [prng_state_data for prng_state_data in l if prng_state_data['rank'] is int(pc.id())]
-                return right_seed[0]
+# def prng_in_a_pickle(filename_prng):
+#     pc = nrn.ParallelContext()
+#     for rank in range(int(pc.nhost())):
+#         pc.barrier()
+#         if rank == int(pc.id()):
+#             # package the rank (processor) and the rand state and dump into the thing
+#             data_prng = {
+#                 'rank': rank,
+#                 'prng_state': np.random.get_state(),
+#             }
+#
+#             with open(filename_prng, 'ab') as f_prng:
+#                 pickle.dump(data_prng, f_prng, protocol=pickle.HIGHEST_PROTOCOL)
+#
+#     pc.barrier()
+#
+# def prng_from_picklejar(filename_prng):
+#     pc = nrn.ParallelContext()
+#
+#     l = []
+#
+#     # open the prng file in read/binary mode
+#     with open(filename_prng, 'rb') as f_prng:
+#         # stop the loop when rank is the same as the id
+#         # while data_tmp['rank'] is not pc.id():
+#         while True:
+#             try:
+#                 l.append(pickle.load(f_prng))
+#             except EOFError:
+#                 # print "Rank not found among the saved data. Possible mismatch in number of procs used?"
+#                 right_seed = [prng_state_data for prng_state_data in l if prng_state_data['rank'] is int(pc.id())]
+#                 return right_seed[0]
 
 # copies param file into root dsim directory
 def copy_paramfile(dsim, f_psim):
@@ -151,19 +151,39 @@ def exec_runsim(f_psim):
 
                 # Seed pseudorandom number generator
                 # always check to see if one was chosen first!
-                if len(p_exp.prng_state):
-                    # attempt to read this as a file!
-                    test_data = prng_from_picklejar(p_exp.prng_state)
-                    # print "%i, %i\n" % (int(pc.id()), test_data['rank'])
-                    np.random.set_state(test_data['prng_state'])
+                # if len(p_exp.prng_state):
+                #     # attempt to read this as a file!
+                #     test_data = prng_from_picklejar(p_exp.prng_state)
+                #     # print "%i, %i\n" % (int(pc.id()), test_data['rank'])
+                #     np.random.set_state(test_data['prng_state'])
+
+                # else:
+                if not p_exp.N_trials:
+                    np.random.seed(rank)
+
+                    # seeds that come from prng_base are stereotyped
+                    # these are seeded with seed rank! Blerg.
+                    prng_base = np.random.RandomState(rank)
+
+                    # establish list of seeds here
+                    # seed_dict = dict.fromkeys(p_exp.prng_seedcore)
+
+                    # try to pull the original value, if it's -1, set a new one
+                    # for key in seed_dict.keys():
+                    for param in p_exp.prng_seed_list:
+                        if p[param] == -1:
+                            p[param] = prng_base.randint(1e6)
 
                 else:
-                    if not p_exp.N_trials:
-                        np.random.seed(rank)
+                    # if there are N_trials, then randomize the seed
+                    np.random.seed()
 
-                    else:
-                        # if there are N_trials, then randomize the seed
-                        np.random.seed()
+                    # establishes random seed for the seed seeder (yeah.)
+                    prng_base = np.random.RandomState()
+
+                    # give a random int seed from [0, 1e9]
+                    for param in p_exp.prng_seed_list:
+                        p[param] = prng_base.randint(1e9)
 
                 # Set tstop before instantiating any classes
                 nrn.tstop = p['tstop']
@@ -174,11 +194,11 @@ def exec_runsim(f_psim):
 
                 # spike file needs to be known by all nodes
                 file_spikes_tmp = fio.file_spike_tmp(dproj)
-                file_prng_tmp = fio.file_prng_tmp(dproj)
+                # file_prng_tmp = fio.file_prng_tmp(dproj)
 
                 # write stupid prng states
                 # should have happened after the seeds (which it does)
-                prng_in_a_pickle(file_prng_tmp)
+                # prng_in_a_pickle(file_prng_tmp)
 
                 # Create network from class_net's Network class
                 # Network(gridpyr_x, gridpyr_y)
@@ -191,10 +211,10 @@ def exec_runsim(f_psim):
                     file_param = ddir.create_filename(expmt_group, 'param', exp_prefix)
                     file_spikes = ddir.create_filename(expmt_group, 'rawspk', exp_prefix)
                     file_spec = ddir.create_filename(expmt_group, 'rawspec', exp_prefix)
-                    file_prng = ddir.create_filename(expmt_group, 'prngstate', exp_prefix)
+                    # file_prng = ddir.create_filename(expmt_group, 'prngstate', exp_prefix)
 
                     # move the prng file to the prng dir
-                    shutil.move(file_prng_tmp, file_prng)
+                    # shutil.move(file_prng_tmp, file_prng)
 
                 # debug
                 debug = 0
@@ -237,6 +257,10 @@ def exec_runsim(f_psim):
                     # write the params, but add a trial number
                     p['Trial'] = j
                     p['exp_prefix'] = exp_prefix
+
+                    # also write the seeds here
+                    # for key, val in seed_dict.iteritems():
+                    #     p['seed_%s' % key] = val
 
                     paramrw.write(file_param, p, net.gid_dict)
 

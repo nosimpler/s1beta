@@ -1,8 +1,8 @@
 # class_net.py - establishes the Network class and related methods
 #
-# v 1.6.2ev
-# rev 2013-01-07 (SL: cleanup old functions)
-# last major: (SL: Massive reorganization of unique inputs)
+# v 1.7.0
+# rev 2013-01-23 (SL: minor)
+# last major: (SL: cleanup old functions)
 
 import itertools as it
 import numpy as np
@@ -46,11 +46,13 @@ class Network():
         self.p_ext, self.p_unique = paramrw.create_pext(self.p, nrn.tstop)
         self.N_extinput = len(self.p_ext)
 
-        # Source list of names, in particular order (cells, extinput, alpha names of unique inputs)
+        # Source list of names
+        # in particular order (cells, extinput, alpha names of unique inputs)
         self.src_list_new = self.__create_src_list()
 
         # cell position lists, also will give counts: must be known by ALL nodes
-        # extinput positions are all located at origin. This is sort of a hack bc of redundancy
+        # extinput positions are all located at origin.
+        # sort of a hack bc of redundancy
         self.pos_dict = dict.fromkeys(self.src_list_new)
 
         # create coords in pos_dict for all cells first
@@ -281,13 +283,13 @@ class Network():
                     self.pc.cell(gid, self.cells_list[-1].connect_to_target(None))
 
                 elif type == 'extinput':
-                    # to find param index, take difference between REAL gid here and gid start point of the items
+                    # to find param index, take difference between REAL gid
+                    # here and gid start point of the items
                     p_ind = gid - self.gid_dict['extinput'][0]
 
-                    # now use the param index in the params and create the cell and artificial NetCon
-                    # what is self.t_evoked?
-                    # self.t_evoked = nrn.Vector([10.])
-                    self.extinput_list.append(ParFeedExt(self.origin, self.p_ext[p_ind]))
+                    # now use the param index in the params and create
+                    # the cell and artificial NetCon
+                    self.extinput_list.append(ParFeedExt(self.origin, self.p_ext[p_ind], gid))
                     self.pc.cell(gid, self.extinput_list[-1].connect_to_target())
 
                 elif type in self.p_unique.keys():
@@ -295,7 +297,7 @@ class Network():
                     cell_type = self.gid_to_type(gid_post)
 
                     # create dictionary entry, append to list
-                    self.ext_list[type].append(ParFeedAll(type, cell_type, self.p_unique[type]))
+                    self.ext_list[type].append(ParFeedAll(type, cell_type, self.p_unique[type], gid))
                     self.pc.cell(gid, self.ext_list[type][-1].connect_to_target())
 
                 else:
@@ -309,7 +311,8 @@ class Network():
     # connections:
     # this NODE is aware of its cells as targets
     # for each syn, return list of source GIDs.
-    # for each item in the list, do a: nc = pc.gid_connect(source_gid, target_syn), weight,delay
+    # for each item in the list, do a:
+    # nc = pc.gid_connect(source_gid, target_syn), weight,delay
     # Both for synapses AND for external inputs
     def __parnet_connect(self):
         # loop over target zipped gids and cells
@@ -331,7 +334,8 @@ class Network():
 
     # setup spike recording for this node
     def __record_spikes(self):
-        # iterate through gids on this node and set to record spikes in spike time vec and id vec
+        # iterate through gids on this node and
+        # set to record spikes in spike time vec and id vec
         # agnostic to type of source, will sort that out later
         for gid in self.__gid_list:
             if self.pc.gid_exists(gid):

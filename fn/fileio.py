@@ -1,8 +1,8 @@
 # fileio.py - general file input/output functions
 #
-# v 1.6.20
-# rev 2013-01-16 (SL: completing merge of alpha feeds)
-# last rev: (MS: Clean up)
+# v 1.7.0
+# rev 2013-01-23 (SL: removed old prng state stuff)
+# last rev: (SL: completing merge of alpha feeds)
 
 import datetime, fnmatch, os, shutil, sys
 import itertools as it
@@ -35,10 +35,10 @@ def file_spike_tmp(dproj):
     return file_spikes
 
 # create temporary prng pickle file
-def file_prng_tmp(dproj):
-    filename_prng = 'prng_tmp.pyp'
-    f_prng = os.path.join(dproj, filename_prng)
-    return f_prng
+# def file_prng_tmp(dproj):
+#     filename_prng = 'prng_tmp.pyp'
+#     f_prng = os.path.join(dproj, filename_prng)
+#     return f_prng
 
 # this is ugly, potentially. sorry, future
 # i.e will change when the file name format changes
@@ -112,7 +112,7 @@ class SimulationPaths():
             'figdpl': '-dpl.eps',
             'figspec': '-spec.eps',
             'param': '-param.txt',
-            'prngstate': '-prng.npz',
+            # 'prngstate': '-prng.npz',
         }
 
     # reads sim information based on sim directory and param files

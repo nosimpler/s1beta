@@ -67,9 +67,20 @@ gbar_evdist_L2Basket: 5e-4
 save_spec_data: 1
 spec_max_freq: 41.
 
-# numerics
+# n trials
 N_trials: 0
-prng_state: ''
+
+# these values will only be used with N_trials = 0
+# and when these values are not -1
+prng_seedcore_input_prox: 0
+prng_seedcore_input_dist: 1
+prng_seedcore_extpois: 2
+prng_seedcore_extgauss: 3
+prng_seedcore_evprox_early: 4
+prng_seedcore_evdist: 5
+prng_seedcore_evprox_late: 6
+
+# Numerics
 tstop: 1000.
 dt: 0.025
 
@@ -125,4 +136,3 @@ gbar_L5Basket_L5Pyr: 2.5e-2
 gbar_L5Basket_L5Basket: 2e-2
 gbar_L5Pyr_L5Basket: 5e-4
 gbar_L2Pyr_L5Basket: 2.5e-4
-
