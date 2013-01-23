@@ -1,8 +1,8 @@
-# cli.py - routines for the command line interface console sssh.py
+# cli.py - routines for the command line interface console s1sh.py
 #
-# v 1.7.3
-# rev 2013-01-23 (SL: default param file)
-# last major: (SL: fixed prettyprint-based functions)
+# v 1.7.4a
+# rev 2013-01-24 (SL: minor changes, not really active)
+# last major: (SL: default param file)
 
 from cmd import Cmd
 from datetime import datetime
@@ -500,7 +500,7 @@ class Console(Cmd):
         """Attempt to find the PNGs and open them
         """
         if args == 'all':
-            file_viewer(self.dsim, 'all')
+            clidefs.file_viewer(self.dsim, 'all')
         else:
             # pretest to see if the experimental directory exists
             if not os.path.isdir(os.path.join(self.dsim, args, 'spec')):
