@@ -206,6 +206,18 @@ class ExpParams():
                     except ValueError:
                         p[param] = str(val)
 
+        # hack-y. sorry, future
+        # tstop_* = 0 is valid now, resets to the actual tstop
+        # with the added bonus of saving this time to the indiv params
+        for param, val in p.iteritems():
+            if param.startswith('tstop_'):
+                if isinstance(val, float):
+                    if val == 0:
+                        p[param] = p['tstop']
+
+                elif isinstance(val, np.ndarray):
+                    p[param][p[param] == 0] = p['tstop']
+
         return p
 
     # general function to expand a list of values
@@ -319,8 +331,11 @@ class ExpParams():
 def feed_validate(p_ext, d, tstop):
     # only append if t0 is less than simulation tstop
     if tstop > d['t0']:
-        # reset tstop if the specified tstop exceeds the
-        # simulation runtime
+        # # reset tstop if the specified tstop exceeds the
+        # # simulation runtime
+        # if d['tstop'] == 0:
+        #     d['tstop'] = tstop
+
         if d['tstop'] > tstop:
             # print "Warning: input parameter tstop exceeds value of simulation run. Resetting."
             d['tstop'] = tstop

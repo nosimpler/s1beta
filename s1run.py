@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # s1run.py - primary run function for s1 project
 #
-# v 1.7.4
-# rev 2013-01-23 (SL: fixed bug in prng seed, fixed timers)
-# last major: (SL: fixed random gen, removed more remnants of prng_state)
+# v 1.7.6
+# rev 2013-01-24 (SL: commented out the optimize function for now)
+# last major: (SL: fixed bug in prng seed, fixed timers)
 
 import os
 import sys
@@ -264,7 +264,6 @@ def exec_runsim(f_psim):
                     shutil.move(file_spikes_tmp, file_spikes)
                     t_sims[n] = time.time() - t_trial_start
                     print "... finished in: %4.4f s" % (t_sims[n])
-                    # print "... finished in: %4.4f s" % (time.time() - run_start)
 
         # completely superficial
         if rank == 0:
@@ -299,7 +298,7 @@ def exec_runsim(f_psim):
             plotfn.pall(ddir, p_exp, spec_results)
 
             # do the relevant png optimization
-            fio.pngoptimize(ddir.dsim)
+            # fio.pngoptimize(ddir.dsim)
 
             print "time: %4.4f s" % (time.time() - plot_start) 
 
