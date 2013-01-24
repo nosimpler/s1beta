@@ -1,8 +1,8 @@
 # paramrw.py - routines for reading the param files
 #
-# v 1.7.3
-# rev 2013-01-23 (SL: only add seeds to list that will change)
-# last major: (SL: changed random seeds)
+# v 1.7.5
+# rev 2013-01-24 (SL: checks for tstop inconsistencies in feeds)
+# last major: (SL: only add seeds to list that will change)
 
 import re
 import fileio as fio
@@ -313,10 +313,18 @@ class ExpParams():
 
         return key_dict
 
-# qnd function to just add feeds based on tstop
+# qnd function to add feeds if they are sensible
+# whips into shape ones that are not
 # could be properly made into a meaningful class.
 def feed_validate(p_ext, d, tstop):
+    # only append if t0 is less than simulation tstop
     if tstop > d['t0']:
+        # reset tstop if the specified tstop exceeds the
+        # simulation runtime
+        if d['tstop'] > tstop:
+            # print "Warning: input parameter tstop exceeds value of simulation run. Resetting."
+            d['tstop'] = tstop
+
         p_ext.append(d)
 
     return p_ext
@@ -346,6 +354,7 @@ def create_pext(p, tstop):
         'loc': 'proximal',
     }
 
+    # ensures time interval makes sense
     p_ext = feed_validate(p_ext, feed_prox, tstop)
 
     feed_dist = {

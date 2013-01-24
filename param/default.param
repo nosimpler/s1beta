@@ -15,35 +15,6 @@ N_pyr_y: 10
 # pois_lamtha: 20.
 pois_T: 1000.
 
-# amplitudes of individual gaussian random inputs to L2Pyr and L5Pyr
-# L2 Basket params
-L2Basket_Gauss_A_weight: 0.
-L2Basket_Gauss_mu: 2000.
-L2Basket_Gauss_sigma: 3.6
-L2Basket_Pois_A_weight: 0.
-L2Basket_Pois_lamtha: 0.
-
-# L2 Pyr params
-L2Pyr_Gauss_A_weight: 0.
-L2Pyr_Gauss_mu: 2000.
-L2Pyr_Gauss_sigma: 3.6
-L2Pyr_Pois_A_weight: 0.
-L2Pyr_Pois_lamtha: 0.
-
-# L5 Pyr params
-L5Pyr_Gauss_A_weight: 0.
-L5Pyr_Gauss_mu: 2000.
-L5Pyr_Gauss_sigma: 4.8
-L5Pyr_Pois_A_weight: 0.
-L5Pyr_Pois_lamtha: 0.
-
-# L5 Basket params
-L5Basket_Gauss_A_weight: 0.
-L5Basket_Gauss_mu: 2000.
-L5Basket_Gauss_sigma: 2.
-L5Basket_Pois_A_weight: 0.
-L5Basket_Pois_lamtha: 0.
-
 # maximal conductacnes for all synapses
 # max conductances TO L2Pyrs
 gbar_L2Pyr_L2Pyr: 5e-4
@@ -116,6 +87,35 @@ gbar_evprox_late_L5Basket: 1e-3
 gbar_evdist_L2Pyr: 1e-3
 gbar_evdist_L5Pyr: 1e-3
 gbar_evdist_L2Basket: 5e-4
+
+# amplitudes of individual gaussian random inputs to L2Pyr and L5Pyr
+# L2 Basket params
+L2Basket_Gauss_A_weight: 0.
+L2Basket_Gauss_mu: 2000.
+L2Basket_Gauss_sigma: 3.6
+L2Basket_Pois_A_weight: 0.
+L2Basket_Pois_lamtha: 0.
+
+# L2 Pyr params
+L2Pyr_Gauss_A_weight: 0.
+L2Pyr_Gauss_mu: 2000.
+L2Pyr_Gauss_sigma: 3.6
+L2Pyr_Pois_A_weight: 0.
+L2Pyr_Pois_lamtha: 0.
+
+# L5 Pyr params
+L5Pyr_Gauss_A_weight: 0.
+L5Pyr_Gauss_mu: 2000.
+L5Pyr_Gauss_sigma: 4.8
+L5Pyr_Pois_A_weight: 0.
+L5Pyr_Pois_lamtha: 0.
+
+# L5 Basket params
+L5Basket_Gauss_A_weight: 0.
+L5Basket_Gauss_mu: 2000.
+L5Basket_Gauss_sigma: 2.
+L5Basket_Pois_A_weight: 0.
+L5Basket_Pois_lamtha: 0.
 
 # analysis
 save_spec_data: 0
