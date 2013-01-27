@@ -1,8 +1,8 @@
 # spec.py - Average time-frequency energy representation using Morlet wavelet method
 #
-# v 1.6.21
-# rev 2013-01-16 (MS: yaxis ticks of alpha feed hist set externally based on bin sizes)
-# last major: (SL: completing merge of alpha feeds)
+# v 1.7.7
+# rev 2013-01-27 (SL: changed the t0 cutoff from 150 ms to 50 ms)
+# last major: (MS: yaxis ticks of alpha feed hist set externally based on bin sizes)
 
 import os
 import sys
@@ -42,11 +42,11 @@ class MorletSpec():
         self.S = data_raw.squeeze()
 
         # cutoff time in ms
-        self.tmin = 150.
+        self.tmin = 50.
 
-        # Check that tstop is greater than 150 ms:
+        # Check that tstop is greater than tmin
         if p_dict['tstop'] > self.tmin:
-            # Remove first 150 ms of simulation
+            # Remove first self.tmin ms of simulation
             self.S = self.S[self.tmin / p_dict['dt']+1:, 1]
 
             # Array of frequencies over which to sort
@@ -69,7 +69,7 @@ class MorletSpec():
                 write(fdata_spec, self.timevec, self.freqvec, self.TFR)
 
         else:
-            print "tstop not greater than 150ms. Skipping wavelet analysis."
+            print "tstop not greater than %4.2f ms. Skipping wavelet analysis." % self.tmin
 
     # also creates self.timevec
     def __traces2TFR(self):
@@ -159,7 +159,7 @@ class MorletSpec():
 
 # Spectral plotting kernel for ONE simulation run
 def pspec(dspec, f_dpl, dfig, p_dict, key_types):
-    # if dspec is an instance of MorletSpec,  get data from object
+    # if dspec is an instance of MorletSpec, get data from object
     if isinstance(dspec, MorletSpec):
         timevec = dspec.timevec
         freqvec = dspec.freqvec
@@ -191,15 +191,23 @@ def pspec(dspec, f_dpl, dfig, p_dict, key_types):
     # grab the dipole data
     data_dipole = np.loadtxt(open(f_dpl, 'r'))
 
+    # assign vectors
     t_dpl = data_dipole[:, 0]
     dp_total = data_dipole[:, 1]
 
+    # plot and create an xlim
     f.ax['dipole'].plot(t_dpl, dp_total)
-    x = (150., f.ax['dipole'].get_xlim()[1])
+    t_stop = f.ax['dipole'].get_xlim()[1]
+    x = (50., t_stop)
+    xticklabels = np.concatenate((np.array([x[0]]), np.arange(100., t_stop+1, 100.)))
 
     # for now, set the xlim for the other one, force it!
     f.ax['dipole'].set_xlim(x)
-    f.ax['spec'].set_xlim(x)
+    # f.ax['spec'].set_xlim(x)
+    # for item in f.ax['dipole'].get_xticklabels():
+    #     print item, item.get_text()
+    f.ax['dipole'].set_xticklabels(xticklabels)
+    f.ax['spec'].set_xticklabels(xticklabels)
 
     # axis labels
     f.ax['spec'].set_xlabel('Time (ms)')
@@ -253,7 +261,7 @@ def pspec_with_hist(dspec, f_dpl, f_spk, dfig, p_dict, gid_dict, key_types):
     dp_total = data_dipole[:, 1]
 
     f.ax['dipole'].plot(t_dpl, dp_total)
-    x = (150., f.ax['dipole'].get_xlim()[1])
+    x = (50., f.ax['dipole'].get_xlim()[1])
 
     # grab alpha feed data. spikes_from_file() from spikefn.py
     s_dict = spikes_from_file(gid_dict, f_spk)

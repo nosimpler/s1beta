@@ -1,8 +1,8 @@
 # cli.py - routines for the command line interface console s1sh.py
 #
-# v 1.7.4a
-# rev 2013-01-24 (SL: minor changes, not really active)
-# last major: (SL: default param file)
+# v 1.7.7
+# rev 2013-01-27 (SL: more minor changes not active)
+# last major: (SL: minor changes, not really active)
 
 from cmd import Cmd
 from datetime import datetime
@@ -245,6 +245,13 @@ class Console(Cmd):
 
         else:
             clidefs.freqpwr_analysis(self.ddata, self.dsim, maxpwr=0)
+
+    # def do_pspec(self, args):
+    #     """Regenerates spec plots in given directory
+    #     """
+    #     dfig_spec = self.simpaths.dfigs['spec']
+    #     fparam_list = self.simpaths.filelists['param']
+    #     fspec_list = self.simpaths.filelists['rawdpl']
 
     def do_pdipole(self, args):
         """Regenerates plots in given directory

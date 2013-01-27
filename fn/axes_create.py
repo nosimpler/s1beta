@@ -1,8 +1,8 @@
 # axes_create.py - simple axis creation
 #
-# v 1.6.21
-# rev 2013-01-16 (MS: alpha feed hist y-axis ticks set based on bin size)
-# last major: (SL: completing merge of alpha feeds)
+# v 1.7.7
+# rev 2013-01-27 (SL: minor cleanup)
+# last major: (MS: alpha feed hist y-axis ticks set based on bin size)
 
 # usage:
 # testfig = fig_std()
@@ -122,9 +122,6 @@ class FigSpec():
         font_prop = {'size': 8}
         mpl.rc('font', **font_prop)
 
-        # gs0 = gridspec.GridSpec(1, 1)
-        # self.ax0 = self.f.add_subplot(gs0[:])
-
         # the right margin is a hack and NOT guaranteed!
         # it's making space for the stupid colorbar that creates a new grid to replace gs1
         # when called, and it doesn't update the params of gs1
@@ -134,14 +131,6 @@ class FigSpec():
         self.ax = {}
         self.ax['dipole'] = self.f.add_subplot(self.gs0[:, :])
         self.ax['spec'] = self.f.add_subplot(self.gs1[:, :])
-        # self.ax['spec'].set_xlabel('Time')
-        # self.f.suptitle('testing')
-
-        # get the xlim of the dipople
-        # x = self.ax['dipole'].get_xlim()
-
-        # for now, set the xlim for the other one, force it!
-        # self.ax['spec'].set_xlim(x)
 
     def close(self):
         plt.close(self.f)

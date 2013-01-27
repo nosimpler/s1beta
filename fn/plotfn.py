@@ -1,8 +1,8 @@
 # plotfn.py - pall and possibly other plot routines
 #
-# v 1.6.20
-# rev 2013-01-16 (SL: completing merge of alpha feeds)
-# last major: (MS: Added plot routine and kernel to plot dpl and spec with alpha feed hist)
+# v 1.7.7
+# rev 2013-01-27 (SL: commented on debug v. parallel modes)
+# last major: (SL: completing merge of alpha feeds)
 
 from pdipole import pdipole, pdipole_with_hist
 from spec import pspec, pspec_with_hist
@@ -55,7 +55,9 @@ def cb(r):
 # reads all data except spec and gid_dict from files
 def pall(ddir, p_exp, spec_results):
     # runtype allows easy (hard coded switching between two modes)
+    # either 'parallel' or 'debug'
     runtype = 'parallel'
+    # runtype = 'debug'
 
     # create giant list of appropriate files and run them all at the same time
     if runtype is 'parallel':

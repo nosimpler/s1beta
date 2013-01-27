@@ -1,8 +1,8 @@
 # class_feed.py - establishes FeedExt(), ParFeedAll()
 #
-# v 1.7.6
-# rev 2013-01-24 (SL: changed vars in _ParFeedExt_create_eventvec)
-# last major: (SL: unique random seeds for each)
+# v 1.7.7
+# rev 2013-01-27 (SL: stdev=0 for inputs is okay, but with just 1 stimulus)
+# last major: (SL: changed vars in _ParFeedExt_create_eventvec)
 
 import numpy as np
 import itertools as it
@@ -169,7 +169,10 @@ class ParFeedExt():
             isi_array = np.arange(self.t0, p['tstop'], 1000./self.f_input)
 
             # array of single stimulus times -- no doublets 
-            t_array = self.prng.normal(np.repeat(isi_array, 10), p['stdev'])
+            if p['stdev']:
+                t_array = self.prng.normal(np.repeat(isi_array, 10), p['stdev'])
+            else:
+                t_array = isi_array
 
             # Two arrays store doublet times
             t_array_low = t_array - 5
