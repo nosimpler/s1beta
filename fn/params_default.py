@@ -1,8 +1,8 @@
 # params_default.py - list of default params and values
 #
-# v 1.7.0
-# rev 2013-01-23 (SL: change prng system)
-# last major: (MS: Some name changes to be congruous with later usage)
+# v 1.7.9
+# rev 2013-01-29 (SL: split up pyr-pyr ampa and nmda conductances)
+# last major: (SL: change prng system)
 
 # flat file of default values
 # tuples for different "experiments"
@@ -50,7 +50,8 @@ def get_params_default():
 
         # maximal conductances for all synapses
         # max conductances TO L2Pyrs
-        'gbar_L2Pyr_L2Pyr': 5e-4,
+        'gbar_L2Pyr_L2Pyr_ampa': 5e-4,
+        'gbar_L2Pyr_L2Pyr_nmda': 5e-4,
         'gbar_L2Basket_L2Pyr': 5e-2,
 
         # max conductances TO L2Baskets
@@ -58,7 +59,8 @@ def get_params_default():
         'gbar_L2Basket_L2Basket': 2e-2,
 
         # max conductances TO L5Pyr
-        'gbar_L5Pyr_L5Pyr': 5e-4,
+        'gbar_L5Pyr_L5Pyr_ampa': 5e-3,
+        'gbar_L5Pyr_L5Pyr_nmda': 5e-4,
         'gbar_L2Pyr_L5Pyr': 2.5e-4,
         'gbar_L2Basket_L5Pyr': 1e-3,
         'gbar_L5Basket_L5Pyr': 2.5e-2,

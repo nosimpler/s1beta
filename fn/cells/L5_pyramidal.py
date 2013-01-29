@@ -1,8 +1,8 @@
 # L5_pyramidal.py - establish class def for layer 5 pyramidal cells
 #
-# v 1.6.4ev
-# rev 2013-01-07 (SL: made evprox/dist more flexible)
-# last rev: (SL: Fixed evdist)
+# v 1.7.9
+# rev 2013-01-29 (SL: separated ampa/nmda conductances in e-e)
+# last rev: (SL: made evprox/dist more flexible)
 
 from neuron import h as nrn
 from class_cell import Pyr
@@ -255,25 +255,39 @@ class L5Pyr(Pyr):
 
     # parallel connection function FROM all cell types TO here
     def parconnect(self, gid, gid_dict, pos_dict, p):
+        # init dict of dicts
+        # nc_dict for ampa and nmda may be the same for this cell type
+        nc_dict = {
+            'ampa': None,
+            'nmda': None,
+        }
+
         # connections FROM L5Pyr TO here
         for gid_src, pos in it.izip(gid_dict['L5_pyramidal'], pos_dict['L5_pyramidal']):
             # if gid_src != gid:
-            nc_dict = {
+            nc_dict['ampa'] = {
                 'pos_src': pos,
-                'A_weight': p['gbar_L5Pyr_L5Pyr'],
+                'A_weight': p['gbar_L5Pyr_L5Pyr_ampa'],
                 'A_delay': 1.,
                 'lamtha': 3.
             }
 
             # ampa connections
-            self.ncfrom_L5Pyr.append(self.parconnect_from_src(gid_src, nc_dict, self.apicaloblique_ampa))
-            self.ncfrom_L5Pyr.append(self.parconnect_from_src(gid_src, nc_dict, self.basal2_ampa))
-            self.ncfrom_L5Pyr.append(self.parconnect_from_src(gid_src, nc_dict, self.basal3_ampa))
+            self.ncfrom_L5Pyr.append(self.parconnect_from_src(gid_src, nc_dict['ampa'], self.apicaloblique_ampa))
+            self.ncfrom_L5Pyr.append(self.parconnect_from_src(gid_src, nc_dict['ampa'], self.basal2_ampa))
+            self.ncfrom_L5Pyr.append(self.parconnect_from_src(gid_src, nc_dict['ampa'], self.basal3_ampa))
+
+            nc_dict['nmda'] = {
+                'pos_src': pos,
+                'A_weight': p['gbar_L5Pyr_L5Pyr_nmda'],
+                'A_delay': 1.,
+                'lamtha': 3.
+            }
 
             # nmda connections
-            self.ncfrom_L5Pyr.append(self.parconnect_from_src(gid_src, nc_dict, self.apicaloblique_nmda))
-            self.ncfrom_L5Pyr.append(self.parconnect_from_src(gid_src, nc_dict, self.basal2_nmda))
-            self.ncfrom_L5Pyr.append(self.parconnect_from_src(gid_src, nc_dict, self.basal3_nmda))
+            self.ncfrom_L5Pyr.append(self.parconnect_from_src(gid_src, nc_dict['nmda'], self.apicaloblique_nmda))
+            self.ncfrom_L5Pyr.append(self.parconnect_from_src(gid_src, nc_dict['nmda'], self.basal2_nmda))
+            self.ncfrom_L5Pyr.append(self.parconnect_from_src(gid_src, nc_dict['nmda'], self.basal3_nmda))
 
         # connections FROM L5Basket TO here
         for gid_src, pos in it.izip(gid_dict['L5_basket'], pos_dict['L5_basket']):

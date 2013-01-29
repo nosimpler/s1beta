@@ -1,8 +1,8 @@
 # L2_pyramidal.py - est class def for layer 2 pyramidal cells
 #
-# v 1.6.4ev
-# rev 2013-01-07 (SL: made evprox/dist more flexible)
-# last rev: (SL: fixed evdist)
+# v 1.7.9
+# rev 2013-01-29 (SL: separated ampa and nmda conductances for e-e connections)
+# last rev: (SL: made evprox/dist more flexible)
 
 from neuron import h as nrn
 from class_cell import Pyr
@@ -151,28 +151,42 @@ class L2Pyr(Pyr):
 
     # collect receptor-type-based connections here
     def parconnect(self, gid, gid_dict, pos_dict, p):
+        # init dict of dicts
+        # nc_dict for ampa and nmda may be the same for this cell type
+        nc_dict = {
+            'ampa': None,
+            'nmda': None,
+        }
+
         # Connections FROM all other L2 Pyramidal cells to this one
         for gid_src, pos in it.izip(gid_dict['L2_pyramidal'], pos_dict['L2_pyramidal']):
             # don't be redundant, this is only possible for LIKE cells, but it might not hurt to check
             # if gid_src != gid:
-            # default value: 'A_weight': 5e-4,
-            nc_dict = {
+            nc_dict['ampa'] = {
                 'pos_src': pos,
-                'A_weight': p['gbar_L2Pyr_L2Pyr'],
+                'A_weight': p['gbar_L2Pyr_L2Pyr_ampa'],
                 'A_delay': 1.,
                 'lamtha': 3.
             }
 
             # parconnect_from_src(gid_presyn, nc_dict, postsyn)
             # ampa connections
-            self.ncfrom_L2Pyr.append(self.parconnect_from_src(gid_src, nc_dict, self.apicaloblique_ampa))
-            self.ncfrom_L2Pyr.append(self.parconnect_from_src(gid_src, nc_dict, self.basal2_ampa))
-            self.ncfrom_L2Pyr.append(self.parconnect_from_src(gid_src, nc_dict, self.basal3_ampa))
+            self.ncfrom_L2Pyr.append(self.parconnect_from_src(gid_src, nc_dict['ampa'], self.apicaloblique_ampa))
+            self.ncfrom_L2Pyr.append(self.parconnect_from_src(gid_src, nc_dict['ampa'], self.basal2_ampa))
+            self.ncfrom_L2Pyr.append(self.parconnect_from_src(gid_src, nc_dict['ampa'], self.basal3_ampa))
 
+            nc_dict['nmda'] = {
+                'pos_src': pos,
+                'A_weight': p['gbar_L2Pyr_L2Pyr_nmda'],
+                'A_delay': 1.,
+                'lamtha': 3.
+            }
+
+            # parconnect_from_src(gid_presyn, nc_dict, postsyn)
             # nmda connections
-            self.ncfrom_L2Pyr.append(self.parconnect_from_src(gid_src, nc_dict, self.apicaloblique_nmda))
-            self.ncfrom_L2Pyr.append(self.parconnect_from_src(gid_src, nc_dict, self.basal2_nmda))
-            self.ncfrom_L2Pyr.append(self.parconnect_from_src(gid_src, nc_dict, self.basal3_nmda))
+            self.ncfrom_L2Pyr.append(self.parconnect_from_src(gid_src, nc_dict['nmda'], self.apicaloblique_nmda))
+            self.ncfrom_L2Pyr.append(self.parconnect_from_src(gid_src, nc_dict['nmda'], self.basal2_nmda))
+            self.ncfrom_L2Pyr.append(self.parconnect_from_src(gid_src, nc_dict['nmda'], self.basal3_nmda))
 
         # connections FROM L2 basket cells TO this L2Pyr cell
         for gid_src, pos in it.izip(gid_dict['L2_basket'], pos_dict['L2_basket']):
