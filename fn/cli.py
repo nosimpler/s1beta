@@ -1,15 +1,13 @@
 # cli.py - routines for the command line interface console s1sh.py
 #
-# v 1.7.7
-# rev 2013-01-27 (SL: more minor changes not active)
-# last major: (SL: minor changes, not really active)
+# v 1.7.8
+# rev 2013-01-29 (SL: added ylim as mandatory argument for pdipole agg mode)
+# last major: (SL: more minor changes not active)
 
 from cmd import Cmd
 from datetime import datetime
 import clidefs
-import multiprocessing
-import subprocess
-import os, signal
+import ast, multiprocessing, os, signal, subprocess
 import readline as rl
 import itertools as it
 import fileio as fio
@@ -55,9 +53,9 @@ class Console(Cmd):
     def do_debug(self, args):
         """Qnd function to test many other functions
         """
-        self.do_setdate('from_remote/2013-01-12')
-        self.do_load('testdist-ev-002')
-        self.do_pdipole('agg')
+        self.do_setdate('2013-01-23')
+        self.do_load('evproxearly-001')
+        self.do_pdipole('agg (-12e3, 0)')
         # self.do_replot('')
         # self.epscompress('spk')
         # self.do_psthgrid()
@@ -254,12 +252,27 @@ class Console(Cmd):
     #     fspec_list = self.simpaths.filelists['rawdpl']
 
     def do_pdipole(self, args):
-        """Regenerates plots in given directory
+        """Regenerates plots in given directory. Usage:
+           To run on current working directory and regenerate each individual plot: 'pdipole'
+           To run aggregates for all simulations in a directory: 'pdipole agg (ymin, max)'
+           Can also be run: 'pdipole agg []' (I think.)
         """
-        if args == 'agg':
+        if args.startswith('agg'):
+            arg_tmp = args.split('agg')
+
+            if len(arg_tmp) == 2:
+                # assume the second argument is the range if specified
+                ylim_read = ast.literal_eval(arg_tmp[-1].strip())
+
+                ylim = ylim_read
+
+            else:
+                ylim = []
+
+            print ylim, type(ylim)
             # run the aggregate dipole
             # using simpaths
-            pdipole_exp(self.ddata)
+            pdipole_exp(self.ddata, ylim)
 
         else:
             dfig_dpl = self.simpaths.dfigs['dipole']
@@ -321,10 +334,10 @@ class Console(Cmd):
     #     epslist = fio.file_match(self.simpaths.dfigs['spikes'], '.eps')
     #     clidefs.pdf_create(self.dsim, 'testing', epslist)
 
-    # def do_save(self, args):
-    #     """Copies the entire current directory over to the cppub directory
-    #     """
-    #     copy_to_pub(self.dsim)
+    def do_save(self, args):
+        """Copies the entire current directory over to the cppub directory
+        """
+        copy_to_pub(self.dsim)
 
     def do_runsim(self, args):
         """Run the simulation code

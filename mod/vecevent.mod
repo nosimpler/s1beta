@@ -46,10 +46,10 @@ VERBATIM
             if (i < size) {
                 etime = px[i];
                 index += 1.;
-            }else{
+            } else {
                 index = -1.;
             }
-        }else{
+        } else {
             index = -1.;
         }
     }

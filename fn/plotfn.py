@@ -1,8 +1,8 @@
 # plotfn.py - pall and possibly other plot routines
 #
-# v 1.7.7
-# rev 2013-01-27 (SL: commented on debug v. parallel modes)
-# last major: (SL: completing merge of alpha feeds)
+# v 1.7.8
+# rev 2013-01-29 (SL: Minor)
+# last major: (SL: commented on debug v. parallel modes)
 
 from pdipole import pdipole, pdipole_with_hist
 from spec import pspec, pspec_with_hist
@@ -71,14 +71,14 @@ def pall(ddir, p_exp, spec_results):
         spk_list = []
         dfig_list = []
 
-        # agregate all file types from individual expmts into lists 
+        # aggregate all file types from individual expmts into lists
         for expmt_group in ddir.expmt_groups:
             # these should be equivalent lengths
             param_list.extend(ddir.file_match(expmt_group, 'param'))
             dpl_list.extend(ddir.file_match(expmt_group, 'rawdpl'))
             spk_list.extend(ddir.file_match(expmt_group, 'rawspk'))
 
-            # append as many copies of epxt dfig dict as there were runs in expmt 
+            # append as many copies of expmt dfig dict as there were runs in expmt
             for i in range(len(ddir.file_match(expmt_group, 'param'))):
                 dfig_list.append(ddir.dfig[expmt_group])
 
@@ -131,10 +131,11 @@ def pdpl_pspec_with_hist(ddir, p_exp, spec_results):
         dpl_list.extend(ddir.file_match(expmt_group, 'rawdpl'))
         spk_list.extend(ddir.file_match(expmt_group, 'rawspk'))
 
-        # append as many copies of epxt dfig dict as there were runs in expmt 
+        # append as many copies of expmt dfig dict as there were runs in expmt
         for i in range(len(ddir.file_match(expmt_group, 'param'))):
             dfig_list.append(ddir.dfig[expmt_group])
 
+    # grab the key types
     key_types = p_exp.get_key_types()
 
     # apply async to compiled lists
@@ -144,18 +145,3 @@ def pdpl_pspec_with_hist(ddir, p_exp, spec_results):
 
     pl.close()
     pl.join()
-
-#         # run each experiment separately
-#         for expmt_group in ddir.expmt_groups:
-#             spec_results_expmt = [spec_result for spec_result in spec_results if expmt_group in spec_result.name]
-# 
-#             # these should be equivalent lengths
-#             param_list = ddir.file_match(expmt_group, 'param')
-#             dpl_list = ddir.file_match(expmt_group, 'rawdpl')
-#             spk_list = ddir.file_match(expmt_group, 'rawspk')
-# 
-#             # print ddir.dfig
-#             dfig = ddir.dfig[expmt_group]
-# 
-#             for f_param, f_spk, f_dpl, data_spec in it.izip(param_list, spk_list, dpl_list, spec_results_expmt):
-#                 pkernel(dfig, f_param, f_spk, f_dpl, data_spec, key_types)

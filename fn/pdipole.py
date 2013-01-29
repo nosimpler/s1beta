@@ -1,8 +1,8 @@
 # pdipole.py - plot dipole function
 #
-# v 1.6.21
-# rev 2013-01-16 (MS: yaxis ticks of alpha feed hist set externally based on bin sizes)
-# last major: (SL: completing merge of alpha feeds)
+# v 1.7.8
+# rev 2013-01-29 (SL: pdipole_exp now takes in runtime ylim to set)
+# last major: (MS: yaxis ticks of alpha feed hist set externally based on bin sizes)
 
 import os
 import itertools as it
@@ -88,7 +88,7 @@ def pdipole_with_hist(f_dpl, f_spk, dfig, p_dict, gid_dict, key_types):
     f.close()
 
 # for a given ddata (SimulationPaths object), find the mean dipole
-def pdipole_exp(ddata):
+def pdipole_exp(ddata, ylim=[]):
     # sim_prefix
     fprefix = ddata.sim_prefix
 
@@ -124,5 +124,9 @@ def pdipole_exp(ddata):
         # create the plot I guess?
         f = fig_std()
         f.ax0.plot(t_vec, x_dpl)
+
+        if len(ylim):
+            f.ax0.set_ylim(ylim)
+
         f.savepng(fname_fig)
         f.close()
