@@ -1,7 +1,7 @@
 # clidefs.py - these are all of the function defs for the cli
 #
-# v 1.6.20
-# rev 2013-01-16 (SL: completing merge of alpha feeds)
+# v 1.7.10
+# rev 2013-01-30 (MS: minor)
 # last major: (MS: add_alpha_feed_hist adds alpha feed histogram to dpl and spec plots)
 
 # Standard modules
@@ -317,8 +317,10 @@ def regenerate_plots(ddata):
 
     # generate data if no spec exists here
     if not spec_results:
-        print "No saved spec data found. Performing spec anaylsis ...",
+        print "No saved spec data found. Performing spec anaylsis ... ",
         spec_results = regenerate_spec_data(ddata)
+
+        print "now plotting"
 
     plotfn.pall(ddata, p_exp, spec_results)
 
@@ -329,8 +331,10 @@ def add_alpha_feed_hist(ddata):
 
     # generate data if no spec exists here
     if not spec_results:
-        print "No saved spec data found. Performing spec anaylsis ...",
+        print "No saved spec data found. Performing spec anaylsis ... ",
         spec_results = regenerate_spec_data(ddata)
+
+        print "Now plotting"
 
     plotfn.pdpl_pspec_with_hist(ddata, p_exp, spec_results)
 

@@ -1,7 +1,7 @@
 # plotfn.py - pall and possibly other plot routines
 #
-# v 1.7.8
-# rev 2013-01-29 (SL: Minor)
+# v 1.7.10
+# rev 2013-01-30 (MS: add debug and parallel modes for pdpl_pspec_with_hist)
 # last major: (SL: commented on debug v. parallel modes)
 
 from pdipole import pdipole, pdipole_with_hist
@@ -118,6 +118,8 @@ def pall(ddir, p_exp, spec_results):
 
 # Plots dipole and spec with alpha feed histograms
 def pdpl_pspec_with_hist(ddir, p_exp, spec_results):
+    runtype = 'parallel'
+
     # preallocate lists for use below
     param_list = []
     dpl_list = []
@@ -138,10 +140,15 @@ def pdpl_pspec_with_hist(ddir, p_exp, spec_results):
     # grab the key types
     key_types = p_exp.get_key_types()
 
-    # apply async to compiled lists
-    pl = Pool()
-    for dfig, f_param, f_spk, f_dpl, data_spec in it.izip(dfig_list, param_list, spk_list, dpl_list, spec_results):
-        pl.apply_async(pkernel_with_hist, (dfig, f_param, f_spk, f_dpl, data_spec, key_types), callback=cb)
+    if runtype is 'parallel':
+        # apply async to compiled lists
+        pl = Pool()
+        for dfig, f_param, f_spk, f_dpl, data_spec in it.izip(dfig_list, param_list, spk_list, dpl_list, spec_results):
+            pl.apply_async(pkernel_with_hist, (dfig, f_param, f_spk, f_dpl, data_spec, key_types), callback=cb)
 
-    pl.close()
-    pl.join()
+        pl.close()
+        pl.join()
+
+    elif runtype is 'debug':
+        for dfig, f_param, f_spk, f_dpl, data_spec in it.izip(dfig_list, param_list, spk_list, dpl_list, spec_results):
+            pkernel_with_hist(dfig, f_param, f_spk, f_dpl, data_spec, key_types)

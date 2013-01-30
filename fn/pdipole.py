@@ -1,8 +1,8 @@
 # pdipole.py - plot dipole function
 #
-# v 1.7.8
-# rev 2013-01-29 (SL: pdipole_exp now takes in runtime ylim to set)
-# last major: (MS: yaxis ticks of alpha feed hist set externally based on bin sizes)
+# v 1.7.10
+# rev 2013-01-30 (MS: Alpha feed histogram works when one feed does not exist)
+# last major: (SL: pdipole_exp now takes in runtime ylim to set)
 
 import os
 import itertools as it
@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from neuron import h as nrn
 from axes_create import fig_std, FigDplWithHist
-from spikefn import spikes_from_file, add_delay_times
+import spikefn 
 
 # file_info is (rootdir, subdir, 
 def pdipole(file_name, dfig, p_dict, key_types):
@@ -48,11 +48,14 @@ def pdipole_with_hist(f_dpl, f_spk, dfig, p_dict, gid_dict, key_types):
     t_vec = ddipole[:, 0]
     dp_total = ddipole[:, 1]
 
-    # get feed input times. spikes_from_file() imported from spikefn.py
-    s_dict = spikes_from_file(gid_dict, f_spk)
+    # get feed input times.
+    s_dict = spikefn.spikes_from_file(gid_dict, f_spk)
+
+    # check for existance of alpha feed keys in s_dict.
+    s_dict = spikefn.alpha_feed_verify(s_dict, p_dict)
 
     # Account for possible delays
-    s_dict = add_delay_times(s_dict, p_dict)
+    s_dict = spikefn.add_delay_times(s_dict, p_dict)
 
     # set number of bins for hist (150 bins/1000ms)
     bins = 150. * p_dict['tstop'] / 1000.
@@ -64,6 +67,7 @@ def pdipole_with_hist(f_dpl, f_spk, dfig, p_dict, gid_dict, key_types):
     f.ax['dipole'].plot(t_vec, dp_total)
 
     hist = {}
+
     # Proximal feed
     hist['feed_prox'] = f.ax['feed_prox'].hist(s_dict['alpha_feed_prox'].spike_list, bins, range=[t_vec[0], t_vec[-1]], color='red', label='Proximal feed')
 

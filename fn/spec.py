@@ -1,8 +1,8 @@
 # spec.py - Average time-frequency energy representation using Morlet wavelet method
 #
-# v 1.7.7
-# rev 2013-01-27 (SL: changed the t0 cutoff from 150 ms to 50 ms)
-# last major: (MS: yaxis ticks of alpha feed hist set externally based on bin sizes)
+# v 1.7.10
+# rev 2013-01-30 (MS: pspec_with_hist works when one feed does not exist)
+# last major: (SL: changed the t0 cutoff from 150 ms to 50 ms)
 
 import os
 import sys
@@ -16,7 +16,7 @@ from multiprocessing import Pool
 from neuron import h as nrn
 
 import fileio as fio
-from spikefn import spikes_from_file, add_delay_times
+import spikefn 
 from axes_create import FigSpec, FigSpecWithHist, fig_std
 
 # general spec write/read functions
@@ -199,15 +199,25 @@ def pspec(dspec, f_dpl, dfig, p_dict, key_types):
     f.ax['dipole'].plot(t_dpl, dp_total)
     t_stop = f.ax['dipole'].get_xlim()[1]
     x = (50., t_stop)
-    xticklabels = np.concatenate((np.array([x[0]]), np.arange(100., t_stop+1, 100.)))
+    xticks = np.concatenate((np.array([x[0]]), np.arange(100., t_stop+1, 100.)))
+    # xticklabels = np.concatenate((np.array([x[0]]), np.arange(100., t_stop+1, 100.)))
 
     # for now, set the xlim for the other one, force it!
     f.ax['dipole'].set_xlim(x)
     # f.ax['spec'].set_xlim(x)
     # for item in f.ax['dipole'].get_xticklabels():
     #     print item, item.get_text()
-    f.ax['dipole'].set_xticklabels(xticklabels)
-    f.ax['spec'].set_xticklabels(xticklabels)
+    f.ax['dipole'].set_xticks(xticks)
+    f.ax['spec'].set_xticks(xticks)
+    # f.ax['spec'].set_xticklabels(xticklabels)
+    # f.ax['dipole'].set_xticklabels(xticklabels)
+
+    # set yticks on spectrogram to include 0
+    # freq_max = f.ax['spec'].get_ylim()[0]
+    # print freq_max
+    # yticks = np.arange(0., freq_max+1, 5.)
+    # print yticks
+    # f.ax['spec'].set_yticks(yticks)
 
     # axis labels
     f.ax['spec'].set_xlabel('Time (ms)')
@@ -264,10 +274,13 @@ def pspec_with_hist(dspec, f_dpl, f_spk, dfig, p_dict, gid_dict, key_types):
     x = (50., f.ax['dipole'].get_xlim()[1])
 
     # grab alpha feed data. spikes_from_file() from spikefn.py
-    s_dict = spikes_from_file(gid_dict, f_spk)
+    s_dict = spikefn.spikes_from_file(gid_dict, f_spk)
+
+    # check for existance of alpha feed keys in s_dict.
+    s_dict = spikefn.alpha_feed_verify(s_dict, p_dict)
 
     # Account for possible delays
-    s_dict = add_delay_times(s_dict, p_dict)
+    s_dict = spikefn.add_delay_times(s_dict, p_dict)
 
     # set number of bins (150 bins/1000ms)
     bins = 150. * p_dict['tstop'] / 1000.

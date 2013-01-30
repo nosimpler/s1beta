@@ -1,7 +1,7 @@
 # axes_create.py - simple axis creation
 #
-# v 1.7.7
-# rev 2013-01-27 (SL: minor cleanup)
+# v 1.7.10
+# rev 2013-01-30 (MS: Minor formatting changes of alpha feed histograms)
 # last major: (MS: alpha feed hist y-axis ticks set based on bin size)
 
 # usage:
@@ -44,7 +44,7 @@ class FigDplWithHist():
         self.gs0 = gridspec.GridSpec(1, 1, wspace=0.05, hspace=0, bottom=0.10, top=0.55, left = 0.1, right = 0.90)
 
         # hist gridspec
-        self.gs1 = gridspec.GridSpec(2, 1, hspace=0.08 , bottom=0.60, top=0.95, left = 0.1, right = 0.90)
+        self.gs1 = gridspec.GridSpec(2, 1, hspace=0.14 , bottom=0.60, top=0.95, left = 0.1, right = 0.90)
 
         # create axes
         self.ax = {}
@@ -61,7 +61,7 @@ class FigDplWithHist():
         for key in self.ax.keys():
             if 'feed' in key:
                 max_n = max(hist_data[key][0])
-                self.ax[key].set_yticks(np.arange(1, max_n+1, np.ceil(max_n/4)))
+                self.ax[key].set_yticks(np.arange(0, max_n+2, np.ceil((max_n+2.)/4.)))
 
             if 'feed_dist' in key:
                 self.ax[key].set_xticklabels('')
@@ -93,7 +93,7 @@ class FigSpecWithHist():
         # when called, and it doesn't update the params of gs1
         self.gs0 = gridspec.GridSpec(1, 4, wspace=0.05, hspace=0., bottom=0.05, top=0.45, left=0.1, right=1.)
         self.gs1 = gridspec.GridSpec(2, 1, height_ratios=[1, 3], bottom=0.50, top=0.70, left=0.1, right=0.82)
-        self.gs2 = gridspec.GridSpec(2, 1, hspace=0.08 , bottom=0.75, top=0.95, left = 0.1, right = 0.82)
+        self.gs2 = gridspec.GridSpec(2, 1, hspace=0.14, bottom=0.75, top=0.95, left = 0.1, right = 0.82)
 
         self.ax = {}
         self.ax['spec'] = self.f.add_subplot(self.gs0[:, :])
@@ -107,7 +107,7 @@ class FigSpecWithHist():
         for key in self.ax.keys():
             if 'feed' in key:
                 max_n = max(hist_data[key][0])
-                self.ax[key].set_yticks(np.arange(1, max_n+2, np.ceil(max_n/4)))
+                self.ax[key].set_yticks(np.arange(0, max_n+2, np.ceil((max_n+2.)/4.)))
 
             if 'feed_dist' in key:
                 self.ax[key].set_xticklabels('')

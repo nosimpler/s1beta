@@ -1,7 +1,7 @@
 # spikefn.py - dealing with spikes
 #
-# v 1.6.21
-# rev 2013-01-16 (MS: minor)
+# v 1.7.10
+# rev 2013-01-30 (MS: Added fn to verify existance of alpha feed keys in s_dict)
 # last major: (SL: completing merge of alpha feeds)
 
 import fileio as fio
@@ -202,11 +202,40 @@ def spike_png(a, s_dict):
 def add_delay_times(s_dict, p_dict):
     # Only add delays if delay is same for L2 and L5
     # Proximal feed
-    if p_dict['input_prox_A_delay_L2'] == p_dict['input_prox_A_delay_L5']:
+    if s_dict['alpha_feed_prox'] and p_dict['input_prox_A_delay_L2'] == p_dict['input_prox_A_delay_L5']:
         s_dict['alpha_feed_prox'].spike_list = [num+p_dict['input_prox_A_delay_L2'] for num in s_dict['alpha_feed_prox'].spike_list]
 
     # Distal
-    if p_dict['input_dist_A_delay_L2'] == p_dict['input_dist_A_delay_L5']: 
+    if s_dict['alpha_feed_dist'] and p_dict['input_dist_A_delay_L2'] == p_dict['input_dist_A_delay_L5']: 
         s_dict['alpha_feed_dist'].spike_list = [num+p_dict['input_dist_A_delay_L2'] for num in s_dict['alpha_feed_dist'].spike_list]
 
     return s_dict
+
+# Checks for existance of alpha feed keys in s_dict. If they do not exist, then simulation used one or no feeds. Creates keys accordingly
+def alpha_feed_verify(s_dict, p_dict):
+    # check for existance of keys. If exist, do nothing
+    if 'alpha_feed_prox' and 'alpha_feed_dist' in s_dict.keys():
+        pass
+
+    # if they do not exist, create them and add proper data
+    else:
+        # if proximal feed's t0 < tstop, it exists and data is stored in s_dict['extinputs']. distal feed does not exist and gets empty list
+        if p_dict['t0_input_prox'] < p_dict['tstop']:
+            s_dict['alpha_feed_prox'] = s_dict['extinput']
+            
+            # make object on the fly with attribute 'spike_list' 
+            # A little hack-y
+            s_dict['alpha_feed_dist'] = type('emptyspike', (object,), {'spike_list': np.array([])})
+
+        # if distal feed's t0 < tstop, it exists and data is stored in s_dict['extinputs']. Proximal feed does not exist and gets empty list
+        elif p_dict['t0_input_dist'] < p_dict['tstop']:
+            s_dict['alpha_feed_prox'] = type('emptyspike', (object,), {'spike_list': np.array([])})
+            s_dict['alpha_feed_dist'] = s_dict['extinput']
+
+        # if neither had t0 < tstop, neither exists and both get empty list 
+        else:
+            s_dict['alpha_feed_prox'] = type('emptyspike', (object,), {'spike_list': np.array([])})
+            s_dict['alpha_feed_dist'] = type('emptyspike', (object,), {'spike_list': np.array([])})
+
+    return s_dict
+

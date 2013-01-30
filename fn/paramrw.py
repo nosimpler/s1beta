@@ -1,8 +1,8 @@
 # paramrw.py - routines for reading the param files
 #
-# v 1.7.5
-# rev 2013-01-24 (SL: checks for tstop inconsistencies in feeds)
-# last major: (SL: only add seeds to list that will change)
+# v 1.7.10
+# rev 2013-01-30 (MS: Alpha feed weights now scale if stdev is zero)
+# last major: (SL: checks for tstop inconsistencies in feeds)
 
 import re
 import fileio as fio
@@ -339,6 +339,15 @@ def feed_validate(p_ext, d, tstop):
         if d['tstop'] > tstop:
             # print "Warning: input parameter tstop exceeds value of simulation run. Resetting."
             d['tstop'] = tstop
+
+        # if stdev is zero, increase synaptic weights 10 fold to make single input equivalent to 10 simultaneous inputs
+        if not d['stdev']:
+            for key in d.keys():
+                if key.endswith('Pyr'):
+                    d[key] = (d[key][0] * 5., d[key][1])
+
+                elif key.endswith('Basket'):
+                    d[key] = (d[key][0] * 5., d[key][1])
 
         p_ext.append(d)
 
