@@ -1,8 +1,8 @@
 # paramrw.py - routines for reading the param files
 #
-# v 1.7.10
-# rev 2013-01-30 (MS: Alpha feed weights now scale if stdev is zero)
-# last major: (SL: checks for tstop inconsistencies in feeds)
+# v 1.7.11
+# rev 2013-01-30 (SL: string templates stored here)
+# last major: (MS: Alpha feed weights now scale if stdev is zero)
 
 import re
 import fileio as fio
@@ -125,6 +125,11 @@ class ExpParams():
 
         # pop off fixed known vals
         self.sim_prefix = self.p_all.pop('sim_prefix')
+
+        # create an experimental string prefix template
+        self.exp_prefix_str = self.sim_prefix+"-%03d"
+        self.trial_prefix_str = self.exp_prefix_str+"-T%02d"
+
         self.N_trials = int(self.p_all.pop('N_trials'))
         # self.prng_state = self.p_all.pop('prng_state')[1:-1]
 

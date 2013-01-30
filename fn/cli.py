@@ -1,8 +1,8 @@
 # cli.py - routines for the command line interface console s1sh.py
 #
-# v 1.7.8
-# rev 2013-01-29 (SL: added ylim as mandatory argument for pdipole agg mode)
-# last major: (SL: more minor changes not active)
+# v 1.7.11
+# rev 2013-01-30 (SL: some new functions, instructions, some new args)
+# last major: (SL: added ylim as mandatory argument for pdipole agg mode)
 
 from cmd import Cmd
 from datetime import datetime
@@ -53,9 +53,10 @@ class Console(Cmd):
     def do_debug(self, args):
         """Qnd function to test many other functions
         """
-        self.do_setdate('2013-01-23')
-        self.do_load('evproxearly-001')
-        self.do_pdipole('agg (-12e3, 0)')
+        self.do_setdate('2013-01-30')
+        self.do_load('test-002')
+        self.do_avgtrials('spec')
+        # self.do_pdipole('agg (-12e3, 0)')
         # self.do_replot('')
         # self.epscompress('spk')
         # self.do_psthgrid()
@@ -86,13 +87,21 @@ class Console(Cmd):
 
     def do_load(self, args):
         """Load parameter file and regens all vars
+           Date needs to be set correctly for this to work. See 'help setdate'
+           Usage example:
+           [s1sh] setdate 2013-01-01
+           [s1sh] load mucomplex-000
         """
+        # dir_check is the attempt at creating this directory
         dir_check = os.path.join(self.dproj, self.ddate, args)
 
+        # check existence of the path
         if os.path.exists(dir_check):
-            self.dsim = dir_check
+            # create blank ddata structure from SimPaths
             self.ddata = fio.SimulationPaths()
-            self.ddata.read_sim(self.dproj, self.dsim)
+
+            # set dsim after using ddata's readsim method
+            self.dsim = self.ddata.read_sim(self.dproj, dir_check)
 
         else:
             print dir_check
@@ -125,6 +134,12 @@ class Console(Cmd):
             print "Something went wrong here."
 
     def do_giddict(self, args):
+        pass
+
+    def do_dipolemin(self, args):
+        """Find the minimum of a particular dipole
+           Usage: dipolemin on <simrun> T<trial> in [interval]
+        """
         pass
 
     def do_file(self, args):
@@ -228,7 +243,8 @@ class Console(Cmd):
     def do_avgtrials(self, args):
         """Averages raw dipole data over all trials
         """
-        clidefs.avg_over_trials(self.ddata, self.dsim, args)
+        datatype = args
+        clidefs.avg_over_trials(self.ddata, datatype)
 
     def do_specanalysis(self, args):
         """Regenerates spec data and saves it to proper exmpt directories

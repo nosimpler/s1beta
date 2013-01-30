@@ -1,7 +1,7 @@
 # clidefs.py - these are all of the function defs for the cli
 #
-# v 1.7.10
-# rev 2013-01-30 (MS: minor)
+# v 1.7.11
+# rev 2013-01-30 (SL: Major changes to avg_over_trials)
 # last major: (MS: add_alpha_feed_hist adds alpha feed histogram to dpl and spec plots)
 
 # Standard modules
@@ -141,70 +141,91 @@ def exec_pwr(ddata):
 def exec_rates(ddata):
     spk.calc_rates(ddata)
 
-# Just run the autoplot function independently
-# do_plot
+# averages raw dipole or raw spec over all trials
+def avg_over_trials(ddata, datatype):
+    # create the relevant key for the data
+    datakey = 'raw' + datatype
+    datakey_avg = 'avg' + datatype
 
-def avg_over_trials(ddata, dsim, dtype):
-    # averages raw dipole or raw spec over all trials
+    # assumes N_Trials are the same in both
+    p_exp = paramrw.ExpParams(ddata.fparam)
+    sim_prefix = p_exp.sim_prefix
+    N_trials = p_exp.N_trials
 
-    # compile paths to saved data
-    if dtype == 'dpl':
-        file_list = fio.file_match(ddata.dsim, '-dpl.txt')
-
-    elif dtype == 'spec':
-        file_list = fio.file_match(ddata.dsim, '-spec.npz')
-        
-        if not file_list:
-            print "No saved spec data found. Please execute specanalysis"
-            return 0
+    # prefix strings
+    exp_prefix_str = p_exp.exp_prefix_str
+    trial_prefix_str = p_exp.trial_prefix_str
 
     # Averaging must be done per expmt
     for expmt_group in ddata.expmt_groups:
-        # create avg'ed data directory
-        dname = os.path.join(dsim, expmt_group, 'raw'+dtype, 'avg'+dtype)
+        ddatatype = ddata.dfig[expmt_group][datakey]
 
-        try:
-            os.makedirs(dname)
+        param_list = ddata.file_match(expmt_group, 'param')
+        rawdata_list = ddata.file_match(expmt_group, datakey)
 
-        except OSError:
-            print "Averaged %s data already exits. Quitting now..." %dtype
-            break
+        # if nothing in the raw data list, then generate it for spec
+        if datakey == 'rawspec':
+            if not len(rawdata_list):
+                # generate the data!
+                regenerate_spec_data(ddata)
+                rawdata_list = ddata.file_match(expmt_group, datakey)
 
-        # list of files in expmt
-        expmt_file_list = [path for path in file_list if expmt_group in path]
+        # simple length check, but will proceed bluntly anyway.
+        # this will result in truncated lists, per it.izip function
+        if len(param_list) != len(rawdata_list):
+            print "warning, some weirdness detected in list length in avg_over_trials. Check yo' lengths!"
 
-        # all trials in expmt - includes duplicates
-        total_trials_list = [path.split('/')[-1].split('T')[0] for path in expmt_file_list]
+        # number of unique simulations, per trial
+        # this had better be equivalent as an integer or a float!
+        N_unique = len(param_list) / N_trials
 
-        # all trials without duplicates
-        trials_list = list(set(total_trials_list))
+        # go through the unique simulations
+        for i in range(N_unique):
+            prefix_unique = exp_prefix_str % i
+            fprefix_long = os.path.join(ddatatype, prefix_unique)
 
-        # Average data for each trial
-        for trial in trials_list:
-            paths_for_avg = [path for path in expmt_file_list if trial in path]
+            # create the sublist of just these trials
+            unique_list = [rawdatafile for rawdatafile in rawdata_list if rawdatafile.startswith(fprefix_long)]
 
+            # one filename per unique
+            # length of the unique list is the number of trials for this sim, should match N_trials
+            fname_unique = ddata.create_filename(expmt_group, datakey_avg, prefix_unique)
+
+            # Average data for each trial
             # average dipole data
-            if dtype == 'dpl':
-                file_name = os.path.join(dsim, expmt_group, 'rawdpl', 'avgdpl', trial+'avgdpl.txt') 
+            if datakey == 'rawdpl':
+                for file in unique_list:
+                    x_tmp = np.loadtxt(open(file, 'r'))
 
-                # load data into numpy array and avg by summing and dividing by n_trials
-                data_for_avg = np.array([np.loadtxt(path) for path in paths_for_avg])
-                avg_data = data_for_avg.sum(axis=0)/data_for_avg.shape[0]
+                    if file is unique_list[0]:
+                        # assume time vec stays the same throughout
+                        t_vec = x_tmp[:, 0]
+                        x_dpl = x_tmp[:, 1]
 
-                np.savetxt(file_name, avg_data, '%5.4f')
+                    else:
+                        x_dpl += x_tmp[:, 1]
+
+                # poor man's mean
+                x_dpl /= len(unique_list)
+
+                # write this data to the file
+                # np.savetxt(fname_unique, avg_data, '%5.4f')
+                with open(fname_unique, 'w') as f:
+                    for t, x in it.izip(t_vec, x_dpl):
+                        f.write("%03.3f\t%5.4f\n" % (t, x))
 
             # average spec data
-            elif dtype == 'spec':
-                file_name = os.path.join(dsim, expmt_group, 'rawspec', 'avgspec', trial+'avgspec.npz') 
+            elif datakey == 'rawspec':
                 # load TFR data into np array and avg by summing and dividing by n_trials 
-                data_for_avg = np.array([np.load(path)['TFR'] for path in paths_for_avg])
-                avg_data = data_for_avg.sum(axis=0)/data_for_avg.shape[0]
+                data_for_avg = np.array([np.load(file)['TFR'] for file in unique_list])
+                spec_avg = data_for_avg.sum(axis=0)/data_for_avg.shape[0]
 
-                # load time and freq vectors for to be saved with avg TFR data
-                timevec = np.load(paths_for_avg[0])['time']
-                freqvec = np.load(paths_for_avg[0])['freq']
+                # load time and freq vectors from the first item on the list, assume all same
+                timevec = np.load(unique_list[0])['time']
+                freqvec = np.load(unique_list[0])['freq']
 
-                np.savez_compressed(file_name, time=timevec, freq=freqvec, TFR=avg_data)
+                # save the aggregate info
+                np.savez_compressed(fname_unique, time=timevec, freq=freqvec, TFR=spec_avg)
 
 def regenerate_spec_data(ddata):
     # regenerates and saves spec data

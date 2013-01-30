@@ -1,8 +1,8 @@
 # fileio.py - general file input/output functions
 #
-# v 1.7.0
-# rev 2013-01-23 (SL: removed old prng state stuff)
-# last rev: (SL: completing merge of alpha feeds)
+# v 1.7.11
+# rev 2013-01-30 (SL: Added avg data types, clean up, spelling)
+# last rev: (SL: removed old prng state stuff)
 
 import datetime, fnmatch, os, shutil, sys
 import itertools as it
@@ -33,12 +33,6 @@ def file_spike_tmp(dproj):
     filename_spikes = 'spikes_tmp.spk'
     file_spikes = os.path.join(dproj, filename_spikes)
     return file_spikes
-
-# create temporary prng pickle file
-# def file_prng_tmp(dproj):
-#     filename_prng = 'prng_tmp.pyp'
-#     f_prng = os.path.join(dproj, filename_prng)
-#     return f_prng
 
 # this is ugly, potentially. sorry, future
 # i.e will change when the file name format changes
@@ -76,15 +70,14 @@ def fparam_match_minimal(dsim, p_exp):
     # Complete list of all param dicts used in simulation
     fparam_list_complete = file_match(dsim, '-param.txt')
 
-    # List of indeces from which to pull param dicts from fparam_list_complete
+    # List of indices from which to pull param dicts from fparam_list_complete
     N_trials = p_exp.N_trials
-    indeces = np.arange(0, len(fparam_list_complete), N_trials)
+    indexes = np.arange(0, len(fparam_list_complete), N_trials)
 
     # Pull unique param dicts from fparam_list_complete
-    fparam_list_minimal = [fparam_list_complete[ind] for ind in indeces]
+    fparam_list_minimal = [fparam_list_complete[ind] for ind in indexes]
 
     return fparam_list_minimal
-    
 
 # check any directory
 def dir_check(d):
@@ -100,19 +93,23 @@ def dir_create(d):
         os.makedirs(d)
 
 # creates data dirs and a dictionary of useful types
+# self.dfig is a dictionary of experiments, which is each a dictionary of data type
+# keys and the specific directories that contain them.
 class SimulationPaths():
     def __init__(self):
         # hard coded data types
         # fig extensions are not currently being used as well as they could be
+        # add new directories here to be automatically created for every simulation
         self.__datatypes = {
             'rawspk': '-spk.txt',
             'rawdpl': '-dpl.txt',
             'rawspec': '-spec.npz',
+            'avgdpl': '-dplavg.txt',
+            'avgspec': '-specavg.npz',
             'figspk': '-spk.eps',
             'figdpl': '-dpl.eps',
             'figspec': '-spec.eps',
             'param': '-param.txt',
-            # 'prngstate': '-prng.npz',
         }
 
     # reads sim information based on sim directory and param files
@@ -129,10 +126,7 @@ class SimulationPaths():
         # create dfig
         self.dfig = self.__read_dirs()
 
-        # old recipe
-        # self.filelists = self.__getfiles()
-        # self.dfigs = self.__dfigs_create()
-        # self.expnames = self.__get_exp_names()
+        return self.dsim
 
     # only run for the creation of a new simulation
     def create_new_sim(self, dproj, expmt_groups, sim_prefix='test'):
@@ -264,42 +258,41 @@ class SimulationPaths():
 
     # *** OLD METHODS FROM OLD SIMULATIONPATHS ***
     # grab lists of non-fig files
-    def __getfiles(self):
-        filelists = {}
-        for key in self.datatypes:
-            if not key.startswith('fig'):
-                subdir = os.path.join(self.dsim, key)
-                fext = self.datatypes[key]
-                filelists[key] = file_match(subdir, fext)
+    # def __getfiles(self):
+    #     filelists = {}
+    #     for key in self.datatypes:
+    #         if not key.startswith('fig'):
+    #             subdir = os.path.join(self.dsim, key)
+    #             fext = self.datatypes[key]
+    #             filelists[key] = file_match(subdir, fext)
 
-        return filelists
+    #     return filelists
 
-    # simple path creations for figures
-    def __dfigs_create(self):
-        return {
-            'spikes': os.path.join(self.dsim, 'figspk'),
-            'dipole': os.path.join(self.dsim, 'figdpl'),
-            'spec': os.path.join(self.dsim, 'figspec'),
-        }
+    # # simple path creations for figures
+    # def __dfigs_create(self):
+    #     return {
+    #         'spikes': os.path.join(self.dsim, 'figspk'),
+    #         'dipole': os.path.join(self.dsim, 'figdpl'),
+    #         'spec': os.path.join(self.dsim, 'figspec'),
+    #     }
 
-    # these are the "experiment" names (versus individual trials)
-    def __get_exp_names(self):
-        expnames = []
-        # Reads the unique experiment names
-        for file in self.filelists['param']:
-            # get the parts of the name we care about
-            parts = file.split('/')[-1].split('.')[0].split('-')[:2]
-            name = parts[0] + '-' + parts[1]
+    # # these are the "experiment" names (versus individual trials)
+    # def __get_exp_names(self):
+    #     expnames = []
+    #     # Reads the unique experiment names
+    #     for file in self.filelists['param']:
+    #         # get the parts of the name we care about
+    #         parts = file.split('/')[-1].split('.')[0].split('-')[:2]
+    #         name = parts[0] + '-' + parts[1]
 
-            if name not in expnames:
-                expnames.append(name)
+    #         if name not in expnames:
+    #             expnames.append(name)
 
-        return expnames
+    #     return expnames
 
     def exp_files_of_type(self, datatype):
         # create dict of experiments
         d = dict.fromkeys(self.expmt_groups)
-        # d = dict.fromkeys(self.expnames)
 
         # create file lists that match the dict keys for only files for this experiment
         # this all would be nicer with a freaking folder

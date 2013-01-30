@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # s1run.py - primary run function for s1 project
 #
-# v 1.7.6
-# rev 2013-01-24 (SL: commented out the optimize function for now)
-# last major: (SL: fixed bug in prng seed, fixed timers)
+# v 1.7.11
+# rev 2013-01-30 (SL: cleanup, using new string templates)
+# last major: (SL: commented out the optimize function for now)
 
 import os
 import sys
@@ -12,12 +12,6 @@ import shutil
 import numpy as np
 from mpi4py import MPI
 from multiprocessing import Pool
-
-try:
-    import cPickle as pickle
-
-except ImportError:
-    import pickle
 
 from neuron import h as nrn
 nrn.load_file("stdrun.hoc")
@@ -140,7 +134,6 @@ def exec_runsim(f_psim):
 
                     # print the run number
                     print "Run %i of %i" % (n, N_total_runs-1),
-                    # print "Run %i of %i" % (i*N_trialruns+j, N_total_runs-1),
 
                 # global variable bs, should be node-independent
                 nrn("dp_total = 0.")
@@ -186,7 +179,8 @@ def exec_runsim(f_psim):
                 nrn.dt = p['dt']
 
                 # create prefix for files everyone knows about
-                exp_prefix = "%s-%03d-T%02d" % (p_exp.sim_prefix, i, j)
+                exp_prefix = p_exp.trial_prefix_str % (i, j)
+                # exp_prefix = "%s-%03d-T%02d" % (p_exp.sim_prefix, i, j)
 
                 # spike file needs to be known by all nodes
                 file_spikes_tmp = fio.file_spike_tmp(dproj)
@@ -242,6 +236,7 @@ def exec_runsim(f_psim):
                             f.write("%03.3f\t%5.4f\n" % (t_vec.x[k], dp_rec.x[k]))
 
                     # write the params, but add a trial number
+                    p['Sim_No'] = i
                     p['Trial'] = j
                     p['exp_prefix'] = exp_prefix
 
