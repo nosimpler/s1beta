@@ -1,6 +1,6 @@
 # ptest.py - plot test function
 #
-# v 0.4.2
+# v 1.7.11a
 # rev 2012-08-23 (SL: created)
 # last major:
 
@@ -9,10 +9,10 @@ mpl.use("Agg")
 
 import matplotlib.pyplot as plt
 from neuron import h as nrn
-from axes_create import fig_std
+from axes_create import FigStd
 
 def ptest(t_vec, v_e, v_i):
-    testfig = fig_std()
+    testfig = FigStd()
     testfig.ax0.hold(True)
 
     testfig.ax0.plot(t_vec, v_e)

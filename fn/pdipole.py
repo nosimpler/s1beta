@@ -1,6 +1,6 @@
 # pdipole.py - plot dipole function
 #
-# v 1.7.10
+# v 1.7.11a
 # rev 2013-01-30 (MS: Alpha feed histogram works when one feed does not exist)
 # last major: (SL: pdipole_exp now takes in runtime ylim to set)
 
@@ -9,7 +9,7 @@ import itertools as it
 import matplotlib.pyplot as plt
 import numpy as np
 from neuron import h as nrn
-from axes_create import fig_std, FigDplWithHist
+from axes_create import FigStd, FigDplWithHist
 import spikefn 
 
 # file_info is (rootdir, subdir, 
@@ -24,7 +24,7 @@ def pdipole(file_name, dfig, p_dict, key_types):
     t_vec = ddipole[:, 0]
     dp_total = ddipole[:, 1]
 
-    f = fig_std()
+    f = FigStd()
     f.ax0.plot(t_vec, dp_total)
     # f.ax0.set_ylim(-4e4, 3e4)
 
@@ -126,7 +126,7 @@ def pdipole_exp(ddata, ylim=[]):
                 f.write("%03.3f\t%5.4f\n" % (t, x))
 
         # create the plot I guess?
-        f = fig_std()
+        f = FigStd()
         f.ax0.plot(t_vec, x_dpl)
 
         if len(ylim):

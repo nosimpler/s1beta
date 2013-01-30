@@ -1,11 +1,11 @@
 # axes_create.py - simple axis creation
 #
-# v 1.7.10
+# v 1.7.11a
 # rev 2013-01-30 (MS: Minor formatting changes of alpha feed histograms)
 # last major: (MS: alpha feed hist y-axis ticks set based on bin size)
 
 # usage:
-# testfig = fig_std()
+# testfig = FigStd()
 # testfig.ax0.plot(somedata)
 # plt.savefig('testfig.png')
 # testfig.close()
@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import numpy as np
 
-class fig_std():
+class FigStd():
     def __init__(self):
         self.f = plt.figure(figsize = (12, 6))
         font_prop = {'size': 8}
@@ -301,7 +301,7 @@ class fig_psthgrid():
 def testfn():
     x = np.random.rand(100)
 
-    # testfig = fig_std()
+    # testfig = FigStd()
     # testfig.ax0.plot(x)
 
     # testfig = fig_raster(100)

@@ -1,6 +1,6 @@
 # cell_tuning.py - tune individual cell types
 #
-# v 1.4.4
+# v 1.7.11a
 # rev 2012-11-26 (MS: Updated to work with present version of code)
 # last major: (SL: some minor changes, untested)
 
@@ -8,9 +8,9 @@
 import matplotlib as mpl 
 # mpl.use('Agg')
 
-# import plt and fig_std
+# import plt and FigStd
 import matplotlib.pyplot as plt 
-from ..fn.axes_create import fig_std
+from ..fn.axes_create import FigStd
 
 from neuron import h as nrn
 nrn.load_file("stdrun.hoc")
@@ -44,7 +44,7 @@ def stimulus(seg, file_prefix):
     data_file.close()
 
     # create a figure
-    testfig = fig_std()
+    testfig = FigStd()
     testfig.ax0.hold(True)
 
     # plot various bits of data

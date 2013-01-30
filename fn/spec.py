@@ -1,8 +1,8 @@
 # spec.py - Average time-frequency energy representation using Morlet wavelet method
 #
-# v 1.7.10
-# rev 2013-01-30 (MS: pspec_with_hist works when one feed does not exist)
-# last major: (SL: changed the t0 cutoff from 150 ms to 50 ms)
+# v 1.7.11a
+# rev 2013-01-30 (SL: FigStd)
+# last major: (MS: pspec_with_hist works when one feed does not exist)
 
 import os
 import sys
@@ -17,7 +17,7 @@ from neuron import h as nrn
 
 import fileio as fio
 import spikefn 
-from axes_create import FigSpec, FigSpecWithHist, fig_std
+from axes_create import FigSpec, FigSpecWithHist, FigStd
 
 # general spec write/read functions
 def write(fdata_spec, t_vec, f_vec, TFR):
@@ -403,7 +403,7 @@ def freqpwr_analysis(dspec):
     }
 
 def pfreqpwr(file_name, results_list, fparam_list, key_types):
-    f = fig_std()
+    f = FigStd()
     f.ax0.hold(True)
 
     legend_list = []
@@ -423,7 +423,7 @@ def pfreqpwr(file_name, results_list, fparam_list, key_types):
     f.save(file_name)
 
 def pmaxpwr(file_name, results_list, fparam_list):
-    f = fig_std()
+    f = FigStd()
     f.ax0.hold(True)
 
     # instantiate lists for storing x and y data

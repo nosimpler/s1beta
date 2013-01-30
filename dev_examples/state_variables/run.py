@@ -1,4 +1,8 @@
 # Example of accessing, saving, plotting state variables
+#
+# v 1.7.11a
+# rev 2013-01-30 (SL: FigStd)
+# last major:
 
 import sys
 sys.path.append("/Users/shane/sandbox/s1beta")
@@ -10,9 +14,9 @@ from neuron import h
 import matplotlib as mpl 
 mpl.use('Agg')
 
-# import plt and fig_std
+# import plt and FigStd
 import matplotlib.pyplot as plt 
-from plottools.axes_create import fig_std
+from plottools.axes_create import FigStd
 
 from L5_pyramidal import L5Pyr
 
@@ -67,7 +71,7 @@ def stimulus(seg, file_prefix):
     data_file.close()
 
     # create a figure
-    testfig = fig_std()
+    testfig = FigStd()
     testfig.ax0.hold(True)
 
     # plot various bits of data
