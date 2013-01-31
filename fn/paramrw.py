@@ -1,8 +1,8 @@
 # paramrw.py - routines for reading the param files
 #
-# v 1.7.11
-# rev 2013-01-30 (SL: string templates stored here)
-# last major: (MS: Alpha feed weights now scale if stdev is zero)
+# v 1.7.13
+# rev 2013-01-30 (SL: added relative time param to evoked response inputs)
+# last major: (SL: string templates stored here)
 
 import re
 import fileio as fio
@@ -413,28 +413,45 @@ def create_pext(p, tstop):
         'L5_basket': (p['gbar_evprox_early_L5Basket'], 1., p['sigma_t_evprox_early']),
         'prng_seedcore': int(p['prng_seedcore_evprox_early']),
         'lamtha_space': 3.,
-        'loc': 'proximal'
+        'loc': 'proximal',
     }
 
+    # see if relative start time is defined
+    if p['dt_evprox0_evdist'] == -1:
+        # if dt is -1, assign the input time based on the input param
+        t0_evdist = p['t_evdist']
+    else:
+        # use dt to set the relative timing
+        t0_evdist = p_unique['evprox0']['t0'] + p['dt_evprox0_evdist']
+
+    # relative timing between evprox0 and evprox1
+    # not defined by distal time
+    if p['dt_evprox0_evprox1'] == -1:
+        t0_evprox1 = p['t_evprox_late']
+    else:
+        t0_evprox1 = p_unique['evprox0']['t0'] + p['dt_evprox0_evprox1']
+
+    # next evoked input is distal
+    p_unique['evdist'] = {
+        't0': t0_evdist,
+        'L2_pyramidal': (p['gbar_evdist_L2Pyr'], 0.1, p['sigma_t_evdist']),
+        'L5_pyramidal': (p['gbar_evdist_L5Pyr'], 0.1, p['sigma_t_evdist']),
+        'L2_basket': (p['gbar_evdist_L2Basket'], 0.1, p['sigma_t_evdist']),
+        'prng_seedcore': int(p['prng_seedcore_evdist']),
+        'lamtha_space': 3.,
+        'loc': 'distal',
+    }
+
+    # next evoked input is proximal also
     p_unique['evprox1'] = {
-        't0': p['t_evprox_late'],
+        't0': t0_evprox1,
         'L2_pyramidal': (p['gbar_evprox_late_L2Pyr'], 0.1, p['sigma_t_evprox_late']),
         'L5_pyramidal': (p['gbar_evprox_late_L5Pyr'], 5., p['sigma_t_evprox_late']),
         'L2_basket': (p['gbar_evprox_late_L2Basket'], 0.1, p['sigma_t_evprox_late']),
         'L5_basket': (p['gbar_evprox_late_L5Basket'], 5., p['sigma_t_evprox_late']),
         'prng_seedcore': int(p['prng_seedcore_evprox_late']),
         'lamtha_space': 3.,
-        'loc': 'proximal'
-    }
-
-    p_unique['evdist'] = {
-        't0': p['t_evdist'],
-        'L2_pyramidal': (p['gbar_evdist_L2Pyr'], 0.1, p['sigma_t_evdist']),
-        'L5_pyramidal': (p['gbar_evdist_L5Pyr'], 0.1, p['sigma_t_evdist']),
-        'L2_basket': (p['gbar_evdist_L2Basket'], 0.1, p['sigma_t_evdist']),
-        'prng_seedcore': int(p['prng_seedcore_evdist']),
-        'lamtha_space': 3.,
-        'loc': 'distal'
+        'loc': 'proximal',
     }
 
     # this needs to create many feeds

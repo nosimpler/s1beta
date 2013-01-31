@@ -1,8 +1,8 @@
 # params_default.py - list of default params and values
 #
-# v 1.7.9
-# rev 2013-01-29 (SL: split up pyr-pyr ampa and nmda conductances)
-# last major: (SL: change prng system)
+# v 1.7.13
+# rev 2013-01-31 (SL: Added relative time to evoked feeds)
+# last major: (SL: split up pyr-pyr ampa and nmda conductances)
 
 # flat file of default values
 # tuples for different "experiments"
@@ -93,7 +93,7 @@ def get_params_default():
         'input_dist_A_weight_inh': 4e-5,
         'input_dist_A_delay_L2': 5.0,
         'input_dist_A_delay_L5': 5.0,
-        # 'input_dist_A_inh': 8e-5,
+        # 'input_dist_A_weight_inh': 8e-5,
 
         # evprox (early) feed strength
         'gbar_evprox_early_L2Pyr': 1e-3,
@@ -116,11 +116,13 @@ def get_params_default():
         't_evprox_early': 454.,
         'sigma_t_evprox_early': 2.5,
 
-        't_evprox_late': 564.,
-        'sigma_t_evprox_late': 7.,
-
+        'dt_evprox0_evdist': -1,
         't_evdist': 499.,
         'sigma_t_evdist': 6.,
+
+        'dt_evprox0_evprox1': -1,
+        't_evprox_late': 564.,
+        'sigma_t_evprox_late': 7.,
 
         # analysis
         'save_spec_data': 0,

@@ -138,3 +138,7 @@ gbar_L5Basket_L5Pyr: 2.5e-2
 gbar_L5Basket_L5Basket: 2e-2
 gbar_L5Pyr_L5Basket: 5e-4
 gbar_L2Pyr_L5Basket: 2.5e-4
+
+# new params from default
+dt_evprox0_evdist: -1
+dt_evprox0_evprox1: -1

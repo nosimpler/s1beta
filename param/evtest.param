@@ -138,3 +138,7 @@ prng_seedcore_evprox_late: 6
 # Numerics
 tstop: 100.
 dt: 0.025
+
+# new params from default
+dt_evprox0_evdist: -1
+dt_evprox0_evprox1: -1

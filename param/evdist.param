@@ -134,3 +134,7 @@ L5Basket_Gauss_mu: 2000.
 L5Basket_Gauss_sigma: 2.
 L5Basket_Pois_A_weight: 0.
 L5Basket_Pois_lamtha: 0.
+
+# new params from default
+dt_evprox0_evdist: -1
+dt_evprox0_evprox1: -1
