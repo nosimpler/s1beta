@@ -1,8 +1,8 @@
 # L2_basket.py - establish class def for layer 2 basket cells
 #
-# v 1.7.0
-# rev 2013-01-23 (SL: clean up)
-# last rev: (SL: Made evprox/dist more flexible)
+# v 1.7.14
+# rev 2013-01-31 (SL: removed autapses)
+# last rev: (SL: clean up)
 
 import itertools as it
 from neuron import h as nrn
@@ -46,14 +46,16 @@ class L2Basket(BasketSingle):
 
         # FROM other L2Basket cells
         for gid_src, pos in it.izip(gid_dict['L2_basket'], pos_dict['L2_basket']):
-            nc_dict = {
-                'pos_src': pos,
-                'A_weight': p['gbar_L2Basket_L2Basket'],
-                'A_delay': 1.,
-                'lamtha': 20.
-            }
+            # no autapses
+            if gid_src != gid:
+                nc_dict = {
+                    'pos_src': pos,
+                    'A_weight': p['gbar_L2Basket_L2Basket'],
+                    'A_delay': 1.,
+                    'lamtha': 20.
+                }
 
-            self.ncfrom_L2Basket.append(self.parconnect_from_src(gid_src, nc_dict, self.soma_gabaa))
+                self.ncfrom_L2Basket.append(self.parconnect_from_src(gid_src, nc_dict, self.soma_gabaa))
 
     # this function might make more sense as a method of net?
     # par: receive from external inputs

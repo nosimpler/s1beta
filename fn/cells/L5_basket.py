@@ -1,8 +1,8 @@
 # L5_basket.py - establish class def for layer 5 basket cells
 #
-# v 1.6.4ev
-# rev 2013-01-07 (SL: made evprox/dist more flexible)
-# last rev: (SL: added evdist)
+# v 1.7.14
+# rev 2013-01-31 (SL: removed autapses)
+# last rev: (SL: made evprox/dist more flexible)
 
 import itertools as it
 from neuron import h as nrn
@@ -33,15 +33,15 @@ class L5Basket(BasketSingle):
     def parconnect(self, gid, gid_dict, pos_dict, p):
         # FROM other L5Basket cells TO this cell
         for gid_src, pos in it.izip(gid_dict['L5_basket'], pos_dict['L5_basket']):
-            # if gid_src != gid:
-            nc_dict = {
-                'pos_src': pos,
-                'A_weight': p['gbar_L5Basket_L5Basket'],
-                'A_delay': 1.,
-                'lamtha': 20.
-            }
+            if gid_src != gid:
+                nc_dict = {
+                    'pos_src': pos,
+                    'A_weight': p['gbar_L5Basket_L5Basket'],
+                    'A_delay': 1.,
+                    'lamtha': 20.
+                }
 
-            self.ncfrom_L5Basket.append(self.parconnect_from_src(gid_src, nc_dict, self.soma_gabaa))
+                self.ncfrom_L5Basket.append(self.parconnect_from_src(gid_src, nc_dict, self.soma_gabaa))
 
         # FROM other L5Pyr cells TO this cell
         for gid_src, pos in it.izip(gid_dict['L5_pyramidal'], pos_dict['L5_pyramidal']):

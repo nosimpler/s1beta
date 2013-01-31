@@ -1,8 +1,8 @@
 # L5_pyramidal.py - establish class def for layer 5 pyramidal cells
 #
-# v 1.7.9
-# rev 2013-01-29 (SL: separated ampa/nmda conductances in e-e)
-# last rev: (SL: made evprox/dist more flexible)
+# v 1.7.14
+# rev 2013-01-31 (SL: removed autapses)
+# last rev: (SL: separated ampa/nmda conductances in e-e)
 
 from neuron import h as nrn
 from class_cell import Pyr
@@ -264,30 +264,30 @@ class L5Pyr(Pyr):
 
         # connections FROM L5Pyr TO here
         for gid_src, pos in it.izip(gid_dict['L5_pyramidal'], pos_dict['L5_pyramidal']):
-            # if gid_src != gid:
-            nc_dict['ampa'] = {
-                'pos_src': pos,
-                'A_weight': p['gbar_L5Pyr_L5Pyr_ampa'],
-                'A_delay': 1.,
-                'lamtha': 3.
-            }
+            if gid_src != gid:
+                nc_dict['ampa'] = {
+                    'pos_src': pos,
+                    'A_weight': p['gbar_L5Pyr_L5Pyr_ampa'],
+                    'A_delay': 1.,
+                    'lamtha': 3.
+                }
 
-            # ampa connections
-            self.ncfrom_L5Pyr.append(self.parconnect_from_src(gid_src, nc_dict['ampa'], self.apicaloblique_ampa))
-            self.ncfrom_L5Pyr.append(self.parconnect_from_src(gid_src, nc_dict['ampa'], self.basal2_ampa))
-            self.ncfrom_L5Pyr.append(self.parconnect_from_src(gid_src, nc_dict['ampa'], self.basal3_ampa))
+                # ampa connections
+                self.ncfrom_L5Pyr.append(self.parconnect_from_src(gid_src, nc_dict['ampa'], self.apicaloblique_ampa))
+                self.ncfrom_L5Pyr.append(self.parconnect_from_src(gid_src, nc_dict['ampa'], self.basal2_ampa))
+                self.ncfrom_L5Pyr.append(self.parconnect_from_src(gid_src, nc_dict['ampa'], self.basal3_ampa))
 
-            nc_dict['nmda'] = {
-                'pos_src': pos,
-                'A_weight': p['gbar_L5Pyr_L5Pyr_nmda'],
-                'A_delay': 1.,
-                'lamtha': 3.
-            }
+                nc_dict['nmda'] = {
+                    'pos_src': pos,
+                    'A_weight': p['gbar_L5Pyr_L5Pyr_nmda'],
+                    'A_delay': 1.,
+                    'lamtha': 3.
+                }
 
-            # nmda connections
-            self.ncfrom_L5Pyr.append(self.parconnect_from_src(gid_src, nc_dict['nmda'], self.apicaloblique_nmda))
-            self.ncfrom_L5Pyr.append(self.parconnect_from_src(gid_src, nc_dict['nmda'], self.basal2_nmda))
-            self.ncfrom_L5Pyr.append(self.parconnect_from_src(gid_src, nc_dict['nmda'], self.basal3_nmda))
+                # nmda connections
+                self.ncfrom_L5Pyr.append(self.parconnect_from_src(gid_src, nc_dict['nmda'], self.apicaloblique_nmda))
+                self.ncfrom_L5Pyr.append(self.parconnect_from_src(gid_src, nc_dict['nmda'], self.basal2_nmda))
+                self.ncfrom_L5Pyr.append(self.parconnect_from_src(gid_src, nc_dict['nmda'], self.basal3_nmda))
 
         # connections FROM L5Basket TO here
         for gid_src, pos in it.izip(gid_dict['L5_basket'], pos_dict['L5_basket']):
