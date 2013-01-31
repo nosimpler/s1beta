@@ -1,8 +1,8 @@
 # clidefs.py - these are all of the function defs for the cli
 #
-# v 1.7.11
-# rev 2013-01-30 (SL: Major changes to avg_over_trials)
-# last major: (MS: add_alpha_feed_hist adds alpha feed histogram to dpl and spec plots)
+# v 1.7.12
+# rev 2013-01-30 (SL: dipole_min_in_interval created)
+# last major: (SL: Major changes to avg_over_trials)
 
 # Standard modules
 import fnmatch, os, re, sys
@@ -140,6 +140,29 @@ def exec_pwr(ddata):
 
 def exec_rates(ddata):
     spk.calc_rates(ddata)
+
+# search for the min in a dipole over specified interval
+def dipole_min_in_interval(ddata, expmt_group, n_sim, n_trial, t_interval):
+    p_exp = paramrw.ExpParams(ddata.fparam)
+    trial_prefix = p_exp.trial_prefix_str % (n_sim, n_trial)
+
+    # list of all the dipoles
+    dpl_list = ddata.file_match(expmt_group, 'rawdpl')
+
+    # load the associated dipole file
+    # find the specific file
+    # assume just the first file
+    fdpl = [file for file in dpl_list if trial_prefix in file][0]
+
+    data = np.loadtxt(open(fdpl, 'r'))
+    t_vec = data[:, 0]
+    data_dpl = data[:, 1]
+
+    data_dpl_range = data_dpl[(t_vec >= t_interval[0]) & (t_vec <= t_interval[1])]
+    dpl_min_range = data_dpl_range.min()
+    t_min_range = t_vec[data_dpl == dpl_min_range]
+
+    print "Minimum value over t range %s was %4.4f at %4.4f." % (str(t_interval), dpl_min_range, t_min_range)
 
 # averages raw dipole or raw spec over all trials
 def avg_over_trials(ddata, datatype):

@@ -1,8 +1,8 @@
 # cli.py - routines for the command line interface console s1sh.py
 #
-# v 1.7.11
-# rev 2013-01-30 (SL: some new functions, instructions, some new args)
-# last major: (SL: added ylim as mandatory argument for pdipole agg mode)
+# v 1.7.12
+# rev 2013-01-30 (SL: new function dipolemin, fixed expmts)
+# last major: (SL: some new functions, instructions, some new args)
 
 from cmd import Cmd
 from datetime import datetime
@@ -53,9 +53,10 @@ class Console(Cmd):
     def do_debug(self, args):
         """Qnd function to test many other functions
         """
-        self.do_setdate('2013-01-30')
-        self.do_load('test-002')
-        self.do_avgtrials('spec')
+        self.do_setdate('from_remote/2013-01-23')
+        self.do_load('mubaseline-001')
+        # self.do_avgtrials('dpl')
+        self.do_dipolemin('in (mu, 0, 2) on [400., 410.]')
         # self.do_pdipole('agg (-12e3, 0)')
         # self.do_replot('')
         # self.epscompress('spk')
@@ -138,9 +139,33 @@ class Console(Cmd):
 
     def do_dipolemin(self, args):
         """Find the minimum of a particular dipole
-           Usage: dipolemin on <simrun> T<trial> in [interval]
+           Usage: dipolemin in (<expmt>, <simrun>, T<trial>) on [interval]
         """
-        pass
+        # look for first keyword
+        if args.startswith("in"):
+            try:
+                # split by 'in' to get the interval
+                s = args.split(" on ")
+
+                # values are then in first part of s
+                # yeah, this is gross, sorry. just parsing between parens for params
+                expmt_group, n_sim_str, n_trial_str = s[0][s[0].find("(")+1:s[0].find(")")].split(", ")
+                n_sim = int(n_sim_str)
+                n_trial = int(n_trial_str)
+
+                t_interval = ast.literal_eval(s[-1])
+
+                # last argument is supposed to be the t_interval
+                # n_sim = int(s[0].split(" ")[1])
+                # n_trial = int(s[0].split(" ")[-1][1:])
+                # t_interval = ast.literal_eval(s[-1])
+
+                clidefs.dipole_min_in_interval(self.ddata, expmt_group, n_sim, n_trial, t_interval)
+            except ValueError:
+                self.do_help('dipolemin')
+
+        else:
+            self.do_help('dipolemin')
 
     def do_file(self, args):
         """Attempts to open a new file of params
@@ -172,14 +197,13 @@ class Console(Cmd):
     #     print self.file_input
 
     def do_expmts(self, args):
-        """Show list of experiments
+        """Show list of experiments for active directory.
         """
-
-        if not len(self.expmts):
-            print "Attempting to generate expmt list"
-            self.expmts = paramrw.read_expmt_groups(self.file_input)
-
-        clidefs.prettyprint(self.expmts)
+        try:
+            clidefs.prettyprint(self.ddata.expmt_groups)
+        except AttributeError:
+            self.do_help('expmts')
+            print "No active directory?"
 
     def do_vars(self, args):
         """Show variables in simulation and their values
