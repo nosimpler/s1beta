@@ -1,8 +1,8 @@
 # spec.py - Average time-frequency energy representation using Morlet wavelet method
 #
-# v 1.7.11a
-# rev 2013-01-30 (SL: FigStd)
-# last major: (MS: pspec_with_hist works when one feed does not exist)
+# v 1.7.15
+# rev 2013-02-04 (MS: analyis takes max_freq as optional argument. pspec fns take xlim as optional argument)
+# last major: (SL: FigStd)
 
 import os
 import sys
@@ -30,33 +30,37 @@ def read(fdata_spec):
 
 class MorletSpec():
     # fdata_spec will be created based on fparam and fdata, a general time series
-    def __init__(self, fparam, fdata, fdata_spec, save_data):
+    def __init__(self, fparam, fdata, fdata_spec, max_freq=None, save_data=None):
         # Save variable portion of fdata_spec as identifying attribute
         self.name = fdata_spec
 
         # function is called this way because paramrw.read() returns 2 outputs
-        p_dict = paramrw.read(fparam)[1]
+        self.p_dict = paramrw.read(fparam)[1]
 
         # Import dipole data and remove extra dimensions from signal array. 
         data_raw = np.loadtxt(open(fdata, 'rb'))
         self.S = data_raw.squeeze()
 
+        # maximum frequency of analysis
+        if not max_freq:
+            max_freq = p_dict['spec_max_freq']    
+
         # cutoff time in ms
         self.tmin = 50.
 
         # Check that tstop is greater than tmin
-        if p_dict['tstop'] > self.tmin:
+        if self.p_dict['tstop'] > self.tmin:
             # Remove first self.tmin ms of simulation
-            self.S = self.S[self.tmin / p_dict['dt']+1:, 1]
+            self.S = self.S[self.tmin / self.p_dict['dt']:, 1]
 
             # Array of frequencies over which to sort
-            self.freqvec = np.arange(1., p_dict['spec_max_freq'])
+            self.freqvec = np.arange(1., max_freq)
 
             # Number of cycles in wavelet (>5 advisable)
             self.width = 7.
 
             # Calculate sampling frequency
-            self.fs = 1000./p_dict['dt']
+            self.fs = 1000./self.p_dict['dt']
 
             # Generate Spec data
             self.TFR = self.__traces2TFR()
@@ -65,7 +69,7 @@ class MorletSpec():
             # self.TFR = np.vstack([self.timevec, self.TFR])
 
             # Write data to file
-            if p_dict['save_spec_data'] or save_data:
+            if self.p_dict['save_spec_data'] or save_data:
                 write(fdata_spec, self.timevec, self.freqvec, self.TFR)
 
         else:
@@ -77,7 +81,7 @@ class MorletSpec():
 
         # range should probably be 0 to len(self.S_trans)
         # shift tvec to reflect change
-        self.timevec = 1000. * np.arange(1, len(self.S_trans)+1)/self.fs + self.tmin
+        self.timevec = 1000. * np.arange(1, len(self.S_trans)+1)/self.fs + self.tmin - self.p_dict['dt']
 
         B = np.zeros((len(self.freqvec), len(self.S_trans)))
  
@@ -158,7 +162,7 @@ class MorletSpec():
         return S
 
 # Spectral plotting kernel for ONE simulation run
-def pspec(dspec, f_dpl, dfig, p_dict, key_types):
+def pspec(dspec, f_dpl, dfig, p_dict, key_types, xlim=[0., 'tstop']):
     # if dspec is an instance of MorletSpec, get data from object
     if isinstance(dspec, MorletSpec):
         timevec = dspec.timevec
@@ -183,23 +187,41 @@ def pspec(dspec, f_dpl, dfig, p_dict, key_types):
     # fig_name = os.path.join(dfig, fprefix+'.eps')
     fig_name = os.path.join(dfig, fprefix+'.png')
 
+    # set xmin value
+    if xlim[0] > timevec[0]:
+        xmin = xlim[0]
+    else:
+        xmin = timevec[0]
+
+    # set xmax value
+    if xlim[1] == 'tstop':
+        xmax = p_dict['tstop']
+    else:
+        xmax = xlim[1]+1
+
+    # vector indeces corresponding to xmin and xmax
+    xmin_ind = xmin / p_dict['dt']
+    xmax_ind = xmax / p_dict['dt']
+
     # f.f is the figure handle!
     f = FigSpec()
-    pc = f.ax['spec'].imshow(TFR, extent=[timevec[0], timevec[-1], freqvec[-1], freqvec[0]], aspect='auto', origin='upper')
+
+    pc = f.ax['spec'].imshow(TFR[:,xmin_ind:xmax_ind], extent=[xmin, xmax, freqvec[-1], freqvec[0]], aspect='auto', origin='upper')
     f.f.colorbar(pc, ax=f.ax['spec'])
 
     # grab the dipole data
     data_dipole = np.loadtxt(open(f_dpl, 'r'))
 
     # assign vectors
-    t_dpl = data_dipole[:, 0]
-    dp_total = data_dipole[:, 1]
+    t_dpl = data_dipole[xmin_ind:xmax_ind, 0]
+    dp_total = data_dipole[xmin_ind:xmax_ind, 1]
 
     # plot and create an xlim
     f.ax['dipole'].plot(t_dpl, dp_total)
-    t_stop = f.ax['dipole'].get_xlim()[1]
-    x = (50., t_stop)
-    xticks = np.concatenate((np.array([x[0]]), np.arange(100., t_stop+1, 100.)))
+    # t_stop = f.ax['dipole'].get_xlim()[1]
+    x = (xmin, xmax)
+    xticks = np.concatenate((np.array([xmin]), np.arange(xmin+50., xmax+1, 100.)))
+    # xticks = np.concatenate((np.array([x[0]]), np.arange(100., tstop+1, 100.)))
     # xticklabels = np.concatenate((np.array([x[0]]), np.arange(100., t_stop+1, 100.)))
 
     # for now, set the xlim for the other one, force it!
@@ -231,7 +253,7 @@ def pspec(dspec, f_dpl, dfig, p_dict, key_types):
     f.close()
 
 # Spectral plotting kernel with alpha feed histogram for ONE simulation run
-def pspec_with_hist(dspec, f_dpl, f_spk, dfig, p_dict, gid_dict, key_types):
+def pspec_with_hist(dspec, f_dpl, f_spk, dfig, p_dict, gid_dict, key_types, xlim=[0., 'tstop']):
     # if dspec is an instance of MorletSpec,  get data from object
     if isinstance(dspec, MorletSpec):
         timevec = dspec.timevec
@@ -252,26 +274,43 @@ def pspec_with_hist(dspec, f_dpl, f_spk, dfig, p_dict, gid_dict, key_types):
         # Generate file prefix 
         fprefix = dspec.split('/')[-1].split('.')[0]
 
-    # Create the fig name in platform dependent manner. If OS, use eps. If linux, use png.
-    if sys.platform.startswith('darwin'):
-        fig_name = os.path.join(dfig, fprefix+'.eps')
+    # Create the fig name
+    fig_name = os.path.join(dfig, fprefix+'.png')
 
-    elif sys.platform.startswith('linux'):
-        fig_name = os.path.join(dfig, fprefix+'.png')
+    # set xmin value
+    if xlim[0] > timevec[0]:
+        xmin = xlim[0]
+    else:
+        xmin = timevec[0]
+
+    # set xmax value
+    if xlim[1] == 'tstop':
+        xmax = p_dict['tstop']
+    else:
+        xmax = xlim[1]
+
+    # vector indeces corresponding to xmin and xmax
+    xmin_ind = xmin / p_dict['dt']
+    xmax_ind = xmax / p_dict['dt']
 
     # f.f is the figure handle!
     f = FigSpecWithHist()
-    pc = f.ax['spec'].imshow(TFR, extent=[timevec[0], timevec[-1], freqvec[-1], freqvec[0]], aspect='auto', origin='upper')
+
+    pc = f.ax['spec'].imshow(TFR[:,xmin_ind:xmax_ind], extent=[xmin, xmax+1, freqvec[-1], freqvec[0]], aspect='auto', origin='upper')
+    # pc = f.ax['spec'].imshow(TFR, extent=[timevec[0], timevec[-1], freqvec[-1], freqvec[0]], aspect='auto', origin='upper')
     f.f.colorbar(pc, ax=f.ax['spec'])
 
     # grab the dipole data
     data_dipole = np.loadtxt(open(f_dpl, 'r'))
 
-    t_dpl = data_dipole[:, 0]
-    dp_total = data_dipole[:, 1]
+    t_dpl = data_dipole[xmin_ind:xmax_ind+1, 0]
+    dp_total = data_dipole[xmin_ind:xmax_ind+1, 1]
+    # t_dpl = data_dipole[:, 0]
+    # dp_total = data_dipole[:, 1]
 
     f.ax['dipole'].plot(t_dpl, dp_total)
-    x = (50., f.ax['dipole'].get_xlim()[1])
+    x = (xmin, xmax)
+    # x = (50., f.ax['dipole'].get_xlim()[1])
 
     # grab alpha feed data. spikes_from_file() from spikefn.py
     s_dict = spikefn.spikes_from_file(gid_dict, f_spk)
@@ -283,15 +322,15 @@ def pspec_with_hist(dspec, f_dpl, f_spk, dfig, p_dict, gid_dict, key_types):
     s_dict = spikefn.add_delay_times(s_dict, p_dict)
 
     # set number of bins (150 bins/1000ms)
-    bins = 150. * p_dict['tstop'] / 1000.
+    bins = 150. * (xmax - xmin) / 1000.
 
     hist = {}
 
     # Proximal feed
-    hist['feed_prox'] = f.ax['feed_prox'].hist(s_dict['alpha_feed_prox'].spike_list, bins, range=[timevec[0], timevec[-1]], color='red', label='Proximal feed')
+    hist['feed_prox'] = f.ax['feed_prox'].hist(s_dict['alpha_feed_prox'].spike_list, bins, range=[xmin, xmax], color='red', label='Proximal feed')
 
     # Distal feed
-    hist['feed_dist'] = f.ax['feed_dist'].hist(s_dict['alpha_feed_dist'].spike_list, bins, range=[timevec[0], timevec[-1]], color='green', label='Distal feed')
+    hist['feed_dist'] = f.ax['feed_dist'].hist(s_dict['alpha_feed_dist'].spike_list, bins, range=[xmin, xmax], color='green', label='Distal feed')
 
     # for now, set the xlim for the other one, force it!
     f.ax['dipole'].set_xlim(x)
@@ -327,7 +366,7 @@ def append_spec(spec_obj):
 
 # Does spec analysis for all files in simulation directory
 # ddir comes from fileio
-def analysis(ddir, p_exp, save_data=0):
+def analysis(ddir, p_exp, max_freq=None, save_data=None):
     # preallocate lists for use below
     param_list = []
     dpl_list = []
@@ -354,7 +393,7 @@ def analysis(ddir, p_exp, save_data=0):
     # perform analysis on all runs from all exmpts at same time
     pl = Pool()
     for fparam, fdpl, fspec in it.izip(param_list, dpl_list, spec_list):
-        pl.apply_async(MorletSpec, (fparam, fdpl, fspec, save_data), callback=append_spec)
+        pl.apply_async(MorletSpec, (fparam, fdpl, fspec, max_freq, save_data), callback=append_spec)
 
     pl.close()
     pl.join()

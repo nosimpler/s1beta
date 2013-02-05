@@ -1,8 +1,8 @@
 # cli.py - routines for the command line interface console s1sh.py
 #
-# v 1.7.12
-# rev 2013-01-30 (SL: new function dipolemin, fixed expmts)
-# last major: (SL: some new functions, instructions, some new args)
+# v 1.7.15
+# rev 2013-02-04 (MS: Specanalysis takes max_freq as optional argument. several plot fns can take xmin and xmax as args. See help for usage)
+# last major: (SL: new function dipolemin, fixed expmts)
 
 from cmd import Cmd
 from datetime import datetime
@@ -53,10 +53,12 @@ class Console(Cmd):
     def do_debug(self, args):
         """Qnd function to test many other functions
         """
-        self.do_setdate('from_remote/2013-01-23')
-        self.do_load('mubaseline-001')
+        self.do_setdate('2013-02-03')
+        self.do_load('test-002')
+        # self.do_specanalysis('max_freq=50')
+        self.do_addalphahist('--xmin=0 --xmax=500')
         # self.do_avgtrials('dpl')
-        self.do_dipolemin('in (mu, 0, 2) on [400., 410.]')
+        # self.do_dipolemin('in (mu, 0, 2) on [400., 410.]')
         # self.do_pdipole('agg (-12e3, 0)')
         # self.do_replot('')
         # self.epscompress('spk')
@@ -265,18 +267,48 @@ class Console(Cmd):
         fio.pngoptimize(self.simpaths.dsim)
 
     def do_avgtrials(self, args):
-        """Averages raw dipole data over all trials
+        """Averages raw dipole data over all trials. Must supply arg specifying which data type to avgerage over (dpl or spec)
         """
-        datatype = args
-        clidefs.avg_over_trials(self.ddata, datatype)
+        if not args:
+            print "You did not specify whether to avgerage dpl or spec data. Try again."
+
+        else:
+            datatype = args
+            clidefs.avg_over_trials(self.ddata, datatype)
 
     def do_specanalysis(self, args):
-        """Regenerates spec data and saves it to proper exmpt directories
+        """Regenerates spec data and saves it to proper exmpt directories. Usage:
+           Can pass arguments to set max_freq, tstart, and tstop of analysis
+           Args must be passed in form arg1=val, arg2=val, arg3=val
+           Can pass any combination/permutation of args or no args at all
         """
-        self.spec_results = clidefs.regenerate_spec_data(self.ddata)
+        # preallocate variables so they always exist
+        max_freq = None
+        tstart = None
+        tstop = None
+
+        # Parse args if they exist
+        if args:
+            arg_list = args.split(', ')
+
+            # Assign value to above variables if the value exists as input
+            for arg in arg_list:
+                if arg.startswith('max_freq'):
+                    max_freq = float(arg.split('=')[-1])
+
+                else:
+                    print "Did not recognize argument. Not doing anything with it" 
+
+                # elif arg.startswith('tstart'):
+                #     tstart = float(arg.split('=')[-1])
+ 
+                # elif arg.startswith('tstop'):
+                #     tstop = float(arg.split('=')[-1])
+
+        self.spec_results = clidefs.regenerate_spec_data(self.ddata, max_freq)
 
     def do_freqpwr(self, args):
-        """Averages spec power over time and plots freq vs power. Fn can act per expmt over over entire simulation. If maxpwr supplied as arg, also plots freq at which max avg pwr occurs v.s input freq
+        """Averages spec power over time and plots freq vs power. Fn can act per expmt or over entire simulation. If maxpwr supplied as arg, also plots freq at which max avg pwr occurs v.s input freq
         """
         if args == 'maxpwr':
             clidefs.freqpwr_analysis(self.ddata, self.dsim, maxpwr=1)
@@ -332,14 +364,70 @@ class Console(Cmd):
             pool.join()
 
     def do_replot(self, args):
-        """Regenerates plots in given directory
+        """Regenerates plots in given directory. Usage:
+           Can pass arguments to set xmin and xmax of plots
+           Args must be passed in form --xmin=val --xmax=val
+           Can pass none, one, or both args in any order
         """
-        clidefs.regenerate_plots(self.ddata)
+        # preallocate variables so they always exist
+        xmin = 0.
+        xmax = 'tstop'
+
+        # Parse args if they exist
+        if args:
+            arg_list = [arg for arg in args.split('--') if arg is not '']
+
+            # Assign value to above variables if the value exists as input
+            for arg in arg_list:
+                if arg.startswith('xmin'):
+                    xmin = float(arg.split('=')[-1])
+ 
+                elif arg.startswith('xmax'):
+                    xmax = float(arg.split('=')[-1])
+
+                else:
+                    print "Did not recognize argument %s. Not doing anything with it" %arg
+
+            # Check to ensure xmin less than xmax
+            if xmin and xmax:
+                if xmin > xmax:
+                    print "xmin greater than xmax. Defaulting to sim parameters"
+                    xmin = 0.
+                    xmax = 'tstop'
+
+        clidefs.regenerate_plots(self.ddata, [xmin, xmax])
+        # clidefs.regenerate_plots(self.ddata, xmin, xmax)
 
     def do_addalphahist(self, args):
         """Adds histogram of alpha feed input times to dpl and spec plots
         """
-        clidefs.add_alpha_feed_hist(self.ddata)
+        # preallocate variables so they always exist
+        xmin = 0.
+        xmax = 'tstop'
+
+        # Parse args if they exist
+        if args:
+            arg_list = [arg for arg in args.split('--') if arg is not '']
+
+            # Assign value to above variables if the value exists as input
+            for arg in arg_list:
+                if arg.startswith('xmin'):
+                    xmin = float(arg.split('=')[-1])
+ 
+                elif arg.startswith('xmax'):
+                    xmax = float(arg.split('=')[-1])
+
+                else:
+                    print "Did not recognize argument %s. Not doing anything with it" %arg
+
+            # Check to ensure xmin less than xmax
+            if xmin and xmax:
+                if xmin > xmax:
+                    print "xmin greater than xmax. Defaulting to sim parameters"
+                    xmin = 0.
+                    xmax = 'tstop'
+
+        clidefs.add_alpha_feed_hist(self.ddata, [xmin, xmax])
 
     def do_plotaverages(self, args):
         """Creates plots of averaged data

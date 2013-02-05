@@ -1,8 +1,8 @@
 # plotfn.py - pall and possibly other plot routines
 #
-# v 1.7.10
-# rev 2013-01-30 (MS: add debug and parallel modes for pdpl_pspec_with_hist)
-# last major: (SL: commented on debug v. parallel modes)
+# v 1.7.15
+# rev 2013-02-04 (MS: pall and pkernels take xlim as optional arg)
+# last major: (MS: add debug and parallel modes for pdpl_pspec_with_hist)
 
 from pdipole import pdipole, pdipole_with_hist
 from spec import pspec, pspec_with_hist
@@ -14,7 +14,7 @@ import itertools as it
 from multiprocessing import Pool
 
 # terrible handling of variables
-def pkernel(dfig, f_param, f_spk, f_dpl, data_spec, key_types):
+def pkernel(dfig, f_param, f_spk, f_dpl, data_spec, key_types, xlim=[0, 'tstop']):
     gid_dict, p_dict = paramrw.read(f_param)
     tstop = p_dict['tstop']
 
@@ -25,13 +25,13 @@ def pkernel(dfig, f_param, f_spk, f_dpl, data_spec, key_types):
 
     # plot kernels
     praster(gid_dict, tstop, f_spk, dfig_spk)
-    pdipole(f_dpl, dfig_dpl, p_dict, key_types)
-    pspec(data_spec, f_dpl, dfig_spec, p_dict, key_types)
+    pdipole(f_dpl, dfig_dpl, p_dict, key_types, xlim)
+    pspec(data_spec, f_dpl, dfig_spec, p_dict, key_types, xlim)
 
     return 0
 
 # Kernel for plotting dipole and spec with alpha feed histograms
-def pkernel_with_hist(dfig, f_param, f_spk, f_dpl, data_spec, key_types):
+def pkernel_with_hist(dfig, f_param, f_spk, f_dpl, data_spec, key_types, xlim=[0., 'tstop']):
     gid_dict, p_dict = paramrw.read(f_param)
     tstop = p_dict['tstop']
 
@@ -41,8 +41,8 @@ def pkernel_with_hist(dfig, f_param, f_spk, f_dpl, data_spec, key_types):
     dfig_spk = dfig['figspk']
 
     # plot kernels
-    pdipole_with_hist(f_dpl, f_spk, dfig_dpl, p_dict, gid_dict, key_types)
-    pspec_with_hist(data_spec, f_dpl, f_spk, dfig_spec, p_dict, gid_dict, key_types)
+    pdipole_with_hist(f_dpl, f_spk, dfig_dpl, p_dict, gid_dict, key_types, xlim)
+    pspec_with_hist(data_spec, f_dpl, f_spk, dfig_spec, p_dict, gid_dict, key_types, xlim)
 
     return 0
 
@@ -53,11 +53,11 @@ def cb(r):
 
 # plot function - this is sort of a stop-gap and shouldn't live here, really
 # reads all data except spec and gid_dict from files
-def pall(ddir, p_exp, spec_results):
+def pall(ddir, p_exp, spec_results, xlim=[0., 'tstop']):
     # runtype allows easy (hard coded switching between two modes)
     # either 'parallel' or 'debug'
-    runtype = 'parallel'
-    # runtype = 'debug'
+    # runtype = 'parallel'
+    runtype = 'debug'
 
     # create giant list of appropriate files and run them all at the same time
     if runtype is 'parallel':
@@ -85,7 +85,7 @@ def pall(ddir, p_exp, spec_results):
         # apply async to compiled lists
         pl = Pool()
         for dfig, f_param, f_spk, f_dpl, data_spec in it.izip(dfig_list, param_list, spk_list, dpl_list, spec_results):
-            pl.apply_async(pkernel, (dfig, f_param, f_spk, f_dpl, data_spec, key_types), callback=cb)
+            pl.apply_async(pkernel, (dfig, f_param, f_spk, f_dpl, data_spec, key_types, xlim), callback=cb)
 
         pl.close()
         pl.join()
@@ -114,10 +114,10 @@ def pall(ddir, p_exp, spec_results):
 
         # apply async to compiled lists
         for dfig, f_param, f_spk, f_dpl, data_spec in it.izip(dfig_list, param_list, spk_list, dpl_list, spec_results):
-           pkernel(dfig, f_param, f_spk, f_dpl, data_spec, key_types)
+           pkernel(dfig, f_param, f_spk, f_dpl, data_spec, key_types, xlim)
 
 # Plots dipole and spec with alpha feed histograms
-def pdpl_pspec_with_hist(ddir, p_exp, spec_results):
+def pdpl_pspec_with_hist(ddir, p_exp, spec_results, xlim=[0., 'tstop']):
     runtype = 'parallel'
 
     # preallocate lists for use below
@@ -144,11 +144,11 @@ def pdpl_pspec_with_hist(ddir, p_exp, spec_results):
         # apply async to compiled lists
         pl = Pool()
         for dfig, f_param, f_spk, f_dpl, data_spec in it.izip(dfig_list, param_list, spk_list, dpl_list, spec_results):
-            pl.apply_async(pkernel_with_hist, (dfig, f_param, f_spk, f_dpl, data_spec, key_types), callback=cb)
+            pl.apply_async(pkernel_with_hist, (dfig, f_param, f_spk, f_dpl, data_spec, key_types, xlim), callback=cb)
 
         pl.close()
         pl.join()
 
     elif runtype is 'debug':
         for dfig, f_param, f_spk, f_dpl, data_spec in it.izip(dfig_list, param_list, spk_list, dpl_list, spec_results):
-            pkernel_with_hist(dfig, f_param, f_spk, f_dpl, data_spec, key_types)
+            pkernel_with_hist(dfig, f_param, f_spk, f_dpl, data_spec, key_types, xlim)

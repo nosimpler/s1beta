@@ -1,8 +1,8 @@
 # clidefs.py - these are all of the function defs for the cli
 #
-# v 1.7.12
-# rev 2013-01-30 (SL: dipole_min_in_interval created)
-# last major: (SL: Major changes to avg_over_trials)
+# v 1.7.15
+# rev 2013-02-04 (MS: Some plot fns now take xlim as optional argument)
+# last major: (SL: dipole_min_in_interval created)
 
 # Standard modules
 import fnmatch, os, re, sys
@@ -250,10 +250,10 @@ def avg_over_trials(ddata, datatype):
                 # save the aggregate info
                 np.savez_compressed(fname_unique, time=timevec, freq=freqvec, TFR=spec_avg)
 
-def regenerate_spec_data(ddata):
+def regenerate_spec_data(ddata, max_freq):
     # regenerates and saves spec data
     p_exp = paramrw.ExpParams(ddata.fparam)
-    spec_results = spec.analysis(ddata, p_exp, save_data=1)
+    spec_results = spec.analysis(ddata, p_exp, max_freq, save_data=1)
 
     return spec_results
 
@@ -349,7 +349,8 @@ def freqpwr_analysis(ddata, dsim, maxpwr):
                     f_name = os.path.join(dsim, expmt_group, 'maxpwr-avg.png')
                     spec.pmaxpwr(f_name, partial_results_list, partial_fparam_list)
 
-def regenerate_plots(ddata):
+def regenerate_plots(ddata, xlim=[0, 'tstop']):
+# def regenerate_plots(ddata, xmin, xmax):
     # need p_exp, spec_results, gid_dict, and tstop.
     # fparam = fio.file_match(ddata.dsim, '.param')[0]
 
@@ -366,9 +367,9 @@ def regenerate_plots(ddata):
 
         print "now plotting"
 
-    plotfn.pall(ddata, p_exp, spec_results)
+    plotfn.pall(ddata, p_exp, spec_results, xlim)
 
-def add_alpha_feed_hist(ddata):
+def add_alpha_feed_hist(ddata, xlim=[0, 'tstop']):
     p_exp = paramrw.ExpParams(ddata.fparam)
 
     spec_results = fio.file_match(ddata.dsim, '-spec.npz')
@@ -380,7 +381,7 @@ def add_alpha_feed_hist(ddata):
 
         print "Now plotting"
 
-    plotfn.pdpl_pspec_with_hist(ddata, p_exp, spec_results)
+    plotfn.pdpl_pspec_with_hist(ddata, p_exp, spec_results, xlim)
 
 # plot data averaged over trials
 def plot_avg_data(ddata):

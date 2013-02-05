@@ -1,8 +1,8 @@
 # pdipole.py - plot dipole function
 #
-# v 1.7.11a
-# rev 2013-01-30 (MS: Alpha feed histogram works when one feed does not exist)
-# last major: (SL: pdipole_exp now takes in runtime ylim to set)
+# v 1.7.15
+# rev 2013-02-04 (MS: pdipole fns take xlim as optional argument)
+# last major: (MS: Alpha feed histogram works when one feed does not exist)
 
 import os
 import itertools as it
@@ -13,16 +13,25 @@ from axes_create import FigStd, FigDplWithHist
 import spikefn 
 
 # file_info is (rootdir, subdir, 
-def pdipole(file_name, dfig, p_dict, key_types):
+def pdipole(file_name, dfig, p_dict, key_types, xlim=[0, 'tstop']):
     # ddipole is dipole data
     ddipole = np.loadtxt(open(file_name, 'rb'))
 
     # split to find file prefix
     file_prefix = file_name.split('/')[-1].split('.')[0]
 
+    # set xmin value
+    xmin = xlim[0] / p_dict['dt']
+
+    # set xmax value
+    if xlim[1] == 'tstop':
+        xmax = p_dict['tstop'] / p_dict['dt']
+    else:
+        xmax = xlim[1] / p_dict['dt']
+
     # these are the vectors for now, but this is going to change
-    t_vec = ddipole[:, 0]
-    dp_total = ddipole[:, 1]
+    t_vec = ddipole[xmin:xmax+1, 0]
+    dp_total = ddipole[xmin:xmax+1, 1]
 
     f = FigStd()
     f.ax0.plot(t_vec, dp_total)
@@ -37,16 +46,25 @@ def pdipole(file_name, dfig, p_dict, key_types):
     f.close()
 
 # Plots dipole with histogram of alpha feed inputs
-def pdipole_with_hist(f_dpl, f_spk, dfig, p_dict, gid_dict, key_types):
+def pdipole_with_hist(f_dpl, f_spk, dfig, p_dict, gid_dict, key_types, xlim=[0., 'tstop']):
     # ddipole is dipole data
     ddipole = np.loadtxt(f_dpl)
 
     # split to find file prefix
     file_prefix = f_dpl.split('/')[-1].split('.')[0]
 
+    # set xmin value
+    xmin = xlim[0] / p_dict['dt']
+
+    # set xmax value
+    if xlim[1] == 'tstop':
+        xmax = p_dict['tstop'] / p_dict['dt']
+    else:
+        xmax = xlim[1] / p_dict['dt']
+
     # these are the vectors for now, but this is going to change
-    t_vec = ddipole[:, 0]
-    dp_total = ddipole[:, 1]
+    t_vec = ddipole[xmin:xmax+1, 0]
+    dp_total = ddipole[xmin:xmax+1, 1]
 
     # get feed input times.
     s_dict = spikefn.spikes_from_file(gid_dict, f_spk)
@@ -58,7 +76,7 @@ def pdipole_with_hist(f_dpl, f_spk, dfig, p_dict, gid_dict, key_types):
     s_dict = spikefn.add_delay_times(s_dict, p_dict)
 
     # set number of bins for hist (150 bins/1000ms)
-    bins = 150. * p_dict['tstop'] / 1000.
+    bins = 150. * (t_vec[-1] - t_vec[0]) / 1000.
 
     # Plotting
     f = FigDplWithHist()
