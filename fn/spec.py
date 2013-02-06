@@ -1,8 +1,8 @@
 # spec.py - Average time-frequency energy representation using Morlet wavelet method
 #
-# v 1.7.15
-# rev 2013-02-04 (MS: analyis takes max_freq as optional argument. pspec fns take xlim as optional argument)
-# last major: (SL: FigStd)
+# v 1.7.15a
+# rev 2013-02-06 (MS: Bug fixed in analysis. Debug option added to analysis)
+# last major: (MS: analyis takes max_freq as optional argument. pspec fns take xlim as optional argument)
 
 import os
 import sys
@@ -43,7 +43,7 @@ class MorletSpec():
 
         # maximum frequency of analysis
         if not max_freq:
-            max_freq = p_dict['spec_max_freq']    
+            max_freq = self.p_dict['spec_max_freq']    
 
         # cutoff time in ms
         self.tmin = 50.
@@ -367,6 +367,8 @@ def append_spec(spec_obj):
 # Does spec analysis for all files in simulation directory
 # ddir comes from fileio
 def analysis(ddir, p_exp, max_freq=None, save_data=None):
+    runtype = 'parallel'
+
     # preallocate lists for use below
     param_list = []
     dpl_list = []
@@ -391,15 +393,23 @@ def analysis(ddir, p_exp, max_freq=None, save_data=None):
         spec_list.extend([ddir.create_filename(expmt_group, 'rawspec', exp_prefix) for exp_prefix in exp_prefix_list])
 
     # perform analysis on all runs from all exmpts at same time
-    pl = Pool()
-    for fparam, fdpl, fspec in it.izip(param_list, dpl_list, spec_list):
-        pl.apply_async(MorletSpec, (fparam, fdpl, fspec, max_freq, save_data), callback=append_spec)
+    if runtype == 'parallel':
+        pl = Pool()
+        for fparam, fdpl, fspec in it.izip(param_list, dpl_list, spec_list):
+            pl.apply_async(MorletSpec, (fparam, fdpl, fspec, max_freq, save_data), callback=append_spec)
 
-    pl.close()
-    pl.join()
+        pl.close()
+        pl.join()
 
-    # sort the spec results by the spec object's name and return
-    return sorted(spec_results, key=lambda spec_obj: spec_obj.name)
+        # sort the spec results by the spec object's name and return
+        return sorted(spec_results, key=lambda spec_obj: spec_obj.name)
+
+    if runtype == 'debug':
+        for fparam, fdpl, fspec in it.izip(param_list, dpl_list, spec_list):
+            spec_results.append(MorletSpec(fparam, fdpl, fspec, max_freq, save_data))
+
+        return spec_results
+
 
 # returns spec results *only* for a given experimental group
 def from_expmt(spec_result_list, expmt_group):

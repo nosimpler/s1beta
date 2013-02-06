@@ -1,8 +1,8 @@
 # clidefs.py - these are all of the function defs for the cli
 #
-# v 1.7.15
-# rev 2013-02-04 (MS: Some plot fns now take xlim as optional argument)
-# last major: (SL: dipole_min_in_interval created)
+# v 1.7.15a
+# rev 2013-02-06 (MS: Bug fixed in regenerate_spec_data)
+# last major: (MS: Some plot fns now take xlim as optional argument)
 
 # Standard modules
 import fnmatch, os, re, sys
@@ -250,7 +250,7 @@ def avg_over_trials(ddata, datatype):
                 # save the aggregate info
                 np.savez_compressed(fname_unique, time=timevec, freq=freqvec, TFR=spec_avg)
 
-def regenerate_spec_data(ddata, max_freq):
+def regenerate_spec_data(ddata, max_freq=None):
     # regenerates and saves spec data
     p_exp = paramrw.ExpParams(ddata.fparam)
     spec_results = spec.analysis(ddata, p_exp, max_freq, save_data=1)
