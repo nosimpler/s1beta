@@ -74,16 +74,16 @@ gbar_evprox_early_L5Basket: {2e-3, 1e-3, 1e-3}
 t_evdist: 95.
 sigma_t_evdist: 6.
 gbar_evdist_L2Pyr: {4e-3, 1e-3, 1.05e-3}
-gbar_evdist_L2Basket: {2e-3, 5e-4, 5.02e-3}
+gbar_evdist_L2Basket: {2e-3, 5e-4, 5.02e-4}
 gbar_evdist_L5Pyr: {4e-3, 1e-3, 1.05e-3}
 
 # evprox (late) feed strength
 t_evprox_late: 160.
 sigma_t_evprox_late: 7.
-gbar_evprox_late_L2Pyr: {8e-2, 5e-3, 6.89e-3}
-gbar_evprox_late_L5Pyr: {8e-2, 2.7e-3, 6.89e-3}
-gbar_evprox_late_L2Basket: {4e-2, 2e-3, 3.471e-3}
-gbar_evprox_late_L5Basket: {4e-2, 1e-3, 3.471e-3}
+gbar_evprox_late_L2Pyr: {8e-2, 5.3e-3, 6.89e-3}
+gbar_evprox_late_L2Basket: {8e-2, 5.3e-3, 6.89e-3}
+gbar_evprox_late_L5Pyr: {4e-2, 2.7e-3, 6.89e-3}
+gbar_evprox_late_L5Basket: {4e-2, 2.7e-3, 3.471e-3}
 
 # analysis
 save_spec_data: 0

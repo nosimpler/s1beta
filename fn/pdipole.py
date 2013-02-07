@@ -1,8 +1,8 @@
 # pdipole.py - plot dipole function
 #
-# v 1.7.15
-# rev 2013-02-04 (MS: pdipole fns take xlim as optional argument)
-# last major: (MS: Alpha feed histogram works when one feed does not exist)
+# v 1.7.16
+# rev 2013-02-07 (SL: Removed (by way of comments) pdipole_exp in favor of avg_trials)
+# last major: (MS: pdipole fns take xlim as optional argument)
 
 import os
 import itertools as it
@@ -109,46 +109,48 @@ def pdipole_with_hist(f_dpl, f_spk, dfig, p_dict, gid_dict, key_types, xlim=[0.,
     plt.savefig(fig_name)
     f.close()
 
-# for a given ddata (SimulationPaths object), find the mean dipole
-def pdipole_exp(ddata, ylim=[]):
-    # sim_prefix
-    fprefix = ddata.sim_prefix
-
-    # go through each expmt
-    for expmt_group in ddata.expmt_groups:
-        # create the filename
-        dexp = ddata.dexpmt_dict[expmt_group]
-        fname_short = '%s-%s-dpl' % (fprefix, expmt_group)
-        fname_data = os.path.join(dexp, fname_short + '.txt')
-        fname_fig = os.path.join(ddata.dfig[expmt_group]['figdpl'], fname_short + '.png')
-
-        # grab the list of raw data dipoles in this expmt
-        dpl_list = ddata.file_match(expmt_group, 'rawdpl')
-
-        for file in dpl_list:
-            x_tmp = np.loadtxt(open(file, 'r'))
-            if file is dpl_list[0]:
-                # assume time vec stays the same throughout
-                t_vec = x_tmp[:, 0]
-                x_dpl = x_tmp[:, 1]
-
-            else:
-                x_dpl += x_tmp[:, 1]
-
-        # poor man's mean
-        x_dpl /= len(dpl_list)
-
-        # write this data to the file
-        with open(fname_data, 'w') as f:
-            for t, x in it.izip(t_vec, x_dpl):
-                f.write("%03.3f\t%5.4f\n" % (t, x))
-
-        # create the plot I guess?
-        f = FigStd()
-        f.ax0.plot(t_vec, x_dpl)
-
-        if len(ylim):
-            f.ax0.set_ylim(ylim)
-
-        f.savepng(fname_fig)
-        f.close()
+## for a given ddata (SimulationPaths object), find the mean dipole
+## this function should be deprecated in favor of one that goes through trials of each sim
+## but that function might need to be cleaned up
+# def pdipole_exp(ddata, ylim=[]):
+#     # sim_prefix
+#     fprefix = ddata.sim_prefix
+#
+#     # go through each expmt
+#     for expmt_group in ddata.expmt_groups:
+#         # create the filename
+#         dexp = ddata.dexpmt_dict[expmt_group]
+#         fname_short = '%s-%s-dpl' % (fprefix, expmt_group)
+#         fname_data = os.path.join(dexp, fname_short + '.txt')
+#         fname_fig = os.path.join(ddata.dfig[expmt_group]['figdpl'], fname_short + '.png')
+# 
+#         # grab the list of raw data dipoles in this expmt
+#         dpl_list = ddata.file_match(expmt_group, 'rawdpl')
+# 
+#         for file in dpl_list:
+#             x_tmp = np.loadtxt(open(file, 'r'))
+#             if file is dpl_list[0]:
+#                 # assume time vec stays the same throughout
+#                 t_vec = x_tmp[:, 0]
+#                 x_dpl = x_tmp[:, 1]
+# 
+#             else:
+#                 x_dpl += x_tmp[:, 1]
+# 
+#         # poor man's mean
+#         x_dpl /= len(dpl_list)
+# 
+#         # write this data to the file
+#         with open(fname_data, 'w') as f:
+#             for t, x in it.izip(t_vec, x_dpl):
+#                 f.write("%03.3f\t%5.4f\n" % (t, x))
+# 
+#         # create the plot I guess?
+#         f = FigStd()
+#         f.ax0.plot(t_vec, x_dpl)
+# 
+#         if len(ylim):
+#             f.ax0.set_ylim(ylim)
+# 
+#         f.savepng(fname_fig)
+#         f.close()

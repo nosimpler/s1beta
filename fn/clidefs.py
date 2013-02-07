@@ -1,8 +1,8 @@
 # clidefs.py - these are all of the function defs for the cli
 #
-# v 1.7.15a
-# rev 2013-02-06 (MS: Bug fixed in regenerate_spec_data)
-# last major: (MS: Some plot fns now take xlim as optional argument)
+# v 1.7.16
+# rev 2013-02-07 (SL: fixed some plot_avg stuff)
+# last major: (MS: Bug fixed in regenerate_spec_data)
 
 # Standard modules
 import fnmatch, os, re, sys
@@ -386,7 +386,7 @@ def add_alpha_feed_hist(ddata, xlim=[0, 'tstop']):
 # plot data averaged over trials
 def plot_avg_data(ddata):
     # avgdpl and avgspec data paths
-    dpl_list = fio.file_match(ddata.dsim, '-avgdpl.txt')
+    dpl_list = fio.file_match(ddata.dsim, '-dplavg.txt')
     spec_list = fio.file_match(ddata.dsim, '-avgspec.npz')
 
     print dpl_list
@@ -443,7 +443,8 @@ def plot_avg_data(ddata):
         pl.join()
 
     else:
-        print "No averaged sped data found either. Run avgtrials()."
+        print "No averaged spec data found. Run avgtrials()."
+        return 0
 
 # rsync command with excludetype input
 def sync_remote_data(droot, server_remote, dsubdir):

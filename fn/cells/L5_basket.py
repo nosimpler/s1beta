@@ -1,8 +1,8 @@
 # L5_basket.py - establish class def for layer 5 basket cells
 #
 # v 1.7.14
-# rev 2013-01-31 (SL: removed autapses)
-# last rev: (SL: made evprox/dist more flexible)
+# rev 2013-02-07 (SL: minor)
+# last rev: (SL: removed autapses)
 
 import itertools as it
 from neuron import h as nrn
@@ -38,7 +38,7 @@ class L5Basket(BasketSingle):
                     'pos_src': pos,
                     'A_weight': p['gbar_L5Basket_L5Basket'],
                     'A_delay': 1.,
-                    'lamtha': 20.
+                    'lamtha': 20.,
                 }
 
                 self.ncfrom_L5Basket.append(self.parconnect_from_src(gid_src, nc_dict, self.soma_gabaa))
@@ -48,9 +48,8 @@ class L5Basket(BasketSingle):
             nc_dict = {
                 'pos_src': pos,
                 'A_weight': p['gbar_L5Pyr_L5Basket'],
-                # 'A_weight': 5e-4,
                 'A_delay': 1.,
-                'lamtha': 3.
+                'lamtha': 3.,
             }
 
             self.ncfrom_L5Pyr.append(self.parconnect_from_src(gid_src, nc_dict, self.soma_ampa))
@@ -60,9 +59,8 @@ class L5Basket(BasketSingle):
             nc_dict = {
                 'pos_src': pos,
                 'A_weight': p['gbar_L2Pyr_L5Basket'],
-                # 'A_weight': 2.5e-4,
                 'A_delay': 1.,
-                'lamtha': 3.
+                'lamtha': 3.,
             }
 
             self.ncfrom_L2Pyr.append(self.parconnect_from_src(gid_src, nc_dict, self.soma_ampa))

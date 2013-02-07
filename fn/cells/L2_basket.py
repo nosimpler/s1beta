@@ -1,8 +1,8 @@
 # L2_basket.py - establish class def for layer 2 basket cells
 #
-# v 1.7.14
-# rev 2013-01-31 (SL: removed autapses)
-# last rev: (SL: clean up)
+# v 1.7.17
+# rev 2013-02-07 (SL: minor)
+# last rev: (SL: removed autapses)
 
 import itertools as it
 from neuron import h as nrn
@@ -39,7 +39,7 @@ class L2Basket(BasketSingle):
                 'pos_src': pos,
                 'A_weight': p['gbar_L2Pyr_L2Basket'],
                 'A_delay': 1.,
-                'lamtha': 3.
+                'lamtha': 3.,
             }
 
             self.ncfrom_L2Pyr.append(self.parconnect_from_src(gid_src, nc_dict, self.soma_ampa))
@@ -52,7 +52,7 @@ class L2Basket(BasketSingle):
                     'pos_src': pos,
                     'A_weight': p['gbar_L2Basket_L2Basket'],
                     'A_delay': 1.,
-                    'lamtha': 20.
+                    'lamtha': 20.,
                 }
 
                 self.ncfrom_L2Basket.append(self.parconnect_from_src(gid_src, nc_dict, self.soma_gabaa))

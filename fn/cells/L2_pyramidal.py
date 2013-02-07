@@ -1,8 +1,8 @@
 # L2_pyramidal.py - est class def for layer 2 pyramidal cells
 #
 # v 1.7.14
-# rev 2013-01-31 (SL: removed autapses)
-# last rev: (SL: separated ampa and nmda conductances for e-e connections)
+# rev 2013-02-07 (SL: minor)
+# last rev: (SL: removed autapses)
 
 from neuron import h as nrn
 from class_cell import Pyr
@@ -166,7 +166,7 @@ class L2Pyr(Pyr):
                     'pos_src': pos,
                     'A_weight': p['gbar_L2Pyr_L2Pyr_ampa'],
                     'A_delay': 1.,
-                    'lamtha': 3.
+                    'lamtha': 3.,
                 }
 
                 # parconnect_from_src(gid_presyn, nc_dict, postsyn)
@@ -179,7 +179,7 @@ class L2Pyr(Pyr):
                     'pos_src': pos,
                     'A_weight': p['gbar_L2Pyr_L2Pyr_nmda'],
                     'A_delay': 1.,
-                    'lamtha': 3.
+                    'lamtha': 3.,
                 }
 
                 # parconnect_from_src(gid_presyn, nc_dict, postsyn)
@@ -195,7 +195,7 @@ class L2Pyr(Pyr):
                 'pos_src': pos,
                 'A_weight': p['gbar_L2Basket_L2Pyr'],
                 'A_delay': 1.,
-                'lamtha': 50.
+                'lamtha': 50.,
             }
 
             self.ncfrom_L2Basket.append(self.parconnect_from_src(gid_src, nc_dict, self.soma_gabaa))

@@ -158,17 +158,18 @@ class Cell():
         return nc
 
     # parallel receptor-centric connect FROM presyn TO this cell, based on GID
-    def parconnect_from_src(self, gid_presyn, p, postsyn):
-        # p keys are: {pos_src, A_weight, A_delay, lamtha}
+    def parconnect_from_src(self, gid_presyn, nc_dict, postsyn):
+    # def parconnect_from_src(self, gid_presyn, p, postsyn):
+        # nc_dict keys are: {pos_src, A_weight, A_delay, lamtha}
         nc = self.pc.gid_connect(gid_presyn, postsyn)
 
         # calculate distance between cell positions with pardistance()
-        d = self.__pardistance(p['pos_src'])
+        d = self.__pardistance(nc_dict['pos_src'])
 
         # set props here
         nc.threshold = 0
-        nc.weight[0] = p['A_weight'] * np.exp(-(d**2) / (p['lamtha']**2))
-        nc.delay = p['A_delay'] / (np.exp(-(d**2) / (p['lamtha']**2)))
+        nc.weight[0] = nc_dict['A_weight'] * np.exp(-(d**2) / (nc_dict['lamtha']**2))
+        nc.delay = nc_dict['A_delay'] / (np.exp(-(d**2) / (nc_dict['lamtha']**2)))
 
         return nc
 

@@ -1,8 +1,8 @@
 # cli.py - routines for the command line interface console s1sh.py
 #
-# v 1.7.15
-# rev 2013-02-04 (MS: Specanalysis takes max_freq as optional argument. several plot fns can take xmin and xmax as args. See help for usage)
-# last major: (SL: new function dipolemin, fixed expmts)
+# v 1.7.16
+# rev 2013-02-07 (SL: auto server, changed pdipole agg function, other)
+# last major: (MS: Specanalysis takes max_freq as optional argument. several plot fns can take xmin and xmax as args. See help for usage)
 
 from cmd import Cmd
 from datetime import datetime
@@ -14,7 +14,7 @@ import fileio as fio
 import paramrw
 import spec
 from praster import praster
-from pdipole import pdipole, pdipole_exp
+from pdipole import pdipole
 from ppsth import ppsth, ppsth_grid
 
 class Console(Cmd):
@@ -23,6 +23,7 @@ class Console(Cmd):
         self.prompt = '\033[93m' + "[s1] " + '\033[0m'
         self.intro  = "\nThis is the SomatoSensory SHell\n"
         self.dproj = '/repo/data/s1'
+        self.server_default = self.__check_server()
         self.f_history = '.s1sh_hist_local'
         self.ddate = ''
         self.dlast = []
@@ -47,8 +48,28 @@ class Console(Cmd):
         # Create the initial datelist
         self.datelist = clidefs.get_subdir_list(self.dproj)
 
+        # create the initial paramfile list
+        self.__get_paramfile_list()
+
         # set the date, grabs a dlist
         self.do_setdate(datetime.now().strftime("%Y-%m-%d"))
+
+    def __check_server(self):
+        f_server = os.path.join(self.dproj, '.server_default')
+
+        if os.path.isfile(f_server):
+            # read the file and set the default server
+            lines_f = fio.clean_lines(f_server)
+
+            # there should only be one thing in this file, so assume that's the server name
+            return lines_f[0]
+        else:
+            return ''
+
+    # create a list of parameter files
+    def __get_paramfile_list(self):
+        dparam_default = os.path.join(os.getcwd(), 'param')
+        self.paramfile_list = [f for f in os.listdir(dparam_default) if f.endswith('.param')]
 
     def do_debug(self, args):
         """Qnd function to test many other functions
@@ -60,9 +81,20 @@ class Console(Cmd):
         # self.do_avgtrials('dpl')
         # self.do_dipolemin('in (mu, 0, 2) on [400., 410.]')
         # self.do_pdipole('agg (-12e3, 0)')
+        # self.do_setdate('from_remote/2013-02-05')
+        # self.do_load('simple_synaptic-006')
+        # self.do_pdipole('agg')
+        # self.do_show('L2Pyr_L5Pyr_wL2Bask changed in 0')
+        # self.__get_paramfile_list()
+        # self.do_avgtrials('dpl')
         # self.do_replot('')
         # self.epscompress('spk')
         # self.do_psthgrid()
+
+    # update the dlist
+    def __update_dlist(self):
+        if os.path.exists(self.ddate):
+            self.dlist = [d for d in os.listdir(self.ddate) if os.path.isdir(os.path.join(self.ddate, d))]
 
     def do_setdate(self, args):
         """Sets the date string to the specified date
@@ -71,9 +103,11 @@ class Console(Cmd):
             dcheck = os.path.join(self.dproj, args)
 
             if os.path.exists(dcheck):
-                self.ddate = args
+                self.ddate = dcheck
             else:
                 self.ddate = 'cppub'
+
+        self.__update_dlist()
 
         print "Date set to", self.ddate
 
@@ -105,6 +139,7 @@ class Console(Cmd):
 
             # set dsim after using ddata's readsim method
             self.dsim = self.ddata.read_sim(self.dproj, dir_check)
+            self.p_exp = paramrw.ExpParams(self.ddata.fparam)
 
         else:
             print dir_check
@@ -114,9 +149,8 @@ class Console(Cmd):
         """complete function for load
         """
         if text:
-            x = [item for item in self.dlist if item.startswith(text)]
-            if x:
-                return x
+            return [item for item in self.dlist if item.startswith(text)]
+
         else:
             return self.dlist
 
@@ -126,7 +160,13 @@ class Console(Cmd):
         try:
             list_args = args.split(" ")
             dsubdir = list_args[0]
-            server_remote = raw_input("Server address: ")
+
+            if not self.server_default:
+                server_remote = raw_input("Server address: ")
+            else:
+                server_remote = self.server_default
+                print "Attempting to use default server ..."
+
             clidefs.sync_remote_data(self.dproj, server_remote, dsubdir)
 
             # path
@@ -156,13 +196,8 @@ class Console(Cmd):
                 n_trial = int(n_trial_str)
 
                 t_interval = ast.literal_eval(s[-1])
-
-                # last argument is supposed to be the t_interval
-                # n_sim = int(s[0].split(" ")[1])
-                # n_trial = int(s[0].split(" ")[-1][1:])
-                # t_interval = ast.literal_eval(s[-1])
-
                 clidefs.dipole_min_in_interval(self.ddata, expmt_group, n_sim, n_trial, t_interval)
+
             except ValueError:
                 self.do_help('dipolemin')
 
@@ -178,8 +213,17 @@ class Console(Cmd):
             self.file_input = args
             print "New file is:", self.file_input
         else:
-            print "Does not appear to exist"
-            return 0
+            # try searching specifcally in param dir
+            f_tmp = os.path.join('param', args)
+            if os.path.isfile(f_tmp):
+                self.file_input = f_tmp
+            else:
+                print "Does not appear to exist"
+                return 0
+
+    # tab complete rules for file
+    def complete_file(self, text, line, j0, J):
+        return [item for item in self.paramfile_list if item.startswith(text)]
 
     def do_diff(self, args):
         """Runs a diff on various data types
@@ -251,12 +295,15 @@ class Console(Cmd):
         """
         if not args:
             dcheck = os.path.join(self.dproj, self.ddate)
+
         else:
             dcheck = os.path.join(self.dproj, args)
 
         if os.path.exists(dcheck):
-            dir_list = [name for name in os.listdir(dcheck) if os.path.isdir(os.path.join(dcheck, name))]
-            clidefs.prettyprint(dir_list)
+            self.__update_dlist()
+
+            # dir_list = [name for name in os.listdir(dcheck) if os.path.isdir(os.path.join(dcheck, name))]
+            clidefs.prettyprint(self.dlist)
         else:
             print "Cannot find directory"
             return 0
@@ -267,7 +314,10 @@ class Console(Cmd):
         fio.pngoptimize(self.simpaths.dsim)
 
     def do_avgtrials(self, args):
-        """Averages raw dipole data over all trials. Must supply arg specifying which data type to avgerage over (dpl or spec)
+        """Averages raw data over all trials for each simulation.
+           Usage:
+           [s1] avgtrials <datatype>
+           where <datatype> is either dpl or spec
         """
         if not args:
             print "You did not specify whether to avgerage dpl or spec data. Try again."
@@ -332,36 +382,36 @@ class Console(Cmd):
         if args.startswith('agg'):
             arg_tmp = args.split('agg')
 
-            if len(arg_tmp) == 2:
-                # assume the second argument is the range if specified
-                ylim_read = ast.literal_eval(arg_tmp[-1].strip())
+            # if len(arg_tmp) == 2:
+            #     # assume the second argument is the range if specified
+            #     ylim_read = ast.literal_eval(arg_tmp[-1].strip())
+            #     ylim = ylim_read
 
-                ylim = ylim_read
+            # else:
+            #     ylim = []
 
-            else:
-                ylim = []
-
-            print ylim, type(ylim)
             # run the aggregate dipole
             # using simpaths
-            pdipole_exp(self.ddata, ylim)
+            p_exp = paramrw.ExpParams(self.ddata.fparam)
+            clidefs.pdipole_agg(self.ddata, p_exp)
+            # pdipole_exp(self.ddata, ylim)
 
-        else:
-            dfig_dpl = self.simpaths.dfigs['dipole']
-            fparam_list = self.simpaths.filelists['param']
-            fdpl_list = self.simpaths.filelists['rawdpl']
+        # else:
+        #     dfig_dpl = self.simpaths.dfigs['dipole']
+        #     fparam_list = self.simpaths.filelists['param']
+        #     fdpl_list = self.simpaths.filelists['rawdpl']
 
-            p_exp = paramrw.ExpParams(self.simpaths.fparam[0])
-            key_types = p_exp.get_key_types()
+        #     p_exp = paramrw.ExpParams(self.simpaths.fparam[0])
+        #     key_types = p_exp.get_key_types()
 
-            pool = multiprocessing.Pool()
-            for fparam, fdpl in it.izip(fparam_list, fdpl_list):
-                # just get the p dict and not the gid dict
-                p = paramrw.read(fparam)[1]
-                pool.apply_async(pdipole, (fdpl, dfig_dpl, p, key_types))
+        #     pool = multiprocessing.Pool()
+        #     for fparam, fdpl in it.izip(fparam_list, fdpl_list):
+        #         # just get the p dict and not the gid dict
+        #         p = paramrw.read(fparam)[1]
+        #         pool.apply_async(pdipole, (fdpl, dfig_dpl, p, key_types))
 
-            pool.close()
-            pool.join()
+        #     pool.close()
+        #     pool.join()
 
     def do_replot(self, args):
         """Regenerates plots in given directory. Usage:
@@ -518,90 +568,104 @@ class Console(Cmd):
         """Displays active param list"""
         clidefs.prettyprint(self.param_list)
 
-    # This is somewhat of a hack -- couldn't get multiple args working
     def do_show(self, args):
         """show: shows a list of params that starts with 'param' for simulation n
+           Usage: show <expmt> <changed> in <N>
+           where <expmt> is one of the experimental groups,
+                 <changed> is a keyword for all the changed params for this sim
+                 and <N> is the sim number. Does not currently query trials for seeds.
         """
+        key_dict = self.p_exp.get_key_types()
+
         # print args
         vars = args.split(' in ')
+        expmt, search_str = vars[0].split(' ')
+        j_exp = int(vars[-1])
+        print expmt, search_str, j_exp
 
-        # print vars
-        if len(vars) == 2:
-            # split was successful
-            s0 = vars[0].split()
+        if expmt in self.ddata.expmt_groups:
+            if search_str == 'changed':
+                p_sim = self.p_exp.return_pdict(expmt, j_exp)
+                for key in key_dict['dynamic_keys']:
+                    print "%s: %4.5f" % (key, p_sim[key])
 
-            # print s0
-            # try to split s0
-            # s0_vars = s0.split()
-            if len(s0) == 2:
-                expmt = s0[0]
-                prange = s0[1]
-            else:
-                print "Needs two arguments before ' in '"
-                return 0
+        # # print vars
+        # if len(vars) == 2:
+        #     # split was successful
+        #     s0 = vars[0].split()
 
-            # s1 is the sim number
-            n = int(vars[1])
-        else:
-            # attempt to split by space
-            s0 = vars[0].split()
-            # print s0
-            if len(s0) == 2:
-                expmt = s0[0]
-                prange = s0[1]
+        #     # print s0
+        #     # try to split s0
+        #     # s0_vars = s0.split()
+        #     if len(s0) == 2:
+        #         expmt = s0[0]
+        #         prange = s0[1]
+        #     else:
+        #         print "Needs two arguments before ' in '"
+        #         return 0
 
-                # assume 0
-                n = 0
-            else:
-                # assume first is expmt and try to proceed with changed
-                expmt = s0[0]
-                prange = 'changed'
-                n = 0
+        #     # s1 is the sim number
+        #     n = int(vars[1])
+        # else:
+        #     # attempt to split by space
+        #     s0 = vars[0].split()
+        #     # print s0
+        #     if len(s0) == 2:
+        #         expmt = s0[0]
+        #         prange = s0[1]
 
-        # Find the param list to traverse based on expmt
-        if expmt in self.expmts:
-            plist = [ex[1] for ex in self.param_list if ex[0] == expmt][0]
-        else:
-            print "No such experiment?"
-            return 0
+        #         # assume 0
+        #         n = 0
+        #     else:
+        #         # assume first is expmt and try to proceed with changed
+        #         expmt = s0[0]
+        #         prange = 'changed'
+        #         n = 0
 
-        # print plist
-        # Search for params based on prange
-        if prange == 'changed':
-            # get the changed params and then print those values from the given simulation
-            if n < self.N_sims:
-                for line in self.var_list:
-                    # Get the value of the param
-                    with open(plist[n]) as f_params:
-                        params = (param.rstrip() for param in f_params)
-                        params = [param for param in params if param.startswith(line[0])]
+        # # Find the param list to traverse based on expmt
+        # if expmt in self.expmts:
+        #     plist = [ex[1] for ex in self.param_list if ex[0] == expmt][0]
+        # else:
+        #     print "No such experiment?"
+        #     return 0
 
-                    print params[0]
-            else:
-                print "No such simulation"
-                return 0
+        # # print plist
+        # # Search for params based on prange
+        # if prange == 'changed':
+        #     # get the changed params and then print those values from the given simulation
+        #     if n < self.N_sims:
+        #         for line in self.var_list:
+        #             # Get the value of the param
+        #             with open(plist[n]) as f_params:
+        #                 params = (param.rstrip() for param in f_params)
+        #                 params = [param for param in params if param.startswith(line[0])]
 
-        elif prange == 'all':
-            if n < self.N_sims:
-                with open(plist[n]) as f_params:
-                    lines = (line.rstrip() for line in f_params)
-                    lines = [line for line in lines if line]
+        #             print params[0]
+        #     else:
+        #         print "No such simulation"
+        #         return 0
 
-                clidefs.prettyprint(lines)
-            else:
-                print "No such simulation"
-                return 0
+        # elif prange == 'all':
+        #     if n < self.N_sims:
+        #         with open(plist[n]) as f_params:
+        #             lines = (line.rstrip() for line in f_params)
+        #             lines = [line for line in lines if line]
 
-        else:
-            if n < self.N_sims:
-                with open(plist[n]) as f_params:
-                    lines = (line.rstrip() for line in f_params)
-                    lines = [line for line in lines if line.startswith(prange)]
+        #         clidefs.prettyprint(lines)
+        #     else:
+        #         print "No such simulation"
+        #         return 0
 
-                clidefs.prettyprint(lines)
-            else:
-                print "No such simulation"
-                return 0
+        # else:
+        #     if n < self.N_sims:
+        #         with open(plist[n]) as f_params:
+        #             lines = (line.rstrip() for line in f_params)
+        #             lines = [line for line in lines if line.startswith(prange)]
+
+        #         clidefs.prettyprint(lines)
+        #     else:
+        #         print "No such simulation"
+        #         return 0
 
     def complete_show(self, text, line, j0, J):
         """Completion function for show

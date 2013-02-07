@@ -1,8 +1,8 @@
 # axes_create.py - simple axis creation
 #
-# v 1.7.11a
-# rev 2013-01-30 (MS: Minor formatting changes of alpha feed histograms)
-# last major: (MS: alpha feed hist y-axis ticks set based on bin size)
+# v 1.7.16
+# rev 2013-02-07 (SL: Incomplete changes to FigRaster)
+# last major: (MS: Minor formatting changes of alpha feed histograms)
 
 # usage:
 # testfig = FigStd()
@@ -135,15 +135,15 @@ class FigSpec():
     def close(self):
         plt.close(self.f)
 
-class fig_raster():
+class FigRaster():
     def __init__(self, tstop):
         self.tstop = tstop
         self.f = plt.figure(figsize=(6, 8))
 
-        grid0 = gridspec.GridSpec(4, 1)
+        grid0 = gridspec.GridSpec(5, 1)
         grid0.update(wspace=0.05, hspace=0., bottom=0.05, top=0.45)
 
-        grid1 = gridspec.GridSpec(4, 1)
+        grid1 = gridspec.GridSpec(5, 1)
         grid1.update(wspace=0.05, hspace=0., bottom=0.50, top=0.95)
 
         self.ax = {}
@@ -161,7 +161,8 @@ class fig_raster():
     def __panel_create(self, grid, layer):
         self.ax[layer] = self.f.add_subplot(grid[:2, :])
         self.ax[layer+'_extgauss'] = self.f.add_subplot(grid[2:3, :])
-        self.ax[layer+'_extpois'] = self.f.add_subplot(grid[3:, :])
+        self.ax[layer+'_extpois'] = self.f.add_subplot(grid[3:4, :])
+        self.ax[layer+'_extinput'] = self.f.add_subplot(grid[4:, :])
 
     def __bottom_panel_prop(self, ax):
         ax.set_yticklabels('')
@@ -304,11 +305,11 @@ def testfn():
     # testfig = FigStd()
     # testfig.ax0.plot(x)
 
-    # testfig = fig_raster(100)
-    # testfig.ax['L5'].plot(x)
+    testfig = FigRaster(100)
+    testfig.ax['L5'].plot(x)
 
-    testfig = FigSpecWithHist()
-    testfig.ax['spec'].plot(x)
+    # testfig = FigSpecWithHist()
+    # testfig.ax['spec'].plot(x)
     # testfig.ax0.plot(x)
 
     # testfig = fig_psth(100)

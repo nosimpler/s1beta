@@ -1,14 +1,14 @@
 # praster.py - plot dipole function
 #
-# v 1.6.13
-# rev 2013-01-12 (SL: set png res)
-# last major: (SL: fixed file name)
+# v 1.7.16
+# rev 2013-02-07 (SL: minor changes to FigRaster)
+# last major: (SL: set png res)
 
 import os
 import numpy as np
 import matplotlib.pyplot as plt
 from neuron import h as nrn
-from axes_create import fig_raster
+from axes_create import FigRaster
 import spikefn as spikefn
 
 # file_info is (rootdir, subdir, 
@@ -52,7 +52,7 @@ def praster(gid_dict, tstop, file_spk, dfig):
     file_prefix = file_spk.split('/')[-1].split('.')[0]
 
     # create standard fig and axes
-    f = fig_raster(tstop)
+    f = FigRaster(tstop)
     spikefn.spike_png(f.ax['L2'], s_dict_L2)
     spikefn.spike_png(f.ax['L5'], s_dict_L5)
     spikefn.spike_png(f.ax['L2_extpois'], s_dict_L2_extpois)

@@ -5,7 +5,7 @@
 # [ ] list comma separated values
 
 sim_prefix: evproxearly
-expmt_groups: {suprathreshold, threshold_nonperceived, threshold_perceived}
+expmt_groups: {suprathreshold}
 
 # numbers of cells making up the pyramidal grids
 N_pyr_x: 10
@@ -63,12 +63,17 @@ input_dist_A_delay_L5: 5.0
 
 # evoked response strengths
 # evprox (early) feed strength
-t_evprox_early: 50.
+t_evprox_early: 450.
 sigma_t_evprox_early: 2.5
-gbar_evprox_early_L2Pyr: {2e-3, 1e-3, 1e-3}
-gbar_evprox_early_L2Basket: {4e-3, 2e-3, 2e-3}
-gbar_evprox_early_L5Pyr: {1e-3, 5e-4, 5e-4}
-gbar_evprox_early_L5Basket: {2e-3, 1e-3, 1e-3}
+gbar_evprox_early_L2Pyr: 0.
+gbar_evprox_early_L2Basket: 0.
+# gbar_evprox_early_L2Basket: 4e-3
+gbar_evprox_early_L5Pyr: [0., 1e-3]
+gbar_evprox_early_L5Basket: [0., 2e-3]
+# gbar_evprox_early_L2Pyr: {2e-3, 1e-3, 1e-3}
+# gbar_evprox_early_L2Basket: {4e-3, 2e-3, 2e-3}
+# gbar_evprox_early_L5Pyr: {1e-3, 5e-4, 5e-4}
+# gbar_evprox_early_L5Basket: {2e-3, 1e-3, 1e-3}
 
 # evdist feed strengths
 t_evdist: 2000.
@@ -90,20 +95,26 @@ save_spec_data: 0
 spec_max_freq: 41.
 
 # N_trials
-N_trials: 50
+N_trials: 0
 
 # these values will only be used with N_trials = 0
 # and when these values are not -1
 prng_seedcore_input_prox: 0
 prng_seedcore_input_dist: 0
-prng_seedcore_extpois: -1
-prng_seedcore_extgauss: -1
-prng_seedcore_evprox_early: -1
-prng_seedcore_evdist: -1
-prng_seedcore_evprox_late: -1
+prng_seedcore_evdist: 54400514
+prng_seedcore_evprox_early: 854075077
+prng_seedcore_evprox_late: 663103164
+prng_seedcore_extgauss: 224933006
+prng_seedcore_extpois: 187062021
+
+# prng_seedcore_extpois: -1
+# prng_seedcore_extgauss: -1
+# prng_seedcore_evprox_early: -1
+# prng_seedcore_evdist: -1
+# prng_seedcore_evprox_late: -1
 
 # Numerics
-tstop: 250.
+tstop: 1000.
 dt: 0.025
 
 # amplitudes of individual gaussian random inputs to L2Pyr and L5Pyr

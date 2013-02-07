@@ -1,8 +1,8 @@
 # L5_pyramidal.py - establish class def for layer 5 pyramidal cells
 #
 # v 1.7.14
-# rev 2013-01-31 (SL: removed autapses)
-# last rev: (SL: separated ampa/nmda conductances in e-e)
+# rev 2013-02-07 (SL: minor)
+# last rev: (SL: removed autapses)
 
 from neuron import h as nrn
 from class_cell import Pyr
@@ -269,7 +269,7 @@ class L5Pyr(Pyr):
                     'pos_src': pos,
                     'A_weight': p['gbar_L5Pyr_L5Pyr_ampa'],
                     'A_delay': 1.,
-                    'lamtha': 3.
+                    'lamtha': 3.,
                 }
 
                 # ampa connections
@@ -281,7 +281,7 @@ class L5Pyr(Pyr):
                     'pos_src': pos,
                     'A_weight': p['gbar_L5Pyr_L5Pyr_nmda'],
                     'A_delay': 1.,
-                    'lamtha': 3.
+                    'lamtha': 3.,
                 }
 
                 # nmda connections
@@ -294,9 +294,8 @@ class L5Pyr(Pyr):
             nc_dict = {
                 'pos_src': pos,
                 'A_weight': p['gbar_L5Basket_L5Pyr'],
-                # 'A_weight': 2.5e-2,
                 'A_delay': 1.,
-                'lamtha': 70.
+                'lamtha': 70.,
             }
 
             # soma synapses are defined in Pyr()
@@ -310,7 +309,7 @@ class L5Pyr(Pyr):
                 'pos_src': pos,
                 'A_weight': p['gbar_L2Pyr_L5Pyr'],
                 'A_delay': 3.,
-                'lamtha': 3.
+                'lamtha': 3.,
             }
 
             self.ncfrom_L2Pyr.append(self.parconnect_from_src(gid_src, nc_dict, self.basal2_ampa))
@@ -324,7 +323,7 @@ class L5Pyr(Pyr):
                 'pos_src': pos,
                 'A_weight': p['gbar_L2Basket_L5Pyr'],
                 'A_delay': 1.,
-                'lamtha': 50.
+                'lamtha': 50.,
             }
 
             self.ncfrom_L2Basket.append(self.parconnect_from_src(gid_src, nc_dict, self.apicaltuft_gabaa))
