@@ -1,8 +1,8 @@
 # paramrw.py - routines for reading the param files
 #
-# v 1.7.13
-# rev 2013-01-30 (SL: added relative time param to evoked response inputs)
-# last major: (SL: string templates stored here)
+# v 1.7.17
+# rev 2013-02-12 (SL: Added params)
+# last major: (SL: added relative time param to evoked response inputs)
 
 import re
 import fileio as fio
@@ -378,6 +378,7 @@ def create_pext(p, tstop):
         'L5Pyr': (p['input_prox_A_weight_pyr'], p['input_prox_A_delay_L5']),
         'L2Basket': (p['input_prox_A_weight_inh'], p['input_prox_A_delay_L2']),
         'L5Basket': (p['input_prox_A_weight_inh'], p['input_prox_A_delay_L5']),
+        'events_per_cycle': p['events_per_cycle'],
         'prng_seedcore': int(p['prng_seedcore_input_prox']),
         'lamtha': 100.,
         'loc': 'proximal',
@@ -394,6 +395,7 @@ def create_pext(p, tstop):
         'L2Pyr': (p['input_dist_A_weight_pyr'], p['input_dist_A_delay_L2']),
         'L5Pyr': (p['input_dist_A_weight_pyr'], p['input_dist_A_delay_L5']),
         'L2Basket': (p['input_dist_A_weight_inh'], p['input_dist_A_delay_L2']),
+        'events_per_cycle': p['events_per_cycle'],
         'prng_seedcore': int(p['prng_seedcore_input_dist']),
         'lamtha': 100.,
         'loc': 'distal',
@@ -408,8 +410,8 @@ def create_pext(p, tstop):
     p_unique['evprox0'] = {
         't0': p['t_evprox_early'],
         'L2_pyramidal': (p['gbar_evprox_early_L2Pyr'], 0.1, p['sigma_t_evprox_early']),
-        'L5_pyramidal': (p['gbar_evprox_early_L5Pyr'], 1., p['sigma_t_evprox_early']),
         'L2_basket': (p['gbar_evprox_early_L2Basket'], 0.1, p['sigma_t_evprox_early']),
+        'L5_pyramidal': (p['gbar_evprox_early_L5Pyr'], 1., p['sigma_t_evprox_early']),
         'L5_basket': (p['gbar_evprox_early_L5Basket'], 1., p['sigma_t_evprox_early']),
         'prng_seedcore': int(p['prng_seedcore_evprox_early']),
         'lamtha_space': 3.,
@@ -446,8 +448,8 @@ def create_pext(p, tstop):
     p_unique['evprox1'] = {
         't0': t0_evprox1,
         'L2_pyramidal': (p['gbar_evprox_late_L2Pyr'], 0.1, p['sigma_t_evprox_late']),
-        'L5_pyramidal': (p['gbar_evprox_late_L5Pyr'], 5., p['sigma_t_evprox_late']),
         'L2_basket': (p['gbar_evprox_late_L2Basket'], 0.1, p['sigma_t_evprox_late']),
+        'L5_pyramidal': (p['gbar_evprox_late_L5Pyr'], 5., p['sigma_t_evprox_late']),
         'L5_basket': (p['gbar_evprox_late_L5Basket'], 5., p['sigma_t_evprox_late']),
         'prng_seedcore': int(p['prng_seedcore_evprox_late']),
         'lamtha_space': 3.,
@@ -466,6 +468,10 @@ def create_pext(p, tstop):
         'prng_seedcore': int(p['prng_seedcore_extgauss']),
         'loc': 'proximal'
     }
+
+    # define pois_T as 0 to reset automatically to tstop
+    if p['pois_T'] == 0:
+        p['pois_T'] = tstop
 
     # Poisson distributed inputs to proximal
     p_unique['extpois'] = {

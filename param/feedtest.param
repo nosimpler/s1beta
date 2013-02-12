@@ -142,3 +142,6 @@ gbar_L2Pyr_L5Basket: 2.5e-4
 # new params from default
 dt_evprox0_evdist: -1
 dt_evprox0_evprox1: -1
+
+# new params from default
+events_per_cycle: 2

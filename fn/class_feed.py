@@ -1,8 +1,8 @@
 # class_feed.py - establishes FeedExt(), ParFeedAll()
 #
-# v 1.7.7
-# rev 2013-01-27 (SL: stdev=0 for inputs is okay, but with just 1 stimulus)
-# last major: (SL: changed vars in _ParFeedExt_create_eventvec)
+# v 1.7.17
+# rev 2013-02-12 (SL: moved ParFeedExt method as part of ParFeedAll, added events_per_cycle)
+# last major: (SL: stdev=0 for inputs is okay, but with just 1 stimulus)
 
 import numpy as np
 import itertools as it
@@ -10,6 +10,8 @@ import itertools as it
 from neuron import h as nrn
 
 class ParFeedAll():
+    # p_ext has a different structure for the extinput
+    # usually, p_ext is a dict of cell types
     def __init__(self, type, celltype, p_ext, gid):
         # VecStim setup
         self.eventvec = nrn.Vector()
@@ -33,6 +35,9 @@ class ParFeedAll():
         elif type == 'extgauss':
             self.__create_extgauss()
 
+        elif type == 'extinput':
+            self.__create_extinput()
+
         # load eventvec into VecStim object
         self.vs.play(self.eventvec)
 
@@ -48,8 +53,6 @@ class ParFeedAll():
         T = self.p_ext['t_interval'][1]
         lamtha = self.p_ext[self.celltype][2]
 
-        # mu and sigma values come from p
-        # one single value from Gaussian dist.
         # values MUST be sorted for VecStim()!
         # start the initial value
         if lamtha > 0.:
@@ -123,64 +126,43 @@ class ParFeedAll():
         # Convert array into nrn vector
         self.eventvec.from_python(val_gauss)
 
-    # for parallel, maybe be that postsyn for this is just nil (None)
-    def connect_to_target(self):
-        nc = nrn.NetCon(self.vs, None)
-        nc.threshold = 0
-
-        return nc
-
-class ParFeedExt():
-    # the p here is actually p_ext elsewhere
-    def __init__(self, net_origin, p, gid):
-        # random generator for this instance
-        self.seed = p['prng_seedcore'] + gid
-        self.prng = np.random.RandomState(self.seed)
-
-        # create eventvec and VecStim objects
-        self.eventvec = nrn.Vector()
-        self.vs = nrn.VecStim()
-
+    def __create_extinput(self):
         # store f_input as self variable for later use if it exists in p
         # t0 is always defined
-        self.t0 = p['t0']
-        self.f_input = p['f_input']
+        t0 = self.p_ext['t0']
+        f_input = self.p_ext['f_input']
+        stdev = self.p_ext['stdev']
+        events_per_cycle = self.p_ext['events_per_cycle']
 
-        # Create vector of input times
-        self.__create_eventvec(p)
+        # events_per_cycle = 1
+        if events_per_cycle > 2 or events_per_cycle <= 0:
+            print "events_per_cycle should be either 1 or 2, trying 2"
+            events_per_cycle = 2
 
-    # for parallel, maybe be that postsyn for this is just nil (None)
-    def connect_to_target(self):
-        nc = nrn.NetCon(self.vs, None)
-        nc.threshold = 0
-
-        return nc
-
-    # Create nrn vector with ALL stimulus times for an input type (e.g. proximal or distal) 
-    # and load vector into VecStim object
-    # only used in feeds
-    def __create_eventvec(self, p):
         # If frequency is 0, create empty vector if input times
-        if not self.f_input:
+        if not f_input:
             t_input = []
 
         else:
             # array of mean stimulus times, starts at t0
-            isi_array = np.arange(self.t0, p['tstop'], 1000./self.f_input)
+            isi_array = np.arange(t0, self.p_ext['tstop'], 1000./f_input)
 
             # array of single stimulus times -- no doublets 
-            if p['stdev']:
-                t_array = self.prng.normal(np.repeat(isi_array, 10), p['stdev'])
+            if stdev:
+                t_array = self.prng.normal(np.repeat(isi_array, 10), stdev)
             else:
                 t_array = isi_array
 
-            # Two arrays store doublet times
-            t_array_low = t_array - 5
-            t_array_high = t_array + 5
+            if events_per_cycle == 2:
+                # Two arrays store doublet times
+                t_array_low = t_array - 5
+                t_array_high = t_array + 5
 
-            # Array with ALL stimulus times for input 
-            # np.append concatenates two np arrays
-            t_input = np.append(t_array_low, t_array_high)
+                # Array with ALL stimulus times for input
+                # np.append concatenates two np arrays
+                t_input = np.append(t_array_low, t_array_high)
+            elif events_per_cycle == 1:
+                t_input = t_array
 
             # brute force remove non-zero times. Might result in fewer vals than desired
             t_input = t_input[t_input > 0]
@@ -189,5 +171,9 @@ class ParFeedExt():
         # Convert array into nrn vector
         self.eventvec.from_python(t_input)
 
-        # load eventvec into VecStim object
-        self.vs.play(self.eventvec)
+    # for parallel, maybe be that postsyn for this is just nil (None)
+    def connect_to_target(self):
+        nc = nrn.NetCon(self.vs, None)
+        nc.threshold = 0
+
+        return nc

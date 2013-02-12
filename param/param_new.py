@@ -85,7 +85,7 @@ def check_missing(write_mode='p'):
         elif write_mode == 'p':
             print f_param
             prettyprint(params_missing)
-            raw_input("Pretty <enter> to continue ...")
+            raw_input("Press <enter> to continue ...")
 
 # prints from an iterable
 def prettyprint(l):

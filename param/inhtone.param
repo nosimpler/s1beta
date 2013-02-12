@@ -152,3 +152,6 @@ dt: 0.025
 # new params from default
 dt_evprox0_evdist: -1
 dt_evprox0_evprox1: -1
+
+# new params from default
+events_per_cycle: 2

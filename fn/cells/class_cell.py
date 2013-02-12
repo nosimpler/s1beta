@@ -1,8 +1,8 @@
 # class_cell.py - establish class def for general cell features
 #
-# v 1.6.2ev
-# rev 2013-01-07 (SL: changed nclist)
-# last rev: (SL: changed parreceives)
+# v 1.7.17
+# rev 2013-01-07 (SL: some minor stuff, some debugging stuff)
+# last rev: (SL: changed nclist)
 
 import numpy as np
 import itertools as it
@@ -159,7 +159,6 @@ class Cell():
 
     # parallel receptor-centric connect FROM presyn TO this cell, based on GID
     def parconnect_from_src(self, gid_presyn, nc_dict, postsyn):
-    # def parconnect_from_src(self, gid_presyn, p, postsyn):
         # nc_dict keys are: {pos_src, A_weight, A_delay, lamtha}
         nc = self.pc.gid_connect(gid_presyn, postsyn)
 
@@ -194,7 +193,7 @@ class Cell():
 # Inhibitory cell class
 class BasketSingle(Cell):
     def __init__(self, pos, cell_name='Basket'):
-        self.props = self.__set_props(pos)
+        self.props = self.__set_props(cell_name, pos)
 
         # Cell.__init__(self, properties)
         Cell.__init__(self, self.props)
@@ -206,14 +205,15 @@ class BasketSingle(Cell):
         # set 3D shape - unused for now but a prototype
         # self.__shape_change()        
 
-    def __set_props(self, pos):
+    def __set_props(self, cell_name, pos):
         return {
             'pos': pos,
             'L': 39.,
             'diam': 20.,
             'cm': 0.85,
             'Ra': 200.,
-            'name': 'L2Basket',
+            'name': cell_name,
+            # 'name': 'L2Basket',
         }
 
     # Define 3D shape and position of cell. By default neuron uses xy plane for
@@ -276,10 +276,16 @@ class Pyr(Cell):
             self.list_dend[-1].Ra = soma_props['Ra']
             self.list_dend[-1].cm = soma_props['cm']
 
+            # old method
+            # if dend_props[sect_name]['L'] < 50:
+            #     self.list_dend[-1].nseg = 1
+            # else:
+            #     nseg = int(dend_props[sect_name]['L']/50)
+
             # set nseg for each dend
             if dend_props[sect_name]['L'] > 100:
                 self.list_dend[-1].nseg = int(dend_props[sect_name]['L'] / 50)
-                
+
                 # make dend.nseg odd for all sections
                 if not self.list_dend[-1].nseg % 2:
                     self.list_dend[-1].nseg += 1

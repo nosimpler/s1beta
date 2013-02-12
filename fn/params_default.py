@@ -1,8 +1,8 @@
 # params_default.py - list of default params and values
 #
-# v 1.7.13
-# rev 2013-01-31 (SL: Added relative time to evoked feeds)
-# last major: (SL: split up pyr-pyr ampa and nmda conductances)
+# v 1.7.17
+# rev 2013-02-12 (SL: added events_per_cycle)
+# last major: (SL: Added relative time to evoked feeds)
 
 # flat file of default values
 # tuples for different "experiments"
@@ -71,6 +71,7 @@ def get_params_default():
         'gbar_L2Pyr_L5Basket': 2.5e-4,
 
         # Ongoing proximal alpha rhythm
+        'events_per_cycle': 2,
         't0_input_prox': 150.,
         'tstop_input_prox': 250.,
         'f_input_prox': 10.,

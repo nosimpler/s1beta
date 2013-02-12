@@ -1,15 +1,15 @@
 # class_net.py - establishes the Network class and related methods
 #
-# v 1.7.3
-# rev 2013-01-23 (SL: minor)
-# last major: (SL: cleanup old functions)
+# v 1.7.17
+# rev 2013-01-23 (SL: Removed ParFeedExt in favor of ParFeedAll)
+# last major: (SL: minor)
 
 import itertools as it
 import numpy as np
 import sys
 
 from neuron import h as nrn
-from fn.class_feed import ParFeedExt, ParFeedAll
+from fn.class_feed import ParFeedAll
 from fn.cells.L5_pyramidal import L5Pyr
 from fn.cells.L2_pyramidal import L2Pyr
 from fn.cells.L2_basket import L2Basket
@@ -22,6 +22,7 @@ class Network():
         # set the params internally for this net
         # better than passing it around like ...
         self.p = p
+
         # int variables for grid of pyramidal cells (for now in both L2 and L5)
         self.gridpyr = {'x': self.p['N_pyr_x'], 'y': self.p['N_pyr_y']}
 
@@ -66,6 +67,8 @@ class Network():
 
         # create coords for all other sources
         self.__create_coords_extinput()
+
+        # count external sources
         self.__count_extsrcs()
 
         # create dictionary of GIDs according to cell type
@@ -163,6 +166,9 @@ class Network():
         origin_y = yrange[(len(yrange)-1)/2]
         origin_z = np.floor(self.zdiff/2)
         self.origin = (origin_x, origin_y, origin_z)
+
+        # debugging override
+        # self.origin = (0.5, 0.5, 653.)
 
         self.pos_dict['extinput'] = [self.origin for i in range(self.N_extinput)]
 
@@ -293,7 +299,8 @@ class Network():
 
                     # now use the param index in the params and create
                     # the cell and artificial NetCon
-                    self.extinput_list.append(ParFeedExt(self.origin, self.p_ext[p_ind], gid))
+                    self.extinput_list.append(ParFeedAll(type, None, self.p_ext[p_ind], gid))
+                    # self.extinput_list.append(ParFeedExt(self.origin, self.p_ext[p_ind], gid))
                     self.pc.cell(gid, self.extinput_list[-1].connect_to_target())
 
                 elif type in self.p_unique.keys():
