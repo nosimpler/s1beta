@@ -38,7 +38,7 @@ gbar_L5Pyr_L5Basket: 5e-4
 gbar_L2Pyr_L5Basket: 2.5e-4
 
 # Ongoing proximal alpha rhythm
-proxribution_prox: normal
+distribution_prox: normal
 t0_input_prox: 150.
 tstop_input_prox: 1000.
 f_input_prox: 10.

@@ -140,10 +140,7 @@ dt_evprox0_evdist: -1
 dt_evprox0_evprox1: -1
 
 # new params from default
-events_per_cycle: 2
-
-# new params from default
 events_per_cycle_prox: 2
 events_per_cycle_dist: 2
 distribution_dist: normal
-proxribution_prox: normal
+distribution_prox: normal
