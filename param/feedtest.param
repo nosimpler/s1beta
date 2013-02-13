@@ -150,3 +150,6 @@ dt_evprox0_evprox1: -1
 
 # new params from default
 events_per_cycle: 2
+
+# new params from default
+proxribution_prox: normal

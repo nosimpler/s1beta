@@ -1,6 +1,6 @@
 # paramrw.py - routines for reading the param files
 #
-# v 1.7.19
+# v 1.7.19a
 # rev 2013-02-13 (MS: Updated feed_verify to read L5 delay of -1 as being same delay as L2. Events_per_cycle done per alpha feed. Added distribution param)
 # last major: (SL: Added params)
 
@@ -134,8 +134,8 @@ class ExpParams():
         # self.prng_state = self.p_all.pop('prng_state')[1:-1]
 
         self.alpha_distributions = {
-                'distribution_prox': self.p_all.pop('distribution_prox'),
-                'distribution_dist': self.p_all.pop('distribution_dist'),
+            'distribution_prox': self.p_all.pop('distribution_prox'),
+            'distribution_dist': self.p_all.pop('distribution_dist'),
         }
 
         # create the list of iterated params

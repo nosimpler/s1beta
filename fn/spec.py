@@ -1,6 +1,6 @@
 # spec.py - Average time-frequency energy representation using Morlet wavelet method
 #
-# v 1.7.19
+# v 1.7.19a
 # rev 2013-02-13 (MS: Minor changes to plotting routines)
 # last major: (MS: Bug fixed in analysis. Debug option added to analysis)
 
@@ -206,7 +206,7 @@ def pspec(dspec, f_dpl, dfig, p_dict, key_types, xlim=[0., 'tstop']):
     # f.f is the figure handle!
     f = FigSpec()
 
-    pc = f.ax['spec'].imshow(TFR[:,xmin_ind:xmax_ind+1], extent=[xmin, xmax, freqvec[-1], freqvec[0]], aspect='auto', origin='upper')
+    pc = f.ax['spec'].imshow(TFR[:, xmin_ind:xmax_ind+1], extent=[xmin, xmax, freqvec[-1], freqvec[0]], aspect='auto', origin='upper')
     f.f.colorbar(pc, ax=f.ax['spec'])
 
     # grab the dipole data
