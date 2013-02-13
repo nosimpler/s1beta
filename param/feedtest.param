@@ -4,24 +4,29 @@
 # np.arrays for everything else?
 # turns out some whitespace is valid for dicts!
 
-sim_prefix: avg-trials-test
-expmt_groups: {testing0}
+sim_prefix: singlets_prox_dist
+expmt_groups: {freq-30Hz, freq-40Hz, freq-50Hz}
 
 # numbers of cells making up the pyramidal grids
 N_pyr_x: 2
 N_pyr_y: 2
 
 # Ongoing proximal alpha rhythm
-t0_input_prox: 150.
-tstop_input_prox: 0
-f_input_prox: [10.]
-f_stdev_prox: 20.
+distribution_prox: normal
+t0_input_prox: 100.
+tstop_input_prox: 0.
+f_input_prox: {30., 40., 50.}
+f_stdev_prox: 0.
+events_per_cycle_prox: 2
 
 # Ongoing distal alpha rhythm
-t0_input_dist: 150.
-tstop_input_dist: 0
-f_input_dist: [10.]
-f_stdev_dist: 20.
+distribution_dist: normal
+t0_input_dist: 100.
+tstop_input_dist: 0.
+f_input_dist: {30., 40., 50.}
+f_stdev_dist: 0
+doublet_dist: 0
+events_per_cycle_dist: 2
 
 # thalamic input amplitudes and delays
 input_prox_A_weight_pyr: 4e-5
@@ -32,8 +37,8 @@ input_prox_A_delay_L5: 1.0
 # current values, not sure where these distal values come from, need to check
 input_dist_A_weight_pyr: 4e-5
 input_dist_A_weight_inh: 4e-5
-input_dist_A_delay_L2: 5.0
-input_dist_A_delay_L5: 5.0
+input_dist_A_delay_L2: [0.1, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50]
+input_dist_A_delay_L5: -1
 
 # times for evoked responses
 t_evprox_early: 6000.
@@ -65,10 +70,10 @@ gbar_evdist_L2Basket: 5e-4
 
 # analysis
 save_spec_data: 1
-spec_max_freq: 41.
+spec_max_freq: 61.
 
 # n trials
-N_trials: 10
+N_trials: 0
 
 # these values will only be used with N_trials = 0
 # and when these values are not -1
@@ -81,7 +86,7 @@ prng_seedcore_evdist: -1
 prng_seedcore_evprox_late: -1
 
 # Numerics
-tstop: 5000.
+tstop: 1000.
 dt: 0.025
 
 # Poisson input

@@ -1,8 +1,8 @@
 # paramrw.py - routines for reading the param files
 #
-# v 1.7.17
-# rev 2013-02-12 (SL: Added params)
-# last major: (SL: added relative time param to evoked response inputs)
+# v 1.7.19
+# rev 2013-02-13 (MS: Updated feed_verify to read L5 delay of -1 as being same delay as L2. Events_per_cycle done per alpha feed. Added distribution param)
+# last major: (SL: Added params)
 
 import re
 import fileio as fio
@@ -133,6 +133,11 @@ class ExpParams():
         self.N_trials = int(self.p_all.pop('N_trials'))
         # self.prng_state = self.p_all.pop('prng_state')[1:-1]
 
+        self.alpha_distributions = {
+                'distribution_prox': self.p_all.pop('distribution_prox'),
+                'distribution_dist': self.p_all.pop('distribution_dist'),
+        }
+
         # create the list of iterated params
         self.list_params = self.__create_paramlist()
         self.N_sims = len(self.list_params[0][1])
@@ -175,6 +180,9 @@ class ExpParams():
                 # only add values that will change
                 if p[param] == -1:
                     self.prng_seed_list.append(param)
+
+            elif param.startswith('distribution_'):
+                p[param] = str(val)
 
             else:
                 # assign group params first
@@ -302,6 +310,10 @@ class ExpParams():
         for param, val in self.p_group[expmt_group].iteritems():
             p_sim[param] = val
 
+        # add alpha distributions
+        for param, val in self.alpha_distributions.iteritems():
+            p_sim[param] = val
+
         return p_sim
 
     # Find keys that change anytime during simulation
@@ -354,6 +366,15 @@ def feed_validate(p_ext, d, tstop):
                 elif key.endswith('Basket'):
                     d[key] = (d[key][0] * 5., d[key][1])
 
+        # if L5 delay is -1, use same delays as L2 unless L2 delay is 0.1 in which case use 1.
+        if d['L5Pyr'][1] == -1:
+            for key in d.keys():
+                if key.startswith('L5'):
+                    if d['L2Pyr'][1] != 0.1:
+                        d[key] = (d[key][0], d['L2Pyr'][1])
+                    else:
+                        d[key] = (d[key][0], 1.)
+
         p_ext.append(d)
 
     return p_ext
@@ -378,8 +399,9 @@ def create_pext(p, tstop):
         'L5Pyr': (p['input_prox_A_weight_pyr'], p['input_prox_A_delay_L5']),
         'L2Basket': (p['input_prox_A_weight_inh'], p['input_prox_A_delay_L2']),
         'L5Basket': (p['input_prox_A_weight_inh'], p['input_prox_A_delay_L5']),
-        'events_per_cycle': p['events_per_cycle'],
+        'events_per_cycle': p['events_per_cycle_prox'],
         'prng_seedcore': int(p['prng_seedcore_input_prox']),
+        'distribution': p['distribution_prox'],
         'lamtha': 100.,
         'loc': 'proximal',
     }
@@ -395,8 +417,9 @@ def create_pext(p, tstop):
         'L2Pyr': (p['input_dist_A_weight_pyr'], p['input_dist_A_delay_L2']),
         'L5Pyr': (p['input_dist_A_weight_pyr'], p['input_dist_A_delay_L5']),
         'L2Basket': (p['input_dist_A_weight_inh'], p['input_dist_A_delay_L2']),
-        'events_per_cycle': p['events_per_cycle'],
+        'events_per_cycle': p['events_per_cycle_dist'],
         'prng_seedcore': int(p['prng_seedcore_input_dist']),
+        'distribution': p['distribution_dist'],
         'lamtha': 100.,
         'loc': 'distal',
     }

@@ -1,8 +1,8 @@
 # clidefs.py - these are all of the function defs for the cli
 #
-# v 1.7.16
-# rev 2013-02-07 (SL: fixed some plot_avg stuff)
-# last major: (MS: Bug fixed in regenerate_spec_data)
+# v 1.7.19
+# rev 2013-02-18 (MS: incomplete function freq_pwr_with_hist)
+# last major: (SL: fixed some plot_avg stuff)
 
 # Standard modules
 import fnmatch, os, re, sys
@@ -348,6 +348,33 @@ def freqpwr_analysis(ddata, dsim, maxpwr):
                 if maxpwr:
                     f_name = os.path.join(dsim, expmt_group, 'maxpwr-avg.png')
                     spec.pmaxpwr(f_name, partial_results_list, partial_fparam_list)
+
+# Averages spec pwr over time and plots it with histogram of alpha feeds per simulation
+def freqpwr_with_hist(ddata, dsim):
+    spec_results = fio.file_match(ddata.dsim, '-spec.npz')
+    spk_list = fio.file_match(ddata.dsim, '-spk.txt')
+    fparam_list = fio.file_match(ddata.dsim, '-param.txt')
+
+    p_exp = paramrw.ExpParams(ddata.fparam)
+    key_types = p_exp.get_key_types()
+
+    # If no save spec reslts exist, redo spec analysis
+    if not spec_results:
+        print "No saved spec data found. Performing spec analysis...",
+        spec_results = regenerate_spec_data(ddata)
+
+        print "now doing spec freq-pwr analysis"
+
+    # perform freqpwr analysis
+    freqpwr_results_list = [spec.freqpwr_analysis(dspec) for dspec in spec_results]
+
+    # Plot
+    for freqpwr_result, f_spk, fparam in it.izip(freqpwr_results_list, spk_list, fparam_list):
+        gid_dict, p_dict = paramrw.read(fparam)
+        file_name = 'freqpwr.png'
+
+        print file_name
+        spec.pfreqpwr_with_hist(file_name, freqpwr_result, f_spk, gid_dict, p_dict, key_types)
 
 def regenerate_plots(ddata, xlim=[0, 'tstop']):
 # def regenerate_plots(ddata, xmin, xmax):

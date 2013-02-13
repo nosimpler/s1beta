@@ -1,8 +1,8 @@
 # cli.py - routines for the command line interface console s1sh.py
 #
-# v 1.7.16
-# rev 2013-02-07 (SL: auto server, changed pdipole agg function, other)
-# last major: (MS: Specanalysis takes max_freq as optional argument. several plot fns can take xmin and xmax as args. See help for usage)
+# v 1.7.19
+# rev 2013-02-13 (MS: Incomplete function freqpwrwithhist)
+# last major: (SL: auto server, changed pdipole agg function, other)
 
 from cmd import Cmd
 from datetime import datetime
@@ -365,6 +365,9 @@ class Console(Cmd):
 
         else:
             clidefs.freqpwr_analysis(self.ddata, self.dsim, maxpwr=0)
+
+    def do_freqpwrwithhist(self, args):
+        clidefs.freqpwr_with_hist(self.ddata, self.dsim)
 
     # def do_pspec(self, args):
     #     """Regenerates spec plots in given directory

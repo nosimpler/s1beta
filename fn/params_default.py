@@ -1,8 +1,8 @@
 # params_default.py - list of default params and values
 #
-# v 1.7.17
-# rev 2013-02-12 (SL: added events_per_cycle)
-# last major: (SL: Added relative time to evoked feeds)
+# v 1.7.19
+# rev 2013-02-13 (MS: Added alpha feed distribution params. events_per_cycle now per feed)
+# last major: (SL: added events_per_cycle)
 
 # flat file of default values
 # tuples for different "experiments"
@@ -71,17 +71,20 @@ def get_params_default():
         'gbar_L2Pyr_L5Basket': 2.5e-4,
 
         # Ongoing proximal alpha rhythm
-        'events_per_cycle': 2,
+        'distribution_prox': 'normal',
         't0_input_prox': 150.,
         'tstop_input_prox': 250.,
         'f_input_prox': 10.,
         'f_stdev_prox': 20.,
+        'events_per_cycle_prox': 2,
 
         # Ongoing distal alpha rhythm
+        'distribution_dist': 'normal',
         't0_input_dist': 150.,
         'tstop_input_dist': 250.,
         'f_input_dist': 10.,
         'f_stdev_dist': 20.,
+        'events_per_cycle_dist': 2,
 
         # thalamic input amplitudes abd delays
         'input_prox_A_weight_pyr': 4e-5,
@@ -91,10 +94,9 @@ def get_params_default():
 
         # current values, not sure where these distal values come from, need to check
         'input_dist_A_weight_pyr': 4e-5,
-        'input_dist_A_weight_inh': 4e-5,
+        'input_dist_A_weight_inh': 8e-5,
         'input_dist_A_delay_L2': 5.0,
         'input_dist_A_delay_L5': 5.0,
-        # 'input_dist_A_weight_inh': 8e-5,
 
         # evprox (early) feed strength
         'gbar_evprox_early_L2Pyr': 1e-3,

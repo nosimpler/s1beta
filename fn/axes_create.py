@@ -1,8 +1,8 @@
 # axes_create.py - simple axis creation
 #
-# v 1.7.16
-# rev 2013-02-07 (SL: Incomplete changes to FigRaster)
-# last major: (MS: Minor formatting changes of alpha feed histograms)
+# v 1.7.19
+# rev 2013-02-13 (MS: figure for plotting alpha feed hists next to freq-pwr analyis)
+# last major: (SL: Incomplete changes to FigRaster)
 
 # usage:
 # testfig = FigStd()
@@ -81,7 +81,7 @@ class FigDplWithHist():
     def close(self):
         plt.close(self.f)
 
-# spec plus dipole
+# spec plus dipole plus alpha feed histograms
 class FigSpecWithHist():
     def __init__(self):
         self.f = plt.figure(figsize=(8, 8))
@@ -115,7 +115,7 @@ class FigSpecWithHist():
     def close(self):
         plt.close(self.f)
 
-# spec plus dipole plus alpha feed histograms
+# spec plus dipole 
 class FigSpec():
     def __init__(self):
         self.f = plt.figure(figsize = (8, 6))
@@ -131,6 +131,29 @@ class FigSpec():
         self.ax = {}
         self.ax['dipole'] = self.f.add_subplot(self.gs0[:, :])
         self.ax['spec'] = self.f.add_subplot(self.gs1[:, :])
+
+    def close(self):
+        plt.close(self.f)
+
+class FigFreqpwrWithHist():
+    def __init__(self):
+        self.f = plt.figure(figsize = (12, 6))
+        font_prop = {'size': 8}
+        mpl.rc('font', **font_prop)
+
+        # One gridspec for both plots
+        self.gs0 = gridspec.GridSpec(1, 2, bottom=0.20, top = 0.80, left=0.1, right=0.90, wspace = 0.1)
+
+        self.ax = {}
+        self.ax['freqpwr'] = self.f.add_subplot(self.gs0[0, 1])
+        self.ax['hist'] = self.f.add_subplot(self.gs0[0, 0])
+
+    def set_hist_props(self, hist_data):
+        max_n = max(hist_data)
+        self.ax['hist'].set_yticks(np.arange(0, max_n+2, np.ceil((max_n+2.)/4.)))
+
+    def save(self, file_name):
+        self.f.savefig(file_name)
 
     def close(self):
         plt.close(self.f)

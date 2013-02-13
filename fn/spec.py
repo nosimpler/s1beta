@@ -1,8 +1,8 @@
 # spec.py - Average time-frequency energy representation using Morlet wavelet method
 #
-# v 1.7.15a
-# rev 2013-02-06 (MS: Bug fixed in analysis. Debug option added to analysis)
-# last major: (MS: analyis takes max_freq as optional argument. pspec fns take xlim as optional argument)
+# v 1.7.19
+# rev 2013-02-13 (MS: Minor changes to plotting routines)
+# last major: (MS: Bug fixed in analysis. Debug option added to analysis)
 
 import os
 import sys
@@ -17,7 +17,7 @@ from neuron import h as nrn
 
 import fileio as fio
 import spikefn 
-from axes_create import FigSpec, FigSpecWithHist, FigStd
+from axes_create import FigSpec, FigSpecWithHist, FigStd, FigFreqpwrWithHist
 
 # general spec write/read functions
 def write(fdata_spec, t_vec, f_vec, TFR):
@@ -197,7 +197,7 @@ def pspec(dspec, f_dpl, dfig, p_dict, key_types, xlim=[0., 'tstop']):
     if xlim[1] == 'tstop':
         xmax = p_dict['tstop']
     else:
-        xmax = xlim[1]+1
+        xmax = xlim[1]
 
     # vector indeces corresponding to xmin and xmax
     xmin_ind = xmin / p_dict['dt']
@@ -206,21 +206,23 @@ def pspec(dspec, f_dpl, dfig, p_dict, key_types, xlim=[0., 'tstop']):
     # f.f is the figure handle!
     f = FigSpec()
 
-    pc = f.ax['spec'].imshow(TFR[:,xmin_ind:xmax_ind], extent=[xmin, xmax, freqvec[-1], freqvec[0]], aspect='auto', origin='upper')
+    pc = f.ax['spec'].imshow(TFR[:,xmin_ind:xmax_ind+1], extent=[xmin, xmax, freqvec[-1], freqvec[0]], aspect='auto', origin='upper')
     f.f.colorbar(pc, ax=f.ax['spec'])
 
     # grab the dipole data
     data_dipole = np.loadtxt(open(f_dpl, 'r'))
 
     # assign vectors
-    t_dpl = data_dipole[xmin_ind:xmax_ind, 0]
-    dp_total = data_dipole[xmin_ind:xmax_ind, 1]
+    t_dpl = data_dipole[xmin_ind:xmax_ind+1, 0]
+    dp_total = data_dipole[xmin_ind:xmax_ind+1, 1]
 
     # plot and create an xlim
     f.ax['dipole'].plot(t_dpl, dp_total)
     # t_stop = f.ax['dipole'].get_xlim()[1]
     x = (xmin, xmax)
-    xticks = np.concatenate((np.array([xmin]), np.arange(xmin+50., xmax+1, 100.)))
+    xticks = f.ax['spec'].get_xticks()
+    xticks[0] = xmin
+    # xticks = np.concatenate((np.array([xmin]), np.arange(xmin+50., xmax+1, p_dict['tstop']/10.)))
     # xticks = np.concatenate((np.array([x[0]]), np.arange(100., tstop+1, 100.)))
     # xticklabels = np.concatenate((np.array([x[0]]), np.arange(100., t_stop+1, 100.)))
 
@@ -470,6 +472,50 @@ def pfreqpwr(file_name, results_list, fparam_list, key_types):
     f.ax0.set_ylabel('Avg_pwr')
 
     f.save(file_name)
+
+def pfreqpwr_with_hist(file_name, freqpwr_result, f_spk, gid_dict, p_dict, key_types):
+    f = FigFreqpwrWithHist()
+    f.ax['hist'].hold(True)
+
+    xmin = 50.
+    xmax = p_dict['tstop']
+
+    f.ax['freqpwr'].plot(freqpwr_result['freq'], freqpwr_result['avg_pwr'])
+
+    # grab alpha feed data. spikes_from_file() from spikefn.py
+    s_dict = spikefn.spikes_from_file(gid_dict, f_spk)
+
+    # check for existance of alpha feed keys in s_dict.
+    s_dict = spikefn.alpha_feed_verify(s_dict, p_dict)
+
+    # Account for possible delays
+    s_dict = spikefn.add_delay_times(s_dict, p_dict)
+
+    # set number of bins (150 bins/1000ms)
+    bins = 150. * (xmax - xmin) / 1000.
+    hist_data = []
+
+    # Proximal feed
+    hist_data.extend(f.ax['hist'].hist(s_dict['alpha_feed_prox'].spike_list, bins, range=[xmin, xmax], color='red', label='Proximal feed')[0])
+
+    # Distal feed
+    hist_data.extend(f.ax['hist'].hist(s_dict['alpha_feed_dist'].spike_list, bins, range=[xmin, xmax], color='green', label='Distal feed')[0])
+
+    # set hist axis props
+    f.set_hist_props(hist_data)
+
+    # axis labels
+    f.ax['freqpwr'].set_xlabel('freq (Hz)')
+    f.ax['freqpwr'].set_ylabel('power')
+    f.ax['hist'].set_xlabel('time (ms)')
+    f.ax['hist'].set_ylabel('# spikes')
+
+    # create title
+    title_str = [key + ': %2.1f' % p_dict[key] for key in key_types['dynamic_keys']]
+    f.f.suptitle(title_str)
+
+    plt.savefig(file_name)
+    f.close()
 
 def pmaxpwr(file_name, results_list, fparam_list):
     f = FigStd()

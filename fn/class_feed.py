@@ -1,8 +1,8 @@
 # class_feed.py - establishes FeedExt(), ParFeedAll()
 #
-# v 1.7.17
-# rev 2013-02-12 (SL: moved ParFeedExt method as part of ParFeedAll, added events_per_cycle)
-# last major: (SL: stdev=0 for inputs is okay, but with just 1 stimulus)
+# v 1.7.19
+# rev 2013-02-13 (MS: create_extinput can use normal or uniform distribution) 
+# last major: (SL: moved ParFeedExt method as part of ParFeedAll, added events_per_cycle)
 
 import numpy as np
 import itertools as it
@@ -133,6 +133,7 @@ class ParFeedAll():
         f_input = self.p_ext['f_input']
         stdev = self.p_ext['stdev']
         events_per_cycle = self.p_ext['events_per_cycle']
+        distribution = self.p_ext['distribution']
 
         # events_per_cycle = 1
         if events_per_cycle > 2 or events_per_cycle <= 0:
@@ -143,13 +144,14 @@ class ParFeedAll():
         if not f_input:
             t_input = []
 
-        else:
+        elif distribution == 'normal':
             # array of mean stimulus times, starts at t0
             isi_array = np.arange(t0, self.p_ext['tstop'], 1000./f_input)
 
             # array of single stimulus times -- no doublets 
             if stdev:
                 t_array = self.prng.normal(np.repeat(isi_array, 10), stdev)
+
             else:
                 t_array = isi_array
 
@@ -167,6 +169,30 @@ class ParFeedAll():
             # brute force remove non-zero times. Might result in fewer vals than desired
             t_input = t_input[t_input > 0]
             t_input.sort()
+
+            # UNIFORM DISTRIBUTION
+        elif distribution == 'uniform':
+            num_inputs = f_input * (self.p_ext['tstop'] - t0) / 1000. * 10.
+            t_array = np.random.uniform(t0, self.p_ext['tstop'], num_inputs)
+
+            if events_per_cycle == 2:
+                # Two arrays store doublet times
+                t_input_low = t_array - 5
+                t_input_high = t_array + 5
+
+                # Array with ALL stimulus times for input 
+                # np.append concatenates two np arrays
+                t_input = np.append(t_input_low, t_input_high)
+            elif events_per_cycle == 1:
+                t_input = t_array
+
+            # brute force remove non-zero times. Might result in fewer vals than desired
+            t_input = t_input[t_input > 0]
+            t_input.sort()
+
+        else:
+            print "Indicated distribution not recognized. Not making any alpha feeds." 
+            t_input = []
 
         # Convert array into nrn vector
         self.eventvec.from_python(t_input)
