@@ -1,8 +1,8 @@
 # L5_pyramidal.py - establish class def for layer 5 pyramidal cells
 #
-# v 1.7.14
-# rev 2013-02-07 (SL: minor)
-# last rev: (SL: removed autapses)
+# v 1.7.18
+# rev 2013-02-12 (SL: Changed delay of L2Pyr-L5Pyr, host of seemingly minor changes w/large effect)
+# last rev: (SL: minor)
 
 from neuron import h as nrn
 from class_cell import Pyr
@@ -22,21 +22,11 @@ class L5Pyr(Pyr):
 
         # Pyr.__init__(self, soma_props)
         Pyr.__init__(self, soma_props)
-        # Pyr.__init__(self, pos, 39, 28.9, 0.85, 'L5Pyr')
         self.celltype = 'L5_pyramidal'
-
-        # preallocate namespaces for dend properties
-        # set in dend_props()
-        # self.dend_names = []
-        # self.dend_L = []
-        # self.dend_diam = []
-        # self.dend_cm = soma_props['cm']
-        # self.cm = 0.85
 
         # Geometry
         # dend Cm and dend Ra set using soma Cm and soma Ra
         self.create_dends(dend_names, dend_props, soma_props)
-        # self.create_dends(self.dend_props, self.cm)
         self.__connect_sections()
         # self.__set_3Dshape()
 
@@ -149,19 +139,19 @@ class L5Pyr(Pyr):
         self.soma.insert('hh')
         self.soma.gkbar_hh = 0.01
         self.soma.gl_hh = 4.26e-5
-        self.soma.el_hh = -65
+        self.soma.el_hh = -65.
 
         self.soma.gnabar_hh = 0.16
 
         # insert 'ca' mechanism
         # Units: pS/um^2
         self.soma.insert('ca')
-        self.soma.gbar_ca = 60
+        self.soma.gbar_ca = 60.
 
         # insert 'cad' mechanism
         # units of tau are ms
         self.soma.insert('cad')
-        self.soma.taur_cad = 20
+        self.soma.taur_cad = 20.
 
         # insert 'kca' mechanism
         # units are S/cm^2?
@@ -171,7 +161,7 @@ class L5Pyr(Pyr):
         # Insert 'km' mechanism
         # Units: pS/um^2
         self.soma.insert('km')
-        self.soma.gbar_km = 200 
+        self.soma.gbar_km = 200.
 
         # insert 'cat' mechanism
         self.soma.insert('cat')
@@ -197,11 +187,11 @@ class L5Pyr(Pyr):
             # Insert 'ca' mechanims
             # Units: pS/um^2
             sec.insert('ca')
-            sec.gbar_ca = 60
+            sec.gbar_ca = 60.
 
             # Insert 'cad' mechanism
             sec.insert('cad')
-            sec.taur_cad = 20
+            sec.taur_cad = 20.
 
             # Insert 'kca' mechanism
             sec.insert('kca')
@@ -210,11 +200,10 @@ class L5Pyr(Pyr):
             # Insert 'km' mechansim
             # Units: pS/um^2
             sec.insert('km')
-            sec.gbar_km = 200
+            sec.gbar_km = 200.
 
             # insert 'cat' and 'ar' mechanisms
             sec.insert('cat')
-            sec.gbar_cat = 2e-4
             sec.insert('ar')
 
         # set gbar_ar
@@ -230,6 +219,9 @@ class L5Pyr(Pyr):
             sec.push()
             for seg in sec:
                 seg.gbar_ar = 1e-6 * np.exp(3e-3 * nrn.distance(seg.x))
+
+                # this should always evaluate to 2e-4
+                sec.gbar_cat = 2e-4 * np.exp(0 * nrn.distance(seg.x))
 
             nrn.pop_section()
 
@@ -308,7 +300,7 @@ class L5Pyr(Pyr):
             nc_dict = {
                 'pos_src': pos,
                 'A_weight': p['gbar_L2Pyr_L5Pyr'],
-                'A_delay': 3.,
+                'A_delay': 1.,
                 'lamtha': 3.,
             }
 

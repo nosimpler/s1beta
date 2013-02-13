@@ -1,8 +1,8 @@
 # class_net.py - establishes the Network class and related methods
 #
-# v 1.7.17
-# rev 2013-01-23 (SL: Removed ParFeedExt in favor of ParFeedAll)
-# last major: (SL: minor)
+# v 1.7.18
+# rev 2013-02-12 (SL: debugging comment when removing init, not active)
+# last major: (SL: Removed ParFeedExt in favor of ParFeedAll)
 
 import itertools as it
 import numpy as np
@@ -94,6 +94,8 @@ class Network():
         # create sources and init
         self.__create_all_src()
         self.__state_init()
+        # if self.rank == 0:
+        #     print "Reminder: No initialization in this network"
 
         # parallel network connector
         self.__parnet_connect()

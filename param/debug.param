@@ -8,38 +8,37 @@ sim_prefix: debug
 expmt_groups: {testing}
 
 # numbers of cells making up the pyramidal grids
-N_pyr_x: 2
-N_pyr_y: 2
+N_pyr_x: 10
+N_pyr_y: 10
 
 # Poisson input
-# pois_lamtha: 20.
 pois_T: 1000.
 
 # maximal conductances for all synapses
 # max conductances TO L2Pyrs
-gbar_L2Pyr_L2Pyr_ampa: 0.
-gbar_L2Pyr_L2Pyr_nmda: 0.
-gbar_L2Basket_L2Pyr: 0.
+gbar_L2Pyr_L2Pyr_ampa: 5e-4
+gbar_L2Pyr_L2Pyr_nmda: 5e-4
+gbar_L2Basket_L2Pyr: 5e-2
 
 # max conductances TO L2Baskets
-gbar_L2Pyr_L2Basket: 0.
-gbar_L2Basket_L2Basket: 0.
+gbar_L2Pyr_L2Basket: 5e-4
+gbar_L2Basket_L2Basket: 2e-2
 
 # max conductances TO L5Pyrs
-gbar_L5Pyr_L5Pyr_ampa: 0.
-gbar_L5Pyr_L5Pyr_nmda: 0.
-gbar_L2Pyr_L5Pyr: 0.
-gbar_L2Basket_L5Pyr: 0.
-gbar_L5Basket_L5Pyr: 0.
+gbar_L5Pyr_L5Pyr_ampa: 5e-4
+gbar_L5Pyr_L5Pyr_nmda: 5e-4
+gbar_L2Pyr_L5Pyr: 2.5e-4
+gbar_L2Basket_L5Pyr: 1e-3
+gbar_L5Basket_L5Pyr: 2.5e-2
 
 # max conductances TO L5Baskets
-gbar_L5Basket_L5Basket: 0.
-gbar_L5Pyr_L5Basket: 0.
-gbar_L2Pyr_L5Basket: 0.
+gbar_L5Basket_L5Basket: 2e-2
+gbar_L5Pyr_L5Basket: 5e-4
+gbar_L2Pyr_L5Basket: 2.5e-4
 
 # Ongoing proximal alpha rhythm
-events_per_cycle: [1, 2]
-t0_input_prox: 10.
+events_per_cycle: 2
+t0_input_prox: 1500.
 tstop_input_prox: 1000.
 f_input_prox: 10.
 f_stdev_prox: 20.
@@ -58,33 +57,31 @@ input_prox_A_delay_L5: 1.0
 
 # current values, not sure where these distal values come from, need to check
 input_dist_A_weight_pyr: 4e-5
-input_dist_A_weight_inh: 4e-5
+input_dist_A_weight_inh: 8e-5
 input_dist_A_delay_L2: 5.0
 input_dist_A_delay_L5: 5.0
 
-# times for evoked responses
-t_evprox_early: 1500.
-dt_evprox0_evdist: -1
-dt_evprox0_evprox1: -1
-t_evprox_late: 2140.
-
+# evprox (early) input
+t_evprox_early: 50.
 sigma_t_evprox_early: 0
-sigma_t_evprox_late: 0
-sigma_t_evdist: 0
-
-# evprox (early) feed strength
 gbar_evprox_early_L2Pyr: 1e-3
 gbar_evprox_early_L2Basket: 2e-3
 gbar_evprox_early_L5Pyr: 5e-4
 gbar_evprox_early_L5Basket: 1e-3
 
-# evdist feed strengths
+# evdist input
+dt_evprox0_evdist: -1
 t_evdist: 100.
-gbar_evdist_L2Pyr: 0.
-gbar_evdist_L2Basket: 0.
-gbar_evdist_L5Pyr: 0
+sigma_t_evdist: 0
+gbar_evdist_L2Pyr: 2e-3
+gbar_evdist_L2Basket: 1e-3
+gbar_evdist_L5Pyr: 2e-3
+# gbar_evdist_L5Pyr: 1e-3
 
-# evprox (late) feed strength
+# evprox (late) input
+dt_evprox0_evprox1: -1
+t_evprox_late: 200.
+sigma_t_evprox_late: 0
 gbar_evprox_late_L2Pyr: 5.3e-3
 gbar_evprox_late_L2Basket: 5.3e-3
 gbar_evprox_late_L5Pyr: 2.7e-3

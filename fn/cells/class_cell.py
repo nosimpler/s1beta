@@ -1,8 +1,8 @@
 # class_cell.py - establish class def for general cell features
 #
-# v 1.7.17
-# rev 2013-01-07 (SL: some minor stuff, some debugging stuff)
-# last rev: (SL: changed nclist)
+# v 1.7.18
+# rev 2013-02-12 (SL: minor seeming changes, cast a bunch of numbers and removed incorr ? old nseg method)
+# last rev: (SL: some minor stuff, some debugging stuff)
 
 import numpy as np
 import itertools as it
@@ -134,9 +134,9 @@ class Cell():
     # creates a RECEIVING excitatory synapse at secloc
     def syn_ampa_create(self, secloc):
         syn_ampa = nrn.Exp2Syn(secloc)
-        syn_ampa.e = 0
+        syn_ampa.e = 0.
         syn_ampa.tau1 = 0.5
-        syn_ampa.tau2 = 5
+        syn_ampa.tau2 = 5.
 
         return syn_ampa
 
@@ -144,8 +144,9 @@ class Cell():
     # this is a pretty fast NMDA, no?
     def syn_nmda_create(self, secloc):
         syn_nmda = nrn.Exp2Syn(secloc)
-        syn_nmda.tau1 = 1
-        syn_nmda.tau2 = 20
+        syn_nmda.e = 0.
+        syn_nmda.tau1 = 1.
+        syn_nmda.tau2 = 20.
 
         return syn_nmda
 
@@ -213,7 +214,6 @@ class BasketSingle(Cell):
             'cm': 0.85,
             'Ra': 200.,
             'name': cell_name,
-            # 'name': 'L2Basket',
         }
 
     # Define 3D shape and position of cell. By default neuron uses xy plane for
@@ -273,14 +273,10 @@ class Pyr(Cell):
             self.list_dend.append(nrn.Section(name=self.name+'_'+sect_name))
             self.list_dend[-1].L = dend_props[sect_name]['L']
             self.list_dend[-1].diam = dend_props[sect_name]['diam']
+
+            # same values for soma
             self.list_dend[-1].Ra = soma_props['Ra']
             self.list_dend[-1].cm = soma_props['cm']
-
-            # old method
-            # if dend_props[sect_name]['L'] < 50:
-            #     self.list_dend[-1].nseg = 1
-            # else:
-            #     nseg = int(dend_props[sect_name]['L']/50)
 
             # set nseg for each dend
             if dend_props[sect_name]['L'] > 100:
