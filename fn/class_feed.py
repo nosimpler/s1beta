@@ -1,8 +1,8 @@
 # class_feed.py - establishes FeedExt(), ParFeedAll()
 #
-# v 1.7.19a
-# rev 2013-02-13 (MS: create_extinput can use normal or uniform distribution) 
-# last major: (SL: moved ParFeedExt method as part of ParFeedAll, added events_per_cycle)
+# v 1.7.20
+# rev 2013-02-14 (SL: Fixed bug in uniform distribution)
+# last major: (MS: create_extinput can use normal or uniform distribution) 
 
 import numpy as np
 import itertools as it
@@ -173,7 +173,7 @@ class ParFeedAll():
         # Uniform Distribution
         elif distribution == 'uniform':
             n_inputs = 10. * f_input * (self.p_ext['tstop'] - t0) / 1000.
-            t_array = np.random.uniform(t0, self.p_ext['tstop'], n_inputs)
+            t_array = self.prng.uniform(t0, self.p_ext['tstop'], n_inputs)
 
             if events_per_cycle == 2:
                 # Two arrays store doublet times
@@ -183,6 +183,7 @@ class ParFeedAll():
                 # Array with ALL stimulus times for input 
                 # np.append concatenates two np arrays
                 t_input = np.append(t_input_low, t_input_high)
+
             elif events_per_cycle == 1:
                 t_input = t_array
 

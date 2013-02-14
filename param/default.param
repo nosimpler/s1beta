@@ -12,7 +12,6 @@ N_pyr_x: 10
 N_pyr_y: 10 
 
 # Poisson input
-# pois_lamtha: 20.
 pois_T: 1000.
 
 # maximal conductacnes for all synapses
@@ -26,7 +25,7 @@ gbar_L2Pyr_L2Basket: 5e-4
 gbar_L2Basket_L2Basket: 2e-2
 
 # max conductances TO L5Pyrs
-gbar_L5Pyr_L5Pyr_ampa: 5e-3
+gbar_L5Pyr_L5Pyr_ampa: 5e-4
 gbar_L5Pyr_L5Pyr_nmda: 5e-4
 gbar_L2Pyr_L5Pyr: 2.5e-4
 gbar_L2Basket_L5Pyr: 1e-3
@@ -59,39 +58,32 @@ input_prox_A_weight_inh: 8e-5
 input_prox_A_delay_L2: 0.1
 input_prox_A_delay_L5: 1.0
 
-# current values, not sure where these distal values come from, need to check
 input_dist_A_weight_pyr: 4e-5
 input_dist_A_weight_inh: 8e-5
 input_dist_A_delay_L2: 5.0
 input_dist_A_delay_L5: 5.0
 
-# times for evoked responses
-t_evprox_early: 104.
-dt_evprox0_evdist: -1
-dt_evprox0_evprox1: -1
-t_evprox_late: 214.
-t_evdist: 149.
-# t_evprox_early: 454.
-# t_evprox_late: 564.
-# t_evdist: 499.
-
-sigma_t_evprox_early: 0
-sigma_t_evprox_late: 0
-sigma_t_evdist: 0
-
 # evprox (early) feed strength
+t_evprox_early: 104.
+sigma_t_evprox_early: 0
 gbar_evprox_early_L2Pyr: 1e-3
 gbar_evprox_early_L5Pyr: 5e-4
 gbar_evprox_early_L2Basket: 2e-3
 gbar_evprox_early_L5Basket: 1e-3
 
 # evprox (late) feed strength
+dt_evprox0_evprox1: -1
+t_evprox_late: 214.
+sigma_t_evprox_late: 0
 gbar_evprox_late_L2Pyr: 5.3e-3
 gbar_evprox_late_L5Pyr: 2.7e-3
 gbar_evprox_late_L2Basket: 2.7e-3
 gbar_evprox_late_L5Basket: 5.3e-3
 
 # evdist feed strengths
+dt_evprox0_evdist: -1
+t_evdist: 149.
+sigma_t_evdist: 0
 gbar_evdist_L2Pyr: 1e-3
 gbar_evdist_L5Pyr: 1e-3
 gbar_evdist_L2Basket: 5e-4

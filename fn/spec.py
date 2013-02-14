@@ -1,8 +1,8 @@
 # spec.py - Average time-frequency energy representation using Morlet wavelet method
 #
-# v 1.7.19a
-# rev 2013-02-13 (MS: Minor changes to plotting routines)
-# last major: (MS: Bug fixed in analysis. Debug option added to analysis)
+# v 1.7.20
+# rev 2013-02-14 (SL: Removed 50 Hz notch filter)
+# last major: (MS: Minor changes to plotting routines)
 
 import os
 import sys
@@ -88,7 +88,8 @@ class MorletSpec():
         if self.S_trans.ndim == 1:
             for j in range(0, len(self.freqvec)):
                 s = sps.detrend(self.S_trans[:])
-                B[j,:] = B[j,:] + self.__energyvec(self.freqvec[j], self.__lnr50(s))
+                B[j,:] += self.__energyvec(self.freqvec[j], s)
+                # B[j,:] = B[j,:] + self.__energyvec(self.freqvec[j], self.__lnr50(s))
 
             return B
 
@@ -96,7 +97,8 @@ class MorletSpec():
             for i in range(0, self.S_trans.shape[0]):
                 for j in range(0, len(self.freqvec)):
                     s = sps.detrend(self.S_trans[i,:])
-                    B[j,:] = B[j,:] + self.__energyvec(self.freqvec[j], self.__lnr50(s))
+                    B[j,:] += self.__energyvec(self.freqvec[j], s)
+                    # B[j,:] = B[j,:] + self.__energyvec(self.freqvec[j], self.__lnr50(s))
 
     def __energyvec(self, f, s):
         # Return an array containing the energy as function of time for freq f

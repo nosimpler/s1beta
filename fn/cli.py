@@ -1,8 +1,8 @@
 # cli.py - routines for the command line interface console s1sh.py
 #
-# v 1.7.19
-# rev 2013-02-13 (MS: Incomplete function freqpwrwithhist)
-# last major: (SL: auto server, changed pdipole agg function, other)
+# v 1.7.20
+# rev 2013-02-14 (SL: example for plotaverages)
+# last major: (MS: Incomplete function freqpwrwithhist)
 
 from cmd import Cmd
 from datetime import datetime
@@ -483,7 +483,8 @@ class Console(Cmd):
         clidefs.add_alpha_feed_hist(self.ddata, [xmin, xmax])
 
     def do_plotaverages(self, args):
-        """Creates plots of averaged data
+        """Creates plots of averaged dipole or spec data. Automatically checks if data exists. Usage:
+           'plotaverages'
         """
         clidefs.plot_avg_data(self.ddata)
 
