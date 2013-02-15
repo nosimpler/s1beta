@@ -49,13 +49,11 @@ f_input_dist: 10
 f_stdev_dist: 20.
 
 # thalamic input amplitudes and delays
-input_prox_A_weight_pyr: 4e-5
 input_prox_A_weight_inh: 8e-5
 input_prox_A_delay_L2: 0.1
 input_prox_A_delay_L5: 1.0
 
 # current values, not sure where these distal values come from, need to check
-input_dist_A_weight_pyr: 4e-5
 input_dist_A_weight_inh: 4e-5
 input_dist_A_delay_L2: 5.0
 input_dist_A_delay_L5: 5.0
@@ -144,3 +142,9 @@ events_per_cycle_prox: 2
 events_per_cycle_dist: 2
 distribution_dist: normal
 distribution_prox: normal
+
+# new params from default
+input_prox_A_weight_L2Pyr: 4e-5
+input_prox_A_weight_L5Pyr: 4e-5
+input_dist_A_weight_L5Pyr: 4e-5
+input_dist_A_weight_L2Pyr: 4e-5

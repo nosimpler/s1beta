@@ -41,7 +41,6 @@ t0_input_prox: 50.
 tstop_input_prox: 1000.
 f_input_prox: 10.
 f_stdev_prox: 20.
-input_prox_A_weight_pyr: 4e-5
 input_prox_A_weight_inh: 8e-5
 input_prox_A_delay_L2: 0.1
 input_prox_A_delay_L5: 1.0
@@ -51,7 +50,6 @@ t0_input_dist: 100.
 tstop_input_dist: 1000.
 f_input_dist: 10
 f_stdev_dist: 20.
-input_dist_A_weight_pyr: 4e-5
 input_dist_A_weight_inh: 4e-5
 input_dist_A_delay_L2: 5.0
 input_dist_A_delay_L5: 5.0
@@ -140,3 +138,9 @@ events_per_cycle_prox: 2
 events_per_cycle_dist: 2
 distribution_dist: normal
 distribution_prox: normal
+
+# new params from default
+input_prox_A_weight_L2Pyr: 4e-5
+input_prox_A_weight_L5Pyr: 4e-5
+input_dist_A_weight_L5Pyr: 4e-5
+input_dist_A_weight_L2Pyr: 4e-5

@@ -1,8 +1,8 @@
 # plotfn.py - pall and possibly other plot routines
 #
-# v 1.7.20
-# rev 2013-02-14 (SL: turned on debug mode to remind that addalphahist should be fixed)
-# last major: (MS: pall and pkernels take xlim as optional arg)
+# v 1.7.21
+# rev 2013-02-14 (SL: turned off debug mode, but it still needs to be fixed)
+# last major: (SL: turned on debug mode to remind that addalphahist should be fixed)
 
 from pdipole import pdipole, pdipole_with_hist
 from spec import pspec, pspec_with_hist
@@ -118,7 +118,7 @@ def pall(ddir, p_exp, spec_results, xlim=[0., 'tstop']):
 
 # Plots dipole and spec with alpha feed histograms
 def pdpl_pspec_with_hist(ddir, p_exp, spec_results, xlim=[0., 'tstop']):
-    runtype = 'debug'
+    runtype = 'parallel'
 
     # preallocate lists for use below
     param_list = []

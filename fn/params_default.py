@@ -1,8 +1,8 @@
 # params_default.py - list of default params and values
 #
-# v 1.7.19
-# rev 2013-02-13 (MS: Added alpha feed distribution params. events_per_cycle now per feed)
-# last major: (SL: added events_per_cycle)
+# v 1.7.21
+# rev 2013-02-14 (SL: Added params for L2 and L5 pyr separately in feeds)
+# last major: (MS: Added alpha feed distribution params. events_per_cycle now per feed)
 
 # flat file of default values
 # tuples for different "experiments"
@@ -87,13 +87,15 @@ def get_params_default():
         'events_per_cycle_dist': 2,
 
         # thalamic input amplitudes abd delays
-        'input_prox_A_weight_pyr': 4e-5,
+        'input_prox_A_weight_L2Pyr': 4e-5,
+        'input_prox_A_weight_L5Pyr': 4e-5,
         'input_prox_A_weight_inh': 8e-5,
         'input_prox_A_delay_L2': 0.1,
         'input_prox_A_delay_L5': 1.0,
 
         # current values, not sure where these distal values come from, need to check
-        'input_dist_A_weight_pyr': 4e-5,
+        'input_dist_A_weight_L2Pyr': 4e-5,
+        'input_dist_A_weight_L5Pyr': 4e-5,
         'input_dist_A_weight_inh': 8e-5,
         'input_dist_A_delay_L2': 5.0,
         'input_dist_A_delay_L5': 5.0,

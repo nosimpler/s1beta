@@ -29,13 +29,11 @@ doublet_dist: 0
 events_per_cycle_dist: 2
 
 # thalamic input amplitudes and delays
-input_prox_A_weight_pyr: 4e-5
 input_prox_A_weight_inh: 8e-5
 input_prox_A_delay_L2: 0.1
 input_prox_A_delay_L5: 1.0
 
 # current values, not sure where these distal values come from, need to check
-input_dist_A_weight_pyr: 4e-5
 input_dist_A_weight_inh: 4e-5
 input_dist_A_delay_L2: [0.1, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50]
 input_dist_A_delay_L5: -1
@@ -147,3 +145,9 @@ gbar_L2Pyr_L5Basket: 2.5e-4
 # new params from default
 dt_evprox0_evdist: -1
 dt_evprox0_evprox1: -1
+
+# new params from default
+input_prox_A_weight_L2Pyr: 4e-5
+input_prox_A_weight_L5Pyr: 4e-5
+input_dist_A_weight_L5Pyr: 4e-5
+input_dist_A_weight_L2Pyr: 4e-5

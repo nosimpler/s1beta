@@ -159,5 +159,8 @@ if __name__ == '__main__':
     elif operation_mode == 'append':
         check_missing('a')
 
+    elif operation_mode == 'help':
+        print 'check, clean, restore, append'
+
     else:
         print "Not a valid option"

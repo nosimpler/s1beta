@@ -2,7 +2,7 @@
 #
 # v 1.7.20
 # rev 2013-02-14 (SL: Fixed bug in uniform distribution)
-# last major: (MS: create_extinput can use normal or uniform distribution) 
+# last major: (MS: create_extinput can use normal or uniform distribution)
 
 import numpy as np
 import itertools as it

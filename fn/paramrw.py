@@ -1,8 +1,8 @@
 # paramrw.py - routines for reading the param files
 #
-# v 1.7.19a
-# rev 2013-02-13 (MS: Updated feed_verify to read L5 delay of -1 as being same delay as L2. Events_per_cycle done per alpha feed. Added distribution param)
-# last major: (SL: Added params)
+# v 1.7.21
+# rev 2013-02-14 (SL: Added different pyr weights for feeds for L2 and L5)
+# last major: (MS: Updated feed_verify to read L5 delay of -1 as being same delay as L2. Events_per_cycle done per alpha feed. Added distribution param)
 
 import re
 import fileio as fio
@@ -395,8 +395,8 @@ def create_pext(p, tstop):
         't0': p['t0_input_prox'],
         'tstop': p['tstop_input_prox'],
         'stdev': p['f_stdev_prox'],
-        'L2Pyr': (p['input_prox_A_weight_pyr'], p['input_prox_A_delay_L2']),
-        'L5Pyr': (p['input_prox_A_weight_pyr'], p['input_prox_A_delay_L5']),
+        'L2Pyr': (p['input_prox_A_weight_L2Pyr'], p['input_prox_A_delay_L2']),
+        'L5Pyr': (p['input_prox_A_weight_L5Pyr'], p['input_prox_A_delay_L5']),
         'L2Basket': (p['input_prox_A_weight_inh'], p['input_prox_A_delay_L2']),
         'L5Basket': (p['input_prox_A_weight_inh'], p['input_prox_A_delay_L5']),
         'events_per_cycle': p['events_per_cycle_prox'],
@@ -414,8 +414,8 @@ def create_pext(p, tstop):
         't0': p['t0_input_dist'],
         'tstop': p['tstop_input_dist'],
         'stdev': p['f_stdev_dist'],
-        'L2Pyr': (p['input_dist_A_weight_pyr'], p['input_dist_A_delay_L2']),
-        'L5Pyr': (p['input_dist_A_weight_pyr'], p['input_dist_A_delay_L5']),
+        'L2Pyr': (p['input_dist_A_weight_L2Pyr'], p['input_dist_A_delay_L2']),
+        'L5Pyr': (p['input_dist_A_weight_L5Pyr'], p['input_dist_A_delay_L5']),
         'L2Basket': (p['input_dist_A_weight_inh'], p['input_dist_A_delay_L2']),
         'events_per_cycle': p['events_per_cycle_dist'],
         'prng_seedcore': int(p['prng_seedcore_input_dist']),
