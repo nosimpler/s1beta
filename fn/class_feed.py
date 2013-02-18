@@ -1,6 +1,6 @@
 # class_feed.py - establishes FeedExt(), ParFeedAll()
 #
-# v 1.7.23a
+# v 1.7.23b
 # rev 2013-02-18 (SL: Fixed the evoked input timings)
 # last major: (SL: Fixed bug in uniform distribution)
 
@@ -37,7 +37,6 @@ class ParFeedAll():
             self.__create_extpois()
 
         elif type.startswith(('evprox', 'evdist')):
-            print gid
             self.__create_evoked()
 
         elif type == 'extgauss':
