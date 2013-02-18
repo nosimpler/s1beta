@@ -1,6 +1,6 @@
 # class_feed.py - establishes FeedExt(), ParFeedAll()
 #
-# v 1.7.23
+# v 1.7.23a
 # rev 2013-02-18 (SL: Fixed the evoked input timings)
 # last major: (SL: Fixed bug in uniform distribution)
 
@@ -107,7 +107,6 @@ class ParFeedAll():
 
             # vals must be sorted
             val_evoked.sort()
-            print val_evoked
 
             self.eventvec.from_python(val_evoked)
 
