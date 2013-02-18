@@ -1,8 +1,8 @@
 # cli.py - routines for the command line interface console s1sh.py
 #
-# v 1.7.20
-# rev 2013-02-14 (SL: example for plotaverages)
-# last major: (MS: Incomplete function freqpwrwithhist)
+# v 1.7.22
+# rev 2013-02-18 (SL: debug changes)
+# last major: (SL: example for plotaverages)
 
 from cmd import Cmd
 from datetime import datetime
@@ -74,14 +74,14 @@ class Console(Cmd):
     def do_debug(self, args):
         """Qnd function to test many other functions
         """
-        self.do_setdate('2013-02-03')
-        self.do_load('test-002')
+        self.do_setdate('from_remote/2013-02-15')
+        self.do_load('evbeta_thresh_nonperceived-002')
+        self.do_plotaverages('')
         # self.do_specanalysis('max_freq=50')
-        self.do_addalphahist('--xmin=0 --xmax=500')
+        # self.do_addalphahist('--xmin=0 --xmax=500')
         # self.do_avgtrials('dpl')
         # self.do_dipolemin('in (mu, 0, 2) on [400., 410.]')
         # self.do_pdipole('agg (-12e3, 0)')
-        # self.do_setdate('from_remote/2013-02-05')
         # self.do_load('simple_synaptic-006')
         # self.do_pdipole('agg')
         # self.do_show('L2Pyr_L5Pyr_wL2Bask changed in 0')

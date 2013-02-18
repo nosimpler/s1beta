@@ -1,8 +1,8 @@
 # clidefs.py - these are all of the function defs for the cli
 #
-# v 1.7.19
-# rev 2013-02-18 (MS: incomplete function freq_pwr_with_hist)
-# last major: (SL: fixed some plot_avg stuff)
+# v 1.7.22
+# rev 2013-02-18 (SL: Fixed the plot_avg_data() function for dipole)
+# last major: (MS: incomplete function freq_pwr_with_hist)
 
 # Standard modules
 import fnmatch, os, re, sys
@@ -75,12 +75,9 @@ def exec_pcompare(ddata, cli_args):
 
     sims = [sim0, sim1]
 
-    # print expmt, [sim0, sim1]
-
     labels = ['A. Control E$_g$-I$_s$', 'B. Increased E$_g$-I$_s$']
 
     if expmt:
-        # print expmt
         psum.pcompare2(ddata, sims, labels, [expmt[0], expmt[0]])
     else:
         psum.pcompare2(ddata, sims, labels)
@@ -89,7 +86,6 @@ def exec_pcompare(ddata, cli_args):
 def exec_pcompare3(ddata, cli_args):
     # the args will be the 3 sim numbers.
     # these will be strings out of the split!
-    # print cli_args
     vars = cli_args.split(' ')
     sim_no = int(vars[0])
     # expmt_last = int(vars[1])
@@ -209,6 +205,8 @@ def avg_over_trials(ddata, datatype):
 
             # create the sublist of just these trials
             unique_list = [rawdatafile for rawdatafile in rawdata_list if rawdatafile.startswith(fprefix_long)]
+
+            print unique_list
 
             # one filename per unique
             # length of the unique list is the number of trials for this sim, should match N_trials
@@ -373,7 +371,6 @@ def freqpwr_with_hist(ddata, dsim):
         gid_dict, p_dict = paramrw.read(fparam)
         file_name = 'freqpwr.png'
 
-        print file_name
         spec.pfreqpwr_with_hist(file_name, freqpwr_result, f_spk, gid_dict, p_dict, key_types)
 
 def regenerate_plots(ddata, xlim=[0, 'tstop']):
@@ -412,62 +409,86 @@ def add_alpha_feed_hist(ddata, xlim=[0, 'tstop']):
 
 # plot data averaged over trials
 def plot_avg_data(ddata):
-    # avgdpl and avgspec data paths
-    dpl_list = fio.file_match(ddata.dsim, '-dplavg.txt')
-    spec_list = fio.file_match(ddata.dsim, '-avgspec.npz')
+    runtype = 'parallel'
+    # runtype = 'debug'
 
-    print dpl_list
+    # this is a qnd check to create the fig dir if it doesn't already exist
+    # backward compatibility check for sims that didn't auto-create these dirs
+    for expmt_group in ddata.expmt_groups:
+        dfig_avgdpl = ddata.dfig[expmt_group]['figavgdpl']
+        dfig_avgspec = ddata.dfig[expmt_group]['figavgspec']
 
+        # create them if they did not previously exist
+        fio.dir_create(dfig_avgdpl)
+        fio.dir_create(dfig_avgspec)
+
+    # presumably globally true information
     p_exp = paramrw.ExpParams(ddata.fparam)
     key_types = p_exp.get_key_types()
 
-    # param list to match avg data lists
-    fparam_list = fio.fparam_match_minimal(ddata.dsim, p_exp) 
-    pdict_list = [paramrw.read(f_param)[1] for f_param in fparam_list]
-
+    # empty lists to be used/appended
+    dpl_list = []
+    spec_list = []
     dfig_list = []
+    dfig_dpl_list = []
+    dfig_spec_list = []
+    pdict_list = []
 
-    # append as many copies of expmt dfig dicts as necessary
+    # by doing all file operations sequentially by expmt_group in this iteration
+    # trying to guarantee order better than before
     for expmt_group in ddata.expmt_groups:
-        dfig_list.extend([ddata.dfig[expmt_group] for path in dpl_list if expmt_group in path])
+        # print expmt_group, ddata.dfig[expmt_group]
 
-    # construct list of names fig dirs for each data type
-    dfig_dpl_list = [os.path.join(dfig['figdpl'], 'avgdpl') for dfig in dfig_list]
-    dfig_spec_list = [os.path.join(dfig['figspec'], 'avgspec') for dfig in dfig_list]
+        # avgdpl and avgspec data paths
+        # fio.file_match() returns lists sorted
+        # dpl_list_expmt is so i can iterate through them in a sec
+        dpl_list_expmt = fio.file_match(ddata.dfig[expmt_group]['avgdpl'], '-dplavg.txt')
+        dpl_list += dpl_list_expmt
+        spec_list += fio.file_match(ddata.dfig[expmt_group]['avgspec'], '-avgspec.npz')
 
-    # if avg dpl data exists
+        # create redundant list of avg dipole dirs and avg spec dirs
+        # unique parts are expmt group names
+        # create one entry for each in dpl_list
+        dfig_list_expmt = [ddata.dfig[expmt_group] for path in dpl_list_expmt]
+        dfig_list += dfig_list_expmt
+        dfig_dpl_list += [dfig['figavgdpl'] for dfig in dfig_list_expmt]
+        dfig_spec_list += [dfig['figavgspec'] for dfig in dfig_list_expmt]
+
+        # param list to match avg data lists
+        fparam_list = fio.fparam_match_minimal(ddata.dfig[expmt_group]['param'], p_exp) 
+        pdict_list += [paramrw.read(f_param)[1] for f_param in fparam_list]
+
     if dpl_list:
-        # directory creation
-        for dfig_dpl in dfig_dpl_list:
-            if not os.path.exists(dfig_dpl):
-                os.makedirs(dfig_dpl)
+        if runtype == 'debug':
+            for f_dpl, dfig_dpl, p_dict in it.izip(dpl_list, dfig_dpl_list, pdict_list):
+                pdipole.pdipole(f_dpl, dfig_dpl, p_dict, key_types)
 
-        # plot avg dpl
-        pl = Pool()
-        for dfig_dpl, p_dict, f_dpl in it.izip(dfig_dpl_list, pdict_list, dpl_list):
-            pl.apply_async(pdipole.pdipole, (f_dpl, dfig_dpl, p_dict, key_types))
+        elif runtype == 'parallel':
+            pl = Pool()
+            for f_dpl, dfig_dpl, p_dict in it.izip(dpl_list, dfig_dpl_list, pdict_list):
+                pl.apply_async(pdipole.pdipole, (f_dpl, dfig_dpl, p_dict, key_types))
 
-        pl.close()
-        pl.join()
+            pl.close()
+            pl.join()
 
     else:
-        print "No averaged dpl data found. Cannot continue without it. Run avgtrials()."
+        print "No avg dipole data found."
         return 0
 
     # if avg spec data exists
     if spec_list:
-        # directory creation
-        for dfig_spec in dfig_spec_list:
-            if not os.path.exists(dfig_spec):
-                os.makedirs(dfig_spec)
+        if runtype == 'debug':
+            for f_spec, f_dpl, dfig_spec, pdict in it.izip(spec_list, dpl_list, dfig_spec_list, pdict_list):
+                spec.pspec(f_spec, f_dpl, dfig_spec, pdict, key_types)
 
-        # plot avg spec
-        pl = Pool()
-        for dfig_spec, p_dict, f_spec, f_dpl in it.izip(dfig_spec_list, pdict_list, spec_list, dpl_list):
-            pl.apply_async(spec.pspec, (f_spec, f_dpl, dfig_spec, p_dict, key_types))
+        elif runtype == 'parallel':
+            pl = Pool()
+            for f_spec, f_dpl, dfig_spec, pdict in it.izip(spec_list, dpl_list, dfig_spec_list, pdict_list):
+            # for dfig_spec, p_dict, f_spec, f_dpl in it.izip(dfig_spec_list, pdict_list, spec_list, dpl_list):
+                pl.apply_async(spec.pspec, (f_spec, f_dpl, dfig_spec, pdict, key_types))
 
-        pl.close()
-        pl.join()
+            pl.close()
+            pl.join()
 
     else:
         print "No averaged spec data found. Run avgtrials()."
@@ -533,7 +554,7 @@ def find_pdfs(ddata, expmt):
         # find the ONE pdf in the root dir
         # all refers to the aggregated pdf file
         pdf_list = [f for f in iglob(os.path.join(ddata, '*.pdf'))]
-        # prettyprint(pdf_list)
+
     elif expmt == 'each':
         # get each and every one of these (syntax matches below)
         pdf_list = fio.file_match(ddata, '*.pdf')

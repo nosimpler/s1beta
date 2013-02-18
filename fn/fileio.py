@@ -1,8 +1,8 @@
 # fileio.py - general file input/output functions
 #
-# v 1.7.11
-# rev 2013-01-30 (SL: Added avg data types, clean up, spelling)
-# last rev: (SL: removed old prng state stuff)
+# v 1.7.22
+# rev 2013-02-18 (SL: Added new avg data type directories)
+# last rev: (SL: Added avg data types, clean up, spelling)
 
 import datetime, fnmatch, os, shutil, sys
 import itertools as it
@@ -106,9 +106,11 @@ class SimulationPaths():
             'rawspec': '-spec.npz',
             'avgdpl': '-dplavg.txt',
             'avgspec': '-specavg.npz',
-            'figspk': '-spk.eps',
+            'figavgdpl': '-dplavg.eps',
+            'figavgspec': '-specavg.eps',
             'figdpl': '-dpl.eps',
             'figspec': '-spec.eps',
+            'figspk': '-spk.eps',
             'param': '-param.txt',
         }
 
