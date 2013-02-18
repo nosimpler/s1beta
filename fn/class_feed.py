@@ -1,8 +1,8 @@
 # class_feed.py - establishes FeedExt(), ParFeedAll()
 #
-# v 1.7.20
-# rev 2013-02-14 (SL: Fixed bug in uniform distribution)
-# last major: (MS: create_extinput can use normal or uniform distribution)
+# v 1.7.23
+# rev 2013-02-18 (SL: Fixed the evoked input timings)
+# last major: (SL: Fixed bug in uniform distribution)
 
 import numpy as np
 import itertools as it
@@ -22,14 +22,22 @@ class ParFeedAll():
         self.celltype = celltype
 
         # random generator for this instance
-        self.seed = self.p_ext['prng_seedcore'] + gid
-        self.prng = np.random.RandomState(self.seed)
+        # qnd hack to make the seeds the same across all gids
+        # for just evoked
+        if type.startswith(('evprox', 'evdist')):
+            self.seed = self.p_ext['prng_seedcore']
+            self.prng = np.random.RandomState(self.seed)
+
+        else:
+            self.seed = self.p_ext['prng_seedcore'] + gid
+            self.prng = np.random.RandomState(self.seed)
 
         # each of these methods creates self.eventvec for playback
         if type == 'extpois':
             self.__create_extpois()
 
         elif type.startswith(('evprox', 'evdist')):
+            print gid
             self.__create_evoked()
 
         elif type == 'extgauss':
@@ -90,7 +98,6 @@ class ParFeedAll():
             # if a non-zero sigma is specified
             if sigma:
                 val_evoked = self.prng.normal(mu, sigma, 1)
-                # val_evoked = np.random.normal(mu, sigma, 1)
 
             else:
                 # if sigma is specified at 0
@@ -100,6 +107,8 @@ class ParFeedAll():
 
             # vals must be sorted
             val_evoked.sort()
+            print val_evoked
+
             self.eventvec.from_python(val_evoked)
 
         else:
