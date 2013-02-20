@@ -1,8 +1,8 @@
 # clidefs.py - these are all of the function defs for the cli
 #
-# v 1.7.22
-# rev 2013-02-18 (SL: Fixed the plot_avg_data() function for dipole)
-# last major: (MS: incomplete function freq_pwr_with_hist)
+# v 1.7.24
+# rev 2013-02-19 (SL: added pdipole_evoked, unfinished)
+# last major: (SL: Fixed the plot_avg_data() function for dipole)
 
 # Standard modules
 import fnmatch, os, re, sys
@@ -39,6 +39,24 @@ def get_subdir_list(dcheck):
     else:
         return []
 
+def exec_pdipole_evoked(ddata):
+    expmt_group = ddata.expmt_groups[0]
+
+    # grab just the first element of the dipole list
+    dpl_list = ddata.file_match(expmt_group, 'rawdpl')
+    param_list = ddata.file_match(expmt_group, 'param')
+    spk_list = ddata.file_match(expmt_group, 'rawspk')
+
+    # fig dir will be that of the original dipole
+    dfig = ddata.dfig[expmt_group]['figdpl']
+
+    # first file names
+    f_dpl = dpl_list[0]
+    f_spk = spk_list[0]
+    f_param = param_list[0]
+
+    pdipole.pdipole_evoked(dfig, f_dpl, f_spk, f_param)
+
 # timer function wrapper returns WALL CLOCK time (more or less)
 def timer(fn, args):
     t0 = time()
@@ -48,22 +66,6 @@ def timer(fn, args):
     print "%s took %4.4f s" % (fn, t1-t0)
 
     return x
-
-# execute running a1_laminar
-def exec_runa1(file_input):
-    # runs the experiments, returns variables for data directory and exp list
-    dir_data, expmts = timer('kainsim', '(\'%s\')'% file_input)
-
-    # runs the psd function and saves the file
-    # timer('pwr.psd', '(\'%s\')'% dir_data)
-
-    # run the spike and rate stuff and saves the files
-    # timer('spk.calc_rates', '(\'%s\')'% dir_data)
-
-    # runs the plot function
-    # timer('plotfn.auto', '(\'%s\')'% dir_data)
-
-    return dir_data, expmts
 
 def exec_pcompare(ddata, cli_args):
     vars = cli_args.split(" ")
@@ -374,7 +376,6 @@ def freqpwr_with_hist(ddata, dsim):
         spec.pfreqpwr_with_hist(file_name, freqpwr_result, f_spk, gid_dict, p_dict, key_types)
 
 def regenerate_plots(ddata, xlim=[0, 'tstop']):
-# def regenerate_plots(ddata, xmin, xmax):
     # need p_exp, spec_results, gid_dict, and tstop.
     # fparam = fio.file_match(ddata.dsim, '.param')[0]
 
@@ -386,10 +387,8 @@ def regenerate_plots(ddata, xlim=[0, 'tstop']):
 
     # generate data if no spec exists here
     if not spec_results:
-        print "No saved spec data found. Performing spec anaylsis ... ",
+        print "No saved spec data found. Performing spec anaylsis ... "
         spec_results = regenerate_spec_data(ddata)
-
-        print "now plotting"
 
     plotfn.pall(ddata, p_exp, spec_results, xlim)
 
@@ -400,10 +399,8 @@ def add_alpha_feed_hist(ddata, xlim=[0, 'tstop']):
 
     # generate data if no spec exists here
     if not spec_results:
-        print "No saved spec data found. Performing spec anaylsis ... ",
+        print "No saved spec data found. Performing spec anaylsis ... "
         spec_results = regenerate_spec_data(ddata)
-
-        print "Now plotting"
 
     plotfn.pdpl_pspec_with_hist(ddata, p_exp, spec_results, xlim)
 

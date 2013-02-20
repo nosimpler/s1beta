@@ -1,8 +1,8 @@
 # cli.py - routines for the command line interface console s1sh.py
 #
-# v 1.7.22
-# rev 2013-02-18 (SL: debug changes)
-# last major: (SL: example for plotaverages)
+# v 1.7.24
+# rev 2013-02-19 (SL: minor debug stuff, start of adding a new function)
+# last major: (SL: debug changes)
 
 from cmd import Cmd
 from datetime import datetime
@@ -72,11 +72,11 @@ class Console(Cmd):
         self.paramfile_list = [f for f in os.listdir(dparam_default) if f.endswith('.param')]
 
     def do_debug(self, args):
-        """Qnd function to test many other functions
+        """Qnd function to test other functions
         """
-        self.do_setdate('from_remote/2013-02-15')
-        self.do_load('evbeta_thresh_nonperceived-002')
-        self.do_plotaverages('')
+        self.do_setdate('2013-02-19')
+        self.do_load('debug-031')
+        self.do_pdipole_evoked('')
         # self.do_specanalysis('max_freq=50')
         # self.do_addalphahist('--xmin=0 --xmax=500')
         # self.do_avgtrials('dpl')
@@ -87,7 +87,6 @@ class Console(Cmd):
         # self.do_show('L2Pyr_L5Pyr_wL2Bask changed in 0')
         # self.__get_paramfile_list()
         # self.do_avgtrials('dpl')
-        # self.do_replot('')
         # self.epscompress('spk')
         # self.do_psthgrid()
 
@@ -416,6 +415,11 @@ class Console(Cmd):
         #     pool.close()
         #     pool.join()
 
+    def do_pdipole_evoked(self, args):
+        """Trial-by-trial replot of pdipole that includes evoked response lines if they exist
+        """
+        clidefs.exec_pdipole_evoked(self.ddata)
+
     def do_replot(self, args):
         """Regenerates plots in given directory. Usage:
            Can pass arguments to set xmin and xmax of plots
@@ -449,7 +453,6 @@ class Console(Cmd):
                     xmax = 'tstop'
 
         clidefs.regenerate_plots(self.ddata, [xmin, xmax])
-        # clidefs.regenerate_plots(self.ddata, xmin, xmax)
 
     def do_addalphahist(self, args):
         """Adds histogram of alpha feed input times to dpl and spec plots

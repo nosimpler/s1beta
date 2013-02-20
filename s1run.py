@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # s1run.py - primary run function for s1 project
 #
-# v 1.7.11
-# rev 2013-01-30 (SL: cleanup, using new string templates)
-# last major: (SL: commented out the optimize function for now)
+# v 1.7.24
+# rev 2013-02-19 (SL: Fixed N_trials = 0 seed logic)
+# last major: (SL: cleanup, using new string templates)
 
 import os
 import sys
@@ -111,9 +111,6 @@ def exec_runsim(f_psim):
         for i in range(p_exp.N_sims):
             if rank == 0:
                 t_expmt_start = time.time()
-                # run_start = time.time()
-                # Tells run number, prints total runs
-                # print "Run %i of %i" % (i, p_exp.N_sims-1),
 
             # return the param dict for this simulation
             p = p_exp.return_pdict(expmt_group, i)
@@ -138,35 +135,33 @@ def exec_runsim(f_psim):
                 # global variable bs, should be node-independent
                 nrn("dp_total = 0.")
 
-                # Different seed logic for N_trials = 0 or not
-                if not p_exp.N_trials:
+                # if there are N_trials, then randomize the seed
+                # establishes random seed for the seed seeder (yeah.)
+                # this creates a prng_tmp on each, but only the value from 0 will be used
+                prng_tmp = np.random.RandomState()
+
+                if rank == 0:
+                    # initialize vector to 1 element, with a 0
+                    # v = nrn.Vector(Length, Init)
+                    r = nrn.Vector(1, 0)
+
                     # seeds that come from prng_base are stereotyped
                     # these are seeded with seed rank! Blerg.
-                    prng_base = np.random.RandomState(rank)
-
-                else:
-                    # if there are N_trials, then randomize the seed
-                    # establishes random seed for the seed seeder (yeah.)
-                    # this creates a prng_tmp on each, but only the value from 0 will be used
-                    prng_tmp = np.random.RandomState()
-
-                    if rank == 0:
-                        # initialize vector to 1 element, with a 0
-                        # v = nrn.Vector(Length, Init)
-                        r = nrn.Vector(1, 0)
-
+                    if not p_exp.N_trials:
+                        prng_base = np.random.RandomState(rank)
+                    else:
                         # Create a random seed value
                         r.x[0] = prng_tmp.randint(1e9)
-                    else:
-                        # create the vector 'r' but don't change its init value
-                        r = nrn.Vector(1, 0)
+                else:
+                    # create the vector 'r' but don't change its init value
+                    r = nrn.Vector(1, 0)
 
-                    # broadcast random seed value in r to everyone
-                    pc.broadcast(r, 0)
+                # broadcast random seed value in r to everyone
+                pc.broadcast(r, 0)
 
-                    # set object prngbase to random state for the seed value
-                    # other random seeds here will then be based on the gid
-                    prng_base = np.random.RandomState(int(r.x[0]))
+                # set object prngbase to random state for the seed value
+                # other random seeds here will then be based on the gid
+                prng_base = np.random.RandomState(int(r.x[0]))
 
                 # seed list is now a list of seeds to be changed on each run
                 # otherwise, its originally set value will remain
@@ -240,6 +235,7 @@ def exec_runsim(f_psim):
                     p['Trial'] = j
                     p['exp_prefix'] = exp_prefix
 
+                    # write params to the file
                     paramrw.write(file_param, p, net.gid_dict)
 
                     if debug:

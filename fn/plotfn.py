@@ -56,8 +56,8 @@ def cb(r):
 def pall(ddir, p_exp, spec_results, xlim=[0., 'tstop']):
     # runtype allows easy (hard coded switching between two modes)
     # either 'parallel' or 'debug'
-    # runtype = 'parallel'
-    runtype = 'debug'
+    runtype = 'parallel'
+    # runtype = 'debug'
 
     # create giant list of appropriate files and run them all at the same time
     if runtype is 'parallel':

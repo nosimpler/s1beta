@@ -1,8 +1,8 @@
-# pdipole.py - plot dipole function
+# pdipole.py - plot dipole functions
 #
-# v 1.7.16
-# rev 2013-02-07 (SL: Removed (by way of comments) pdipole_exp in favor of avg_trials)
-# last major: (MS: pdipole fns take xlim as optional argument)
+# v 1.7.24
+# rev 2013-02-19 (SL: added pdipole_evoked)
+# last major: (SL: Removed (by way of comments) pdipole_exp in favor of avg_trials)
 
 import os
 import itertools as it
@@ -11,6 +11,7 @@ import numpy as np
 from neuron import h as nrn
 from axes_create import FigStd, FigDplWithHist
 import spikefn 
+import paramrw
 
 # file_info is (rootdir, subdir, 
 def pdipole(file_name, dfig, p_dict, key_types, xlim=[0, 'tstop']):
@@ -44,6 +45,50 @@ def pdipole(file_name, dfig, p_dict, key_types, xlim=[0, 'tstop']):
 
     plt.savefig(fig_name, dpi=300)
     f.close()
+
+def pdipole_evoked(dfig, f_dpl, f_spk, f_param):
+    gid_dict, p_dict = paramrw.read(f_param)
+
+    s_dict = spikefn.spikes_from_file_pure(f_param, f_spk)
+    s = s_dict.keys()
+    s.sort()
+
+    for item in s:
+        if item.startswith('evprox') or item.startswith('evdist'):
+            print item
+
+    print dir(s_dict['evprox0'])
+    print s_dict['evprox0'].spike_list
+
+    # x_dipole is dipole data
+    # x_dipole = np.loadtxt(open(f_dpl, 'r'))
+
+    # # split to find file prefix
+    # file_prefix = f_dpl.split('/')[-1].split('.')[0]
+
+    # # set xmin value
+    # xmin = xlim[0] / p_dict['dt']
+
+    # # set xmax value
+    # if xlim[1] == 'tstop':
+    #     xmax = p_dict['tstop'] / p_dict['dt']
+    # else:
+    #     xmax = xlim[1] / p_dict['dt']
+
+    # # these are the vectors for now, but this is going to change
+    # t_vec = x_dipole[xmin:xmax+1, 0]
+    # dp_total = x_dipole[xmin:xmax+1, 1]
+
+    # f = FigStd()
+    # f.ax0.plot(t_vec, dp_total)
+
+    # title = [key + ': %2.1f' % p_dict[key] for key in key_types['dynamic_keys']]
+    # plt.title(title)
+
+    # fig_name = os.path.join(dfig, file_prefix+'.png')
+
+    # plt.savefig(fig_name, dpi=300)
+    # f.close()
 
 # Plots dipole with histogram of alpha feed inputs
 def pdipole_with_hist(f_dpl, f_spk, dfig, p_dict, gid_dict, key_types, xlim=[0., 'tstop']):
@@ -109,6 +154,7 @@ def pdipole_with_hist(f_dpl, f_spk, dfig, p_dict, gid_dict, key_types, xlim=[0.,
     plt.savefig(fig_name)
     f.close()
 
+## DO NOT DELETE THIS FUNCTION! ##
 ## for a given ddata (SimulationPaths object), find the mean dipole
 ## this function should be deprecated in favor of one that goes through trials of each sim
 ## but that function might need to be cleaned up

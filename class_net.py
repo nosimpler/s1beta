@@ -1,8 +1,8 @@
 # class_net.py - establishes the Network class and related methods
 #
-# v 1.7.18
-# rev 2013-02-12 (SL: debugging comment when removing init, not active)
-# last major: (SL: Removed ParFeedExt in favor of ParFeedAll)
+# v 1.7.24
+# rev 2013-02-19 (SL: minor in this file)
+# last major: (SL: debugging comment when removing init, not active)
 
 import itertools as it
 import numpy as np
@@ -302,7 +302,6 @@ class Network():
                     # now use the param index in the params and create
                     # the cell and artificial NetCon
                     self.extinput_list.append(ParFeedAll(type, None, self.p_ext[p_ind], gid))
-                    # self.extinput_list.append(ParFeedExt(self.origin, self.p_ext[p_ind], gid))
                     self.pc.cell(gid, self.extinput_list[-1].connect_to_target())
 
                 elif type in self.p_unique.keys():

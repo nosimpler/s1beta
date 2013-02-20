@@ -1,12 +1,11 @@
 # class_feed.py - establishes FeedExt(), ParFeedAll()
 #
-# v 1.7.23b
-# rev 2013-02-18 (SL: Fixed the evoked input timings)
-# last major: (SL: Fixed bug in uniform distribution)
+# v 1.7.24
+# rev 2013-02-19 (SL: changed debug, some more minor)
+# last major: (SL: Fixed the evoked input timings)
 
 import numpy as np
 import itertools as it
-
 from neuron import h as nrn
 
 class ParFeedAll():

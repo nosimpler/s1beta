@@ -1,13 +1,14 @@
 # spikefn.py - dealing with spikes
 #
-# v 1.7.19
-# rev 2013-02-13 (MS: updated alpha_feed_verify to handle delays specified as -1) 
-# last major: (MS: Added fn to verify existance of alpha feed keys in s_dict)
+# v 1.7.24
+# rev 2013-02-19 (SL: spikes_from_file() is being deprecated in favor of spikes_from_file_pure())
+# last major: (MS: updated alpha_feed_verify to handle delays specified as -1) 
 
 import fileio as fio
 import numpy as np
 import itertools as it
 import os
+import paramrw
 
 # meant as a class for ONE cell type
 class Spikes():
@@ -94,6 +95,7 @@ def hist_bin_opt(x, N_trials):
 
 # not "purely" from files
 def spikes_from_file(gid_dict, fspikes):
+    print "spikes_from_file() is being deprecated. Please see spikes_from_file_pure() for eventual replacement."
     # check to see if there are spikes in here, otherwise return an empty array
     if os.stat(fspikes).st_size:
         s = np.loadtxt(open(fspikes, 'rb'))
@@ -113,25 +115,81 @@ def spikes_from_file(gid_dict, fspikes):
         s_dict[key] = Spikes(s, gid_dict[key])
 
         if key not in 'extinput':
-        # figure out its extgauss feed
+            # figure out its extgauss feed
             newkey_gauss = 'extgauss_' + key
             s_dict[newkey_gauss] = split_extrand(s, gid_dict, key, 'extgauss')
-            # s_dict[newkey_gauss] = split_extgauss(s, gid_dict, key)
 
             # figure out its extpois feed
             newkey_pois = 'extpois_' + key
             s_dict[newkey_pois] = split_extrand(s, gid_dict, key, 'extpois')
-            # s_dict[newkey_pois] = split_extpois(s, gid_dict, key)
 
     # Deal with alpha feeds (extinputs)
-    # order guaranteed by order of inputs in p_ext in paramrw and by details of gid creation in class_net
-    # A little cloodgy to deal with the fact that one might not exist
+    # order guaranteed by order of inputs in p_ext in paramrw
+    # and by details of gid creation in class_net
+    # A little kludgy to deal with the fact that one might not exist
     if len(gid_dict['extinput']) > 1:
         s_dict['alpha_feed_prox'] = Spikes(s, [gid_dict['extinput'][0]])
         s_dict['alpha_feed_dist'] = Spikes(s, [gid_dict['extinput'][1]])
 
         # Add 5ms to all times in distal alpha feed list to account for 5ms synaptic delay
         # s_dict['alpha_feed_dist'].spike_list = [num+5. for num in s_dict['alpha_feed_dist'].spike_list]
+
+    return s_dict
+
+# "purely" from files, this is the new way to replace the old way
+def spikes_from_file_pure(fparam, fspikes):
+    gid_dict, _ = paramrw.read(fparam)
+
+    # cell list - requires cell to start with L2/L5
+    src_list = []
+    src_extinput_list = []
+    src_unique_list = []
+
+    # fill in 2 lists from the keys
+    for key in gid_dict.keys():
+        if key.startswith('L2_') or key.startswith('L5_'):
+            src_list.append(key)
+
+        elif key == 'extinput':
+            src_extinput_list.append(key)
+
+        else:
+            src_unique_list.append(key)
+
+    # check to see if there are spikes in here, otherwise return an empty array
+    if os.stat(fspikes).st_size:
+        s = np.loadtxt(open(fspikes, 'rb'))
+
+    else:
+        s = np.array([], dtype='float64')
+
+    # get the skeleton s_dict from the cell_list
+    s_dict = dict.fromkeys(src_list)
+
+    # # remove extgauss, extpois from keys, going to be replaced with different types
+    # del s_dict['extgauss']
+    # del s_dict['extpois']
+
+    # iterate through just the src keys
+    for key in s_dict.keys():
+        # sort of a hack to separate extgauss
+        s_dict[key] = Spikes(s, gid_dict[key])
+
+        # figure out its extgauss feed
+        newkey_gauss = 'extgauss_' + key
+        s_dict[newkey_gauss] = split_extrand(s, gid_dict, key, 'extgauss')
+
+        # figure out its extpois feed
+        newkey_pois = 'extpois_' + key
+        s_dict[newkey_pois] = split_extrand(s, gid_dict, key, 'extpois')
+
+    # do the keys in unique list
+    for key in src_unique_list:
+        s_dict[key] = Spikes(s, gid_dict[key])
+
+    # handle the extinput: this is a LIST!
+    print gid_dict['evprox0']
+    s_dict['extinput'] = [Spikes(s, [gid]) for gid in gid_dict['extinput']]
 
     return s_dict
 
@@ -223,7 +281,8 @@ def add_delay_times(s_dict, p_dict):
 
     return s_dict
 
-# Checks for existance of alpha feed keys in s_dict. If they do not exist, then simulation used one or no feeds. Creates keys accordingly
+# Checks for existance of alpha feed keys in s_dict.
+# If they do not exist, then simulation used one or no feeds. Creates keys accordingly
 def alpha_feed_verify(s_dict, p_dict):
     # check for existance of keys. If exist, do nothing
     if 'alpha_feed_prox' and 'alpha_feed_dist' in s_dict.keys():
@@ -231,7 +290,8 @@ def alpha_feed_verify(s_dict, p_dict):
 
     # if they do not exist, create them and add proper data
     else:
-        # if proximal feed's t0 < tstop, it exists and data is stored in s_dict['extinputs']. distal feed does not exist and gets empty list
+        # if proximal feed's t0 < tstop, it exists and data is stored in s_dict['extinputs'].
+        # distal feed does not exist and gets empty list
         if p_dict['t0_input_prox'] < p_dict['tstop']:
             s_dict['alpha_feed_prox'] = s_dict['extinput']
             
@@ -239,7 +299,8 @@ def alpha_feed_verify(s_dict, p_dict):
             # A little hack-y
             s_dict['alpha_feed_dist'] = type('emptyspike', (object,), {'spike_list': np.array([])})
 
-        # if distal feed's t0 < tstop, it exists and data is stored in s_dict['extinputs']. Proximal feed does not exist and gets empty list
+        # if distal feed's t0 < tstop, it exists and data is stored in s_dict['extinputs'].
+        # Proximal feed does not exist and gets empty list
         elif p_dict['t0_input_dist'] < p_dict['tstop']:
             s_dict['alpha_feed_prox'] = type('emptyspike', (object,), {'spike_list': np.array([])})
             s_dict['alpha_feed_dist'] = s_dict['extinput']
@@ -250,4 +311,3 @@ def alpha_feed_verify(s_dict, p_dict):
             s_dict['alpha_feed_dist'] = type('emptyspike', (object,), {'spike_list': np.array([])})
 
     return s_dict
-

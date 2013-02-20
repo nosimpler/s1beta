@@ -1,8 +1,8 @@
 # paramrw.py - routines for reading the param files
 #
-# v 1.7.21
-# rev 2013-02-14 (SL: Added different pyr weights for feeds for L2 and L5)
-# last major: (MS: Updated feed_verify to read L5 delay of -1 as being same delay as L2. Events_per_cycle done per alpha feed. Added distribution param)
+# v 1.7.24
+# rev 2013-02-19 (SL: cleanup)
+# last major: (SL: Added different pyr weights for feeds for L2 and L5)
 
 import re
 import fileio as fio
@@ -354,10 +354,10 @@ def feed_validate(p_ext, d, tstop):
         #     d['tstop'] = tstop
 
         if d['tstop'] > tstop:
-            # print "Warning: input parameter tstop exceeds value of simulation run. Resetting."
             d['tstop'] = tstop
 
-        # if stdev is zero, increase synaptic weights 10 fold to make single input equivalent to 10 simultaneous inputs
+        # if stdev is zero, increase synaptic weights 10 fold to make
+        # single input equivalent to 10 simultaneous inputs
         if not d['stdev']:
             for key in d.keys():
                 if key.endswith('Pyr'):
@@ -510,6 +510,13 @@ def create_pext(p, tstop):
     }
 
     return p_ext, p_unique
+
+# # reads and interprets inputs from the params
+# def read_extinputs(f_param):
+#     # use the general reader
+#     gid_dict, p = read(f_param)
+# 
+#     N_extinput = len(gid_dict['extinput'])
 
 # Finds the changed variables
 def changed_vars(sim_list):
