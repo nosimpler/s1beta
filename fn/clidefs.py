@@ -1,8 +1,8 @@
 # clidefs.py - these are all of the function defs for the cli
 #
-# v 1.7.24
-# rev 2013-02-19 (SL: added pdipole_evoked, unfinished)
-# last major: (SL: Fixed the plot_avg_data() function for dipole)
+# v 1.7.25
+# rev 2013-02-20 (SL: changed ylim system, pdipole stuff, fixed some bugs, etc.)
+# last major: (SL: added pdipole_evoked, unfinished)
 
 # Standard modules
 import fnmatch, os, re, sys
@@ -39,7 +39,10 @@ def get_subdir_list(dcheck):
     else:
         return []
 
-def exec_pdipole_evoked(ddata):
+def exec_pdipole_evoked(ddata, ylim=[]):
+    runtype = 'parallel'
+    # runtype = 'debug'
+
     expmt_group = ddata.expmt_groups[0]
 
     # grab just the first element of the dipole list
@@ -55,7 +58,17 @@ def exec_pdipole_evoked(ddata):
     f_spk = spk_list[0]
     f_param = param_list[0]
 
-    pdipole.pdipole_evoked(dfig, f_dpl, f_spk, f_param)
+    if runtype == 'parallel':
+        pl = Pool()
+        for f_dpl, f_spk, f_param in it.izip(dpl_list, spk_list, param_list):
+            pl.apply_async(pdipole.pdipole_evoked, (dfig, f_dpl, f_spk, f_param, ylim))
+
+        pl.close()
+        pl.join()
+
+    elif runtype == 'debug':
+        for f_dpl, f_spk, f_param in it.izip(dpl_list, spk_list, param_list):
+            pdipole.pdipole_evoked(dfig, f_dpl, f_spk, f_param, ylim)
 
 # timer function wrapper returns WALL CLOCK time (more or less)
 def timer(fn, args):
@@ -140,7 +153,7 @@ def exec_rates(ddata):
     spk.calc_rates(ddata)
 
 # search for the min in a dipole over specified interval
-def dipole_min_in_interval(ddata, expmt_group, n_sim, n_trial, t_interval):
+def exec_dipole_min(ddata, expmt_group, n_sim, n_trial, t_interval):
     p_exp = paramrw.ExpParams(ddata.fparam)
     trial_prefix = p_exp.trial_prefix_str % (n_sim, n_trial)
 
@@ -172,6 +185,9 @@ def avg_over_trials(ddata, datatype):
     p_exp = paramrw.ExpParams(ddata.fparam)
     sim_prefix = p_exp.sim_prefix
     N_trials = p_exp.N_trials
+
+    if not N_trials:
+        N_trials = 1
 
     # prefix strings
     exp_prefix_str = p_exp.exp_prefix_str
@@ -207,8 +223,6 @@ def avg_over_trials(ddata, datatype):
 
             # create the sublist of just these trials
             unique_list = [rawdatafile for rawdatafile in rawdata_list if rawdatafile.startswith(fprefix_long)]
-
-            print unique_list
 
             # one filename per unique
             # length of the unique list is the number of trials for this sim, should match N_trials
@@ -405,7 +419,10 @@ def add_alpha_feed_hist(ddata, xlim=[0, 'tstop']):
     plotfn.pdpl_pspec_with_hist(ddata, p_exp, spec_results, xlim)
 
 # plot data averaged over trials
-def plot_avg_data(ddata):
+# dipole and spec should be split up at some point (soon)
+# ylim specified here is ONLY for the dipole
+def exec_plotaverages(ddata, ylim=[]):
+# def plot_avg_data(ddata):
     runtype = 'parallel'
     # runtype = 'debug'
 
@@ -456,14 +473,27 @@ def plot_avg_data(ddata):
         pdict_list += [paramrw.read(f_param)[1] for f_param in fparam_list]
 
     if dpl_list:
+        # new input to pdipole
+        pdipole_dict = {
+            'xmin': 0.,
+            'xmax': None,
+            'ymin': None,
+            'ymax': None,
+        }
+
+        # if there is a length, assume it's 2 (it should be!)
+        if len(ylim):
+            pdipole_dict['ymin'] = ylim[0]
+            pdipole_dict['ymax'] = ylim[1]
+
         if runtype == 'debug':
             for f_dpl, dfig_dpl, p_dict in it.izip(dpl_list, dfig_dpl_list, pdict_list):
-                pdipole.pdipole(f_dpl, dfig_dpl, p_dict, key_types)
+                pdipole.pdipole(f_dpl, dfig_dpl, p_dict, key_types, pdipole_dict)
 
         elif runtype == 'parallel':
             pl = Pool()
             for f_dpl, dfig_dpl, p_dict in it.izip(dpl_list, dfig_dpl_list, pdict_list):
-                pl.apply_async(pdipole.pdipole, (f_dpl, dfig_dpl, p_dict, key_types))
+                pl.apply_async(pdipole.pdipole, (f_dpl, dfig_dpl, p_dict, key_types, pdipole_dict))
 
             pl.close()
             pl.join()

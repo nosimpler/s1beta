@@ -1,8 +1,8 @@
 # plotfn.py - pall and possibly other plot routines
 #
-# v 1.7.21
-# rev 2013-02-14 (SL: turned off debug mode, but it still needs to be fixed)
-# last major: (SL: turned on debug mode to remind that addalphahist should be fixed)
+# v 1.7.25
+# rev 2013-02-20 (SL: new pdipole settings dict)
+# last major: (SL: turned off debug mode, but it still needs to be fixed)
 
 from pdipole import pdipole, pdipole_with_hist
 from spec import pspec, pspec_with_hist
@@ -23,9 +23,17 @@ def pkernel(dfig, f_param, f_spk, f_dpl, data_spec, key_types, xlim=[0, 'tstop']
     dfig_spec = dfig['figspec']
     dfig_spk = dfig['figspk']
 
+    pdipole_dict = {
+        'xmin': xlim[0],
+        'xmax': xlim[1],
+        'ymin': None,
+        'ymax': None,
+    }
+
     # plot kernels
     praster(gid_dict, tstop, f_spk, dfig_spk)
-    pdipole(f_dpl, dfig_dpl, p_dict, key_types, xlim)
+    pdipole(f_dpl, dfig_dpl, p_dict, key_types, pdipole_dict)
+    # pdipole(f_dpl, dfig_dpl, p_dict, key_types, xlim)
     pspec(data_spec, f_dpl, dfig_spec, p_dict, key_types, xlim)
 
     return 0

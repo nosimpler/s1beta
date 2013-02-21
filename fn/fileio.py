@@ -1,8 +1,8 @@
 # fileio.py - general file input/output functions
 #
-# v 1.7.22
-# rev 2013-02-18 (SL: Added new avg data type directories)
-# last rev: (SL: Added avg data types, clean up, spelling)
+# v 1.7.25
+# rev 2013-02-20 (SL: Fixed a bug in N_trials=0, unrelated to the last bug of this sort ...)
+# last rev: (SL: Added new avg data type directories)
 
 import datetime, fnmatch, os, shutil, sys
 import itertools as it
@@ -72,6 +72,8 @@ def fparam_match_minimal(dsim, p_exp):
 
     # List of indices from which to pull param dicts from fparam_list_complete
     N_trials = p_exp.N_trials
+    if not N_trials:
+        N_trials = 1
     indexes = np.arange(0, len(fparam_list_complete), N_trials)
 
     # Pull unique param dicts from fparam_list_complete

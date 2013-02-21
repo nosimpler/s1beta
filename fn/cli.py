@@ -1,8 +1,8 @@
 # cli.py - routines for the command line interface console s1sh.py
 #
-# v 1.7.24
-# rev 2013-02-19 (SL: minor debug stuff, start of adding a new function)
-# last major: (SL: debug changes)
+# v 1.7.25
+# rev 2013-02-20 (SL: lots of cleanup, changed how pdipole works, changed pdipole inputs)
+# last major: (SL: minor debug stuff, start of adding a new function)
 
 from cmd import Cmd
 from datetime import datetime
@@ -14,7 +14,7 @@ import fileio as fio
 import paramrw
 import spec
 from praster import praster
-from pdipole import pdipole
+import pdipole
 from ppsth import ppsth, ppsth_grid
 
 class Console(Cmd):
@@ -74,9 +74,9 @@ class Console(Cmd):
     def do_debug(self, args):
         """Qnd function to test other functions
         """
-        self.do_setdate('2013-02-19')
-        self.do_load('debug-031')
-        self.do_pdipole_evoked('')
+        self.do_setdate('from_remote/2013-02-18')
+        self.do_load('evbeta_thresh_nonperceived-001')
+        self.do_pdipole('avg [-60000, 30000]')
         # self.do_specanalysis('max_freq=50')
         # self.do_addalphahist('--xmin=0 --xmax=500')
         # self.do_avgtrials('dpl')
@@ -195,7 +195,7 @@ class Console(Cmd):
                 n_trial = int(n_trial_str)
 
                 t_interval = ast.literal_eval(s[-1])
-                clidefs.dipole_min_in_interval(self.ddata, expmt_group, n_sim, n_trial, t_interval)
+                clidefs.exec_dipolemin(self.ddata, expmt_group, n_sim, n_trial, t_interval)
 
             except ValueError:
                 self.do_help('dipolemin')
@@ -303,6 +303,7 @@ class Console(Cmd):
 
             # dir_list = [name for name in os.listdir(dcheck) if os.path.isdir(os.path.join(dcheck, name))]
             clidefs.prettyprint(self.dlist)
+
         else:
             print "Cannot find directory"
             return 0
@@ -381,44 +382,52 @@ class Console(Cmd):
            To run aggregates for all simulations in a directory: 'pdipole agg (ymin, max)'
            Can also be run: 'pdipole agg []' (I think.)
         """
-        if args.startswith('agg'):
-            arg_tmp = args.split('agg')
+        # if args.startswith('agg'):
+        #     p_exp = paramrw.ExpParams(self.ddata.fparam)
+        #     clidefs.pdipole_agg(self.ddata, p_exp)
 
-            # if len(arg_tmp) == 2:
-            #     # assume the second argument is the range if specified
-            #     ylim_read = ast.literal_eval(arg_tmp[-1].strip())
-            #     ylim = ylim_read
+        # pdipole <type> <ylim>
+        arg_tmp = args.split(' ')
 
-            # else:
-            #     ylim = []
+        runtype_list = [
+            'exp',
+            'evoked',
+            'avg',
+        ]
 
-            # run the aggregate dipole
-            # using simpaths
-            p_exp = paramrw.ExpParams(self.ddata.fparam)
-            clidefs.pdipole_agg(self.ddata, p_exp)
-            # pdipole_exp(self.ddata, ylim)
+        # minimal checks in this function
+        # assume that no ylim argument was specified
+        if len(arg_tmp) == 1:
+            runtype = arg_tmp[0]
+            ylim = []
 
-        # else:
-        #     dfig_dpl = self.simpaths.dfigs['dipole']
-        #     fparam_list = self.simpaths.filelists['param']
-        #     fdpl_list = self.simpaths.filelists['rawdpl']
+        else:
+            # assume the first arg is correct, split on that
+            if arg_tmp[0] in runtype_list:
+                runtype = arg_tmp[0]
 
-        #     p_exp = paramrw.ExpParams(self.simpaths.fparam[0])
-        #     key_types = p_exp.get_key_types()
+                arg_ylim_tmp = args.split(runtype)
 
-        #     pool = multiprocessing.Pool()
-        #     for fparam, fdpl in it.izip(fparam_list, fdpl_list):
-        #         # just get the p dict and not the gid dict
-        #         p = paramrw.read(fparam)[1]
-        #         pool.apply_async(pdipole, (fdpl, dfig_dpl, p, key_types))
+                if len(arg_ylim_tmp) == 2:
+                    ylim_read = ast.literal_eval(arg_ylim_tmp[-1].strip())
+                    ylim = ylim_read
 
-        #     pool.close()
-        #     pool.join()
+                else:
+                    ylim = []
 
-    def do_pdipole_evoked(self, args):
-        """Trial-by-trial replot of pdipole that includes evoked response lines if they exist
-        """
-        clidefs.exec_pdipole_evoked(self.ddata)
+        if runtype == 'exp':
+            # run the avg dipole per experiment (across all trials/simulations)
+            # using simpaths (ddata)
+            pdipole.pdipole_exp(self.ddata, ylim)
+
+        elif runtype == 'evoked':
+            # add the evoked lines to the pdipole individual simulations
+            clidefs.exec_pdipole_evoked(self.ddata, ylim)
+
+        elif runtype == 'avg':
+            # plot average over all TRIALS of a param regime
+            # requires that avg dipole data exist
+            clidefs.exec_plotaverages(self.ddata, ylim)
 
     def do_replot(self, args):
         """Regenerates plots in given directory. Usage:
@@ -489,7 +498,9 @@ class Console(Cmd):
         """Creates plots of averaged dipole or spec data. Automatically checks if data exists. Usage:
            'plotaverages'
         """
-        clidefs.plot_avg_data(self.ddata)
+
+        clidefs.exec_plotaverages(self.ddata)
+        # clidefs.plot_avg_data(self.ddata)
 
     def do_epscompress(self, args):
         """Runs the eps compress utils on the specified fig type (currently either spk or spec)

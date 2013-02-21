@@ -1,8 +1,8 @@
 # spikefn.py - dealing with spikes
 #
-# v 1.7.24
-# rev 2013-02-19 (SL: spikes_from_file() is being deprecated in favor of spikes_from_file_pure())
-# last major: (MS: updated alpha_feed_verify to handle delays specified as -1) 
+# v 1.7.25
+# rev 2013-02-20 (SL: new functions for working with spikes in Spikes())
+# last major: (SL: spikes_from_file() is being deprecated in favor of spikes_from_file_pure())
 
 import fileio as fio
 import numpy as np
@@ -34,6 +34,23 @@ class Spikes():
                 spike_list.append(srange)
 
         return spike_list
+
+    # simple return of all spikes *or* each spike indexed i in every list
+    def collapse_all(self, i=None):
+        if i == 'None':
+            spk_all = []
+            for spk_list in self.spike_list:
+                spk_all.extend(spk_list)
+
+        else:
+            spk_all = [spk_list[i] for spk_list in self.spike_list if spk_list]
+
+        return spk_all
+
+    # uses self.collapse_all() and returns unique spike times
+    def unique_all(self, i=None):
+        spk_all = self.collapse_all(i)
+        return np.unique(spk_all)
 
     # plot psth
     def ppsth(self, a):

@@ -1,8 +1,8 @@
 # pdipole.py - plot dipole functions
 #
-# v 1.7.24
-# rev 2013-02-19 (SL: added pdipole_evoked)
-# last major: (SL: Removed (by way of comments) pdipole_exp in favor of avg_trials)
+# v 1.7.25
+# rev 2013-02-20 (SL: major change to inputs of pdipole: last input is a dict of settings)
+# last major: (SL: added pdipole_evoked)
 
 import os
 import itertools as it
@@ -14,29 +14,40 @@ import spikefn
 import paramrw
 
 # file_info is (rootdir, subdir, 
-def pdipole(file_name, dfig, p_dict, key_types, xlim=[0, 'tstop']):
+def pdipole(file_name, dfig, p_dict, key_types, plot_dict):
+# def pdipole(file_name, dfig, p_dict, key_types, xlim=[0, 'tstop']):
     # ddipole is dipole data
     ddipole = np.loadtxt(open(file_name, 'rb'))
 
     # split to find file prefix
     file_prefix = file_name.split('/')[-1].split('.')[0]
 
-    # set xmin value
-    xmin = xlim[0] / p_dict['dt']
-
-    # set xmax value
-    if xlim[1] == 'tstop':
-        xmax = p_dict['tstop'] / p_dict['dt']
+    if plot_dict['xmin'] is None:
+        xmin = 0.
     else:
-        xmax = xlim[1] / p_dict['dt']
+        xmin = plot_dict['xmin']
 
-    # these are the vectors for now, but this is going to change
-    t_vec = ddipole[xmin:xmax+1, 0]
-    dp_total = ddipole[xmin:xmax+1, 1]
+    if plot_dict['xmax'] is None:
+        xmax = p_dict['tstop']
+    else:
+        xmax = plot_dict['xmax']
+
+    # take the whole vectors
+    t_vec = ddipole[:, 0]
+    dp_total = ddipole[:, 1]
+
+    # now truncate them using logical indexing
+    t_vec_range = t_vec[(t_vec >= xmin) & (t_vec <= xmax)]
+    dp_range = dp_total[(t_vec >= xmin) & (t_vec <= xmax)]
 
     f = FigStd()
     f.ax0.plot(t_vec, dp_total)
-    # f.ax0.set_ylim(-4e4, 3e4)
+
+    # sorry about the parity between vars here and above with xmin/xmax
+    if plot_dict['ymin'] is None or plot_dict['ymax'] is None:
+        pass
+    else:
+        f.ax0.set_ylim(plot_dict['ymin'], plot_dict['ymax'])
 
     title = [key + ': %2.1f' % p_dict[key] for key in key_types['dynamic_keys']]
     plt.title(title)
@@ -46,25 +57,29 @@ def pdipole(file_name, dfig, p_dict, key_types, xlim=[0, 'tstop']):
     plt.savefig(fig_name, dpi=300)
     f.close()
 
-def pdipole_evoked(dfig, f_dpl, f_spk, f_param):
+# plot vertical lines corresponding to the evoked input times
+# for each individual simulation/trial
+def pdipole_evoked(dfig, f_dpl, f_spk, f_param, ylim=[]):
     gid_dict, p_dict = paramrw.read(f_param)
 
+    # get the spike dict from the files
     s_dict = spikefn.spikes_from_file_pure(f_param, f_spk)
     s = s_dict.keys()
     s.sort()
 
-    for item in s:
-        if item.startswith('evprox') or item.startswith('evdist'):
-            print item
+    # create an empty dict 'spk_unique'
+    spk_unique = dict.fromkeys([key for key in s_dict.keys() if key.startswith(('evprox', 'evdist'))])
 
-    print dir(s_dict['evprox0'])
-    print s_dict['evprox0'].spike_list
+    for key in spk_unique:
+        spk_unique[key] = s_dict[key].unique_all(0)
+
+    # draw vertical lines for each item in this
 
     # x_dipole is dipole data
-    # x_dipole = np.loadtxt(open(f_dpl, 'r'))
+    x_dipole = np.loadtxt(open(f_dpl, 'r'))
 
-    # # split to find file prefix
-    # file_prefix = f_dpl.split('/')[-1].split('.')[0]
+    # split to find file prefix
+    file_prefix = f_dpl.split('/')[-1].split('.')[0]
 
     # # set xmin value
     # xmin = xlim[0] / p_dict['dt']
@@ -75,20 +90,35 @@ def pdipole_evoked(dfig, f_dpl, f_spk, f_param):
     # else:
     #     xmax = xlim[1] / p_dict['dt']
 
-    # # these are the vectors for now, but this is going to change
-    # t_vec = x_dipole[xmin:xmax+1, 0]
-    # dp_total = x_dipole[xmin:xmax+1, 1]
+    # these are the vectors for now, but this is going to change
+    t_vec = x_dipole[:, 0]
+    dp_total = x_dipole[:, 1]
 
-    # f = FigStd()
-    # f.ax0.plot(t_vec, dp_total)
+    f = FigStd()
 
-    # title = [key + ': %2.1f' % p_dict[key] for key in key_types['dynamic_keys']]
-    # plt.title(title)
+    # hold on
+    f.ax0.hold(True)
 
-    # fig_name = os.path.join(dfig, file_prefix+'.png')
+    f.ax0.plot(t_vec, dp_total)
 
-    # plt.savefig(fig_name, dpi=300)
-    # f.close()
+    lines_spk = dict.fromkeys(spk_unique)
+
+    # plot the lines
+    for key in spk_unique:
+        x_val = spk_unique[key][0]
+        lines_spk[key] = plt.axvline(x=x_val, linewidth=0.5, color='r')
+
+    # title_txt = [key + ': {:.2e}' % p_dict[key] for key in key_types['dynamic_keys']]
+    title_txt = 'test'
+    f.ax0.set_title(title_txt)
+
+    if ylim:
+        f.ax0.set_ylim(ylim)
+
+    fig_name = os.path.join(dfig, file_prefix+'.png')
+
+    plt.savefig(fig_name, dpi=300)
+    f.close()
 
 # Plots dipole with histogram of alpha feed inputs
 def pdipole_with_hist(f_dpl, f_spk, dfig, p_dict, gid_dict, key_types, xlim=[0., 'tstop']):
@@ -154,49 +184,47 @@ def pdipole_with_hist(f_dpl, f_spk, dfig, p_dict, gid_dict, key_types, xlim=[0.,
     plt.savefig(fig_name)
     f.close()
 
-## DO NOT DELETE THIS FUNCTION! ##
-## for a given ddata (SimulationPaths object), find the mean dipole
-## this function should be deprecated in favor of one that goes through trials of each sim
-## but that function might need to be cleaned up
-# def pdipole_exp(ddata, ylim=[]):
-#     # sim_prefix
-#     fprefix = ddata.sim_prefix
-#
-#     # go through each expmt
-#     for expmt_group in ddata.expmt_groups:
-#         # create the filename
-#         dexp = ddata.dexpmt_dict[expmt_group]
-#         fname_short = '%s-%s-dpl' % (fprefix, expmt_group)
-#         fname_data = os.path.join(dexp, fname_short + '.txt')
-#         fname_fig = os.path.join(ddata.dfig[expmt_group]['figdpl'], fname_short + '.png')
-# 
-#         # grab the list of raw data dipoles in this expmt
-#         dpl_list = ddata.file_match(expmt_group, 'rawdpl')
-# 
-#         for file in dpl_list:
-#             x_tmp = np.loadtxt(open(file, 'r'))
-#             if file is dpl_list[0]:
-#                 # assume time vec stays the same throughout
-#                 t_vec = x_tmp[:, 0]
-#                 x_dpl = x_tmp[:, 1]
-# 
-#             else:
-#                 x_dpl += x_tmp[:, 1]
-# 
-#         # poor man's mean
-#         x_dpl /= len(dpl_list)
-# 
-#         # write this data to the file
-#         with open(fname_data, 'w') as f:
-#             for t, x in it.izip(t_vec, x_dpl):
-#                 f.write("%03.3f\t%5.4f\n" % (t, x))
-# 
-#         # create the plot I guess?
-#         f = FigStd()
-#         f.ax0.plot(t_vec, x_dpl)
-# 
-#         if len(ylim):
-#             f.ax0.set_ylim(ylim)
-# 
-#         f.savepng(fname_fig)
-#         f.close()
+# For a given ddata (SimulationPaths object), find the mean dipole
+# over ALL trials in ALL conditions in EACH experiment
+def pdipole_exp(ddata, ylim=[]):
+    # sim_prefix
+    fprefix = ddata.sim_prefix
+
+    # go through each expmt
+    for expmt_group in ddata.expmt_groups:
+        # create the filename
+        dexp = ddata.dexpmt_dict[expmt_group]
+        fname_short = '%s-%s-dpl' % (fprefix, expmt_group)
+        fname_data = os.path.join(dexp, fname_short + '.txt')
+        fname_fig = os.path.join(ddata.dfig[expmt_group]['figdpl'], fname_short + '.png')
+
+        # grab the list of raw data dipoles in this expmt
+        dpl_list = ddata.file_match(expmt_group, 'rawdpl')
+
+        for file in dpl_list:
+            x_tmp = np.loadtxt(open(file, 'r'))
+            if file is dpl_list[0]:
+                # assume time vec stays the same throughout
+                t_vec = x_tmp[:, 0]
+                x_dpl = x_tmp[:, 1]
+
+            else:
+                x_dpl += x_tmp[:, 1]
+
+        # poor man's mean
+        x_dpl /= len(dpl_list)
+
+        # write this data to the file
+        with open(fname_data, 'w') as f:
+            for t, x in it.izip(t_vec, x_dpl):
+                f.write("%03.3f\t%5.4f\n" % (t, x))
+
+        # create the plot I guess?
+        f = FigStd()
+        f.ax0.plot(t_vec, x_dpl)
+
+        if len(ylim):
+            f.ax0.set_ylim(ylim)
+
+        f.savepng(fname_fig)
+        f.close()
