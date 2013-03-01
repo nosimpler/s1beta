@@ -40,7 +40,7 @@ gbar_L2Pyr_L5Basket: 2.5e-4
 distribution_prox: normal
 t0_input_prox: 50.
 tstop_input_prox: 0.
-f_input_prox: 10.
+f_input_prox: [10., 20.]
 f_stdev_prox: 20.
 events_per_cycle_prox: 2
 
@@ -48,8 +48,8 @@ events_per_cycle_prox: 2
 distribution_dist: normal
 t0_input_dist: 50.
 tstop_input_dist: 0.
-f_input_dist: 10.
-f_stdev_dist: 20.
+f_input_dist: f_input_prox
+f_stdev_dist: f_stdev_prox
 events_per_cycle_dist: 2
 
 # thalamic input amplitudes and delays
@@ -67,7 +67,7 @@ input_dist_A_delay_L2: 5.0
 input_dist_A_delay_L5: 5.0
 
 # evprox (early) input
-t_evprox_early: 50.
+t_evprox_early: 5000.
 sigma_t_evprox_early: 2.5
 gbar_evprox_early_L2Pyr: 1e-3
 gbar_evprox_early_L2Basket: 2e-3
@@ -76,7 +76,7 @@ gbar_evprox_early_L5Basket: 1e-3
 
 # evdist input
 dt_evprox0_evdist: -1
-t_evdist: 100.
+t_evdist: 10000.
 sigma_t_evdist: 6.
 gbar_evdist_L2Pyr: 2e-3
 gbar_evdist_L2Basket: 1e-3
@@ -85,7 +85,7 @@ gbar_evdist_L5Pyr: 2e-3
 
 # evprox (late) input
 dt_evprox0_evprox1: -1
-t_evprox_late: 150.
+t_evprox_late: 15000.
 sigma_t_evprox_late: 7.
 gbar_evprox_late_L2Pyr: 5.3e-3
 gbar_evprox_late_L2Basket: 5.3e-3
@@ -139,5 +139,5 @@ prng_seedcore_evdist: -1
 prng_seedcore_evprox_late: 0
 
 # Numerics
-tstop: 150.
+tstop: 500.
 dt: 0.025

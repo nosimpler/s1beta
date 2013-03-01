@@ -1,7 +1,7 @@
 # paramrw.py - routines for reading the param files
 #
-# v 1.7.24
-# rev 2013-02-19 (SL: cleanup)
+# v 1.7.26
+# rev 2013-03-01 (MS: Added method to co-vary params)
 # last major: (SL: Added different pyr weights for feeds for L2 and L5)
 
 import re
@@ -138,6 +138,9 @@ class ExpParams():
             'distribution_dist': self.p_all.pop('distribution_dist'),
         }
 
+        # make dict of coupled params
+        self.coupled_params = self.__find_coupled_params()
+
         # create the list of iterated params
         self.list_params = self.__create_paramlist()
         self.N_sims = len(self.list_params[0][1])
@@ -251,6 +254,25 @@ class ExpParams():
         # return the final linspace expanded
         return val_range
 
+    # creates dict of params whose values are to be coupled
+    def __find_coupled_params(self):
+        self.coupled_params = {}
+
+        # iterates over all key/value pairs to find vals that are strings
+        for key, val in self.p_all.iteritems():  
+            if isinstance(val, str):
+                # check that string is another param in p_all
+                if val in self.p_all.keys():
+                    self.coupled_params[key] = val
+                else:
+                    print "Unknown key: %s. Probably going to error." %val
+
+        # Pop coupled params
+        for key in self.coupled_params.iterkeys():
+            self.p_all.pop(key)
+
+        return self.coupled_params
+
     # create the dict based on the default param dict
     def __create_dict_from_default(self, p_all_input):
         # create a copy of params_default through which to iterate
@@ -310,9 +332,13 @@ class ExpParams():
         for param, val in self.p_group[expmt_group].iteritems():
             p_sim[param] = val
 
-        # add alpha distributions
+        # add alpha distributions. A bit hack-y
         for param, val in self.alpha_distributions.iteritems():
             p_sim[param] = val
+
+        # Add coupled params
+        for coupled_param, val_param  in self.coupled_params.iteritems():
+            p_sim[coupled_param] = p_sim[val_param]
 
         return p_sim
 
@@ -356,9 +382,9 @@ def feed_validate(p_ext, d, tstop):
         if d['tstop'] > tstop:
             d['tstop'] = tstop
 
-        # if stdev is zero, increase synaptic weights 10 fold to make
-        # single input equivalent to 10 simultaneous inputs
-        if not d['stdev']:
+        # if stdev is zero, increase synaptic weights 5 fold to make
+        # single input equivalent to 5 simultaneous input to prevent spiking
+        if not d['stdev'] and d['distribution'] != 'uniform':
             for key in d.keys():
                 if key.endswith('Pyr'):
                     d[key] = (d[key][0] * 5., d[key][1])
