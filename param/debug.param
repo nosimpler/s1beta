@@ -4,12 +4,12 @@
 # np.arrays for everything else?
 # turns out some whitespace is valid for dicts!
 
-sim_prefix: debug-evoked
+sim_prefix: iclamp_prox_feed_prox_dist
 expmt_groups: {testing}
 
 # numbers of cells making up the pyramidal grids
-N_pyr_x: 1
-N_pyr_y: 1
+N_pyr_x: 2
+N_pyr_y: 2
 
 # Poisson input
 pois_T: 1000.
@@ -38,19 +38,19 @@ gbar_L2Pyr_L5Basket: 2.5e-4
 
 # Ongoing proximal alpha rhythm
 distribution_prox: normal
-t0_input_prox: 50.
-tstop_input_prox: 0.
-f_input_prox: [10., 20.]
+t0_input_prox: 150.
+tstop_input_prox: 950.
+f_input_prox: 10.
 f_stdev_prox: 20.
 events_per_cycle_prox: 2
 
 # Ongoing distal alpha rhythm
 distribution_dist: normal
-t0_input_dist: 50.
-tstop_input_dist: 0.
+t0_input_dist: t0_input_prox
+tstop_input_dist: tstop_input_prox
 f_input_dist: f_input_prox
 f_stdev_dist: f_stdev_prox
-events_per_cycle_dist: 2
+events_per_cycle_dist: events_per_cycle_prox
 
 # thalamic input amplitudes and delays
 input_prox_A_weight_L2Pyr: 4e-5
@@ -139,5 +139,5 @@ prng_seedcore_evdist: -1
 prng_seedcore_evprox_late: 0
 
 # Numerics
-tstop: 500.
+tstop: 1000.
 dt: 0.025

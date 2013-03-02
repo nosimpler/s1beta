@@ -1,8 +1,8 @@
 # L5_pyramidal.py - establish class def for layer 5 pyramidal cells
 #
-# v 1.7.18
-# rev 2013-02-12 (SL: Changed delay of L2Pyr-L5Pyr, host of seemingly minor changes w/large effect)
-# last rev: (SL: minor)
+# v 1.7.28
+# rev 2013-03-02 (MS: inactive example code for adding iclamps)
+# last rev: (SL: Changed delay of L2Pyr-L5Pyr, host of seemingly minor changes w/large effect)
 
 from neuron import h as nrn
 from class_cell import Pyr
@@ -41,6 +41,14 @@ class L5Pyr(Pyr):
 
         # create synapses
         self.__synapse_create()
+
+        # insert proximal IClamps
+        # self.stim_list = []
+        # for sect_name in ('apical_oblique', 'basal_2', 'basal_3'):
+        #     self.stim_list.append(self.insert_iclamp(sect_name, 0.5, 50, 950, 0.01))
+
+        # insert distal IClamp
+        # self.stim_list.append(self.insert_iclamp('apical_tuft', 0.5, 105, 405, 0.01))
 
     # Sets somatic properties. Returns dictionary.
     def __set_soma_props(self, pos):

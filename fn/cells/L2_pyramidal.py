@@ -1,7 +1,7 @@
 # L2_pyramidal.py - est class def for layer 2 pyramidal cells
 #
-# v 1.7.14
-# rev 2013-02-07 (SL: minor)
+# v 1.7.28
+# rev 2013-03-02 (MS: inactive example code for adding iclamps)
 # last rev: (SL: removed autapses)
 
 from neuron import h as nrn
@@ -40,6 +40,14 @@ class L2Pyr(Pyr):
 
         # create synapses
         self.__synapse_create()
+
+        # insert proximal IClamps
+        # self.stim_list = []
+        # for sect_name in ('apical_oblique', 'basal_2', 'basal_3'):
+        #     self.stim_list.append(self.insert_iclamp(sect_name, 0.5, 50, 950, 0.01))
+
+        # insert distal IClamp
+        # self.stim_list.append(self.insert_iclamp('apical_tuft', 0.5, 105, 405, 0.01))
 
     # Set somatic properties
     def __set_soma_props(self, pos):

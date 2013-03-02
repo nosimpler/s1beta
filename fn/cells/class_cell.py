@@ -1,8 +1,8 @@
 # class_cell.py - establish class def for general cell features
 #
-# v 1.7.18
-# rev 2013-02-12 (SL: minor seeming changes, cast a bunch of numbers and removed incorr ? old nseg method)
-# last rev: (SL: some minor stuff, some debugging stuff)
+# v 1.7.28
+# rev 2013-02-12 (MS: method for adding IClamps to segs)
+# last rev: (SL: minor seeming changes, cast a bunch of numbers and removed incorr ? old nseg method)
 
 import numpy as np
 import itertools as it
@@ -109,6 +109,22 @@ class Cell():
 
             # set the pp dipole's ztan value to the last value from y_diff
             dpp.ztan = y_diff[-1]
+
+    # Add IClamp to a segment
+    def insert_iclamp(self, sect_name, seg_loc, tstart, tstop, weight):
+        # gather list of all sections
+        seclist = nrn.SectionList()
+        seclist.wholetree(sec=self.soma)
+
+        # find specified sect in section list, insert IClamp, set props
+        for sect in seclist:
+            if sect_name in sect.name():
+                stim = nrn.IClamp(sect(seg_loc))
+                stim.delay = tstart
+                stim.dur = tstop - tstart
+                stim.amp = weight
+
+        return stim
 
     ## For all synapses, section location 'secloc' is being explicitly supplied 
     ## for clarity, even though they are (right now) always 0.5. Might change in future
