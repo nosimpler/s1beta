@@ -1,8 +1,8 @@
 # spec.py - Average time-frequency energy representation using Morlet wavelet method
 #
-# v 1.7.20
-# rev 2013-02-14 (SL: Removed 50 Hz notch filter)
-# last major: (MS: Minor changes to plotting routines)
+# v 1.7.30
+# rev 2013-03-06 (MS: Title string creation using external method)
+# last major: (SL: Removed 50 Hz notch filter)
 
 import os
 import sys
@@ -17,7 +17,7 @@ from neuron import h as nrn
 
 import fileio as fio
 import spikefn 
-from axes_create import FigSpec, FigSpecWithHist, FigStd, FigFreqpwrWithHist
+from axes_create import FigSpec, FigSpecWithHist, FigStd, FigFreqpwrWithHist, create_title
 
 # general spec write/read functions
 def write(fdata_spec, t_vec, f_vec, TFR):
@@ -250,8 +250,9 @@ def pspec(dspec, f_dpl, dfig, p_dict, key_types, xlim=[0., 'tstop']):
     f.ax['spec'].set_ylabel('Frequency (Hz)')
 
     # create title
-    title_str = [key + ': %2.1f' % p_dict[key] for key in key_types['dynamic_keys']]
+    title_str = create_title(p_dict, key_types)
     f.f.suptitle(title_str)
+    # title_str = [key + ': %2.1f' % p_dict[key] for key in key_types['dynamic_keys']]
 
     plt.savefig(fig_name, dpi=300)
     f.close()
@@ -355,8 +356,9 @@ def pspec_with_hist(dspec, f_dpl, f_spk, dfig, p_dict, gid_dict, key_types, xlim
             f.ax[key].legend()
 
     # create title
-    title_str = [key + ': %2.1f' % p_dict[key] for key in key_types['dynamic_keys']]
+    title_str = create_title(p_dict, key_types)
     f.f.suptitle(title_str)
+    # title_str = [key + ': %2.1f' % p_dict[key] for key in key_types['dynamic_keys']]
 
     plt.savefig(fig_name)
     f.close()
@@ -513,8 +515,9 @@ def pfreqpwr_with_hist(file_name, freqpwr_result, f_spk, gid_dict, p_dict, key_t
     f.ax['hist'].set_ylabel('# spikes')
 
     # create title
-    title_str = [key + ': %2.1f' % p_dict[key] for key in key_types['dynamic_keys']]
+    title_str = create_title(p_dict, key_types)
     f.f.suptitle(title_str)
+    # title_str = [key + ': %2.1f' % p_dict[key] for key in key_types['dynamic_keys']]
 
     plt.savefig(file_name)
     f.close()

@@ -1,8 +1,8 @@
 # axes_create.py - simple axis creation
 #
-# v 1.7.19
-# rev 2013-02-13 (MS: figure for plotting alpha feed hists next to freq-pwr analyis)
-# last major: (SL: Incomplete changes to FigRaster)
+# v 1.7.30
+# rev 2013-03-06 (MS: Method for generating title string based on dynamic params)
+# last major: (MS: figure for plotting alpha feed hists next to freq-pwr analyis)
 
 # usage:
 # testfig = FigStd()
@@ -321,6 +321,21 @@ class fig_psthgrid():
 
     def close(self):
         plt.close(self.f)
+
+# creates title string based on params that change during simulation
+def create_title(p_dict, key_types):
+    title = []
+
+    for key in key_types['dynamic_keys']:
+        # Rules for when to use scientific notation
+        if p_dict[key] >= 0.1:
+            title.append(key + ': %2.1f' %p_dict[key])
+        else:
+            title.append(key + ': %2.1e' %p_dict[key])
+
+    # Return string in alphabetic order
+    title.sort()
+    return title
 
 def testfn():
     x = np.random.rand(100)

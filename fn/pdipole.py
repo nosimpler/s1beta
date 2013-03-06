@@ -1,15 +1,15 @@
 # pdipole.py - plot dipole functions
 #
-# v 1.7.25
-# rev 2013-02-20 (SL: major change to inputs of pdipole: last input is a dict of settings)
-# last major: (SL: added pdipole_evoked)
+# v 1.7.30
+# rev 2013-03-06 (MS: Title strings generated using external method)
+# last major: (SL: major change to inputs of pdipole: last input is a dict of settings)
 
 import os
 import itertools as it
 import matplotlib.pyplot as plt
 import numpy as np
 from neuron import h as nrn
-from axes_create import FigStd, FigDplWithHist
+from axes_create import FigStd, FigDplWithHist, create_title
 import spikefn 
 import paramrw
 
@@ -49,8 +49,9 @@ def pdipole(file_name, dfig, p_dict, key_types, plot_dict):
     else:
         f.ax0.set_ylim(plot_dict['ymin'], plot_dict['ymax'])
 
-    title = [key + ': %2.1f' % p_dict[key] for key in key_types['dynamic_keys']]
-    plt.title(title)
+    title_str = create_title(p_dict, key_types)
+    f.f.suptitle(title_str)
+    # title = [key + ': %2.1f' % p_dict[key] for key in key_types['dynamic_keys']]
 
     fig_name = os.path.join(dfig, file_prefix+'.png')
 
@@ -175,8 +176,9 @@ def pdipole_with_hist(f_dpl, f_spk, dfig, p_dict, gid_dict, key_types, xlim=[0.,
         if 'feed' in key:
             f.ax[key].legend()
 
-    title = [key + ': %2.1f' % p_dict[key] for key in key_types['dynamic_keys']]
-    plt.title(title)
+    title_str = create_title(p_dict, key_types)
+    f.f.suptitle(title_str)
+    # title = [key + ': %2.1f' % p_dict[key] for key in key_types['dynamic_keys']]
 
     fig_name = os.path.join(dfig, file_prefix+'.png')
     # fig_name = 'hist_test.png'
