@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # s1run.py - primary run function for s1 project
 #
-# v 1.7.24
-# rev 2013-02-19 (SL: Fixed N_trials = 0 seed logic)
-# last major: (SL: cleanup, using new string templates)
+# v 1.7.29
+# rev 2013-03-06 (MS: spec now specfn)
+# last major: (SL: Fixed N_trials = 0 seed logic)
 
 import os
 import sys
@@ -21,7 +21,7 @@ from class_net import Network
 import fn.fileio as fio
 import fn.paramrw as paramrw
 import fn.plotfn as plotfn
-import fn.spec as spec
+import fn.specfn as specfn
 
 # spike write function
 def spikes_write(net, filename_spikes):
@@ -278,7 +278,7 @@ def exec_runsim(f_psim):
             t_start_analysis = time.time()
 
             # run the spectral analysis and temporarily keep data in memory in spec_results
-            spec_results = spec.analysis(ddir, p_exp)
+            spec_results = specfn.analysis(ddir, p_exp)
 
             print "time: %4.4f s" % (time.time() - t_start_analysis)
             print "Plot ...",

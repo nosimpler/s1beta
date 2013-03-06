@@ -1,8 +1,8 @@
 # clidefs.py - these are all of the function defs for the cli
 #
-# v 1.7.25
-# rev 2013-02-20 (SL: changed ylim system, pdipole stuff, fixed some bugs, etc.)
-# last major: (SL: added pdipole_evoked, unfinished)
+# v 1.7.29
+# rev 2013-03-06 (MS: spec now specfn)
+# last major: (SL: changed ylim system, pdipole stuff, fixed some bugs, etc.)
 
 # Standard modules
 import fnmatch, os, re, sys
@@ -18,7 +18,7 @@ import spikefn
 import plotfn
 import fileio as fio
 import paramrw
-import spec
+import specfn
 import pdipole
 import axes_create
 
@@ -267,7 +267,7 @@ def avg_over_trials(ddata, datatype):
 def regenerate_spec_data(ddata, max_freq=None):
     # regenerates and saves spec data
     p_exp = paramrw.ExpParams(ddata.fparam)
-    spec_results = spec.analysis(ddata, p_exp, max_freq, save_data=1)
+    spec_results = specfn.analysis(ddata, p_exp, max_freq, save_data=1)
 
     return spec_results
 
@@ -292,18 +292,18 @@ def freqpwr_analysis(ddata, dsim, maxpwr):
         print "now doing spec freq-pwr analysis"
 
     # perform freqpwr analysis
-    freqpwr_results_list = [spec.freqpwr_analysis(dspec) for dspec in spec_results]
+    freqpwr_results_list = [specfn.freqpwr_analysis(dspec) for dspec in spec_results]
 
     # plot for whole simulation
     if analysis_type == 'sim':
 
         file_name = os.path.join(dsim, 'freqpwr.png')
-        spec.pfreqpwr(file_name, freqpwr_results_list, fparam_list, key_types)
+        specfn.pfreqpwr(file_name, freqpwr_results_list, fparam_list, key_types)
 
         # if maxpwr plot indicated
         if maxpwr:
             f_name = os.path.join(dsim, 'maxpwr.png')
-            spec.pmaxpwr(f_name, freqpwr_results_list, fparam_list)
+            specfn.pmaxpwr(f_name, freqpwr_results_list, fparam_list)
 
     # plot per exmpt
     if analysis_type == 'expmt':
@@ -317,16 +317,16 @@ def freqpwr_analysis(ddata, dsim, maxpwr):
             partial_fparam_list = [fparam for fparam in fparam_list if expmt_group in fparam]
 
             # plot results
-            spec.pfreqpwr(file_name, partial_results_list, partial_fparam_list, key_types)
+            specfn.pfreqpwr(file_name, partial_results_list, partial_fparam_list, key_types)
 
             # if maxpwr plot indicated
             if maxpwr:
                 f_name = os.path.join(dsim, expmt_group, 'maxpwr.png')
-                spec.pmaxpwr(f_name, partial_results_list, partial_fparam_list)
+                specfn.pmaxpwr(f_name, partial_results_list, partial_fparam_list)
 
     if spec_results_avged:
         # perform freqpwr analysis
-        freqpwr_results_list = [spec.freqpwr_analysis(dspec) for dspec in spec_results_avged]
+        freqpwr_results_list = [specfn.freqpwr_analysis(dspec) for dspec in spec_results_avged]
 
         # create fparam list to match avg'ed data
         N_trials = p_exp.N_trials
@@ -337,12 +337,12 @@ def freqpwr_analysis(ddata, dsim, maxpwr):
         if analysis_type == 'sim':
 
             file_name = os.path.join(dsim, 'freqpwr-avg.png')
-            spec.pfreqpwr(file_name, freqpwr_results_list, fparam_list, key_types)
+            specfn.pfreqpwr(file_name, freqpwr_results_list, fparam_list, key_types)
 
             # if maxpwr plot indicated
             if maxpwr:
                 f_name = os.path.join(dsim, 'maxpwr-avg.png')
-                spec.pmaxpwr(f_name, freqpwr_results_list, fparam_list)
+                specfn.pmaxpwr(f_name, freqpwr_results_list, fparam_list)
 
         # plot per exmpt
         if analysis_type == 'expmt':
@@ -356,12 +356,12 @@ def freqpwr_analysis(ddata, dsim, maxpwr):
                 partial_fparam_list = [fparam for fparam in fparam_list if expmt_group in fparam]
 
                 # plot results
-                spec.pfreqpwr(file_name, partial_results_list, partial_fparam_list, key_types)
+                specfn.pfreqpwr(file_name, partial_results_list, partial_fparam_list, key_types)
 
                 # if maxpwr plot indicated
                 if maxpwr:
                     f_name = os.path.join(dsim, expmt_group, 'maxpwr-avg.png')
-                    spec.pmaxpwr(f_name, partial_results_list, partial_fparam_list)
+                    specfn.pmaxpwr(f_name, partial_results_list, partial_fparam_list)
 
 # Averages spec pwr over time and plots it with histogram of alpha feeds per simulation
 def freqpwr_with_hist(ddata, dsim):
@@ -380,14 +380,14 @@ def freqpwr_with_hist(ddata, dsim):
         print "now doing spec freq-pwr analysis"
 
     # perform freqpwr analysis
-    freqpwr_results_list = [spec.freqpwr_analysis(dspec) for dspec in spec_results]
+    freqpwr_results_list = [specfn.freqpwr_analysis(dspec) for dspec in spec_results]
 
     # Plot
     for freqpwr_result, f_spk, fparam in it.izip(freqpwr_results_list, spk_list, fparam_list):
         gid_dict, p_dict = paramrw.read(fparam)
         file_name = 'freqpwr.png'
 
-        spec.pfreqpwr_with_hist(file_name, freqpwr_result, f_spk, gid_dict, p_dict, key_types)
+        specfn.pfreqpwr_with_hist(file_name, freqpwr_result, f_spk, gid_dict, p_dict, key_types)
 
 def regenerate_plots(ddata, xlim=[0, 'tstop']):
     # need p_exp, spec_results, gid_dict, and tstop.
@@ -506,13 +506,13 @@ def exec_plotaverages(ddata, ylim=[]):
     if spec_list:
         if runtype == 'debug':
             for f_spec, f_dpl, dfig_spec, pdict in it.izip(spec_list, dpl_list, dfig_spec_list, pdict_list):
-                spec.pspec(f_spec, f_dpl, dfig_spec, pdict, key_types)
+                specfn.pspec(f_spec, f_dpl, dfig_spec, pdict, key_types)
 
         elif runtype == 'parallel':
             pl = Pool()
             for f_spec, f_dpl, dfig_spec, pdict in it.izip(spec_list, dpl_list, dfig_spec_list, pdict_list):
             # for dfig_spec, p_dict, f_spec, f_dpl in it.izip(dfig_spec_list, pdict_list, spec_list, dpl_list):
-                pl.apply_async(spec.pspec, (f_spec, f_dpl, dfig_spec, pdict, key_types))
+                pl.apply_async(specfn.pspec, (f_spec, f_dpl, dfig_spec, pdict, key_types))
 
             pl.close()
             pl.join()

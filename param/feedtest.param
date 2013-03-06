@@ -4,27 +4,27 @@
 # np.arrays for everything else?
 # turns out some whitespace is valid for dicts!
 
-sim_prefix: uniform_prox_dist
-expmt_groups: {testing0}
+sim_prefix: prox_dist-stdev-5
+expmt_groups: {delay-00, delay-05, delay-25, delay-50}
 
 # numbers of cells making up the pyramidal grids
 N_pyr_x: 2
 N_pyr_y: 2
 
 # Ongoing proximal alpha rhythm
-distribution_prox: uniform
+distribution_prox: normal
 t0_input_prox: 100.
 tstop_input_prox: 0.
 f_input_prox: L[5, 50, 10]
-f_stdev_prox: 0.
+f_stdev_prox: [5.]
 events_per_cycle_prox: 2
 
 # Ongoing distal alpha rhythm
-distribution_dist: uniform
-t0_input_dist: 100.
+distribution_dist: normal
+t0_input_dist: t0_input_prox
 tstop_input_dist: 0.
 f_input_dist: f_input_prox
-f_stdev_dist: 0.
+f_stdev_dist: f_stdev_prox
 events_per_cycle_dist: 2
 
 # thalamic input amplitudes and delays
@@ -34,8 +34,8 @@ input_prox_A_delay_L5: 1.0
 
 # current values, not sure where these distal values come from, need to check
 input_dist_A_weight_inh: 4e-5
-input_dist_A_delay_L2: 5.0
-input_dist_A_delay_L5: 5.0
+input_dist_A_delay_L2: {0., 5.0, 25., 50.}
+input_dist_A_delay_L5: {0., 5.0, 25., 50.}
 
 # times for evoked responses
 t_evprox_early: 6000.
@@ -70,7 +70,7 @@ save_spec_data: 1
 spec_max_freq: 61.
 
 # n trials
-N_trials: 0
+N_trials: 10
 
 # these values will only be used with N_trials = 0
 # and when these values are not -1

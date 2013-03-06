@@ -1,8 +1,8 @@
 # cli.py - routines for the command line interface console s1sh.py
 #
-# v 1.7.25
-# rev 2013-02-20 (SL: lots of cleanup, changed how pdipole works, changed pdipole inputs)
-# last major: (SL: minor debug stuff, start of adding a new function)
+# v 1.7.29
+# rev 2013-03-06 (MS: spec now specfn)
+# last major: (SL: lots of cleanup, changed how pdipole works, changed pdipole inputs)
 
 from cmd import Cmd
 from datetime import datetime
@@ -12,7 +12,7 @@ import readline as rl
 import itertools as it
 import fileio as fio
 import paramrw
-import spec
+import specfn
 from praster import praster
 import pdipole
 from ppsth import ppsth, ppsth_grid

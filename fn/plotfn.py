@@ -1,11 +1,11 @@
 # plotfn.py - pall and possibly other plot routines
 #
-# v 1.7.25
-# rev 2013-02-20 (SL: new pdipole settings dict)
-# last major: (SL: turned off debug mode, but it still needs to be fixed)
+# v 1.7.29
+# rev 2013-03-06 (MS: spec now specfn)
+# last major: (SL: new pdipole settings dict)
 
 from pdipole import pdipole, pdipole_with_hist
-from spec import pspec, pspec_with_hist
+from specfn import pspec, pspec_with_hist
 from praster import praster
 import paramrw
 import itertools as it

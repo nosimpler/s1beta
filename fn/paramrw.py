@@ -1,8 +1,8 @@
 # paramrw.py - routines for reading the param files
 #
-# v 1.7.26
-# rev 2013-03-01 (MS: Added method to co-vary params)
-# last major: (SL: Added different pyr weights for feeds for L2 and L5)
+# v 1.7.29
+# rev 2013-03-06 (MS: minor)
+# last major: (MS: Added method to co-vary params)
 
 import re
 import fileio as fio
@@ -123,20 +123,8 @@ class ExpParams():
         # create non-exp params dict from default dict
         self.__create_dict_from_default(p_all_input)
 
-        # pop off fixed known vals
-        self.sim_prefix = self.p_all.pop('sim_prefix')
-
-        # create an experimental string prefix template
-        self.exp_prefix_str = self.sim_prefix+"-%03d"
-        self.trial_prefix_str = self.exp_prefix_str+"-T%02d"
-
-        self.N_trials = int(self.p_all.pop('N_trials'))
-        # self.prng_state = self.p_all.pop('prng_state')[1:-1]
-
-        self.alpha_distributions = {
-            'distribution_prox': self.p_all.pop('distribution_prox'),
-            'distribution_dist': self.p_all.pop('distribution_dist'),
-        }
+        # pop off fixed known vals and create experimental prefix templates
+        self.__pop_known_values()
 
         # make dict of coupled params
         self.coupled_params = self.__find_coupled_params()
@@ -144,6 +132,32 @@ class ExpParams():
         # create the list of iterated params
         self.list_params = self.__create_paramlist()
         self.N_sims = len(self.list_params[0][1])
+
+    # return pdict based on that one value, PLUS append the p_ext here ... yes, hack-y
+    def return_pdict(self, expmt_group, i):
+        # p_template was always updated to include the ones from exp and others
+        p_sim = dict.fromkeys(self.p_template)
+
+        # go through params in list_params
+        for param, val_list in self.list_params:
+            if param.startswith('prng_seedcore_'):
+                p_sim[param] = int(val_list[i])
+            else:
+                p_sim[param] = val_list[i]
+
+        # go through the expmt group-based params
+        for param, val in self.p_group[expmt_group].iteritems():
+            p_sim[param] = val
+
+        # add alpha distributions. A bit hack-y
+        for param, val in self.alpha_distributions.iteritems():
+            p_sim[param] = val
+
+        # Add coupled params
+        for coupled_param, val_param  in self.coupled_params.iteritems():
+            p_sim[coupled_param] = p_sim[val_param]
+
+        return p_sim
 
     # reads .param file and returns p_all_input dict
     def __read_sim(self, f_psim):
@@ -256,22 +270,38 @@ class ExpParams():
 
     # creates dict of params whose values are to be coupled
     def __find_coupled_params(self):
-        self.coupled_params = {}
+        coupled_params = {}
 
         # iterates over all key/value pairs to find vals that are strings
         for key, val in self.p_all.iteritems():  
             if isinstance(val, str):
                 # check that string is another param in p_all
                 if val in self.p_all.keys():
-                    self.coupled_params[key] = val
+                    coupled_params[key] = val
                 else:
                     print "Unknown key: %s. Probably going to error." %val
 
         # Pop coupled params
-        for key in self.coupled_params.iterkeys():
+        for key in coupled_params.iterkeys():
             self.p_all.pop(key)
 
-        return self.coupled_params
+        return coupled_params
+
+    def __pop_known_values(self):
+        self.sim_prefix = self.p_all.pop('sim_prefix')
+
+        # create an experimental string prefix template
+        self.exp_prefix_str = self.sim_prefix+"-%03d"
+        self.trial_prefix_str = self.exp_prefix_str+"-T%02d"
+
+        self.N_trials = int(self.p_all.pop('N_trials'))
+        # self.prng_state = self.p_all.pop('prng_state')[1:-1]
+
+        # Save alpha distribution types in dict for later use
+        self.alpha_distributions = {
+            'distribution_prox': self.p_all.pop('distribution_prox'),
+            'distribution_dist': self.p_all.pop('distribution_dist'),
+        }
 
     # create the dict based on the default param dict
     def __create_dict_from_default(self, p_all_input):
@@ -315,32 +345,6 @@ class ExpParams():
 
         vals_all = cartesian(plist)
         return zip(self.keys_sorted, vals_all.transpose())
-
-    # return pdict based on that one value, PLUS append the p_ext here ... yes, hack-y
-    def return_pdict(self, expmt_group, i):
-        # p_template was always updated to include the ones from exp and others
-        p_sim = dict.fromkeys(self.p_template)
-
-        # go through params in list_params
-        for param, val_list in self.list_params:
-            if param.startswith('prng_seedcore_'):
-                p_sim[param] = int(val_list[i])
-            else:
-                p_sim[param] = val_list[i]
-
-        # go through the expmt group-based params
-        for param, val in self.p_group[expmt_group].iteritems():
-            p_sim[param] = val
-
-        # add alpha distributions. A bit hack-y
-        for param, val in self.alpha_distributions.iteritems():
-            p_sim[param] = val
-
-        # Add coupled params
-        for coupled_param, val_param  in self.coupled_params.iteritems():
-            p_sim[coupled_param] = p_sim[val_param]
-
-        return p_sim
 
     # Find keys that change anytime during simulation
     # (i.e. have more than one associated value)
