@@ -1,8 +1,8 @@
 # cli.py - routines for the command line interface console s1sh.py
 #
-# v 1.7.29
-# rev 2013-03-06 (MS: spec now specfn)
-# last major: (SL: lots of cleanup, changed how pdipole works, changed pdipole inputs)
+# v 1.7.31
+# rev 2013-03-12 (MS: created aggregatespec for plotting all spec data in one fig)
+# last major: (MS: spec now specfn)
 
 from cmd import Cmd
 from datetime import datetime
@@ -493,6 +493,28 @@ class Console(Cmd):
                     xmax = 'tstop'
 
         clidefs.add_alpha_feed_hist(self.ddata, [xmin, xmax])
+
+    def do_aggregatehist(self, args):
+        """Creates aggregates all spec data with histograms into one massive fig.
+           Must supply column label and row label as --row_label:param --column_label:param"
+           row_label should be param that changes only over experiments
+           column_label should be a param that changes trial to trial
+        """
+        arg_list = [arg for arg in args.split('--') if arg is not '']
+        print arg_list
+
+        # Parse args
+        for arg in arg_list:
+            if arg.startswith('row'):
+                row_label = arg.split(':')[-1].split(' ')[0]
+
+            elif arg.startswith('column'):
+                column_label = arg.split(':')[-1].split(' ')[0]
+
+            else:
+                print "Did not recongnize argument. Going to break now."
+
+        clidefs.exec_aggregatehist(self.ddata, [row_label, column_label])
 
     def do_plotaverages(self, args):
         """Creates plots of averaged dipole or spec data. Automatically checks if data exists. Usage:

@@ -1,7 +1,7 @@
 # paramrw.py - routines for reading the param files
 #
-# v 1.7.29
-# rev 2013-03-06 (MS: minor)
+# v 1.7.31
+# rev 2013-03-12 (MS: coupled keys added to dynamic key list as necessary)
 # last major: (MS: Added method to co-vary params)
 
 import re
@@ -350,9 +350,13 @@ class ExpParams():
     # (i.e. have more than one associated value)
     def get_key_types(self):
         key_dict = {
+            'expmt_keys': [],
             'dynamic_keys': [],
             'static_keys': [],
         }
+
+        # Save exmpt keys
+        key_dict['expmt_keys'] = self.expmt_group_params
 
         # Save expmt keys as dynamic keys
         key_dict['dynamic_keys'] = self.expmt_group_params
@@ -369,6 +373,13 @@ class ExpParams():
 
             except TypeError:
                 key_dict['static_keys'].append(key)
+
+        # Check if coupled params are dynamic
+        for dep_param, ind_param in self.coupled_params.iteritems():
+            if ind_param in key_dict['dynamic_keys']:
+                key_dict['dynamic_keys'].append(dep_param)
+            else:
+                key_dict['static_keys'].append(dep_param)
 
         return key_dict
 

@@ -1,8 +1,8 @@
 # clidefs.py - these are all of the function defs for the cli
 #
-# v 1.7.29
-# rev 2013-03-06 (MS: spec now specfn)
-# last major: (SL: changed ylim system, pdipole stuff, fixed some bugs, etc.)
+# v 1.7.31
+# rev 2013-03-12 (MS: exec_aggregatehist)
+# last major: (MS: spec now specfn)
 
 # Standard modules
 import fnmatch, os, re, sys
@@ -417,6 +417,18 @@ def add_alpha_feed_hist(ddata, xlim=[0, 'tstop']):
         spec_results = regenerate_spec_data(ddata)
 
     plotfn.pdpl_pspec_with_hist(ddata, p_exp, spec_results, xlim)
+
+def exec_aggregatehist(ddata, labels):
+    p_exp = paramrw.ExpParams(ddata.fparam)
+
+    spec_results = fio.file_match(ddata.dsim, '-spec.npz')
+
+    # generate data if no spec exists here
+    if not spec_results:
+        print "No saved spec data found. Performing spec anaylsis ... "
+        spec_results = regenerate_spec_data(ddata)
+
+    plotfn.aggregate_spec_with_hist(ddata, p_exp, spec_results, labels)
 
 # plot data averaged over trials
 # dipole and spec should be split up at some point (soon)

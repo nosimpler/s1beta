@@ -1,8 +1,8 @@
 # spikefn.py - dealing with spikes
 #
-# v 1.7.27
-# rev 2013-03-01 (MS: fixed error causing alpha hists not to work when only one feed existed)
-# last major: (SL: new functions for working with spikes in Spikes())
+# v 1.7.31
+# rev 2013-03-12 (MS: fixed error in accounting for delays in alpha inputs)
+# last major: (MS: fixed error causing alpha hists not to work when only one feed existed)
 
 import fileio as fio
 import numpy as np
@@ -112,7 +112,7 @@ def hist_bin_opt(x, N_trials):
 
 # not "purely" from files
 def spikes_from_file(gid_dict, fspikes):
-    print "spikes_from_file() is being deprecated. Please see spikes_from_file_pure() for eventual replacement."
+    # print "spikes_from_file() is being deprecated. Please see spikes_from_file_pure() for eventual replacement."
     # check to see if there are spikes in here, otherwise return an empty array
     if os.stat(fspikes).st_size:
         s = np.loadtxt(open(fspikes, 'rb'))
@@ -278,23 +278,23 @@ def add_delay_times(s_dict, p_dict):
     # Only add delays if delay is same for L2 and L5
     # Proximal feed
     # if L5 delay is -1, has same delays as L2
-    if p_dict['input_prox_A_delay_L5'] == -1:
-        s_dict['alpha_feed_prox'].spike_list = [num+p_dict['input_prox_A_delay_L2'] for num in s_dict['alpha_feed_prox'].spike_list]
+    # if p_dict['input_prox_A_delay_L5'] == -1:
+    #     s_dict['alpha_feed_prox'].spike_list = [num+p_dict['input_prox_A_delay_L2'] for num in s_dict['alpha_feed_prox'].spike_list]
 
     # else, check to see if delays are the same anyway
-    else:
-        if s_dict['alpha_feed_prox'] != np.array([]) and p_dict['input_prox_A_delay_L2'] == p_dict['input_prox_A_delay_L5']:
-            s_dict['alpha_feed_prox'].spike_list = [num+p_dict['input_prox_A_delay_L2'] for num in s_dict['alpha_feed_prox'].spike_list]
+    # else:
+    if s_dict['alpha_feed_prox'] and p_dict['input_prox_A_delay_L2'] == p_dict['input_prox_A_delay_L5']:
+        s_dict['alpha_feed_prox'].spike_list = [num+p_dict['input_prox_A_delay_L2'] for num in s_dict['alpha_feed_prox'].spike_list]
 
     # Distal
     # if L5 delay is -1, has same delays as L2
-    if p_dict['input_dist_A_delay_L5'] == -1:
-        s_dict['alpha_feed_dist'].spike_list = [num+p_dict['input_dist_A_delay_L2'] for num in s_dict['alpha_feed_dist'].spike_list]
+    # if p_dict['input_dist_A_delay_L5'] == -1:
+    #     s_dict['alpha_feed_dist'].spike_list = [num+p_dict['input_dist_A_delay_L2'] for num in s_dict['alpha_feed_dist'].spike_list]
 
     # else, check to see if delays are the same anyway
-    else:
-        if s_dict['alpha_feed_dist'] != np.array([]) and p_dict['input_dist_A_delay_L2'] == p_dict['input_dist_A_delay_L5']: 
-            s_dict['alpha_feed_dist'].spike_list = [num+p_dict['input_dist_A_delay_L2'] for num in s_dict['alpha_feed_dist'].spike_list]
+    # else:
+    if s_dict['alpha_feed_dist'] and p_dict['input_dist_A_delay_L2'] == p_dict['input_dist_A_delay_L5']: 
+        s_dict['alpha_feed_dist'].spike_list = [num+p_dict['input_dist_A_delay_L2'] for num in s_dict['alpha_feed_dist'].spike_list]
 
     return s_dict
 

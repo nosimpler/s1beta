@@ -1,8 +1,8 @@
 # axes_create.py - simple axis creation
 #
-# v 1.7.30
-# rev 2013-03-06 (MS: Method for generating title string based on dynamic params)
-# last major: (MS: figure for plotting alpha feed hists next to freq-pwr analyis)
+# v 1.7.31
+# rev 2013-03-12 (MS: Axes creation for aggregate fig of spectrograms with alpha hists)
+# last major: (MS: Method for generating title string based on dynamic params)
 
 # usage:
 # testfig = FigStd()
@@ -10,10 +10,12 @@
 # plt.savefig('testfig.png')
 # testfig.close()
 
+import paramrw
 import matplotlib as mpl
 # mpl.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
+import itertools as it
 import numpy as np
 
 class FigStd():
@@ -322,13 +324,128 @@ class fig_psthgrid():
     def close(self):
         plt.close(self.f)
 
+class AggregateSpecWithHist():
+    def __init__(self, N_rows, N_cols):
+        self.N_rows = N_rows
+        self.N_cols = N_cols
+
+        self.f = plt.figure(figsize=(2+8*N_cols, 1+8*N_rows), dpi=300)
+        font_prop = {'size': 8}
+        mpl.rc('font', **font_prop)
+
+        # margins
+        self.top_margin = 1. / (2 + 8 * N_rows)
+        self.left_margin = 2. / (2 + 8 * N_cols)
+
+        # Height is measured from top of figure 
+        # i.e. row at top of figure is considered row 0
+        # This is the opposite of matplotlib conventions
+        # White space accounting is kind of wierd. Sorry.
+        self.gap_height = 0.1 / (N_rows + 1)
+        height = (0.9 - self.top_margin) / N_rows
+        top = 1. - self.top_margin - self.gap_height
+        bottom = top - height
+
+        # Width is measured from left of figure
+        # This is inline with matplotlib conventions 
+        # White space accounting it kind of wierd. Sorry
+        self.gap_width = 0.15 / (N_cols + 1.)
+        width = (0.85 - self.left_margin) / N_cols
+        left = self.left_margin + self.gap_width
+        right = left + width
+
+        # Preallocate some lists
+        self.gs0_list = []
+        self.gs1_list = []
+        self.gs2_list = []
+        self.ax_list = []
+
+        # iterate over all rows/cols and create axes for each location
+        for row, col in it.product(range(0, N_rows), range(0, N_cols)):
+            # left and right margins for this set of axes
+            tmp_left = left + width * col + self.gap_width * col 
+            tmp_right = right + width * col + self.gap_width * col
+
+            # top and bottom margins for this set of axes
+            bottom_spec = bottom - height * row - self.gap_height * row
+            top_spec = bottom_spec + (0.4 - self.top_margin / 5) / N_rows
+
+            bottom_dpl = top_spec + (0.05 - self.top_margin / 5) / N_rows
+            top_dpl = bottom_dpl + (0.2 - self.top_margin / 5) / N_rows
+
+            bottom_hist = top_dpl + (0.05 - self.top_margin / 5) / N_rows
+            top_hist = bottom_hist + (0.2 - self.top_margin / 5) / N_rows
+
+            # tmp_top = top - height * row - self.gap_height * row
+            # tmp_bottom = bottom - height * row - self.gap_height * row
+
+            # Create gridspecs
+            self.gs0_list.append(gridspec.GridSpec(1, 4, wspace=0., hspace=0., bottom=bottom_spec, top=top_spec, left=tmp_left, right=tmp_right))
+            self.gs1_list.append(gridspec.GridSpec(2, 1, bottom=bottom_dpl, top=top_dpl, left=tmp_left, right=tmp_right-0.18/N_cols))
+            self.gs2_list.append(gridspec.GridSpec(2, 1, hspace=0.14, bottom=bottom_hist, top=top_hist, left=tmp_left, right = tmp_right-0.18/N_cols))
+
+            # create axes
+            ax = {}
+            ax['spec'] = self.f.add_subplot(self.gs0_list[-1][:, :])
+            ax['dipole'] = self.f.add_subplot(self.gs1_list[-1][:, :])
+            ax['feed_prox'] = self.f.add_subplot(self.gs2_list[-1][1, :])
+            ax['feed_dist'] = self.f.add_subplot(self.gs2_list[-1][0, :])
+
+            # store axes
+            # SUPER IMPORTANT: this list iterates across rows!!!!!
+            self.ax_list.append(ax)
+
+    def set_hist_props(self, ax, hist_data):
+        for key in ax.keys():
+            if 'feed' in key:
+                max_n = max(hist_data[key][0])
+                ax[key].set_yticks(np.arange(0, max_n+2, np.ceil((max_n+2.)/4.)))
+
+            if 'feed_dist' in key:
+                ax[key].set_xticklabels('')
+
+    # def add_column_labels(self, param_list):
+    def add_column_labels(self, param_list, key): 
+        # override = {'fontsize': 8*self.N_cols}
+
+        gap = (0.85 - self.left_margin) / self.N_cols + self.gap_width 
+        
+        for i in range(0, self.N_cols):
+            p_dict = paramrw.read(param_list[i])[1]
+
+            x = self.left_margin + gap / 2. + gap * i
+            y = 1 - self.top_margin / 2.
+
+            self.f.text(x, y, key+' :%2.1f' %p_dict[key], fontsize=36, horizontalalignment='center', verticalalignment='top')
+
+            # self.ax_list[i]['feed_dist'].set_title(key + ': %2.1f' %p_dict[key], **override)
+
+    def add_row_labels(self, param_list, key):
+        gap = (0.9 - self.top_margin) / self.N_rows + self.gap_height
+
+        for i in range(0, self.N_rows):
+            ind = self.N_cols * i
+            p_dict = paramrw.read(param_list[ind])[1]
+
+            # place text in middle of each row of axes
+            x = self.left_margin / 2.
+            y = 1. - self.top_margin - self.gap_height - gap / 2 - gap * i
+
+            self.f.text(x, y, key+': %s' %p_dict[key], fontsize=36, rotation='vertical', horizontalalignment='left', verticalalignment='center')
+
+    def save(self, file_name):
+        self.f.savefig(file_name)
+
+    def close(self):
+        plt.close(self.f)
+
 # creates title string based on params that change during simulation
 def create_title(p_dict, key_types):
     title = []
 
     for key in key_types['dynamic_keys']:
         # Rules for when to use scientific notation
-        if p_dict[key] >= 0.1:
+        if p_dict[key] >= 0.1 or p_dict[key] == 0:
             title.append(key + ': %2.1f' %p_dict[key])
         else:
             title.append(key + ': %2.1e' %p_dict[key])
@@ -343,8 +460,9 @@ def testfn():
     # testfig = FigStd()
     # testfig.ax0.plot(x)
 
-    testfig = FigRaster(100)
-    testfig.ax['L5'].plot(x)
+    # testfig = FigSpecWithHist()
+    testfig = AggregateSpecWithHist(3, 3)
+    # testfig.ax['spec'].plot(x)
 
     # testfig = FigSpecWithHist()
     # testfig.ax['spec'].plot(x)

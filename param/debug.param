@@ -11,7 +11,7 @@
 # Limitation: Will not work for feed distributions
 
 sim_prefix: test
-expmt_groups: {testing0}
+expmt_groups: {testing0, testing1}
 
 # numbers of cells making up the pyramidal grids
 N_pyr_x: 1
@@ -46,15 +46,15 @@ gbar_L2Pyr_L5Basket: 2.5e-4
 distribution_prox: normal
 t0_input_prox: 50.
 tstop_input_prox: 0
-f_input_prox: 50.
-f_stdev_prox: 0
-events_per_cycle_prox: 1
+f_input_prox: [10., 20.]
+f_stdev_prox: 20.
+events_per_cycle_prox: 2
 
 # Ongoing distal alpha rhythm
 distribution_dist: normal
 t0_input_dist: 50.
 tstop_input_dist: 0
-f_input_dist: 0
+f_input_dist: {0., 10.}
 f_stdev_dist: 20.
 events_per_cycle_dist: 2
 
@@ -128,8 +128,8 @@ L5Basket_Pois_A_weight: 0.
 L5Basket_Pois_lamtha: 0.
 
 # analysis
-save_spec_data: 0
-spec_max_freq: 101.
+save_spec_data: 1
+spec_max_freq: 41.
 
 # N_trials
 N_trials: 0
