@@ -1,8 +1,8 @@
 # cli.py - routines for the command line interface console s1sh.py
 #
-# v 1.7.31
-# rev 2013-03-12 (MS: created aggregatespec for plotting all spec data in one fig)
-# last major: (MS: spec now specfn)
+# v 1.7.32
+# rev 2013-03-23 (SL: added specmax)
+# last major: (MS: created aggregatespec for plotting all spec data in one fig)
 
 from cmd import Cmd
 from datetime import datetime
@@ -74,9 +74,10 @@ class Console(Cmd):
     def do_debug(self, args):
         """Qnd function to test other functions
         """
-        self.do_setdate('from_remote/2013-02-18')
-        self.do_load('evbeta_thresh_nonperceived-001')
-        self.do_pdipole('avg [-60000, 30000]')
+        self.do_setdate('2013-03-03')
+        self.do_load('mubaseline-000')
+        self.do_specmax('in (mu, 0, 15) on [0, 1000.]')
+        # self.do_pdipole('avg [-60000, 30000]')
         # self.do_specanalysis('max_freq=50')
         # self.do_addalphahist('--xmin=0 --xmax=500')
         # self.do_avgtrials('dpl')
@@ -178,9 +179,33 @@ class Console(Cmd):
     def do_giddict(self, args):
         pass
 
+    def do_specmax(self, args):
+        """Find the max spectral power, report value and time
+        """
+        # look for first keyword
+        if args.startswith("in"):
+            try:
+                # split by 'in' to get the interval
+                s = args.split(" on ")
+
+                # values are then in first part of s
+                # yeah, this is gross, sorry. just parsing between parens for params
+                expmt_group, n_sim_str, n_trial_str = s[0][s[0].find("(")+1:s[0].find(")")].split(", ")
+                n_sim = int(n_sim_str)
+                n_trial = int(n_trial_str)
+
+                t_interval = ast.literal_eval(s[-1])
+                clidefs.exec_specmax(self.ddata, expmt_group, n_sim, n_trial, t_interval)
+
+            except ValueError:
+                self.do_help('dipolemin')
+
+        else:
+            self.do_help('dipolemin')
+
     def do_dipolemin(self, args):
         """Find the minimum of a particular dipole
-           Usage: dipolemin in (<expmt>, <simrun>, T<trial>) on [interval]
+           Usage: dipolemin in (<expmt>, <simrun>, <trial>) on [interval]
         """
         # look for first keyword
         if args.startswith("in"):

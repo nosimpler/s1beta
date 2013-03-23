@@ -49,15 +49,18 @@ f_input_dist: 10
 f_stdev_dist: 20.
 
 # thalamic input amplitudes and delays
+input_prox_A_weight_L2Pyr: 4e-5
+input_prox_A_weight_L5Pyr: 4e-5
 input_prox_A_weight_inh: 8e-5
 input_prox_A_delay_L2: 0.1
 input_prox_A_delay_L5: 1.0
 
 # current values, not sure where these distal values come from, need to check
-input_dist_A_weight_inh: 4e-5
+input_dist_A_weight_L5Pyr: 4e-5
+input_dist_A_weight_L2Pyr: 4e-5
+input_dist_A_weight_inh: 8e-5
 input_dist_A_delay_L2: 5.0
 input_dist_A_delay_L5: 5.0
-# input_dist_A_inh: 8e-5
 
 # evoked response strengths
 # evprox (early) feed strength
@@ -88,12 +91,12 @@ save_spec_data: 0
 spec_max_freq: 41.
 
 # N_trials
-N_trials: 25
+N_trials: 0
 
 # these values will only be used with N_trials = 0
 # and when these values are not -1
-prng_seedcore_input_prox: -1
-prng_seedcore_input_dist: -1
+prng_seedcore_input_dist: 827943075
+prng_seedcore_input_prox: 730617084
 prng_seedcore_extpois: 0
 prng_seedcore_extgauss: 0
 prng_seedcore_evprox_early: 0
@@ -101,7 +104,7 @@ prng_seedcore_evdist: 0
 prng_seedcore_evprox_late: 0
 
 # Numerics
-tstop: 1000.
+tstop: 100.
 dt: 0.025
 
 # amplitudes of individual gaussian random inputs to L2Pyr and L5Pyr
@@ -142,9 +145,3 @@ events_per_cycle_prox: 2
 events_per_cycle_dist: 2
 distribution_dist: normal
 distribution_prox: normal
-
-# new params from default
-input_prox_A_weight_L2Pyr: 4e-5
-input_prox_A_weight_L5Pyr: 4e-5
-input_dist_A_weight_L5Pyr: 4e-5
-input_dist_A_weight_L2Pyr: 4e-5

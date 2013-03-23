@@ -1,8 +1,8 @@
 # clidefs.py - these are all of the function defs for the cli
 #
-# v 1.7.31
-# rev 2013-03-12 (MS: exec_aggregatehist)
-# last major: (MS: spec now specfn)
+# v 1.7.32
+# rev 2013-03-23 (SL: added specmax)
+# last major: (MS: exec_aggregatehist)
 
 # Standard modules
 import fnmatch, os, re, sys
@@ -152,8 +152,39 @@ def exec_pwr(ddata):
 def exec_rates(ddata):
     spk.calc_rates(ddata)
 
+def exec_specmax(ddata, expmt_group, n_sim, n_trial, t_interval):
+    p_exp = paramrw.ExpParams(ddata.fparam)
+    trial_prefix = p_exp.trial_prefix_str % (n_sim, n_trial)
+
+    # list of all the dipoles
+    dpl_list = ddata.file_match(expmt_group, 'rawdpl')
+    spec_list = ddata.file_match(expmt_group, 'rawspec')
+
+    # load the associated dipole file
+    # find the specific file
+    # assume just the first file
+    fdpl = [file for file in dpl_list if trial_prefix in file][0]
+    fspec = [file for file in spec_list if trial_prefix in file][0]
+
+    data = spec.read(fspec)
+    print data['freq']
+    print data['TFR'].shape
+    max_mask = data['TFR']==data['TFR'].max()
+    print data['time'][max_mask.sum(axis=0)==1]
+    print data['freq'][max_mask.sum(axis=1)==1]
+
+    # data = np.loadtxt(open(fdpl, 'r'))
+    # t_vec = data[:, 0]
+    # data_dpl = data[:, 1]
+
+    # data_dpl_range = data_dpl[(t_vec >= t_interval[0]) & (t_vec <= t_interval[1])]
+    # dpl_min_range = data_dpl_range.min()
+    # t_min_range = t_vec[data_dpl == dpl_min_range]
+
+    # print "Minimum value over t range %s was %4.4f at %4.4f." % (str(t_interval), dpl_min_range, t_min_range)
+
 # search for the min in a dipole over specified interval
-def exec_dipole_min(ddata, expmt_group, n_sim, n_trial, t_interval):
+def exec_dipolemin(ddata, expmt_group, n_sim, n_trial, t_interval):
     p_exp = paramrw.ExpParams(ddata.fparam)
     trial_prefix = p_exp.trial_prefix_str % (n_sim, n_trial)
 

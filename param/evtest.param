@@ -9,8 +9,8 @@ sim_prefix: testdist-ev
 expmt_groups: {testing0}
 
 # numbers of cells making up the pyramidal grids
-N_pyr_x: 10
-N_pyr_y: 10
+N_pyr_x: 1
+N_pyr_y: 1
 
 # Poisson input
 pois_T: 1000.
