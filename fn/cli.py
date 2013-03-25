@@ -1,8 +1,8 @@
 # cli.py - routines for the command line interface console s1sh.py
 #
-# v 1.7.32
-# rev 2013-03-23 (SL: added specmax)
-# last major: (MS: created aggregatespec for plotting all spec data in one fig)
+# v 1.7.35
+# rev 2013-03-25 (SL: Fixed default command behavior, now works as python interpeter)
+# last major: (SL: added specmax)
 
 from cmd import Cmd
 from datetime import datetime
@@ -860,8 +860,6 @@ class Console(Cmd):
            In that case we execute the line as Python code.
         """
         try:
-            if line == p[0]:
-                print p[1]
             exec(line) in self._locals, self._globals
         except Exception, e:
             print e.__class__, ":", e

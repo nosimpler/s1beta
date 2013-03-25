@@ -1,8 +1,8 @@
 # paramrw.py - routines for reading the param files
 #
-# v 1.7.34
-# rev 2013-03-25 (SL: ignores any Run_Date keys that might be present)
-# last major: (MS: coupled keys added to dynamic key list as necessary)
+# v 1.7.35
+# rev 2013-03-25 (SL: fixed small typo, but Run_Date bug still exists)
+# last major: (SL: ignores any Run_Date keys that might be present)
 
 import re
 import fileio as fio
@@ -324,7 +324,7 @@ class ExpParams():
 
         # now display extraneous keys, if there were any
         if len(p_all_input):
-            print "Keys were not found in in default params: %s" % str(p_all_input.keys())
+            print "Keys were not found in default params: %s" % str(p_all_input.keys())
 
     # creates all combination of non-exp params
     def __create_paramlist(self):
