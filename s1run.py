@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # s1run.py - primary run function for s1 project
 #
-# v 1.7.29
-# rev 2013-03-06 (MS: spec now specfn)
-# last major: (SL: Fixed N_trials = 0 seed logic)
+# v 1.7.34
+# rev 2013-03-25 (SL: Run_Date is sneakily added to the end of the copied original param file)
+# last major: (MS: spec now specfn)
 
 import os
 import sys
@@ -41,7 +41,7 @@ def spikes_write(net, filename_spikes):
     pc.barrier()
 
 # copies param file into root dsim directory
-def copy_paramfile(dsim, f_psim):
+def copy_paramfile(dsim, f_psim, str_date):
     # assumes in this cwd, can use try/except in the future
     print os.path.join(os.getcwd(), f_psim)
     paramfile = f_psim.split("/")[-1]
@@ -49,6 +49,10 @@ def copy_paramfile(dsim, f_psim):
     paramfile_sim = os.path.join(dsim, paramfile)
 
     shutil.copyfile(paramfile_orig, paramfile_sim)
+
+    # open the new param file and append the date to it
+    with open(paramfile_sim, 'a') as f_param:
+        f_param.write('\nRun_Date: %s' % str_date)
 
 # All units for time: ms
 def exec_runsim(f_psim):
@@ -74,10 +78,9 @@ def exec_runsim(f_psim):
     if rank == 0:
         ddir = fio.SimulationPaths()
         ddir.create_new_sim(dproj, p_exp.expmt_groups, p_exp.sim_prefix)
-        # ddir = fio.OutputDataPaths(dproj, p_exp.expmt_groups, p_exp.sim_prefix)
         ddir.create_dirs()
 
-        copy_paramfile(ddir.dsim, f_psim)
+        copy_paramfile(ddir.dsim, f_psim, ddir.str_date)
 
     # iterate through groups and through params in the group
     if rank == 0:

@@ -1,8 +1,8 @@
 # fileio.py - general file input/output functions
 #
-# v 1.7.25
-# rev 2013-02-20 (SL: Fixed a bug in N_trials=0, unrelated to the last bug of this sort ...)
-# last rev: (SL: Added new avg data type directories)
+# v 1.7.34
+# rev 2013-03-25 (SL: Adds str_date as an output used in s1run's copy param file routine)
+# last rev: (SL: Fixed a bug in N_trials=0, unrelated to the last bug of this sort ...)
 
 import datetime, fnmatch, os, shutil, sys
 import itertools as it
@@ -185,8 +185,9 @@ class SimulationPaths():
     # Returns date directory
     # this is NOT safe for midnight
     def __datedir(self):
-        str_date = datetime.datetime.now().strftime("%Y-%m-%d")
-        ddate = os.path.join(self.dproj, str_date)
+        self.str_date = datetime.datetime.now().strftime("%Y-%m-%d")
+        ddate = os.path.join(self.dproj, self.str_date)
+
         return ddate
 
     # returns the directory for the sim

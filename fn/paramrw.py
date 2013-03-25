@@ -1,8 +1,8 @@
 # paramrw.py - routines for reading the param files
 #
-# v 1.7.31
-# rev 2013-03-12 (MS: coupled keys added to dynamic key list as necessary)
-# last major: (MS: Added method to co-vary params)
+# v 1.7.34
+# rev 2013-03-25 (SL: ignores any Run_Date keys that might be present)
+# last major: (MS: coupled keys added to dynamic key list as necessary)
 
 import re
 import fileio as fio
@@ -200,6 +200,9 @@ class ExpParams():
 
             elif param.startswith('distribution_'):
                 p[param] = str(val)
+
+            elif param == 'Run_Date':
+                pass
 
             else:
                 # assign group params first
