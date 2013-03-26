@@ -1,8 +1,8 @@
 # clidefs.py - these are all of the function defs for the cli
 #
-# v 1.7.36
-# rev 2013-03-26 (SL: fixed some function calls, mostly dipolefn)
-# last major: (SL: added specmax)
+# v 1.7.37
+# rev 2013-03-26 (SL: fixed specmax)
+# last major: (SL: fixed some function calls, mostly dipolefn)
 
 # Standard modules
 import fnmatch, os, re, sys
@@ -166,22 +166,33 @@ def exec_specmax(ddata, expmt_group, n_sim, n_trial, t_interval):
     fdpl = [file for file in dpl_list if trial_prefix in file][0]
     fspec = [file for file in spec_list if trial_prefix in file][0]
 
-    data = spec.read(fspec)
-    print data['freq']
-    print data['TFR'].shape
-    max_mask = data['TFR']==data['TFR'].max()
-    print data['time'][max_mask.sum(axis=0)==1]
-    print data['freq'][max_mask.sum(axis=1)==1]
+    data = specfn.read(fspec)
+    # print data['freq']
+    # print data['TFR'].shape
+    pwr_max = data['TFR'].max()
+    max_mask = data['TFR']==pwr_max
+    t_at_max = data['time'][max_mask.sum(axis=0)==1]
+    f_at_max = data['freq'][max_mask.sum(axis=1)==1]
 
-    # data = np.loadtxt(open(fdpl, 'r'))
-    # t_vec = data[:, 0]
-    # data_dpl = data[:, 1]
+    # friendly printout
+    # fmt_t = '%4.3f'
+    # fmt_f = '%4.2f'
+    print "Max power of %4.2e at f of %4.2f Hz at %4.3f ms" % (pwr_max, f_at_max, t_at_max)
 
-    # data_dpl_range = data_dpl[(t_vec >= t_interval[0]) & (t_vec <= t_interval[1])]
-    # dpl_min_range = data_dpl_range.min()
-    # t_min_range = t_vec[data_dpl == dpl_min_range]
+    pd_at_max = 1000./f_at_max
+    t_start = t_at_max - pd_at_max/2.
+    t_end = t_at_max + pd_at_max/2.
 
-    # print "Minimum value over t range %s was %4.4f at %4.4f." % (str(t_interval), dpl_min_range, t_min_range)
+    print "Symmetric interval at %4.2f Hz (T=%4.3f ms) about %4.3f ms is (%4.3f, %4.3f)" % (f_at_max, pd_at_max, t_at_max, t_start, t_end)
+
+    # output structure
+    data_max = {
+        'pwr': pwr_max,
+        't': t_at_max,
+        'f': f_at_max,
+    }
+
+    return data_max
 
 # search for the min in a dipole over specified interval
 def exec_dipolemin(ddata, expmt_group, n_sim, n_trial, t_interval):

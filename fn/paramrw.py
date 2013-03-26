@@ -1,8 +1,8 @@
 # paramrw.py - routines for reading the param files
 #
-# v 1.7.35
-# rev 2013-03-25 (SL: fixed small typo, but Run_Date bug still exists)
-# last major: (SL: ignores any Run_Date keys that might be present)
+# v 1.7.37
+# rev 2013-03-26 (SL: added arange to the possibilities, I hope this doesn't break a lot of stuff)
+# last major: (SL: fixed small typo, but Run_Date bug still exists)
 
 import re
 import fileio as fio
@@ -233,6 +233,9 @@ class ExpParams():
                 elif val[0] is 'L':
                     p[param] = self.__expand_linspace(val)
 
+                elif val[0] is 'A':
+                    p[param] = self.__expand_arange(val)
+
                 else:
                     try:
                         p[param] = float(val)
@@ -258,6 +261,17 @@ class ExpParams():
         val_list = str_val[1:-1].split(', ')
         val_range = np.array([float(item) for item in val_list])
 
+        return val_range
+
+    # general function to expand the arange
+    def __expand_arange(self, str_val):
+        # strip away the leading character along with the brackets and split the csv values
+        val_list = str_val[2:-1].split(', ')
+
+        # use the values in val_list as params for np.linspace
+        val_range = np.arange(float(val_list[0]), float(val_list[1]), float(val_list[2]))
+
+        # return the final linspace expanded
         return val_range
 
     # general function to expand the linspace

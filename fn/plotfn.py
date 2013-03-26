@@ -1,13 +1,13 @@
 # plotfn.py - pall and possibly other plot routines
 #
-# v 1.7.31
-# rev 2013-03-12 (MS: method for creating spectrogram aggregate fig)
-# last major: (MS: spec now specfn)
+# v 1.7.37
+# rev 2013-03-26 (SL: name fixes forgot to commit)
+# last major: (SL: fixed some names)
 
-from pdipole import pdipole, pdipole_with_hist
 from praster import praster
-from axes_create import AggregateSpecWithHist
+import axes_create as ac
 import paramrw
+import dipolefn
 import specfn
 import os
 import itertools as it
@@ -34,8 +34,7 @@ def pkernel(dfig, f_param, f_spk, f_dpl, data_spec, key_types, xlim=[0, 'tstop']
 
     # plot kernels
     praster(gid_dict, tstop, f_spk, dfig_spk)
-    pdipole(f_dpl, dfig_dpl, p_dict, key_types, pdipole_dict)
-    # pdipole(f_dpl, dfig_dpl, p_dict, key_types, xlim)
+    dipolefn.pdipole(f_dpl, f_param, dfig_dpl, key_types, pdipole_dict)
     specfn.pspec(data_spec, f_dpl, dfig_spec, p_dict, key_types, xlim)
 
     return 0
@@ -51,7 +50,7 @@ def pkernel_with_hist(dfig, f_param, f_spk, f_dpl, data_spec, key_types, xlim=[0
     dfig_spk = dfig['figspk']
 
     # plot kernels
-    pdipole_with_hist(f_dpl, f_spk, dfig_dpl, p_dict, gid_dict, key_types, xlim)
+    dipolefn.pdipole_with_hist(f_dpl, f_spk, dfig_dpl, p_dict, gid_dict, key_types, xlim)
     specfn.pspec_with_hist(data_spec, f_dpl, f_spk, dfig_spec, p_dict, gid_dict, key_types, xlim)
 
     return 0
@@ -178,7 +177,7 @@ def aggregate_spec_with_hist(ddir, p_exp, spec_results, labels):
     N_cols = len(ddir.file_match(ddir.expmt_groups[0], 'param'))
 
     # Create figure
-    f = AggregateSpecWithHist(N_rows, N_cols)
+    f = ac.FigAggregateSpecWithHist(N_rows, N_cols)
 
     # Grab all necessary data in aggregated lists
     for expmt_group in ddir.expmt_groups:

@@ -1,8 +1,8 @@
 # cli.py - routines for the command line interface console s1sh.py
 #
-# v 1.7.36
-# rev 2013-03-26 (SL: fixed a few function calls/names)
-# last major: (SL: Fixed default command behavior, now works as python interpeter)
+# v 1.7.37
+# rev 2013-03-26 (SL: fixed specmax)
+# last major: (SL: fixed a few function calls/names)
 
 from cmd import Cmd
 from datetime import datetime
@@ -74,11 +74,11 @@ class Console(Cmd):
     def do_debug(self, args):
         """Qnd function to test other functions
         """
-        self.do_setdate('2013-03-25')
-        self.do_load('test-007')
-        self.do_avgtrials('dpl')
+        self.do_setdate('from_remote/2013-03-25')
+        self.do_load('mu_baseline-002')
+        self.do_specmax('in (testing, 0, 4) on [0, 1000.]')
+        # self.do_avgtrials('dpl')
         # self.do_replot('')
-        # self.do_specmax('in (mu, 0, 15) on [0, 1000.]')
         # self.do_pdipole('avg [-60000, 30000]')
         # self.do_specanalysis('max_freq=50')
         # self.do_addalphahist('--xmin=0 --xmax=500')
@@ -181,7 +181,8 @@ class Console(Cmd):
         pass
 
     def do_specmax(self, args):
-        """Find the max spectral power, report value and time
+        """Find the max spectral power, report value and time.
+           Usage: specmax in (<expmt>, <simrun>, <trial>) on [interval]
         """
         # look for first keyword
         if args.startswith("in"):
@@ -199,10 +200,10 @@ class Console(Cmd):
                 clidefs.exec_specmax(self.ddata, expmt_group, n_sim, n_trial, t_interval)
 
             except ValueError:
-                self.do_help('dipolemin')
+                self.do_help('specmax')
 
         else:
-            self.do_help('dipolemin')
+            self.do_help('specmax')
 
     def do_dipolemin(self, args):
         """Find the minimum of a particular dipole

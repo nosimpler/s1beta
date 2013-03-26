@@ -11,11 +11,11 @@
 # Limitation: Will not work for feed distributions
 
 sim_prefix: test
-expmt_groups: {testing0, testing1}
+expmt_groups: {testing0}
 
 # numbers of cells making up the pyramidal grids
-N_pyr_x: 1
-N_pyr_y: 1
+N_pyr_x: 2
+N_pyr_y: 2
 
 # Poisson input
 pois_T: 1000.
@@ -45,8 +45,8 @@ gbar_L2Pyr_L5Basket: 2.5e-4
 # Ongoing proximal alpha rhythm
 distribution_prox: normal
 t0_input_prox: 50.
-tstop_input_prox: 0
-f_input_prox: [10., 20.]
+tstop_input_prox: 0.
+f_input_prox: 10.
 f_stdev_prox: 20.
 events_per_cycle_prox: 2
 
@@ -54,13 +54,13 @@ events_per_cycle_prox: 2
 distribution_dist: normal
 t0_input_dist: 50.
 tstop_input_dist: 0
-f_input_dist: {0., 10.}
+f_input_dist: 0.
 f_stdev_dist: 20.
 events_per_cycle_dist: 2
 
 # thalamic input amplitudes and delays
 input_prox_A_weight_L2Pyr: 4e-5
-input_prox_A_weight_L5Pyr: 4e-5
+input_prox_A_weight_L5Pyr: A(4e-5, 8e-5, 1e-5)
 input_prox_A_weight_inh: 8e-5
 input_prox_A_delay_L2: 0.1
 input_prox_A_delay_L5: 1.0
