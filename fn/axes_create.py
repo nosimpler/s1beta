@@ -1,8 +1,8 @@
 # axes_create.py - simple axis creation
 #
-# v 1.7.31
-# rev 2013-03-12 (MS: Axes creation for aggregate fig of spectrograms with alpha hists)
-# last major: (MS: Method for generating title string based on dynamic params)
+# v 1.7.36
+# rev 2013-03-26 (SL: Fixed name)
+# last major: (MS: Axes creation for aggregate fig of spectrograms with alpha hists)
 
 # usage:
 # testfig = FigStd()
@@ -324,7 +324,7 @@ class fig_psthgrid():
     def close(self):
         plt.close(self.f)
 
-class AggregateSpecWithHist():
+class FigAggregateSpecWithHist():
     def __init__(self, N_rows, N_cols):
         self.N_rows = N_rows
         self.N_cols = N_cols
@@ -461,7 +461,7 @@ def testfn():
     # testfig.ax0.plot(x)
 
     # testfig = FigSpecWithHist()
-    testfig = AggregateSpecWithHist(3, 3)
+    testfig = FigAggregateSpecWithHist(3, 3)
     # testfig.ax['spec'].plot(x)
 
     # testfig = FigSpecWithHist()

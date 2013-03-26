@@ -1,8 +1,8 @@
 # cli.py - routines for the command line interface console s1sh.py
 #
-# v 1.7.35
-# rev 2013-03-25 (SL: Fixed default command behavior, now works as python interpeter)
-# last major: (SL: added specmax)
+# v 1.7.36
+# rev 2013-03-26 (SL: fixed a few function calls/names)
+# last major: (SL: Fixed default command behavior, now works as python interpeter)
 
 from cmd import Cmd
 from datetime import datetime
@@ -13,8 +13,8 @@ import itertools as it
 import fileio as fio
 import paramrw
 import specfn
+import dipolefn
 from praster import praster
-import pdipole
 from ppsth import ppsth, ppsth_grid
 
 class Console(Cmd):
@@ -74,9 +74,11 @@ class Console(Cmd):
     def do_debug(self, args):
         """Qnd function to test other functions
         """
-        self.do_setdate('2013-03-03')
-        self.do_load('mubaseline-000')
-        self.do_specmax('in (mu, 0, 15) on [0, 1000.]')
+        self.do_setdate('2013-03-25')
+        self.do_load('test-007')
+        self.do_avgtrials('dpl')
+        # self.do_replot('')
+        # self.do_specmax('in (mu, 0, 15) on [0, 1000.]')
         # self.do_pdipole('avg [-60000, 30000]')
         # self.do_specanalysis('max_freq=50')
         # self.do_addalphahist('--xmin=0 --xmax=500')
@@ -87,7 +89,6 @@ class Console(Cmd):
         # self.do_pdipole('agg')
         # self.do_show('L2Pyr_L5Pyr_wL2Bask changed in 0')
         # self.__get_paramfile_list()
-        # self.do_avgtrials('dpl')
         # self.epscompress('spk')
         # self.do_psthgrid()
 
@@ -349,7 +350,7 @@ class Console(Cmd):
 
         else:
             datatype = args
-            clidefs.avg_over_trials(self.ddata, datatype)
+            clidefs.exec_avgtrials(self.ddata, datatype)
 
     def do_specanalysis(self, args):
         """Regenerates spec data and saves it to proper exmpt directories. Usage:
@@ -443,7 +444,7 @@ class Console(Cmd):
         if runtype == 'exp':
             # run the avg dipole per experiment (across all trials/simulations)
             # using simpaths (ddata)
-            pdipole.pdipole_exp(self.ddata, ylim)
+            dipolefn.pdipole_exp(self.ddata, ylim)
 
         elif runtype == 'evoked':
             # add the evoked lines to the pdipole individual simulations
@@ -486,6 +487,7 @@ class Console(Cmd):
                     xmin = 0.
                     xmax = 'tstop'
 
+        # check for spec data, create it if didn't exist, and then run the plots
         clidefs.regenerate_plots(self.ddata, [xmin, xmax])
 
     def do_addalphahist(self, args):

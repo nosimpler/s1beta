@@ -1,8 +1,8 @@
 # fileio.py - general file input/output functions
 #
-# v 1.7.34
-# rev 2013-03-25 (SL: Adds str_date as an output used in s1run's copy param file routine)
-# last rev: (SL: Fixed a bug in N_trials=0, unrelated to the last bug of this sort ...)
+# v 1.7.36
+# rev 2013-03-26 (SL: cleanup)
+# last rev: (SL: Adds str_date as an output used in s1run's copy param file routine)
 
 import datetime, fnmatch, os, shutil, sys
 import itertools as it
@@ -250,9 +250,7 @@ class SimulationPaths():
 
         # search the sim directory for all relevant files
         if os.path.exists(ddata):
-        # if os.path.exists(dexpmt_group):
             for root, dirnames, filenames in os.walk(ddata):
-            # for root, dirnames, filenames in os.walk(dexpmt_group):
                 for fname in fnmatch.filter(filenames, '*'+fext):
                     file_list.append(os.path.join(root, fname))
 

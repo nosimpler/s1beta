@@ -1,8 +1,8 @@
 # clidefs.py - these are all of the function defs for the cli
 #
-# v 1.7.32
-# rev 2013-03-23 (SL: added specmax)
-# last major: (MS: exec_aggregatehist)
+# v 1.7.36
+# rev 2013-03-26 (SL: fixed some function calls, mostly dipolefn)
+# last major: (SL: added specmax)
 
 # Standard modules
 import fnmatch, os, re, sys
@@ -19,7 +19,7 @@ import plotfn
 import fileio as fio
 import paramrw
 import specfn
-import pdipole
+import dipolefn
 import axes_create
 
 # Returns length of any list
@@ -61,14 +61,14 @@ def exec_pdipole_evoked(ddata, ylim=[]):
     if runtype == 'parallel':
         pl = Pool()
         for f_dpl, f_spk, f_param in it.izip(dpl_list, spk_list, param_list):
-            pl.apply_async(pdipole.pdipole_evoked, (dfig, f_dpl, f_spk, f_param, ylim))
+            pl.apply_async(dipolefn.pdipole_evoked, (dfig, f_dpl, f_spk, f_param, ylim))
 
         pl.close()
         pl.join()
 
     elif runtype == 'debug':
         for f_dpl, f_spk, f_param in it.izip(dpl_list, spk_list, param_list):
-            pdipole.pdipole_evoked(dfig, f_dpl, f_spk, f_param, ylim)
+            dipolefn.pdipole_evoked(dfig, f_dpl, f_spk, f_param, ylim)
 
 # timer function wrapper returns WALL CLOCK time (more or less)
 def timer(fn, args):
@@ -207,7 +207,7 @@ def exec_dipolemin(ddata, expmt_group, n_sim, n_trial, t_interval):
     print "Minimum value over t range %s was %4.4f at %4.4f." % (str(t_interval), dpl_min_range, t_min_range)
 
 # averages raw dipole or raw spec over all trials
-def avg_over_trials(ddata, datatype):
+def exec_avgtrials(ddata, datatype):
     # create the relevant key for the data
     datakey = 'raw' + datatype
     datakey_avg = 'avg' + datatype
@@ -227,6 +227,7 @@ def avg_over_trials(ddata, datatype):
     # Averaging must be done per expmt
     for expmt_group in ddata.expmt_groups:
         ddatatype = ddata.dfig[expmt_group][datakey]
+        dparam = ddata.dfig[expmt_group]['param']
 
         param_list = ddata.file_match(expmt_group, 'param')
         rawdata_list = ddata.file_match(expmt_group, datakey)
@@ -241,7 +242,7 @@ def avg_over_trials(ddata, datatype):
         # simple length check, but will proceed bluntly anyway.
         # this will result in truncated lists, per it.izip function
         if len(param_list) != len(rawdata_list):
-            print "warning, some weirdness detected in list length in avg_over_trials. Check yo' lengths!"
+            print "warning, some weirdness detected in list length in exec_avgtrials. Check yo' lengths!"
 
         # number of unique simulations, per trial
         # this had better be equivalent as an integer or a float!
@@ -249,11 +250,14 @@ def avg_over_trials(ddata, datatype):
 
         # go through the unique simulations
         for i in range(N_unique):
+            # fills in the correct int for the experimental prefix string formatter 'exp_prefix_str'
             prefix_unique = exp_prefix_str % i
             fprefix_long = os.path.join(ddatatype, prefix_unique)
+            fprefix_long_param = os.path.join(dparam, prefix_unique)
 
             # create the sublist of just these trials
             unique_list = [rawdatafile for rawdatafile in rawdata_list if rawdatafile.startswith(fprefix_long)]
+            unique_param_list = [pfile for pfile in param_list if pfile.startswith(fprefix_long_param)]
 
             # one filename per unique
             # length of the unique list is the number of trials for this sim, should match N_trials
@@ -262,16 +266,23 @@ def avg_over_trials(ddata, datatype):
             # Average data for each trial
             # average dipole data
             if datakey == 'rawdpl':
-                for file in unique_list:
-                    x_tmp = np.loadtxt(open(file, 'r'))
+                for f_dpl, f_param in it.izip(unique_list, unique_param_list):
+                    dpl = dipolefn.Dipole(f_dpl, f_param)
 
-                    if file is unique_list[0]:
+                    # do not run the renormalization function here
+                    # unnecessary at this time, probably because there is a linearity in the
+                    # baseline renormalization that is then the same for a given sim
+                    # irrespective of the number of trials
+                    # dpl.baseline_renormalize()
+
+                    # initialize and use x_dpl
+                    if f_dpl is unique_list[0]:
                         # assume time vec stays the same throughout
-                        t_vec = x_tmp[:, 0]
-                        x_dpl = x_tmp[:, 1]
+                        t_vec = dpl.t
+                        x_dpl = dpl.dpl
 
                     else:
-                        x_dpl += x_tmp[:, 1]
+                        x_dpl += dpl.dpl
 
                 # poor man's mean
                 x_dpl /= len(unique_list)
@@ -420,6 +431,7 @@ def freqpwr_with_hist(ddata, dsim):
 
         specfn.pfreqpwr_with_hist(file_name, freqpwr_result, f_spk, gid_dict, p_dict, key_types)
 
+# runs plotfn.pall *but* checks to make sure there are spec data
 def regenerate_plots(ddata, xlim=[0, 'tstop']):
     # need p_exp, spec_results, gid_dict, and tstop.
     # fparam = fio.file_match(ddata.dsim, '.param')[0]
@@ -465,7 +477,6 @@ def exec_aggregatehist(ddata, labels):
 # dipole and spec should be split up at some point (soon)
 # ylim specified here is ONLY for the dipole
 def exec_plotaverages(ddata, ylim=[]):
-# def plot_avg_data(ddata):
     runtype = 'parallel'
     # runtype = 'debug'
 
@@ -516,7 +527,7 @@ def exec_plotaverages(ddata, ylim=[]):
         pdict_list += [paramrw.read(f_param)[1] for f_param in fparam_list]
 
     if dpl_list:
-        # new input to pdipole
+        # new input to dipolefn
         pdipole_dict = {
             'xmin': 0.,
             'xmax': None,
@@ -530,13 +541,13 @@ def exec_plotaverages(ddata, ylim=[]):
             pdipole_dict['ymax'] = ylim[1]
 
         if runtype == 'debug':
-            for f_dpl, dfig_dpl, p_dict in it.izip(dpl_list, dfig_dpl_list, pdict_list):
-                pdipole.pdipole(f_dpl, dfig_dpl, p_dict, key_types, pdipole_dict)
+            for f_dpl, f_param, dfig_dpl in it.izip(dpl_list, fparam_list, dfig_dpl_list):
+                dipolefn.pdipole(f_dpl, f_param, dfig_dpl, key_types, pdipole_dict)
 
         elif runtype == 'parallel':
             pl = Pool()
-            for f_dpl, dfig_dpl, p_dict in it.izip(dpl_list, dfig_dpl_list, pdict_list):
-                pl.apply_async(pdipole.pdipole, (f_dpl, dfig_dpl, p_dict, key_types, pdipole_dict))
+            for f_dpl, f_param, dfig_dpl in it.izip(dpl_list, fparam_list, dfig_dpl_list):
+                pl.apply_async(dipolefn.pdipole, (f_dpl, f_param, dfig_dpl, key_types, pdipole_dict))
 
             pl.close()
             pl.join()
@@ -554,7 +565,6 @@ def exec_plotaverages(ddata, ylim=[]):
         elif runtype == 'parallel':
             pl = Pool()
             for f_spec, f_dpl, dfig_spec, pdict in it.izip(spec_list, dpl_list, dfig_spec_list, pdict_list):
-            # for dfig_spec, p_dict, f_spec, f_dpl in it.izip(dfig_spec_list, pdict_list, spec_list, dpl_list):
                 pl.apply_async(specfn.pspec, (f_spec, f_dpl, dfig_spec, pdict, key_types))
 
             pl.close()

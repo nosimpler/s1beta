@@ -1,47 +1,78 @@
-# pdipole.py - plot dipole functions
+# dipolefn.py - dipole-based analysis functions
 #
-# v 1.7.30
-# rev 2013-03-06 (MS: Title strings generated using external method)
-# last major: (SL: major change to inputs of pdipole: last input is a dict of settings)
+# v 1.7.36
+# rev 2013-03-26 (SL: renamed from pdipole.py)
+# last major: (MS: fixed error in accounting for delays in alpha inputs)
 
-import os
-import itertools as it
-import matplotlib.pyplot as plt
+import fileio as fio
 import numpy as np
-from neuron import h as nrn
-from axes_create import FigStd, FigDplWithHist, create_title
-import spikefn 
+import itertools as it
+import os
 import paramrw
+import spikefn 
+import matplotlib.pyplot as plt
+from neuron import h as nrn
+import axes_create as ac
 
-# file_info is (rootdir, subdir, 
-def pdipole(file_name, dfig, p_dict, key_types, plot_dict):
-# def pdipole(file_name, dfig, p_dict, key_types, xlim=[0, 'tstop']):
-    # ddipole is dipole data
-    ddipole = np.loadtxt(open(file_name, 'rb'))
+# class Dipole() is for a single set of f_dpl and f_param
+class Dipole():
+    def __init__(self, f_dpl, f_param):
+        self.__parse_f(f_dpl, f_param)
+
+    def __parse_f(self, f_dpl, f_param):
+        x = np.loadtxt(open(f_dpl, 'r'))
+        self.t = x[:, 0]
+        self.dpl = x[:, 1]
+
+        # grab the number of cells
+        self.gid_dict, self.p = paramrw.read(f_param)
+
+        self.p['N_pyr_x']
+
+    # standard dipole baseline in this model is -50.207 fAm per pair of pyr cells in network
+    # ext function to renormalize
+    def baseline_renormalize(self):
+        # N_pyr cells in grid. This is per layer.
+        N_pyr = self.p['N_pyr_x'] * self.p['N_pyr_y']
+
+        # dipole offset calculation: increasing number of pyr cells (L2 and L5, simultaneously)
+        # with no inputs, resulted in a roughly linear, roughly stationary (100 ms) dipole baseline
+        # of -50.207 fAm. This represents the resultant correction
+        dpl_offset = N_pyr * 50.207
+
+        # simple baseline shift of the dipole
+        self.dpl += dpl_offset
+
+# pdipole is for a single dipole file, should be for a 
+# single dipole file combination (incl. param file)
+# this should be done with an axis input too
+# two separate functions, a pdipole kernel function and a specific function for this simple plot
+def pdipole(f_dpl, f_param, dfig, key_types, plot_dict):
+    # dpl is an obj of Dipole() class
+    dpl = Dipole(f_dpl, f_param)
+    dpl.baseline_renormalize()
 
     # split to find file prefix
-    file_prefix = file_name.split('/')[-1].split('.')[0]
+    file_prefix = f_dpl.split('/')[-1].split('.')[0]
 
+    # get xmin and xmax from the plot_dict
     if plot_dict['xmin'] is None:
         xmin = 0.
     else:
         xmin = plot_dict['xmin']
 
     if plot_dict['xmax'] is None:
-        xmax = p_dict['tstop']
+        xmax = dpl.p['tstop']
     else:
         xmax = plot_dict['xmax']
 
-    # take the whole vectors
-    t_vec = ddipole[:, 0]
-    dp_total = ddipole[:, 1]
+    # truncate them using logical indexing
+    t_range = dpl.t[(dpl.t >= xmin) & (dpl.t <= xmax)]
+    dpl_range = dpl.dpl[(dpl.t >= xmin) & (dpl.t <= xmax)]
 
-    # now truncate them using logical indexing
-    t_vec_range = t_vec[(t_vec >= xmin) & (t_vec <= xmax)]
-    dp_range = dp_total[(t_vec >= xmin) & (t_vec <= xmax)]
-
-    f = FigStd()
-    f.ax0.plot(t_vec, dp_total)
+    f = ac.FigStd()
+    f.ax0.plot(t_range, dpl_range)
+    # f.ax0.plot(dpl.t, dpl.dpl)
 
     # sorry about the parity between vars here and above with xmin/xmax
     if plot_dict['ymin'] is None or plot_dict['ymax'] is None:
@@ -49,14 +80,62 @@ def pdipole(file_name, dfig, p_dict, key_types, plot_dict):
     else:
         f.ax0.set_ylim(plot_dict['ymin'], plot_dict['ymax'])
 
-    title_str = create_title(p_dict, key_types)
+    title_str = ac.create_title(dpl.p, key_types)
+    # title_str = ac.create_title(p_dict, key_types)
     f.f.suptitle(title_str)
-    # title = [key + ': %2.1f' % p_dict[key] for key in key_types['dynamic_keys']]
 
+    # create new fig name
     fig_name = os.path.join(dfig, file_prefix+'.png')
 
+    # savefig
     plt.savefig(fig_name, dpi=300)
     f.close()
+
+# # pdipole is for a single dipole file, should be for a 
+# # single dipole file combination (incl. param file)
+# def pdipole(f_dpl, dfig, p_dict, key_types, plot_dict):
+#     # ddipole is dipole data
+#     ddipole = np.loadtxt(open(f_dpl, 'rb'))
+# 
+#     # split to find file prefix
+#     file_prefix = f_dpl.split('/')[-1].split('.')[0]
+# 
+#     # get xmin and xmax from the plot_dict
+#     if plot_dict['xmin'] is None:
+#         xmin = 0.
+#     else:
+#         xmin = plot_dict['xmin']
+# 
+#     if plot_dict['xmax'] is None:
+#         xmax = p_dict['tstop']
+#     else:
+#         xmax = plot_dict['xmax']
+# 
+#     # take the whole vectors
+#     t_vec = ddipole[:, 0]
+#     dp_total = ddipole[:, 1]
+# 
+#     # now truncate them using logical indexing
+#     t_vec_range = t_vec[(t_vec >= xmin) & (t_vec <= xmax)]
+#     dp_range = dp_total[(t_vec >= xmin) & (t_vec <= xmax)]
+# 
+#     f = ac.FigStd()
+#     f.ax0.plot(t_vec, dp_total)
+# 
+#     # sorry about the parity between vars here and above with xmin/xmax
+#     if plot_dict['ymin'] is None or plot_dict['ymax'] is None:
+#         pass
+#     else:
+#         f.ax0.set_ylim(plot_dict['ymin'], plot_dict['ymax'])
+# 
+#     title_str = ac.create_title(p_dict, key_types)
+#     f.f.suptitle(title_str)
+#     # title = [key + ': %2.1f' % p_dict[key] for key in key_types['dynamic_keys']]
+# 
+#     fig_name = os.path.join(dfig, file_prefix+'.png')
+# 
+#     plt.savefig(fig_name, dpi=300)
+#     f.close()
 
 # plot vertical lines corresponding to the evoked input times
 # for each individual simulation/trial
@@ -95,7 +174,7 @@ def pdipole_evoked(dfig, f_dpl, f_spk, f_param, ylim=[]):
     t_vec = x_dipole[:, 0]
     dp_total = x_dipole[:, 1]
 
-    f = FigStd()
+    f = ac.FigStd()
 
     # hold on
     f.ax0.hold(True)
@@ -155,7 +234,7 @@ def pdipole_with_hist(f_dpl, f_spk, dfig, p_dict, gid_dict, key_types, xlim=[0.,
     bins = 150. * (t_vec[-1] - t_vec[0]) / 1000.
 
     # Plotting
-    f = FigDplWithHist()
+    f = ac.FigDplWithHist()
 
     # dipole
     f.ax['dipole'].plot(t_vec, dp_total)
@@ -176,7 +255,7 @@ def pdipole_with_hist(f_dpl, f_spk, dfig, p_dict, gid_dict, key_types, xlim=[0.,
         if 'feed' in key:
             f.ax[key].legend()
 
-    title_str = create_title(p_dict, key_types)
+    title_str = ac.create_title(p_dict, key_types)
     f.f.suptitle(title_str)
     # title = [key + ': %2.1f' % p_dict[key] for key in key_types['dynamic_keys']]
 
@@ -222,7 +301,7 @@ def pdipole_exp(ddata, ylim=[]):
                 f.write("%03.3f\t%5.4f\n" % (t, x))
 
         # create the plot I guess?
-        f = FigStd()
+        f = ac.FigStd()
         f.ax0.plot(t_vec, x_dpl)
 
         if len(ylim):
