@@ -1,8 +1,8 @@
 # axes_create.py - simple axis creation
 #
-# v 1.7.36
-# rev 2013-03-26 (SL: Fixed name)
-# last major: (MS: Axes creation for aggregate fig of spectrograms with alpha hists)
+# v 1.7.38
+# rev 2013-04-01 (SL: added FigDipoleExp())
+# last major: (SL: Fixed name)
 
 # usage:
 # testfig = FigStd()
@@ -38,7 +38,7 @@ class FigStd():
 
 class FigDplWithHist():
     def __init__(self):
-        self.f = plt.figure(figsize = (12, 6))
+        self.f = plt.figure(figsize=(12, 6))
         font_prop = {'size': 8}
         mpl.rc('font', **font_prop)
 
@@ -271,7 +271,6 @@ class fig_psthgrid():
 
         self.grid_list = []
         self.__create_grids(N_rows, N_cols)
-        # self.__create_grids(4, 5)
 
         # axes are a list of lists here
         self.ax = []
@@ -439,6 +438,56 @@ class FigAggregateSpecWithHist():
     def close(self):
         plt.close(self.f)
 
+# aggregate figures for the experiments
+class FigDipoleExp():
+    def __init__(self, N_expmt_groups):
+        self.N_expmt_groups = N_expmt_groups
+        self.f = plt.figure(figsize=(6, 2*self.N_expmt_groups))
+        font_prop = {'size': 8}
+        mpl.rc('font', **font_prop)
+
+        # create a gridspec
+        self.gspec = gridspec.GridSpec(self.N_expmt_groups, 1)
+        self.__create_axes()
+        self.__set_ax_props()
+
+    def __create_axes(self):
+        self.ax = [self.f.add_subplot(self.gspec[i:(i+1)]) for i in range(self.N_expmt_groups)]
+
+    # take an external list of dipoles and plot them
+    # such a list is created externally
+    def plot(self, t, dpl_list):
+        if len(dpl_list) == self.N_expmt_groups:
+            # list of max and min dipoles for each in dpl_list
+            dpl_max = []
+            dpl_min = []
+
+            # check on all the mins and maxes
+            for dpl, ax in it.izip(dpl_list, self.ax):
+                ax.plot(t, dpl)
+                ylim_tmp = ax.get_ylim()
+
+                dpl_min.append(ylim_tmp[0])
+                dpl_max.append(ylim_tmp[1])
+
+            # find the overall min and max
+            ymin = np.min(dpl_min)
+            ymax = np.max(dpl_max)
+
+            # set the ylims for all, the same
+            for ax in self.ax:
+                ax.set_ylim((ymin, ymax))
+
+    def __set_ax_props(self):
+        for ax in self.ax[:-1]:
+            ax.set_xticklabels('')
+
+    def savepng(self, file_name, dpi_set=300):
+        self.f.savefig(file_name, dpi=dpi_set)
+
+    def close(self):
+        plt.close(self.f)
+
 # creates title string based on params that change during simulation
 def create_title(p_dict, key_types):
     title = []
@@ -450,18 +499,22 @@ def create_title(p_dict, key_types):
         else:
             title.append(key + ': %2.1e' %p_dict[key])
 
-    # Return string in alphabetic order
+    # Return string in alphabetical order
     title.sort()
     return title
 
+# just a quick test for running this function
 def testfn():
     x = np.random.rand(100)
 
     # testfig = FigStd()
     # testfig.ax0.plot(x)
 
+    testfig = FigDipoleExp(2)
+    testfig.ax[0].plot(x)
+
     # testfig = FigSpecWithHist()
-    testfig = FigAggregateSpecWithHist(3, 3)
+    # testfig = FigAggregateSpecWithHist(3, 3)
     # testfig.ax['spec'].plot(x)
 
     # testfig = FigSpecWithHist()
@@ -471,7 +524,7 @@ def testfn():
     # testfig = fig_psth(100)
     # testfig.ax['L5_extpois'].plot(x)
 
-    plt.savefig('testing.png')
+    plt.savefig('testing.png', dpi=250)
     testfig.close()
 
 if __name__ == '__main__':

@@ -1,8 +1,8 @@
 # dipolefn.py - dipole-based analysis functions
 #
-# v 1.7.36
-# rev 2013-03-26 (SL: renamed from pdipole.py)
-# last major: (MS: fixed error in accounting for delays in alpha inputs)
+# v 1.7.38
+# rev 2013-04-01 (SL: pdipole_exp now does one major aggregate output in addition)
+# last major: (SL: renamed from pdipole.py)
 
 import fileio as fio
 import numpy as np
@@ -271,6 +271,17 @@ def pdipole_exp(ddata, ylim=[]):
     # sim_prefix
     fprefix = ddata.sim_prefix
 
+    # create the figure name
+    fname_exp = '%s_dpl' % (fprefix)
+    fname_exp_fig = os.path.join(ddata.dsim, fname_exp + '.png')
+
+    # create one figure comparing across all
+    N_expmt_groups = len(ddata.expmt_groups)
+    f_exp = ac.FigDipoleExp(N_expmt_groups)
+
+    # empty list for the aggregate dipole data
+    dpl_exp = []
+
     # go through each expmt
     for expmt_group in ddata.expmt_groups:
         # create the filename
@@ -279,21 +290,33 @@ def pdipole_exp(ddata, ylim=[]):
         fname_data = os.path.join(dexp, fname_short + '.txt')
         fname_fig = os.path.join(ddata.dfig[expmt_group]['figdpl'], fname_short + '.png')
 
-        # grab the list of raw data dipoles in this expmt
+        # grab the list of raw data dipoles and assoc params in this expmt
         dpl_list = ddata.file_match(expmt_group, 'rawdpl')
+        param_list = ddata.file_match(expmt_group, 'param')
 
-        for file in dpl_list:
-            x_tmp = np.loadtxt(open(file, 'r'))
-            if file is dpl_list[0]:
+        for f_dpl, f_param in it.izip(dpl_list, param_list):
+        # for file in dpl_list:
+            dpl = Dipole(f_dpl, f_param)
+            dpl.baseline_renormalize()
+            # x_tmp = np.loadtxt(open(file, 'r'))
+
+            # initialize and use x_dpl
+            if f_dpl is dpl_list[0]:
+
                 # assume time vec stays the same throughout
-                t_vec = x_tmp[:, 0]
-                x_dpl = x_tmp[:, 1]
+                t_vec = dpl.t
+                x_dpl = dpl.dpl
 
             else:
-                x_dpl += x_tmp[:, 1]
+                # guaranteed to exist after dpl_list[0]
+                x_dpl += dpl.dpl
 
         # poor man's mean
         x_dpl /= len(dpl_list)
+
+        # save this in a list to do comparison figure
+        # order is same as ddata.expmt_groups
+        dpl_exp.append(x_dpl)
 
         # write this data to the file
         with open(fname_data, 'w') as f:
@@ -309,3 +332,13 @@ def pdipole_exp(ddata, ylim=[]):
 
         f.savepng(fname_fig)
         f.close()
+
+    # plot the aggregate data using methods defined in FigDipoleExp()
+    f_exp.plot(t_vec, dpl_exp)
+
+    # attempt at setting titles
+    for ax, expmt_group in it.izip(f_exp.ax, ddata.expmt_groups):
+        ax.set_title(expmt_group)
+
+    f_exp.savepng(fname_exp_fig)
+    f_exp.close()

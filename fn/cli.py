@@ -1,8 +1,8 @@
 # cli.py - routines for the command line interface console s1sh.py
 #
-# v 1.7.37
-# rev 2013-03-26 (SL: fixed specmax)
-# last major: (SL: fixed a few function calls/names)
+# v 1.7.38
+# rev 2013-04-01 (SL: some changes to sync, debug code test)
+# last major: (SL: fixed specmax)
 
 from cmd import Cmd
 from datetime import datetime
@@ -74,9 +74,10 @@ class Console(Cmd):
     def do_debug(self, args):
         """Qnd function to test other functions
         """
-        self.do_setdate('from_remote/2013-03-25')
-        self.do_load('mu_baseline-002')
-        self.do_specmax('in (testing, 0, 4) on [0, 1000.]')
+        self.do_setdate('from_remote/2013-03-28')
+        self.do_load('evbeta_thresh_nonperceived-000')
+        self.do_pdipole('exp')
+        # self.do_specmax('in (testing, 0, 4) on [0, 1000.]')
         # self.do_avgtrials('dpl')
         # self.do_replot('')
         # self.do_pdipole('avg [-60000, 30000]')
@@ -84,11 +85,8 @@ class Console(Cmd):
         # self.do_addalphahist('--xmin=0 --xmax=500')
         # self.do_avgtrials('dpl')
         # self.do_dipolemin('in (mu, 0, 2) on [400., 410.]')
-        # self.do_pdipole('agg (-12e3, 0)')
         # self.do_load('simple_synaptic-006')
-        # self.do_pdipole('agg')
         # self.do_show('L2Pyr_L5Pyr_wL2Bask changed in 0')
-        # self.__get_paramfile_list()
         # self.epscompress('spk')
         # self.do_psthgrid()
 
@@ -156,11 +154,23 @@ class Console(Cmd):
             return self.dlist
 
     def do_sync(self, args):
-        """Sync with specified remote server
+        """Sync with specified remote server. If 'exclude' is unspecified, by default will use the exclude_eps.txt file in the data dir. If exclude is specified, it will look in the root data dir. Usage examples:
+           [s1] sync 2013-03-25
+           [s1] sync 2013-03-25 --exclude=somefile.txt
         """
         try:
-            list_args = args.split(" ")
-            dsubdir = list_args[0]
+            fshort_exclude = ''
+            list_args = args.split('--')
+
+            # expect first arg to be the dsubdir
+            dsubdir = list_args.pop(0)
+
+            for arg in list_args:
+                if arg:
+                    opt, val = arg.split('=')
+
+                    if opt == 'exclude':
+                        fshort_exclude = val
 
             if not self.server_default:
                 server_remote = raw_input("Server address: ")
@@ -168,7 +178,11 @@ class Console(Cmd):
                 server_remote = self.server_default
                 print "Attempting to use default server ..."
 
-            clidefs.sync_remote_data(self.dproj, server_remote, dsubdir)
+            # run the command
+            if fshort_exclude:
+                clidefs.exec_sync(self.dproj, server_remote, dsubdir, fshort_exclude)
+            else:
+                clidefs.exec_sync(self.dproj, server_remote, dsubdir)
 
             # path
             newdir = os.path.join('from_remote', dsubdir)
@@ -406,8 +420,8 @@ class Console(Cmd):
     def do_pdipole(self, args):
         """Regenerates plots in given directory. Usage:
            To run on current working directory and regenerate each individual plot: 'pdipole'
-           To run aggregates for all simulations in a directory: 'pdipole agg (ymin, max)'
-           Can also be run: 'pdipole agg []' (I think.)
+           To run aggregates for all simulations (across all trials/conditions) in a directory: 'pdipole exp'
+           To run aggregates with lines marking evoked times, run: 'pdipole evoked'
         """
         # if args.startswith('agg'):
         #     p_exp = paramrw.ExpParams(self.ddata.fparam)
@@ -550,7 +564,6 @@ class Console(Cmd):
         """
 
         clidefs.exec_plotaverages(self.ddata)
-        # clidefs.plot_avg_data(self.ddata)
 
     def do_epscompress(self, args):
         """Runs the eps compress utils on the specified fig type (currently either spk or spec)

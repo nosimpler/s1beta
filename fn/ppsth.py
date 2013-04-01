@@ -1,8 +1,8 @@
 # ppsth.py - Plots aggregate psth of all trials in an "experiment"
 #
-# v 1.6.21
-# rev 2013-01-16 (MS: minor)
-# last rev: (SL: Added ppsth_grid, changing around some bin stuff)
+# v 1.7.38
+# rev 2013-04-01 (SL: minor)
+# last rev: (MS: minor)
 
 import numpy as np
 import itertools as it
@@ -37,8 +37,6 @@ def ppsth_grid(simpaths):
 
     # ugly but slightly less ugly than the index arithmetic i had planned. muahaha
     f = fig_psthgrid(N_rows, N_cols, tstop)
-    # N_rows = len(f.ax)
-    # N_cols = len(f.ax[0])
 
     # create coordinates for axes
     # this is backward-looking for a reason!

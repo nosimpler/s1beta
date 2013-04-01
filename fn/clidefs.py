@@ -1,8 +1,8 @@
 # clidefs.py - these are all of the function defs for the cli
 #
-# v 1.7.37
-# rev 2013-03-26 (SL: fixed specmax)
-# last major: (SL: fixed some function calls, mostly dipolefn)
+# v 1.7.38
+# rev 2013-04-01 (SL: fixed a number of functions, comments, etc.)
+# last major: (SL: fixed specmax)
 
 # Standard modules
 import fnmatch, os, re, sys
@@ -146,12 +146,7 @@ def exec_phist(ddata, args):
     N_bins = int(args_split[1])
     psum.pphase_hist(ddata, N_sim, N_bins)
 
-def exec_pwr(ddata):
-    pwr.psd(ddata)
-
-def exec_rates(ddata):
-    spk.calc_rates(ddata)
-
+# find the spectral max over an interval, for a particular sim
 def exec_specmax(ddata, expmt_group, n_sim, n_trial, t_interval):
     p_exp = paramrw.ExpParams(ddata.fparam)
     trial_prefix = p_exp.trial_prefix_str % (n_sim, n_trial)
@@ -228,6 +223,7 @@ def exec_avgtrials(ddata, datatype):
     sim_prefix = p_exp.sim_prefix
     N_trials = p_exp.N_trials
 
+    # fix for N_trials=0
     if not N_trials:
         N_trials = 1
 
@@ -280,11 +276,8 @@ def exec_avgtrials(ddata, datatype):
                 for f_dpl, f_param in it.izip(unique_list, unique_param_list):
                     dpl = dipolefn.Dipole(f_dpl, f_param)
 
-                    # do not run the renormalization function here
-                    # unnecessary at this time, probably because there is a linearity in the
-                    # baseline renormalization that is then the same for a given sim
-                    # irrespective of the number of trials
-                    # dpl.baseline_renormalize()
+                    # ah, this is required becaused the dpl *file* still contains the raw, un-normalized data
+                    dpl.baseline_renormalize()
 
                     # initialize and use x_dpl
                     if f_dpl is unique_list[0]:
@@ -586,9 +579,10 @@ def exec_plotaverages(ddata, ylim=[]):
         return 0
 
 # rsync command with excludetype input
-def sync_remote_data(droot, server_remote, dsubdir):
+def exec_sync(droot, server_remote, dsubdir, fshort_exclude='exclude_eps.txt'):
     # make up the local exclude file name
-    f_exclude = os.path.join(droot, 'exclude_eps.txt')
+    # f_exclude = os.path.join(droot, 'exclude_eps.txt')
+    f_exclude = os.path.join(droot, fshort_exclude)
 
     # create remote and local directories, they should look similar
     dremote = os.path.join(droot, dsubdir)
