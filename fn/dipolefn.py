@@ -1,8 +1,8 @@
 # dipolefn.py - dipole-based analysis functions
 #
-# v 1.7.39
-# rev 2013-04-08 (SL: calculate_aggregate_dipole() function, pdipole_exp2)
-# last major: (SL: pdipole_exp now does one major aggregate output in addition)
+# v 1.7.40
+# rev 2013-04-09 (SL: Dipole class reads new data, doesn't do baseline normalization yet)
+# last major: (SL: calculate_aggregate_dipole() function, pdipole_exp2)
 
 import fileio as fio
 import numpy as np
@@ -27,6 +27,11 @@ class Dipole():
         x = np.loadtxt(open(f_dpl, 'r'))
         self.t = x[:, 0]
         self.dpl = x[:, 1]
+
+        # assume these are present if there are enough vectors
+        if x.shape[1] > 3:
+            self.dpl_L2 = x[:, 2]
+            self.dpl_L5 = x[:, 3]
 
     # standard dipole baseline in this model is -50.207 fAm per pair of pyr cells in network
     # ext function to renormalize

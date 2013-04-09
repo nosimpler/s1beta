@@ -1,8 +1,8 @@
 # class_cell.py - establish class def for general cell features
 #
-# v 1.7.28
-# rev 2013-02-12 (MS: method for adding IClamps to segs)
-# last rev: (SL: minor seeming changes, cast a bunch of numbers and removed incorr ? old nseg method)
+# v 1.7.40
+# rev 2013-04-09 (SL: separated L2 and L5 dipoles)
+# last rev: (MS: method for adding IClamps to segs)
 
 import numpy as np
 import itertools as it
@@ -14,7 +14,6 @@ from neuron import h as nrn
 # Create a cell class
 class Cell():
     def __init__(self, soma_props):
-    # def __init__(self, pos, L_soma, diam_soma, cm, cell_name='cell'):
         # Parallel methods
         self.pc = nrn.ParallelContext()
 
@@ -70,7 +69,11 @@ class Cell():
             # sets pointers in dipole mod file to the correct locations
             # nrn.setpointer(ref, ptr, obj)
             nrn.setpointer(sect(0.99)._ref_v, 'pv', dpp)
-            nrn.setpointer(nrn._ref_dp_total, 'Qtotal', dpp)
+            if self.celltype.startswith('L2'):
+                nrn.setpointer(nrn._ref_dp_total_L2, 'Qtotal', dpp)
+
+            elif self.celltype.startswith('L5'):
+                nrn.setpointer(nrn._ref_dp_total_L5, 'Qtotal', dpp)
 
             # gives INTERNAL segments of the section, non-endpoints
             # creating this because need multiple values simultaneously
@@ -102,7 +105,12 @@ class Cell():
 
                 # set aggregate pointers
                 nrn.setpointer(dpp._ref_Qsum, 'Qsum', sect(loc[i]).dipole)
-                nrn.setpointer(nrn._ref_dp_total, 'Qtotal', sect(loc[i]).dipole)
+
+                if self.celltype.startswith('L2'):
+                    nrn.setpointer(nrn._ref_dp_total_L2, 'Qtotal', sect(loc[i]).dipole)
+
+                elif self.celltype.startswith('L5'):
+                    nrn.setpointer(nrn._ref_dp_total_L5, 'Qtotal', sect(loc[i]).dipole)
 
                 # add ztan values
                 sect(loc[i]).dipole.ztan = y_diff[i]

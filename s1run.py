@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # s1run.py - primary run function for s1 project
 #
-# v 1.7.34
-# rev 2013-03-25 (SL: Run_Date is sneakily added to the end of the copied original param file)
-# last major: (MS: spec now specfn)
+# v 1.7.40
+# rev 2013-04-09 (SL: Separated L2 and L5 dipole)
+# last major: (SL: Run_Date is sneakily added to the end of the copied original param file)
 
 import os
 import sys
@@ -136,7 +136,8 @@ def exec_runsim(f_psim):
                     print "Run %i of %i" % (n, N_total_runs-1),
 
                 # global variable bs, should be node-independent
-                nrn("dp_total = 0.")
+                nrn("dp_total_L2 = 0.")
+                nrn("dp_total_L5 = 0.")
 
                 # if there are N_trials, then randomize the seed
                 # establishes random seed for the seed seeder (yeah.)
@@ -209,8 +210,12 @@ def exec_runsim(f_psim):
 
                 # initialize cells to -65 mV and compile code
                 # after all the NetCon delays have been specified
-                dp_rec = nrn.Vector()
-                dp_rec.record(nrn._ref_dp_total)
+                dp_rec_L2 = nrn.Vector()
+                dp_rec_L2.record(nrn._ref_dp_total_L2)
+
+                # testing just the L5 dipole
+                dp_rec_L5 = nrn.Vector()
+                dp_rec_L5.record(nrn._ref_dp_total_L5)
 
                 # sets the default max solver step in ms (purposefully large)
                 pc.set_maxstep(10)
@@ -224,14 +229,16 @@ def exec_runsim(f_psim):
                 pc.psolve(nrn.tstop)
 
                 # combine dp_rec
-                pc.allreduce(dp_rec, 1)
+                pc.allreduce(dp_rec_L2, 1)
+                pc.allreduce(dp_rec_L5, 1)
 
                 # write time and calculated dipole to data file only if on the first proc
                 # only execute this statement on one processor
                 if rank == 0:
                     with open(file_dpl, 'a') as f:
                         for k in range(int(t_vec.size())):
-                            f.write("%03.3f\t%5.4f\n" % (t_vec.x[k], dp_rec.x[k]))
+                            # write t, total dipole, L2 dipole, L5 dipole
+                            f.write("%03.3f\t%5.4f\t%5.4f\t%5.4f\n" % (t_vec.x[k], dp_rec_L2.x[k]+dp_rec_L5.x[k], dp_rec_L2.x[k], dp_rec_L5.x[k]))
 
                     # write the params, but add a trial number
                     p['Sim_No'] = i
