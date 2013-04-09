@@ -1,8 +1,8 @@
 # praster.py - plot dipole function
 #
-# v 1.7.16
-# rev 2013-02-07 (SL: minor changes to FigRaster)
-# last major: (SL: set png res)
+# v 1.7.39
+# rev 2013-04-08 (SL: changed spikes_from_file)
+# last major: (SL: minor changes to FigRaster)
 
 import os
 import numpy as np
@@ -12,9 +12,9 @@ from axes_create import FigRaster
 import spikefn as spikefn
 
 # file_info is (rootdir, subdir, 
-def praster(gid_dict, tstop, file_spk, dfig):
+def praster(f_param, tstop, file_spk, dfig):
     # ddipole is dipole data
-    s_dict = spikefn.spikes_from_file(gid_dict, file_spk)
+    s_dict = spikefn.spikes_from_file(f_param, file_spk)
 
     s_dict_L2 = {}
     s_dict_L5 = {}
@@ -62,7 +62,6 @@ def praster(gid_dict, tstop, file_spk, dfig):
 
     # testfig.ax0.plot(t_vec, dp_total)
     fig_name = os.path.join(dfig, file_prefix+'.png')
-    # fig_name = os.path.join(dfig, file_prefix+'.eps')
 
     plt.savefig(fig_name, dpi=300)
     f.close()

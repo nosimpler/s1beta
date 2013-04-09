@@ -1,8 +1,8 @@
 # clidefs.py - these are all of the function defs for the cli
 #
-# v 1.7.38
-# rev 2013-04-01 (SL: fixed a number of functions, comments, etc.)
-# last major: (SL: fixed specmax)
+# v 1.7.39
+# rev 2013-04-08 (SL: persistent error in exec_pdipole_evoked)
+# last major: (SL: fixed a number of functions, comments, etc.)
 
 # Standard modules
 import fnmatch, os, re, sys
@@ -40,8 +40,8 @@ def get_subdir_list(dcheck):
         return []
 
 def exec_pdipole_evoked(ddata, ylim=[]):
-    runtype = 'parallel'
-    # runtype = 'debug'
+    # runtype = 'parallel'
+    runtype = 'debug'
 
     expmt_group = ddata.expmt_groups[0]
 
@@ -320,8 +320,8 @@ def regenerate_spec_data(ddata, max_freq=None):
 def freqpwr_analysis(ddata, dsim, maxpwr):
     # Averages spec power over time and plots it
 
-    # Prompt user for type of analysis (per exmpt or whole sim) 
-    analysis_type = raw_input('Would you like analysis per exmpt or for whole sim? (expmt or sim): ')
+    # Prompt user for type of analysis (per expmt or whole sim)
+    analysis_type = raw_input('Would you like analysis per expmt or for whole sim? (expmt or sim): ')
 
     spec_results = fio.file_match(ddata.dsim, '-spec.npz')
     spec_results_avged = fio.file_match(ddata.dsim, '-avgspec.npz')
@@ -351,14 +351,14 @@ def freqpwr_analysis(ddata, dsim, maxpwr):
             f_name = os.path.join(dsim, 'maxpwr.png')
             specfn.pmaxpwr(f_name, freqpwr_results_list, fparam_list)
 
-    # plot per exmpt
+    # plot per expmt
     if analysis_type == 'expmt':
         for expmt_group in ddata.expmt_groups:
-            # create name for figure. Figure saved to exmpt directory
+            # create name for figure. Figure saved to expmt directory
             file_name = os.path.join(dsim, expmt_group, 'freqpwr.png')
             # file_name = os.path.join(dsim, expmt_group, 'figfreqpwr', 'freqpwr.png')
 
-            # compile list of freqpwr results and param pathways for exmpt
+            # compile list of freqpwr results and param pathways for expmt
             partial_results_list = [result for result in freqpwr_results_list if result['expmt']==expmt_group]
             partial_fparam_list = [fparam for fparam in fparam_list if expmt_group in fparam]
 
@@ -390,14 +390,14 @@ def freqpwr_analysis(ddata, dsim, maxpwr):
                 f_name = os.path.join(dsim, 'maxpwr-avg.png')
                 specfn.pmaxpwr(f_name, freqpwr_results_list, fparam_list)
 
-        # plot per exmpt
+        # plot per expmt
         if analysis_type == 'expmt':
             for expmt_group in ddata.expmt_groups:
-                # create name for figure. Figure saved to exmpt directory
+                # create name for figure. Figure saved to expmt directory
                 file_name = os.path.join(dsim, expmt_group, 'freqpwr-avg.png')
                 # file_name = os.path.join(dsim, expmt_group, 'figfreqpwr', 'freqpwr.png')
 
-                # compile list of freqpwr results and param pathways for exmpt
+                # compile list of freqpwr results and param pathways for expmt
                 partial_results_list = [result for result in freqpwr_results_list if result['expmt']==expmt_group]
                 partial_fparam_list = [fparam for fparam in fparam_list if expmt_group in fparam]
 
@@ -453,7 +453,8 @@ def regenerate_plots(ddata, xlim=[0, 'tstop']):
 
     plotfn.pall(ddata, p_exp, spec_results, xlim)
 
-def add_alpha_feed_hist(ddata, xlim=[0, 'tstop']):
+# function to add alpha feed hists
+def exec_addalphahist(ddata, xlim=[0, 'tstop']):
     p_exp = paramrw.ExpParams(ddata.fparam)
 
     spec_results = fio.file_match(ddata.dsim, '-spec.npz')

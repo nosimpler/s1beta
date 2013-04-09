@@ -1,8 +1,8 @@
 # cli.py - routines for the command line interface console s1sh.py
 #
-# v 1.7.38
-# rev 2013-04-01 (SL: some changes to sync, debug code test)
-# last major: (SL: fixed specmax)
+# v 1.7.39
+# rev 2013-04-08 (SL: added a split args function)
+# last major: (SL: some changes to sync, debug code test)
 
 from cmd import Cmd
 from datetime import datetime
@@ -54,6 +54,27 @@ class Console(Cmd):
         # set the date, grabs a dlist
         self.do_setdate(datetime.now().strftime("%Y-%m-%d"))
 
+    # splits argstring in format of --opt0=val0 --opt1=val1
+    def __split_args(self, args):
+        # split based on space
+        args_tmp = args.split(' ')
+
+        # only take the args that start with -- and include a =
+        args_opt = [arg for arg in args_tmp if arg.startswith('--')]
+        args_opt = [arg for arg in args_opt if '=' in arg]
+
+        # final output list of tuples (?) or lists of args and values
+        arg_list = []
+
+        # iterate through args
+        for arg in args_opt:
+            if arg:
+                # append output to the final list
+                arg_list.append(arg.split('='))
+                # opt, val = arg.split('=')
+
+        return arg_list
+
     def __check_server(self):
         f_server = os.path.join(self.dproj, '.server_default')
 
@@ -74,13 +95,13 @@ class Console(Cmd):
     def do_debug(self, args):
         """Qnd function to test other functions
         """
-        self.do_setdate('from_remote/2013-03-28')
-        self.do_load('evbeta_thresh_nonperceived-000')
-        self.do_pdipole('exp')
+        self.do_setdate('2013-04-03')
+        self.do_load('evbeta_thresh_nonperceived-001')
+        self.do_pdipole('exp2')
+        # self.do_pdipole('evoked')
         # self.do_specmax('in (testing, 0, 4) on [0, 1000.]')
         # self.do_avgtrials('dpl')
         # self.do_replot('')
-        # self.do_pdipole('avg [-60000, 30000]')
         # self.do_specanalysis('max_freq=50')
         # self.do_addalphahist('--xmin=0 --xmax=500')
         # self.do_avgtrials('dpl')
@@ -368,7 +389,7 @@ class Console(Cmd):
             clidefs.exec_avgtrials(self.ddata, datatype)
 
     def do_specanalysis(self, args):
-        """Regenerates spec data and saves it to proper exmpt directories. Usage:
+        """Regenerates spec data and saves it to proper expmt directories. Usage:
            Can pass arguments to set max_freq, tstart, and tstop of analysis
            Args must be passed in form arg1=val, arg2=val, arg3=val
            Can pass any combination/permutation of args or no args at all
@@ -423,15 +444,13 @@ class Console(Cmd):
            To run aggregates for all simulations (across all trials/conditions) in a directory: 'pdipole exp'
            To run aggregates with lines marking evoked times, run: 'pdipole evoked'
         """
-        # if args.startswith('agg'):
-        #     p_exp = paramrw.ExpParams(self.ddata.fparam)
-        #     clidefs.pdipole_agg(self.ddata, p_exp)
-
-        # pdipole <type> <ylim>
+        # temporary arg split
         arg_tmp = args.split(' ')
 
+        # list of acceptable runtypes
         runtype_list = [
             'exp',
+            'exp2',
             'evoked',
             'avg',
         ]
@@ -443,23 +462,38 @@ class Console(Cmd):
             ylim = []
 
         else:
-            # assume the first arg is correct, split on that
+            # set the runtype to the first
             if arg_tmp[0] in runtype_list:
                 runtype = arg_tmp[0]
 
-                arg_ylim_tmp = args.split(runtype)
+            # get the list of optional args
+            arg_list = self.__split_args(args)
 
-                if len(arg_ylim_tmp) == 2:
-                    ylim_read = ast.literal_eval(arg_ylim_tmp[-1].strip())
-                    ylim = ylim_read
+            # default values for various params
+            # i_ctrl = 0
+            for opt, val in arg_list:
+                # currently not being used
+                if opt == 'i_ctrl':
+                    i_ctrl = int(val)
 
-                else:
-                    ylim = []
+            # assume the first arg is correct, split on that
+            # arg_ylim_tmp = args.split(runtype)
+
+            # if len(arg_ylim_tmp) == 2:
+            #     ylim_read = ast.literal_eval(arg_ylim_tmp[-1].strip())
+            #     ylim = ylim_read
+
+            # else:
+            #     ylim = []
 
         if runtype == 'exp':
             # run the avg dipole per experiment (across all trials/simulations)
             # using simpaths (ddata)
             dipolefn.pdipole_exp(self.ddata, ylim)
+
+        elif runtype == 'exp2':
+            dipolefn.pdipole_exp2(self.ddata)
+            # dipolefn.pdipole_exp2(self.ddata, i_ctrl)
 
         elif runtype == 'evoked':
             # add the evoked lines to the pdipole individual simulations
@@ -506,7 +540,8 @@ class Console(Cmd):
         clidefs.regenerate_plots(self.ddata, [xmin, xmax])
 
     def do_addalphahist(self, args):
-        """Adds histogram of alpha feed input times to dpl and spec plots
+        """Adds histogram of alpha feed input times to dpl and spec plots. Usage:
+           [s1] addalphahist {--xmin=0 --xmax=100}
         """
         # preallocate variables so they always exist
         xmin = 0.
@@ -534,7 +569,8 @@ class Console(Cmd):
                     xmin = 0.
                     xmax = 'tstop'
 
-        clidefs.add_alpha_feed_hist(self.ddata, [xmin, xmax])
+        clidefs.exec_addalphahist(self.ddata, [xmin, xmax])
+        # clidefs.add_alpha_feed_hist(self.ddata, [xmin, xmax])
 
     def do_aggregatehist(self, args):
         """Creates aggregates all spec data with histograms into one massive fig.

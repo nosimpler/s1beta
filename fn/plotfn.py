@@ -1,8 +1,8 @@
 # plotfn.py - pall and possibly other plot routines
 #
-# v 1.7.37
-# rev 2013-03-26 (SL: name fixes forgot to commit)
-# last major: (SL: fixed some names)
+# v 1.7.39
+# rev 2013-04-08 (SL: changed praster)
+# last major: (SL: name fixes forgot to commit)
 
 from praster import praster
 import axes_create as ac
@@ -33,7 +33,7 @@ def pkernel(dfig, f_param, f_spk, f_dpl, data_spec, key_types, xlim=[0, 'tstop']
     }
 
     # plot kernels
-    praster(gid_dict, tstop, f_spk, dfig_spk)
+    praster(f_param, tstop, f_spk, dfig_spk)
     dipolefn.pdipole(f_dpl, f_param, dfig_dpl, key_types, pdipole_dict)
     specfn.pspec(data_spec, f_dpl, dfig_spec, p_dict, key_types, xlim)
 
@@ -127,7 +127,8 @@ def pall(ddir, p_exp, spec_results, xlim=[0., 'tstop']):
 
 # Plots dipole and spec with alpha feed histograms
 def pdpl_pspec_with_hist(ddir, p_exp, spec_results, xlim=[0., 'tstop']):
-    runtype = 'parallel'
+    runtype = 'debug'
+    # runtype = 'parallel'
 
     # preallocate lists for use below
     param_list = []

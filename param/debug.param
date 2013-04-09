@@ -60,7 +60,7 @@ events_per_cycle_dist: 2
 
 # thalamic input amplitudes and delays
 input_prox_A_weight_L2Pyr: 4e-5
-input_prox_A_weight_L5Pyr: A(4e-5, 8e-5, 1e-5)
+input_prox_A_weight_L5Pyr: 4e-5
 input_prox_A_weight_inh: 8e-5
 input_prox_A_delay_L2: 0.1
 input_prox_A_delay_L5: 1.0

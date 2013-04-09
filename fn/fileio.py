@@ -1,8 +1,8 @@
 # fileio.py - general file input/output functions
 #
-# v 1.7.36
-# rev 2013-03-26 (SL: cleanup)
-# last rev: (SL: Adds str_date as an output used in s1run's copy param file routine)
+# v 1.7.39
+# rev 2013-04-08 (SL: finds an aggregate file)
+# last rev: (SL: cleanup)
 
 import datetime, fnmatch, os, shutil, sys
 import itertools as it
@@ -149,6 +149,19 @@ class SimulationPaths():
         # will only be written to at time of creation, by create_dirs
         # dfig is a terrible variable name, sorry!
         self.dfig = self.__ddata_dict_template()
+
+    # this is a hack
+    # checks root expmt_group directory for any files i've thrown there
+    def find_aggregate_file(self, expmt_group, datatype):
+        # file name is in format: '%s-%s-%s' % (sim_prefix, expmt_group, datatype-ish)
+        fname = '%s-%s-%s.txt' % (self.sim_prefix, expmt_group, datatype)
+        # get a list of txt files in the expmt_group
+
+        # local=1 forces the search to be local to this directory and not recursive
+        local = 1
+        flist = file_match(self.dexpmt_dict[expmt_group], fname, local)
+
+        return flist
 
     # creates a dict of dicts for each experiment and all the datatype directories
     # this is the empty template that gets filled in later.

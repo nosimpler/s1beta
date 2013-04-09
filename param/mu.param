@@ -4,8 +4,8 @@
 # L() defines a linspace range
 # [ ] list comma separated values
 
-sim_prefix: mubaseline
-expmt_groups: {mu}
+sim_prefix: mubaseline-13
+expmt_groups: {mu_low, mu_high}
 
 # numbers of cells making up the pyramidal grids
 N_pyr_x: 10
@@ -38,27 +38,27 @@ gbar_L2Pyr_L5Basket: 2.5e-4
 
 # Ongoing proximal alpha rhythm
 t0_input_prox: 50.
-tstop_input_prox: 1000.
+tstop_input_prox: 1500.
 f_input_prox: 10.
 f_stdev_prox: 20.
 
 # Ongoing distal alpha rhythm
 t0_input_dist: 50.
-tstop_input_dist: 1000.
+tstop_input_dist: 1500.
 f_input_dist: 10
 f_stdev_dist: 20.
 
 # thalamic input amplitudes and delays
-input_prox_A_weight_L2Pyr: 4e-5
-input_prox_A_weight_L5Pyr: 4e-5
-input_prox_A_weight_inh: 8e-5
+input_prox_A_weight_L2Pyr: {4e-5, 6e-5}
+input_prox_A_weight_L5Pyr: {4e-5, 6e-5}
+input_prox_A_weight_inh: {8e-5, 1.2e-4}
 input_prox_A_delay_L2: 0.1
 input_prox_A_delay_L5: 1.0
 
 # current values, not sure where these distal values come from, need to check
-input_dist_A_weight_L5Pyr: 4e-5
-input_dist_A_weight_L2Pyr: 4e-5
-input_dist_A_weight_inh: 8e-5
+input_dist_A_weight_L5Pyr: {4e-5, 6e-5}
+input_dist_A_weight_L2Pyr: {4e-5, 6e-5}
+input_dist_A_weight_inh: {8e-5, 1.2e-4}
 input_dist_A_delay_L2: 5.0
 input_dist_A_delay_L5: 5.0
 
@@ -87,16 +87,16 @@ gbar_evdist_L5Pyr: 1e-3
 gbar_evdist_L2Basket: 5e-4
 
 # analysis
-save_spec_data: 0
+save_spec_data: 1
 spec_max_freq: 41.
 
 # N_trials
-N_trials: 0
+N_trials: 1
 
 # these values will only be used with N_trials = 0
 # and when these values are not -1
-prng_seedcore_input_dist: 827943075
-prng_seedcore_input_prox: 730617084
+prng_seedcore_input_dist: 717536520
+prng_seedcore_input_prox: 844592256
 prng_seedcore_extpois: 0
 prng_seedcore_extgauss: 0
 prng_seedcore_evprox_early: 0
@@ -104,7 +104,7 @@ prng_seedcore_evdist: 0
 prng_seedcore_evprox_late: 0
 
 # Numerics
-tstop: 100.
+tstop: 1000.
 dt: 0.025
 
 # amplitudes of individual gaussian random inputs to L2Pyr and L5Pyr

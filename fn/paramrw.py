@@ -1,8 +1,8 @@
 # paramrw.py - routines for reading the param files
 #
-# v 1.7.37
-# rev 2013-03-26 (SL: added arange to the possibilities, I hope this doesn't break a lot of stuff)
-# last major: (SL: fixed small typo, but Run_Date bug still exists)
+# v 1.7.39
+# rev 2013-04-08 (SL: find_param function to randomly find a param from a fparam file)
+# last major: (SL: added arange to the possibilities, I hope this doesn't break a lot of stuff)
 
 import re
 import fileio as fio
@@ -75,12 +75,13 @@ def write(fparam, p, gid_list):
                 f.write(str(val)+'\n')
 
 # Searches f_param for any match of p
-def find_param(fparam, p):
-    lines = fio.clean_lines(fparam)
-    param_list = [line for line in lines if line.split(': ')[0].startswith(p)]
+def find_param(fparam, param_key):
+    _, p = read(fparam)
 
-    # return a list of tuples
-    return [(param.split(': ')[0], float(param.split(': ')[1])) for param in param_list]
+    try:
+        return p[param_key]
+    except KeyError:
+        return "There is no key by the name %s" % param_key
 
 # reads the simgroup name from fparam
 def read_sim_prefix(fparam):
@@ -589,3 +590,8 @@ def changed_vars(sim_list):
     var_list = list(line for line in keyvals if re.match('[KL\(]', line[1][0]))
 
     return var_list
+
+# debug test function
+if __name__ == '__main__':
+    fparam = 'changethisnamehere.txt'
+    print find_param(fparam, 'WhoDat')

@@ -1,8 +1,8 @@
 # spec.py - Average time-frequency energy representation using Morlet wavelet method
 #
-# v 1.7.31
-# rev 2013-03-12 (MS: Method to plot spec data with dpl and hist to supplied axis)
-# last major: (MS: Title string creation using external method)
+# v 1.7.39
+# rev 2013-04-08 (SL: a true pspec to plot to an axis)
+# last major: (MS: Method to plot spec data with dpl and hist to supplied axis)
 
 import os
 import sys
@@ -17,7 +17,7 @@ from neuron import h as nrn
 
 import fileio as fio
 import spikefn 
-from axes_create import FigSpec, FigSpecWithHist, FigStd, FigFreqpwrWithHist, create_title
+import axes_create as ac
 
 # general spec write/read functions
 def write(fdata_spec, t_vec, f_vec, TFR):
@@ -163,7 +163,20 @@ class MorletSpec():
 
         return S
 
+# spectral plotting kernel should be simpler and take just a file name and an axis handle
 # Spectral plotting kernel for ONE simulation run
+def pspecone(ax_spec, fspec):
+    # read is a function in this file to read the fspec
+    data_spec = read(fspec)
+    TFR = data_spec['TFR']
+    f = data_spec['freq']
+
+    pc = ax_spec.imshow(TFR, aspect='auto', origin='upper')
+    # ax_spec.colorbar(pc, ax=ax_spec)
+
+    return pc
+
+# this is actually a plot kernel for one sim that does dipole, etc.
 def pspec(dspec, f_dpl, dfig, p_dict, key_types, xlim=[0., 'tstop']):
     # if dspec is an instance of MorletSpec, get data from object
     if isinstance(dspec, MorletSpec):
@@ -206,7 +219,7 @@ def pspec(dspec, f_dpl, dfig, p_dict, key_types, xlim=[0., 'tstop']):
     xmax_ind = xmax / p_dict['dt']
 
     # f.f is the figure handle!
-    f = FigSpec()
+    f = ac.FigSpec()
 
     pc = f.ax['spec'].imshow(TFR[:, xmin_ind:xmax_ind+1], extent=[xmin, xmax, freqvec[-1], freqvec[0]], aspect='auto', origin='upper')
     f.f.colorbar(pc, ax=f.ax['spec'])
@@ -220,23 +233,14 @@ def pspec(dspec, f_dpl, dfig, p_dict, key_types, xlim=[0., 'tstop']):
 
     # plot and create an xlim
     f.ax['dipole'].plot(t_dpl, dp_total)
-    # t_stop = f.ax['dipole'].get_xlim()[1]
     x = (xmin, xmax)
     xticks = f.ax['spec'].get_xticks()
     xticks[0] = xmin
-    # xticks = np.concatenate((np.array([xmin]), np.arange(xmin+50., xmax+1, p_dict['tstop']/10.)))
-    # xticks = np.concatenate((np.array([x[0]]), np.arange(100., tstop+1, 100.)))
-    # xticklabels = np.concatenate((np.array([x[0]]), np.arange(100., t_stop+1, 100.)))
 
     # for now, set the xlim for the other one, force it!
     f.ax['dipole'].set_xlim(x)
-    # f.ax['spec'].set_xlim(x)
-    # for item in f.ax['dipole'].get_xticklabels():
-    #     print item, item.get_text()
     f.ax['dipole'].set_xticks(xticks)
     f.ax['spec'].set_xticks(xticks)
-    # f.ax['spec'].set_xticklabels(xticklabels)
-    # f.ax['dipole'].set_xticklabels(xticklabels)
 
     # set yticks on spectrogram to include 0
     # freq_max = f.ax['spec'].get_ylim()[0]
@@ -250,7 +254,7 @@ def pspec(dspec, f_dpl, dfig, p_dict, key_types, xlim=[0., 'tstop']):
     f.ax['spec'].set_ylabel('Frequency (Hz)')
 
     # create title
-    title_str = create_title(p_dict, key_types)
+    title_str = ac.create_title(p_dict, key_types)
     f.f.suptitle(title_str)
     # title_str = [key + ': %2.1f' % p_dict[key] for key in key_types['dynamic_keys']]
 
@@ -299,10 +303,9 @@ def pspec_with_hist(dspec, f_dpl, f_spk, dfig, p_dict, gid_dict, key_types, xlim
     xmax_ind = xmax / p_dict['dt']
 
     # f.f is the figure handle!
-    f = FigSpecWithHist()
+    f = ac.FigSpecWithHist()
 
     pc = f.ax['spec'].imshow(TFR[:,xmin_ind:xmax_ind], extent=[xmin, xmax+1, freqvec[-1], freqvec[0]], aspect='auto', origin='upper')
-    # pc = f.ax['spec'].imshow(TFR, extent=[timevec[0], timevec[-1], freqvec[-1], freqvec[0]], aspect='auto', origin='upper')
     f.f.colorbar(pc, ax=f.ax['spec'])
 
     # grab the dipole data
@@ -310,12 +313,9 @@ def pspec_with_hist(dspec, f_dpl, f_spk, dfig, p_dict, gid_dict, key_types, xlim
 
     t_dpl = data_dipole[xmin_ind:xmax_ind+1, 0]
     dp_total = data_dipole[xmin_ind:xmax_ind+1, 1]
-    # t_dpl = data_dipole[:, 0]
-    # dp_total = data_dipole[:, 1]
 
     f.ax['dipole'].plot(t_dpl, dp_total)
     x = (xmin, xmax)
-    # x = (50., f.ax['dipole'].get_xlim()[1])
 
     # grab alpha feed data. spikes_from_file() from spikefn.py
     s_dict = spikefn.spikes_from_file(gid_dict, f_spk)
@@ -326,16 +326,22 @@ def pspec_with_hist(dspec, f_dpl, f_spk, dfig, p_dict, gid_dict, key_types, xlim
     # Account for possible delays
     s_dict = spikefn.add_delay_times(s_dict, p_dict)
 
-    # set number of bins (150 bins/1000ms)
+    # set number of bins (150 bins per 1000ms)
     bins = 150. * (xmax - xmin) / 1000.
 
     hist = {}
 
     # Proximal feed
-    hist['feed_prox'] = f.ax['feed_prox'].hist(s_dict['alpha_feed_prox'].spike_list, bins, range=[xmin, xmax], color='red', label='Proximal feed')
+    hist['feed_prox'] = f.ax['feed_prox'].hist(s_dict['alpha_feed_prox'].spike_list, bins, range=[xmin, xmax], color='red', label='Proximal feed', alpha=0.5)
+
+    # f.ax['testing'] = f.ax['feed_prox'].twinx()
+    # hist['feed_dist'] = f.ax['testing'].hist(s_dict['alpha_feed_dist'].spike_list, bins, range=[xmin, xmax], color='green', label='Distal feed', alpha=0.5)
 
     # Distal feed
     hist['feed_dist'] = f.ax['feed_dist'].hist(s_dict['alpha_feed_dist'].spike_list, bins, range=[xmin, xmax], color='green', label='Distal feed')
+
+    # f.ax['testing'].invert_yaxis()
+    f.ax['feed_dist'].invert_yaxis()
 
     # for now, set the xlim for the other one, force it!
     f.ax['dipole'].set_xlim(x)
@@ -356,11 +362,10 @@ def pspec_with_hist(dspec, f_dpl, f_spk, dfig, p_dict, gid_dict, key_types, xlim
             f.ax[key].legend()
 
     # create title
-    title_str = create_title(p_dict, key_types)
+    title_str = ac.create_title(p_dict, key_types)
     f.f.suptitle(title_str)
-    # title_str = [key + ': %2.1f' % p_dict[key] for key in key_types['dynamic_keys']]
 
-    plt.savefig(fig_name)
+    f.savepng(fig_name)
     f.close()
 
 # this must be globally available for callback function append_spec
@@ -458,7 +463,7 @@ def freqpwr_analysis(dspec):
     }
 
 def pfreqpwr(file_name, results_list, fparam_list, key_types):
-    f = FigStd()
+    f = ac.FigStd()
     f.ax0.hold(True)
 
     legend_list = []
@@ -478,7 +483,7 @@ def pfreqpwr(file_name, results_list, fparam_list, key_types):
     f.save(file_name)
 
 def pfreqpwr_with_hist(file_name, freqpwr_result, f_spk, gid_dict, p_dict, key_types):
-    f = FigFreqpwrWithHist()
+    f = ac.FigFreqpwrWithHist()
     f.ax['hist'].hold(True)
 
     xmin = 50.
@@ -515,7 +520,7 @@ def pfreqpwr_with_hist(file_name, freqpwr_result, f_spk, gid_dict, p_dict, key_t
     f.ax['hist'].set_ylabel('# spikes')
 
     # create title
-    title_str = create_title(p_dict, key_types)
+    title_str = ac.create_title(p_dict, key_types)
     f.f.suptitle(title_str)
     # title_str = [key + ': %2.1f' % p_dict[key] for key in key_types['dynamic_keys']]
 
@@ -591,7 +596,7 @@ def aggregate_with_hist(f, ax, dspec, f_dpl, f_spk, p_dict, gid_dict):
             ax[key].legend()
 
     # create title
-    # title_str = create_title(p_dict, key_types)
+    # title_str = ac.create_title(p_dict, key_types)
     # f.f.suptitle(title_str)
     # title_str = [key + ': %2.1f' % p_dict[key] for key in key_types['dynamic_keys']]
 
@@ -599,7 +604,7 @@ def aggregate_with_hist(f, ax, dspec, f_dpl, f_spk, p_dict, gid_dict):
     # f.close()
 
 def pmaxpwr(file_name, results_list, fparam_list):
-    f = FigStd()
+    f = ac.FigStd()
     f.ax0.hold(True)
 
     # instantiate lists for storing x and y data

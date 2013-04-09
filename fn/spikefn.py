@@ -1,8 +1,8 @@
 # spikefn.py - dealing with spikes
 #
-# v 1.7.31
-# rev 2013-03-12 (MS: fixed error in accounting for delays in alpha inputs)
-# last major: (MS: fixed error causing alpha hists not to work when only one feed existed)
+# v 1.7.39
+# rev 2013-04-08 (SL: spikes from file requires ... fparam file, bin count function)
+# last major: (MS: fixed error in accounting for delays in alpha inputs)
 
 import fileio as fio
 import numpy as np
@@ -61,6 +61,9 @@ class Spikes():
         bins = hist_bin_opt(s_agg, 1)
         a.hist(s_agg, bins, normed=True, facecolor='g', alpha=0.75)
 
+def bin_count(bins_per_second, tinterval):
+    return bins_per_second * tinterval / 1000.
+
 # splits ext gauss by supplied cell type
 # def split_extgauss(s, gid_dict, type):
 #     gid_cell = gid_dict[type]
@@ -110,51 +113,8 @@ def hist_bin_opt(x, N_trials):
     print bin_opt
     return bin_opt
 
-# not "purely" from files
-def spikes_from_file(gid_dict, fspikes):
-    # print "spikes_from_file() is being deprecated. Please see spikes_from_file_pure() for eventual replacement."
-    # check to see if there are spikes in here, otherwise return an empty array
-    if os.stat(fspikes).st_size:
-        s = np.loadtxt(open(fspikes, 'rb'))
-    else:
-        s = np.array([], dtype='float64')
-
-    # get the qnd dict keys from gid_dict
-    s_dict = dict.fromkeys(gid_dict)
-
-    # remove extgauss, extpois from keys, going to be replaced with different types
-    del s_dict['extgauss']
-    del s_dict['extpois']
-
-    # now iterate over remaining keys
-    for key in s_dict.keys():
-        # sort of a hack to separate extgauss
-        s_dict[key] = Spikes(s, gid_dict[key])
-
-        if key not in 'extinput':
-            # figure out its extgauss feed
-            newkey_gauss = 'extgauss_' + key
-            s_dict[newkey_gauss] = split_extrand(s, gid_dict, key, 'extgauss')
-
-            # figure out its extpois feed
-            newkey_pois = 'extpois_' + key
-            s_dict[newkey_pois] = split_extrand(s, gid_dict, key, 'extpois')
-
-    # Deal with alpha feeds (extinputs)
-    # order guaranteed by order of inputs in p_ext in paramrw
-    # and by details of gid creation in class_net
-    # A little kludgy to deal with the fact that one might not exist
-    if len(gid_dict['extinput']) > 1:
-        s_dict['alpha_feed_prox'] = Spikes(s, [gid_dict['extinput'][0]])
-        s_dict['alpha_feed_dist'] = Spikes(s, [gid_dict['extinput'][1]])
-
-        # Add 5ms to all times in distal alpha feed list to account for 5ms synaptic delay
-        # s_dict['alpha_feed_dist'].spike_list = [num+5. for num in s_dict['alpha_feed_dist'].spike_list]
-
-    return s_dict
-
 # "purely" from files, this is the new way to replace the old way
-def spikes_from_file_pure(fparam, fspikes):
+def spikes_from_file(fparam, fspikes):
     gid_dict, _ = paramrw.read(fparam)
 
     # cell list - requires cell to start with L2/L5
@@ -183,10 +143,6 @@ def spikes_from_file_pure(fparam, fspikes):
     # get the skeleton s_dict from the cell_list
     s_dict = dict.fromkeys(src_list)
 
-    # # remove extgauss, extpois from keys, going to be replaced with different types
-    # del s_dict['extgauss']
-    # del s_dict['extpois']
-
     # iterate through just the src keys
     for key in s_dict.keys():
         # sort of a hack to separate extgauss
@@ -204,9 +160,18 @@ def spikes_from_file_pure(fparam, fspikes):
     for key in src_unique_list:
         s_dict[key] = Spikes(s, gid_dict[key])
 
-    # handle the extinput: this is a LIST!
-    print gid_dict['evprox0']
-    s_dict['extinput'] = [Spikes(s, [gid]) for gid in gid_dict['extinput']]
+    # Deal with alpha feeds (extinputs)
+    # order guaranteed by order of inputs in p_ext in paramrw
+    # and by details of gid creation in class_net
+    # A little kludgy to deal with the fact that one might not exist
+    if len(gid_dict['extinput']) > 1:
+        s_dict['alpha_feed_prox'] = Spikes(s, [gid_dict['extinput'][0]])
+        s_dict['alpha_feed_dist'] = Spikes(s, [gid_dict['extinput'][1]])
+
+    else:
+        # not sure why this is done here
+        # handle the extinput: this is a LIST!
+        s_dict['extinput'] = [Spikes(s, [gid]) for gid in gid_dict['extinput']]
 
     return s_dict
 
@@ -328,3 +293,6 @@ def alpha_feed_verify(s_dict, p_dict):
             s_dict['alpha_feed_dist'] = type('emptyspike', (object,), {'spike_list': np.array([])})
 
     return s_dict
+
+if __name__ == '__main__':
+    print bin_count(150., 500.)

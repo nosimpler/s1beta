@@ -1,8 +1,8 @@
 # axes_create.py - simple axis creation
 #
-# v 1.7.38
-# rev 2013-04-01 (SL: added FigDipoleExp())
-# last major: (SL: Fixed name)
+# v 1.7.39
+# rev 2013-04-08 (SL: some changes in FigDipoleExp())
+# last major: (SL: added FigDipoleExp())
 
 # usage:
 # testfig = FigStd()
@@ -113,6 +113,9 @@ class FigSpecWithHist():
 
             if 'feed_dist' in key:
                 self.ax[key].set_xticklabels('')
+
+    def savepng(self, fig_name, dpiset=250):
+        self.f.savefig(fig_name, dpi=dpiset)
 
     def close(self):
         plt.close(self.f)
@@ -433,7 +436,7 @@ class FigAggregateSpecWithHist():
             self.f.text(x, y, key+': %s' %p_dict[key], fontsize=36, rotation='vertical', horizontalalignment='left', verticalalignment='center')
 
     def save(self, file_name):
-        self.f.savefig(file_name)
+        self.f.savefig(file_name, dpi=250)
 
     def close(self):
         plt.close(self.f)
@@ -453,6 +456,7 @@ class FigDipoleExp():
 
     def __create_axes(self):
         self.ax = [self.f.add_subplot(self.gspec[i:(i+1)]) for i in range(self.N_expmt_groups)]
+        self.ax_twinx = []
 
     # take an external list of dipoles and plot them
     # such a list is created externally
@@ -477,6 +481,15 @@ class FigDipoleExp():
             # set the ylims for all, the same
             for ax in self.ax:
                 ax.set_ylim((ymin, ymax))
+
+    # creates a twinx axis for the specified axis
+    def create_axis_twinx(self, n):
+        if n < len(self.ax):
+            self.ax_twinx.append(self.ax[n].twinx())
+
+            # returns the index of most recently added element (now the length)
+            # modified to account for zero indexing
+            return len(self.ax_twinx)-1
 
     def __set_ax_props(self):
         for ax in self.ax[:-1]:
@@ -510,7 +523,7 @@ def testfn():
     # testfig = FigStd()
     # testfig.ax0.plot(x)
 
-    testfig = FigDipoleExp(2)
+    testfig = FigDipoleExp(3)
     testfig.ax[0].plot(x)
 
     # testfig = FigSpecWithHist()
