@@ -1,8 +1,8 @@
 # dipolefn.py - dipole-based analysis functions
 #
-# v 1.7.40
-# rev 2013-04-09 (SL: Dipole class reads new data, doesn't do baseline normalization yet)
-# last major: (SL: calculate_aggregate_dipole() function, pdipole_exp2)
+# v 1.7.41
+# rev 2013-04-12 (SL: added calc_avgdpl_stimevoked() and related plot)
+# last major: (SL: Dipole class reads new data, doesn't do baseline normalization yet)
 
 import fileio as fio
 import numpy as np
@@ -50,7 +50,7 @@ class Dipole():
         # simple baseline shift of the dipole
         self.dpl += dpl_offset
 
-# ddata is a SimulationPaths() object
+# ddata is a fio.SimulationPaths() object
 def calc_aggregate_dipole(ddata):
     for expmt_group in ddata.expmt_groups:
         # create the filename
@@ -82,6 +82,70 @@ def calc_aggregate_dipole(ddata):
         # write this data to the file
         with open(fname_data, 'w') as f:
             for t, x in it.izip(t_vec, x_dpl):
+                f.write("%03.3f\t%5.4f\n" % (t, x))
+
+# calculate stimulus evoked dipole
+def calc_avgdpl_stimevoked(ddata):
+    for expmt_group in ddata.expmt_groups:
+        # create the filename
+        dexp = ddata.dexpmt_dict[expmt_group]
+        fname_short = '%s-%s-dpl' % (ddata.sim_prefix, expmt_group)
+        fname_data = os.path.join(dexp, fname_short + '.txt')
+
+        # grab the list of raw data dipoles and assoc params in this expmt
+        fdpl_list = ddata.file_match(expmt_group, 'rawdpl')
+        param_list = ddata.file_match(expmt_group, 'param')
+        spk_list = ddata.file_match(expmt_group, 'rawspk')
+
+        # actual list of Dipole() objects
+        dpl_list = [Dipole(fdpl) for fdpl in fdpl_list]
+        t_truncated = []
+
+        # iterate through the lists, grab the spike time, phase align the signals,
+        # cut them to length, and then mean the dipoles
+        for dpl, f_spk, f_param in it.izip(dpl_list, spk_list, param_list):
+            _, p = paramrw.read(f_param)
+
+            # grab the corresponding relevant starting spike time
+            s = spikefn.spikes_from_file(f_param, f_spk)
+            s = spikefn.alpha_feed_verify(s, p)
+            s = spikefn.add_delay_times(s, p)
+
+            # t_evoked is the same for all of the cells in these simulations
+            t_evoked = s['evprox0'].spike_list[0][0]
+
+            # attempt to give a 50 ms buffer
+            if t_evoked > 50.:
+                t0 = t_evoked - 50.
+            else:
+                t0 = t_evoked
+
+            # truncate the dipole related vectors
+            dpl.t = dpl.t[dpl.t > t0]
+            dpl.dpl = dpl.dpl[dpl.t > t0]
+            t_truncated.append(dpl.t[0])
+
+        # find the t0_max value to compare on other dipoles
+        t_truncated -= np.max(t_truncated)
+
+        for dpl, t_adj in it.izip(dpl_list, t_truncated):
+            # negative numbers mean that this vector needs to be shortened by that many ms
+            T_new = dpl.t[-1] + t_adj
+            dpl.dpl = dpl.dpl[dpl.t < T_new]
+            dpl.t = dpl.t[dpl.t < T_new]
+
+            if dpl is dpl_list[0]:
+                dpl_total = dpl.dpl
+
+            else:
+                dpl_total += dpl.dpl
+
+        dpl_mean = dpl_total / len(dpl_list)
+        t_dpl = dpl_list[0].t
+
+        # write this data to the file
+        with open(fname_data, 'w') as f:
+            for t, x in it.izip(t_dpl, dpl_mean):
                 f.write("%03.3f\t%5.4f\n" % (t, x))
 
 # pdipole is for a single dipole file, should be for a 
@@ -424,10 +488,7 @@ def pdipole_exp2(ddata):
 
     # input hist information: predicated on the fact that the input histograms
     # should be identical for *all* of the inputs represented in this figure
-    hist = {
-        'prox': f_exp.ax[1].hist(s['alpha_feed_prox'].spike_list, bins, color='red', label='Proximal input', alpha=0.75),
-        'dist': f_exp.ax_twinx[n_dist].hist(s['alpha_feed_dist'].spike_list, bins, color='green', label='Proximal input', alpha=0.75),
-    }
+    spikefn.pinput_hist(f_exp.ax[1], f_exp.ax_twinx[n_dist], s['alpha_feed_prox'].spike_list, s['alpha_feed_dist'].spike_list, n_bins)
 
     # grab the max counts for both hists
     # the [0] item of hist are the counts
@@ -488,29 +549,164 @@ def pdipole_exp2(ddata):
     f_exp.ax[2].set_xlim(50., tstop)
     f_exp.ax[3].set_xlim(50., tstop)
 
-        # fname_short = '%s-%s-dpl' % (fprefix, expmt_group)
-        # fname_fig = os.path.join(ddata.dfig[expmt_group]['figdpl'], fname_short + '.png')
+    f_exp.savepng(fname_exp_fig)
+    f_exp.close()
 
-        # put an if statement here to find the right expmt group and plot directly
-        # to the appropriate axis
-        # plot both the ctrl and the expmt
+# For a given ddata (SimulationPaths object), find the mean dipole
+# over ALL trials in ALL conditions in EACH experiment
+def pdipole_evoked_aligned(ddata):
+    # grab the original dipole from a specific dir
+    dproj = '/repo/data/s1'
 
-    # # plot the aggregate data using methods defined in FigDipoleExp()
-    # # f_exp.plot(t_vec, dpl_exp)
-    # for ax, dpl in it.izip(f_exp.ax, dpl_exp):
-    #     ax.hold(True)
-    #     ax.plot(t_vec, dpl)
+    runtype = 'somethingotherthandebug'
+    # runtype = 'debug'
 
-    #     # sneaky way to get the xlim from the dpl_exp first
-    #     xlim = ax.get_xlim()
-    #     ax.plot(dpl_ctrl.t, dpl_ctrl.dpl)
+    if runtype == 'debug':
+        ddate = '2013-04-08'
+        dsim = 'mubaseline-04-000'
+        i_ctrl = 0
+    else:
+        ddate = raw_input('Short date directory? ')
+        dsim = raw_input('Sim name? ')
+        i_ctrl = ast.literal_eval(raw_input('Sim number: '))
+    dcheck = os.path.join(dproj, ddate, dsim)
 
-    #     # now force it after plotting the ctrl
-    #     ax.set_xlim(xlim)
+    # create a blank ddata structure
+    ddata_ctrl = fio.SimulationPaths()
+    dsim = ddata_ctrl.read_sim(dproj, dcheck)
 
-    # # attempt at setting titles
-    # for ax, expmt_group in it.izip(f_exp.ax, ddata.expmt_groups):
-    #     ax.set_title(expmt_group)
+    # find the mu_low and mu_high in the expmtgroup names
+    # this means the group names must be well formed
+    for expmt_group in ddata_ctrl.expmt_groups:
+        if 'mu_low' in expmt_group:
+            mu_low_group = expmt_group
+        elif 'mu_high' in expmt_group:
+            mu_high_group = expmt_group
+
+    # choose the first [0] from the list of the file matches for mu_low
+    fdpl_mu_low = ddata_ctrl.file_match(mu_low_group, 'rawdpl')[i_ctrl]
+    fparam_mu_low = ddata_ctrl.file_match(mu_low_group, 'param')[i_ctrl]
+    fspk_mu_low = ddata_ctrl.file_match(mu_low_group, 'rawspk')[i_ctrl]
+    fspec_mu_low = ddata_ctrl.file_match(mu_low_group, 'rawspec')[i_ctrl]
+
+    # choose the first [0] from the list of the file matches for mu_high
+    fdpl_mu_high = ddata_ctrl.file_match(mu_high_group, 'rawdpl')[i_ctrl]
+    fparam_mu_high = ddata_ctrl.file_match(mu_high_group, 'param')[i_ctrl]
+
+    # grab the relevant dipole and renormalize it for mu_low
+    dpl_mu_low = Dipole(fdpl_mu_low)
+    dpl_mu_low.baseline_renormalize(fparam_mu_low)
+
+    # grab the relevant dipole and renormalize it for mu_high
+    dpl_mu_high = Dipole(fdpl_mu_high)
+    dpl_mu_high.baseline_renormalize(fparam_mu_high)
+
+    # input feed information
+    s = spikefn.spikes_from_file(fparam_mu_low, fspk_mu_low)
+    _, p_ctrl = paramrw.read(fparam_mu_low)
+    s = spikefn.alpha_feed_verify(s, p_ctrl)
+    s = spikefn.add_delay_times(s, p_ctrl)
+
+    # find tstop, assume same over all. grab the first param file, get the tstop
+    tstop = paramrw.find_param(fparam_mu_low, 'tstop')
+
+    # hard coded bin count for now
+    n_bins = spikefn.bin_count(150., tstop)
+
+    # sim_prefix
+    fprefix = ddata.sim_prefix
+
+    # create the figure name
+    fname_exp = '%s_dpl_align' % (fprefix)
+    fname_exp_fig = os.path.join(ddata.dsim, fname_exp + '.png')
+
+    # create one figure comparing across all
+    N_expmt_groups = len(ddata.expmt_groups)
+    f_exp = ac.FigDipoleExp(4)
+
+    # plot the ctrl dipoles
+    f_exp.ax[2].plot(dpl_mu_low.t, dpl_mu_low.dpl, color='k')
+    f_exp.ax[2].hold(True)
+    f_exp.ax[2].plot(dpl_mu_high.t, dpl_mu_high.dpl)
+
+    # function creates an f_exp.ax_twinx list and returns the index of the new feed
+    n_dist = f_exp.create_axis_twinx(1)
+
+    # input hist information: predicated on the fact that the input histograms
+    # should be identical for *all* of the inputs represented in this figure
+    # places 2 histograms on two axes (meant to be one axis flipped)
+    hists = spikefn.pinput_hist(f_exp.ax[1], f_exp.ax_twinx[n_dist], s['alpha_feed_prox'].spike_list, s['alpha_feed_dist'].spike_list, n_bins)
+
+    # grab the max counts for both hists
+    # the [0] item of hist are the counts
+    max_hist = np.max([np.max(hists[key][0]) for key in hists.keys()])
+    ymax = 2 * max_hist
+
+    # plot the spec here
+    pc = specfn.pspecone(f_exp.ax[0], fspec_mu_low)
+
+    # deal with the axes here
+    f_exp.ax_twinx[n_dist].set_ylim((ymax, 0))
+    f_exp.ax[1].set_ylim((0, ymax))
+
+    # f_exp.ax[1].set_xlim((50., tstop))
+
+    # turn hold on
+    f_exp.ax[2].hold(True)
+
+    # empty list for the aggregate dipole data
+    dpl_exp = []
+
+    # go through each expmt
+    # calculation is extremely redundant
+    for expmt_group in ddata.expmt_groups:
+        # a little sloppy, just find the param file
+        # this param file was for the baseline renormalization and
+        # assumes it's the same in all for this expmt_group
+        # also for getting the gid_dict, also assumed to be the same
+        fparam = ddata.file_match(expmt_group, 'param')[0]
+
+        # general check to see if the aggregate dipole data exists
+        if 'mu_low' in expmt_group or 'mu_high' in expmt_group:
+            # check to see if these files exist
+            flist = ddata.find_aggregate_file(expmt_group, 'dpl')
+
+            # if no file exists, then find one
+            if not len(flist):
+                calc_aggregate_dipole(ddata)
+                flist = ddata.find_aggregate_file(expmt_group, 'dpl')
+
+            # testing the first file
+            list_spk = ddata.file_match(expmt_group, 'rawspk')
+            list_s_dict = [spikefn.spikes_from_file(fparam, fspk) for fspk in list_spk]
+            list_evoked = [s_dict['evprox0'].spike_list[0][0] for s_dict in list_s_dict]
+            lines_spk = [f_exp.ax[2].axvline(x=x_val, linewidth=0.5, color='r') for x_val in list_evoked]
+            lines_spk = [f_exp.ax[3].axvline(x=x_val, linewidth=0.5, color='r') for x_val in list_evoked]
+
+        # handle mu_low and mu_high separately
+        if 'mu_low' in expmt_group:
+            dpl_mu_low_ev = Dipole(flist[0])
+            dpl_mu_low_ev.baseline_renormalize(fparam)
+            f_exp.ax[3].plot(dpl_mu_low_ev.t, dpl_mu_low_ev.dpl, color='k')
+
+            # get xlim stuff
+            t0 = dpl_mu_low_ev.t[0]
+            T = dpl_mu_low_ev.t[-1]
+
+        elif 'mu_high' in expmt_group:
+            dpl_mu_high_ev = Dipole(flist[0])
+            dpl_mu_high_ev.baseline_renormalize(fparam)
+            f_exp.ax[3].plot(dpl_mu_high_ev.t, dpl_mu_high_ev.dpl, color='b')
+
+    f_exp.ax[1].set_xlim(50., tstop)
+
+    for ax in f_exp.ax[2:]:
+        ax.set_xlim((t0, T))
+
+    # for ax in f_exp.ax_twinx:
+    #     ax.set_xlim(500., tstop)
+
+    # f_exp.ax[2].set_ylim(-2000., 6000)
 
     f_exp.savepng(fname_exp_fig)
     f_exp.close()

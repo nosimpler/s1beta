@@ -1,8 +1,8 @@
 # spikefn.py - dealing with spikes
 #
-# v 1.7.39
-# rev 2013-04-08 (SL: spikes from file requires ... fparam file, bin count function)
-# last major: (MS: fixed error in accounting for delays in alpha inputs)
+# v 1.7.41
+# rev 2013-04-12 (SL: pinput_hist() is a weird function)
+# last major: (SL: spikes from file requires ... fparam file, bin count function)
 
 import fileio as fio
 import numpy as np
@@ -293,6 +293,15 @@ def alpha_feed_verify(s_dict, p_dict):
             s_dict['alpha_feed_dist'] = type('emptyspike', (object,), {'spike_list': np.array([])})
 
     return s_dict
+
+# input histogram on 2 axes
+def pinput_hist(a0, a1, s_list0, s_list1, n_bins):
+    hists = {
+        'prox': a0.hist(s_list0, n_bins, color='red', label='Proximal input', alpha=0.75),
+        'dist': a1.hist(s_list1, n_bins, color='green', label='Proximal input', alpha=0.75),
+    }
+
+    return hists
 
 if __name__ == '__main__':
     print bin_count(150., 500.)

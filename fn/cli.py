@@ -1,8 +1,8 @@
 # cli.py - routines for the command line interface console s1sh.py
 #
-# v 1.7.39
-# rev 2013-04-08 (SL: added a split args function)
-# last major: (SL: some changes to sync, debug code test)
+# v 1.7.41
+# rev 2013-04-12 (SL: added function calc_dipole_avg() and a new pdipole run mode ev)
+# last major: (SL: added a split args function)
 
 from cmd import Cmd
 from datetime import datetime
@@ -95,10 +95,10 @@ class Console(Cmd):
     def do_debug(self, args):
         """Qnd function to test other functions
         """
-        self.do_setdate('2013-04-03')
-        self.do_load('evbeta_thresh_nonperceived-001')
-        self.do_pdipole('exp2')
-        # self.do_pdipole('evoked')
+        self.do_setdate('from_remote/2013-04-08')
+        self.do_load('evbeta_thresh_nonperceived-000')
+        self.do_calc_dipole_avg('')
+        self.do_pdipole('evaligned')
         # self.do_specmax('in (testing, 0, 4) on [0, 1000.]')
         # self.do_avgtrials('dpl')
         # self.do_replot('')
@@ -437,6 +437,11 @@ class Console(Cmd):
     #     dfig_spec = self.simpaths.dfigs['spec']
     #     fparam_list = self.simpaths.filelists['param']
     #     fspec_list = self.simpaths.filelists['rawdpl']
+    def do_calc_dipole_avg(self, args):
+        """Calculates average dipole using dipolefn.calc_avgdpl_stimevoked:
+           Usage: [s1] calc_dipole_avg
+        """
+        dipolefn.calc_avgdpl_stimevoked(self.ddata)
 
     def do_pdipole(self, args):
         """Regenerates plots in given directory. Usage:
@@ -452,6 +457,7 @@ class Console(Cmd):
             'exp',
             'exp2',
             'evoked',
+            'evaligned',
             'avg',
         ]
 
@@ -498,6 +504,9 @@ class Console(Cmd):
         elif runtype == 'evoked':
             # add the evoked lines to the pdipole individual simulations
             clidefs.exec_pdipole_evoked(self.ddata, ylim)
+
+        elif runtype == 'evaligned':
+            dipolefn.pdipole_evoked_aligned(self.ddata)
 
         elif runtype == 'avg':
             # plot average over all TRIALS of a param regime

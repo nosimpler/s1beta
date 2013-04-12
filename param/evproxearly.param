@@ -4,8 +4,8 @@
 # L() defines a linspace range
 # [ ] list comma separated values
 
-sim_prefix: evbeta_thresh_nonperceived
-expmt_groups: {mu_none, mu_low, mu_high}
+sim_prefix: evbeta_thresh_nonperceived-19
+expmt_groups: {mu_low, mu_high}
 
 # numbers of cells making up the pyramidal grids
 N_pyr_x: 10
@@ -49,23 +49,23 @@ f_input_dist: 10
 f_stdev_dist: 20.
 
 # thalamic input amplitudes and delays
-input_prox_A_weight_L2Pyr: {0., 4e-5, 6e-5}
-input_prox_A_weight_L5Pyr: {0., 4e-5, 6e-5}
-input_prox_A_weight_inh: {0., 8e-5, 1.2e-4}
+input_prox_A_weight_L2Pyr: {4e-5, 6e-5}
+input_prox_A_weight_L5Pyr: {4e-5, 6e-5}
+input_prox_A_weight_inh: {8e-5, 1.2e-4}
 input_prox_A_delay_L2: 0.1
 input_prox_A_delay_L5: 1.0
 
 # current values, not sure where these distal values come from, need to check
-input_dist_A_weight_L2Pyr: {0., 4e-5, 6e-5}
-input_dist_A_weight_L5Pyr: {0., 4e-5, 6e-5}
-input_dist_A_weight_inh: {0., 8e-5, 1.2e-4}
+input_dist_A_weight_L2Pyr: {4e-5, 6e-5}
+input_dist_A_weight_L5Pyr: {4e-5, 6e-5}
+input_dist_A_weight_inh: {8e-5, 1.2e-4}
 input_dist_A_delay_L2: 5.0
 input_dist_A_delay_L5: 5.0
 
 # evoked response strengths
 # evprox (early) feed strength
 # t_evprox_early: [0., 482.025]
-t_evprox_early: A(683.6, 738.6, 5.)
+t_evprox_early: A(144.948, 191.402, 5.)
 sigma_t_evprox_early: 0.
 gbar_evprox_early_L2Pyr: 1e-3
 gbar_evprox_early_L2Basket: 2e-3
@@ -98,8 +98,8 @@ N_trials: 1
 
 # these values will only be used with N_trials = 0
 # and when these values are not -1
-prng_seedcore_input_dist: 717536520
-prng_seedcore_input_prox: 844592256
+prng_seedcore_input_dist: 817612092
+prng_seedcore_input_prox: 710963573
 prng_seedcore_extpois: -1
 prng_seedcore_extgauss: -1
 prng_seedcore_evprox_early: -1
@@ -107,7 +107,7 @@ prng_seedcore_evdist: -1
 prng_seedcore_evprox_late: -1
 
 # Numerics
-tstop: 800.
+tstop: 1000.
 dt: 0.025
 
 # amplitudes of individual gaussian random inputs to L2Pyr and L5Pyr
