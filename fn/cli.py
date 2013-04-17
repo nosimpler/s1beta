@@ -1,8 +1,8 @@
 # cli.py - routines for the command line interface console s1sh.py
 #
-# v 1.7.41
-# rev 2013-04-12 (SL: added function calc_dipole_avg() and a new pdipole run mode ev)
-# last major: (SL: added a split args function)
+# v 1.7.42
+# rev 2013-04-17 (MS: Aggregate spec method can now take lists of labels as input)
+# last major: (SL: added function calc_dipole_avg() and a new pdipole run mode ev)
 
 from cmd import Cmd
 from datetime import datetime
@@ -581,7 +581,7 @@ class Console(Cmd):
         clidefs.exec_addalphahist(self.ddata, [xmin, xmax])
         # clidefs.add_alpha_feed_hist(self.ddata, [xmin, xmax])
 
-    def do_aggregatehist(self, args):
+    def do_aggregatespec(self, args):
         """Creates aggregates all spec data with histograms into one massive fig.
            Must supply column label and row label as --row_label:param --column_label:param"
            row_label should be param that changes only over experiments
@@ -593,7 +593,14 @@ class Console(Cmd):
         # Parse args
         for arg in arg_list:
             if arg.startswith('row'):
-                row_label = arg.split(':')[-1].split(' ')[0]
+                row_label = arg.split(':')[-1]
+
+                # See if a list is being passed in
+                if row_label.startswith('['):
+                    row_label = arg.split('[')[-1].split(']')[0].split(', ')
+
+                else:
+                    row_label = arg.split(':')[-1].split(' ')[0]
 
             elif arg.startswith('column'):
                 column_label = arg.split(':')[-1].split(' ')[0]
@@ -601,7 +608,7 @@ class Console(Cmd):
             else:
                 print "Did not recongnize argument. Going to break now."
 
-        clidefs.exec_aggregatehist(self.ddata, [row_label, column_label])
+        clidefs.exec_aggregatespec(self.ddata, [row_label, column_label])
 
     def do_plotaverages(self, args):
         """Creates plots of averaged dipole or spec data. Automatically checks if data exists. Usage:

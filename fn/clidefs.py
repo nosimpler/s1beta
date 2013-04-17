@@ -1,8 +1,8 @@
 # clidefs.py - these are all of the function defs for the cli
 #
-# v 1.7.39
-# rev 2013-04-08 (SL: persistent error in exec_pdipole_evoked)
-# last major: (SL: fixed a number of functions, comments, etc.)
+# v 1.7.42
+# rev 2013-04-17 (MS: Minor changes to exec_aggregatespec) 
+# last major: (SL: persistent error in exec_pdipole_evoked)
 
 # Standard modules
 import fnmatch, os, re, sys
@@ -324,7 +324,7 @@ def freqpwr_analysis(ddata, dsim, maxpwr):
     analysis_type = raw_input('Would you like analysis per expmt or for whole sim? (expmt or sim): ')
 
     spec_results = fio.file_match(ddata.dsim, '-spec.npz')
-    spec_results_avged = fio.file_match(ddata.dsim, '-avgspec.npz')
+    spec_results_avged = fio.file_match(ddata.dsim, '-specavg.npz')
     fparam_list = fio.file_match(ddata.dsim, '-param.txt')
 
     p_exp = paramrw.ExpParams(ddata.fparam)
@@ -466,7 +466,7 @@ def exec_addalphahist(ddata, xlim=[0, 'tstop']):
 
     plotfn.pdpl_pspec_with_hist(ddata, p_exp, spec_results, xlim)
 
-def exec_aggregatehist(ddata, labels):
+def exec_aggregatespec(ddata, labels):
     p_exp = paramrw.ExpParams(ddata.fparam)
 
     spec_results = fio.file_match(ddata.dsim, '-spec.npz')

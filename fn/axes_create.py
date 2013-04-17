@@ -1,8 +1,8 @@
 # axes_create.py - simple axis creation
 #
-# v 1.7.39
-# rev 2013-04-08 (SL: some changes in FigDipoleExp())
-# last major: (SL: added FigDipoleExp())
+# v 1.7.42
+# rev 2013-04-17 (MS: minor addition to label creation for aggregate spec figs)
+# last major: (SL: some changes in FigDipoleExp())
 
 # usage:
 # testfig = FigStd()
@@ -433,7 +433,16 @@ class FigAggregateSpecWithHist():
             x = self.left_margin / 2.
             y = 1. - self.top_margin - self.gap_height - gap / 2 - gap * i
 
-            self.f.text(x, y, key+': %s' %p_dict[key], fontsize=36, rotation='vertical', horizontalalignment='left', verticalalignment='center')
+            try:
+                if len(key) == self.N_rows:
+                    self.f.text(x, y, key[i], fontsize=36, rotation='vertical', horizontalalignment='left', verticalalignment='center')
+
+                else:
+                    print "Not enough row labels passed. Not using any"
+                    return 0
+
+            except TypeError:
+                self.f.text(x, y, key+': %s' %p_dict[key], fontsize=36, rotation='vertical', horizontalalignment='left', verticalalignment='center')
 
     def save(self, file_name):
         self.f.savefig(file_name, dpi=250)
