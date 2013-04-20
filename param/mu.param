@@ -145,3 +145,8 @@ events_per_cycle_prox: 2
 events_per_cycle_dist: 2
 distribution_dist: normal
 distribution_prox: normal
+
+# new params from default
+Itonic_A_L5Pyr_soma: 0.2
+Itonic_t0_L5Pyr_soma: 50.
+Itonic_T_L5Pyr_soma: -1

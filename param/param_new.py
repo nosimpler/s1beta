@@ -2,9 +2,9 @@
 # here contain all necessary keys
 # should be self-contained
 #
-# v 1.7.13
-# rev 2013-01-31 (SL: created)
-# last major:
+# v 1.7.43
+# rev 2013-04-20 (SL: some weird bug, not sure where/why, might be some kind of unique param file)
+# last major: (SL: created)
 
 import os, fnmatch, shutil, sys
 
@@ -28,7 +28,10 @@ def dict_from_lines(l):
 
     # populate dict
     for line in l:
+        # try:
         param, val = line.split(": ")
+        # except ValueError:
+        #     print line
         d[param] = val
 
     return d

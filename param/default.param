@@ -119,6 +119,11 @@ L5Basket_Gauss_sigma: 2.
 L5Basket_Pois_A_weight: 0.
 L5Basket_Pois_lamtha: 0.
 
+# Tonic input to L5Pyr
+Itonic_A_L5Pyr_soma: 0.2
+Itonic_t0_L5Pyr_soma: 50.
+Itonic_T_L5Pyr_soma: -1
+
 # analysis
 save_spec_data: 0
 spec_max_freq: 41.

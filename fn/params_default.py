@@ -1,8 +1,8 @@
 # params_default.py - list of default params and values
 #
-# v 1.7.21
-# rev 2013-02-14 (SL: Added params for L2 and L5 pyr separately in feeds)
-# last major: (MS: Added alpha feed distribution params. events_per_cycle now per feed)
+# v 1.7.43
+# rev 2013-04-20 (SL: Added basic IClamp params for L5Pyr)
+# last major: (SL: Added params for L2 and L5 pyr separately in feeds)
 
 # flat file of default values
 # tuples for different "experiments"
@@ -132,6 +132,11 @@ def get_params_default():
         # analysis
         'save_spec_data': 0,
         'spec_max_freq': 41.,
+
+        # IClamp params
+        'Itonic_A_L5Pyr_soma': 0.,
+        'Itonic_t0_L5Pyr_soma': 50.,
+        'Itonic_T_L5Pyr_soma': -1.,
 
         # numerics
         # N_trials of 0 means that seed is set by rank, will still run 1 trial (obviously)

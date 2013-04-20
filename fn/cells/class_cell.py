@@ -1,8 +1,8 @@
 # class_cell.py - establish class def for general cell features
 #
-# v 1.7.40
-# rev 2013-04-09 (SL: separated L2 and L5 dipoles)
-# last rev: (MS: method for adding IClamps to segs)
+# v 1.7.43
+# rev 2013-04-20 (SL: updated IClamp procedures)
+# last rev: (SL: separated L2 and L5 dipoles)
 
 import numpy as np
 import itertools as it
@@ -119,7 +119,8 @@ class Cell():
             dpp.ztan = y_diff[-1]
 
     # Add IClamp to a segment
-    def insert_iclamp(self, sect_name, seg_loc, tstart, tstop, weight):
+    def insert_IClamp(self, sect_name, props_IClamp):
+    # def insert_iclamp(self, sect_name, seg_loc, tstart, tstop, weight):
         # gather list of all sections
         seclist = nrn.SectionList()
         seclist.wholetree(sec=self.soma)
@@ -127,15 +128,18 @@ class Cell():
         # find specified sect in section list, insert IClamp, set props
         for sect in seclist:
             if sect_name in sect.name():
-                stim = nrn.IClamp(sect(seg_loc))
-                stim.delay = tstart
-                stim.dur = tstop - tstart
-                stim.amp = weight
+                stim = nrn.IClamp(sect(props_IClamp['loc']))
+                stim.delay = props_IClamp['delay']
+                stim.dur = props_IClamp['dur']
+                stim.amp = props_IClamp['amp']
+                # stim.dur = tstop - tstart
+                # stim = nrn.IClamp(sect(seg_loc))
 
+        # object must exist for NEURON somewhere and needs to be saved
         return stim
 
-    ## For all synapses, section location 'secloc' is being explicitly supplied 
-    ## for clarity, even though they are (right now) always 0.5. Might change in future
+    # For all synapses, section location 'secloc' is being explicitly supplied 
+    # for clarity, even though they are (right now) always 0.5. Might change in future
     # creates a RECEIVING inhibitory synapse at secloc
     def syn_gabaa_create(self, secloc):
         syn_gabaa = nrn.Exp2Syn(secloc)

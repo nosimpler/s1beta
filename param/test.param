@@ -147,3 +147,8 @@ input_prox_A_weight_L2Pyr: 4e-5
 input_prox_A_weight_L5Pyr: 4e-5
 input_dist_A_weight_L5Pyr: 4e-5
 input_dist_A_weight_L2Pyr: 4e-5
+
+# new params from default
+Itonic_A_L5Pyr_soma: 0.2
+Itonic_t0_L5Pyr_soma: 50.
+Itonic_T_L5Pyr_soma: -1

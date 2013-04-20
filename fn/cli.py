@@ -1,8 +1,8 @@
 # cli.py - routines for the command line interface console s1sh.py
 #
-# v 1.7.42
-# rev 2013-04-17 (MS: Aggregate spec method can now take lists of labels as input)
-# last major: (SL: added function calc_dipole_avg() and a new pdipole run mode ev)
+# v 1.7.43
+# rev 2013-04-20 (SL: minor)
+# last major: (MS: Aggregate spec method can now take lists of labels as input)
 
 from cmd import Cmd
 from datetime import datetime
@@ -324,7 +324,6 @@ class Console(Cmd):
         """Views the changes in the .params file. Use like 'load'
            but does not commit variables to workspace
         """
-        # droot = '/repo/data/audtc'
         dcheck = os.path.join(self.dproj, self.ddate, args)
 
         if os.path.exists(dcheck):

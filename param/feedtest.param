@@ -147,3 +147,8 @@ gbar_L5Basket_L5Pyr: 2.5e-2
 gbar_L5Basket_L5Basket: 2e-2
 gbar_L5Pyr_L5Basket: 5e-4
 gbar_L2Pyr_L5Basket: 2.5e-4
+
+# new params from default
+Itonic_A_L5Pyr_soma: 0.2
+Itonic_t0_L5Pyr_soma: 50.
+Itonic_T_L5Pyr_soma: -1

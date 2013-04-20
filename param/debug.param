@@ -10,12 +10,12 @@
 # linspaces of values, and experimental values.
 # Limitation: Will not work for feed distributions
 
-sim_prefix: test
+sim_prefix: iclamp-1grid
 expmt_groups: {testing0}
 
 # numbers of cells making up the pyramidal grids
-N_pyr_x: 2
-N_pyr_y: 2
+N_pyr_x: 1
+N_pyr_y: 1
 
 # maximal conductances for all synapses
 # max conductances TO L2Pyrs
@@ -127,6 +127,11 @@ L5Basket_Pois_lamtha: 0.
 # analysis
 save_spec_data: 1
 spec_max_freq: 41.
+
+# Tonic input to L5Pyr
+Itonic_A_L5Pyr_soma: 0.2
+Itonic_t0_L5Pyr_soma: 50.
+Itonic_T_L5Pyr_soma: -1
 
 # N_trials
 N_trials: 0
