@@ -126,7 +126,7 @@ L5Basket_Gauss_sigma: 2.
 L5Basket_Pois_A_weight: 0.
 L5Basket_Pois_lamtha: 0.
 
-# maximal conductacnes for all synapses
+# maximal conductances for all synapses
 # max conductances TO L2Pyrs
 gbar_L2Pyr_L2Pyr_ampa: 5e-4
 gbar_L2Pyr_L2Pyr_nmda: 5e-4
@@ -152,3 +152,8 @@ gbar_L2Pyr_L5Basket: 2.5e-4
 Itonic_A_L5Pyr_soma: 0.2
 Itonic_t0_L5Pyr_soma: 50.
 Itonic_T_L5Pyr_soma: -1
+
+# new params from default
+Itonic_T_L2Pyr_soma: -1
+Itonic_t0_L2Pyr_soma: 50.
+Itonic_A_L2Pyr_soma: 0.

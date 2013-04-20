@@ -150,3 +150,8 @@ distribution_prox: normal
 Itonic_A_L5Pyr_soma: 0.2
 Itonic_t0_L5Pyr_soma: 50.
 Itonic_T_L5Pyr_soma: -1
+
+# new params from default
+Itonic_T_L2Pyr_soma: -1
+Itonic_t0_L2Pyr_soma: 50.
+Itonic_A_L2Pyr_soma: 0.

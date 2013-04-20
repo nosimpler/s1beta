@@ -2,9 +2,9 @@
 # here contain all necessary keys
 # should be self-contained
 #
-# v 1.7.43
-# rev 2013-04-20 (SL: some weird bug, not sure where/why, might be some kind of unique param file)
-# last major: (SL: created)
+# v 1.7.44
+# rev 2013-04-20 (SL: bug was in malformed param file)
+# last major: (SL: some weird bug, not sure where/why, might be some kind of unique param file)
 
 import os, fnmatch, shutil, sys
 
@@ -64,8 +64,9 @@ def check_missing(write_mode='p'):
     # now do similar for each other file in the set
     for f_param in flist:
         # create a backup file
-        f_backup = f_param+'.bak'
-        shutil.copyfile(f_param, f_backup)
+        if write_mode == 'a':
+            f_backup = f_param+'.bak'
+            shutil.copyfile(f_param, f_backup)
 
         # get the pure lines (to be written back later)
         l_param = purelines(f_param)

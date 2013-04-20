@@ -1,8 +1,8 @@
 # class_net.py - establishes the Network class and related methods
 #
-# v 1.7.43
-# rev 2013-04-20 (SL: creating IClamps externally to the L5Pyr(), right after creation)
-# last major: (SL: minor in this file)
+# v 1.7.44
+# rev 2013-04-20 (SL: added IClamps to L2Pyr())
+# last major: (SL: creating IClamps externally to the L5Pyr(), right after creation)
 
 import itertools as it
 import numpy as np
@@ -281,6 +281,10 @@ class Network():
                 if type == 'L2_pyramidal':
                     self.cells_list.append(L2Pyr(pos))
                     self.pc.cell(gid, self.cells_list[-1].connect_to_target(None))
+
+                    # run the IClamp function here
+                    # create_all_IClamp() is defined in L2Pyr (etc)
+                    self.cells_list[-1].create_all_IClamp(self.p)
 
                 elif type == 'L5_pyramidal':
                     self.cells_list.append(L5Pyr(pos))

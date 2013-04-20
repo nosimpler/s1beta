@@ -1,8 +1,8 @@
 # L2_pyramidal.py - est class def for layer 2 pyramidal cells
 #
-# v 1.7.28
-# rev 2013-03-02 (MS: inactive example code for adding iclamps)
-# last rev: (SL: removed autapses)
+# v 1.7.44
+# rev 2013-04-20 (SL: Added IClamp def, very much redundant with L5Pyr())
+# last rev: (MS: inactive example code for adding iclamps)
 
 from neuron import h as nrn
 from class_cell import Pyr
@@ -41,13 +41,40 @@ class L2Pyr(Pyr):
         # create synapses
         self.__synapse_create()
 
-        # insert proximal IClamps
-        # self.stim_list = []
-        # for sect_name in ('apical_oblique', 'basal_2', 'basal_3'):
-        #     self.stim_list.append(self.insert_iclamp(sect_name, 0.5, 50, 950, 0.01))
+    # insert IClamps in all situations
+    # temporarily an external function taking the p dict
+    def create_all_IClamp(self, p):
+        # list of sections for this celltype
+        sect_list_IClamp = [
+            'soma',
+        ]
 
-        # insert distal IClamp
-        # self.stim_list.append(self.insert_iclamp('apical_tuft', 0.5, 105, 405, 0.01))
+        # some parameters
+        t_delay = p['Itonic_t0_L2Pyr_soma']
+
+        # T = -1 means use nrn.tstop
+        if p['Itonic_T_L2Pyr_soma'] == -1:
+            # t_delay = 50.
+            t_dur = nrn.tstop - t_delay
+        else:
+            t_dur = p['Itonic_T_L2Pyr_soma'] - t_delay
+
+        # t_dur must be nonnegative, I imagine
+        if t_dur < 0.:
+            t_dur = 0.
+
+        # properties of the IClamp
+        props_IClamp = {
+            'loc': 0.5,
+            'delay': t_delay,
+            'dur': t_dur,
+            'amp': p['Itonic_A_L2Pyr_soma']
+        }
+
+        # iterate through list of sect_list_IClamp to create a persistent IClamp object
+        # the insert_IClamp procedure is in Cell() and checks on names
+        # so names must be actual section names, or else it will fail silently
+        self.list_IClamp = [self.insert_IClamp(sect_name, props_IClamp) for sect_name in sect_list_IClamp]
 
     # Set somatic properties
     def __set_soma_props(self, pos):

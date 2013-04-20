@@ -1,8 +1,8 @@
 # L5_pyramidal.py - establish class def for layer 5 pyramidal cells
 #
-# v 1.7.43
-# rev 2013-04-20 (SL: Updated IClamp procedures in L5Pyr())
-# last rev: (MS: inactive example code for adding iclamps)
+# v 1.7.44
+# rev 2013-04-20 (SL: minor)
+# last rev: (SL: Updated IClamp procedures in L5Pyr())
 
 from neuron import h as nrn
 from class_cell import Pyr
@@ -44,7 +44,6 @@ class L5Pyr(Pyr):
 
         # insert iclamp
         self.list_IClamp = []
-        # self.create_all_IClamp()
 
     # insert IClamps in all situations
     # temporarily an external function taking the p dict

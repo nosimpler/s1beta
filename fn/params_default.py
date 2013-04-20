@@ -1,8 +1,8 @@
 # params_default.py - list of default params and values
 #
-# v 1.7.43
-# rev 2013-04-20 (SL: Added basic IClamp params for L5Pyr)
-# last major: (SL: Added params for L2 and L5 pyr separately in feeds)
+# v 1.7.44
+# rev 2013-04-20 (SL: added IClamp params to L2Pyr)
+# last major: (SL: Added basic IClamp params for L5Pyr)
 
 # flat file of default values
 # tuples for different "experiments"
@@ -133,7 +133,12 @@ def get_params_default():
         'save_spec_data': 0,
         'spec_max_freq': 41.,
 
-        # IClamp params
+        # IClamp params for L2Pyr
+        'Itonic_A_L2Pyr_soma': 0.,
+        'Itonic_t0_L2Pyr_soma': 50.,
+        'Itonic_T_L2Pyr_soma': -1.,
+
+        # IClamp params for L5Pyr
         'Itonic_A_L5Pyr_soma': 0.,
         'Itonic_t0_L5Pyr_soma': 50.,
         'Itonic_T_L5Pyr_soma': -1.,
