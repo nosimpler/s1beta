@@ -1,8 +1,8 @@
-# spec.py - Average time-frequency energy representation using Morlet wavelet method
+# specfn.py - Average time-frequency energy representation using Morlet wavelet method
 #
-# v 1.7.39
-# rev 2013-04-08 (SL: a true pspec to plot to an axis)
-# last major: (MS: Method to plot spec data with dpl and hist to supplied axis)
+# v 1.7.45
+# rev 2013-04-23 (SL: Renamed pspecone() to pspec_ax(). Added fn generate_missing_spec())
+# last major: (SL: a true pspec to plot to an axis)
 
 import os
 import sys
@@ -165,7 +165,8 @@ class MorletSpec():
 
 # spectral plotting kernel should be simpler and take just a file name and an axis handle
 # Spectral plotting kernel for ONE simulation run
-def pspecone(ax_spec, fspec):
+# ax_spec is the axis handle. fspec is the file name
+def pspec_ax(ax_spec, fspec):
     # read is a function in this file to read the fspec
     data_spec = read(fspec)
     TFR = data_spec['TFR']
@@ -368,6 +369,25 @@ def pspec_with_hist(dspec, f_dpl, f_spk, dfig, p_dict, gid_dict, key_types, xlim
     f.savepng(fig_name)
     f.close()
 
+# common function to generate spec if it appears to be missing
+def generate_missing_spec(ddata, f_max=40):
+    # just check first expmt_group
+    expmt_group = ddata.expmt_groups[0]
+
+    # list of spec data
+    l_spec = ddata.file_match(expmt_group, 'rawspec')
+
+    # if this list is empty, assume it is everywhere and run the analysis function
+    if not l_spec:
+        spec = analysis(ddata, [], f_max, 1)
+    else:
+        # this is currently incorrect, it should actually return the data that has been referred to
+        # as spec_results. such a function to properly get this without analysis (eg. reader to this data)
+        # should exist
+        spec = []
+
+    return spec
+
 # this must be globally available for callback function append_spec
 spec_results = []
 
@@ -376,8 +396,8 @@ def append_spec(spec_obj):
     spec_results.append(spec_obj)
 
 # Does spec analysis for all files in simulation directory
-# ddir comes from fileio
-def analysis(ddir, p_exp, max_freq=None, save_data=None):
+# ddata comes from fileio
+def analysis(ddata, p_exp, max_freq=None, save_data=None):
     runtype = 'parallel'
 
     # preallocate lists for use below
@@ -386,22 +406,22 @@ def analysis(ddir, p_exp, max_freq=None, save_data=None):
     spec_list = []
 
     # aggregrate all file from individual expmts into lists
-    for expmt_group in ddir.expmt_groups:
+    for expmt_group in ddata.expmt_groups:
         # get the list of params
         # returns an alpha SORTED list
         # store expmt param list temporarily for use below
-        param_tmp = ddir.file_match(expmt_group, 'param')
+        param_tmp = ddata.file_match(expmt_group, 'param')
 
         # add param_tmp to list of all param files
         param_list.extend(param_tmp)
 
         # get the list of dipoles
-        dpl_list.extend(ddir.file_match(expmt_group, 'rawdpl'))
+        dpl_list.extend(ddata.file_match(expmt_group, 'rawdpl'))
 
         # create list of spec output names
         # this is sorted because of file_match
         exp_prefix_list = [fio.strip_extprefix(fparam) for fparam in param_tmp]
-        spec_list.extend([ddir.create_filename(expmt_group, 'rawspec', exp_prefix) for exp_prefix in exp_prefix_list])
+        spec_list.extend([ddata.create_filename(expmt_group, 'rawspec', exp_prefix) for exp_prefix in exp_prefix_list])
 
     # perform analysis on all runs from all exmpts at same time
     if runtype == 'parallel':
@@ -420,7 +440,6 @@ def analysis(ddir, p_exp, max_freq=None, save_data=None):
             spec_results.append(MorletSpec(fparam, fdpl, fspec, max_freq, save_data))
 
         return spec_results
-
 
 # returns spec results *only* for a given experimental group
 def from_expmt(spec_result_list, expmt_group):

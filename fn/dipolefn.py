@@ -1,8 +1,8 @@
 # dipolefn.py - dipole-based analysis functions
 #
-# v 1.7.41
-# rev 2013-04-12 (SL: added calc_avgdpl_stimevoked() and related plot)
-# last major: (SL: Dipole class reads new data, doesn't do baseline normalization yet)
+# v 1.7.45
+# rev 2013-04-23 (SL: added a proper pdipole to an axis handle)
+# last major: (SL: added calc_avgdpl_stimevoked() and related plot)
 
 import fileio as fio
 import numpy as np
@@ -147,6 +147,25 @@ def calc_avgdpl_stimevoked(ddata):
         with open(fname_data, 'w') as f:
             for t, x in it.izip(t_dpl, dpl_mean):
                 f.write("%03.3f\t%5.4f\n" % (t, x))
+
+# plot a dipole to an axis from corresponding dipole and param files
+def pdipole_ax(a, f_dpl, f_param):
+    dpl = Dipole(f_dpl)
+    dpl.baseline_renormalize(f_param)
+
+    a.plot(dpl.t, dpl.dpl)
+
+    # any further xlim sets can be done by whoever wants to do them later
+    a.set_xlim((0., dpl.t[-1]))
+
+    # at least make the ylim symmetrical about 0
+    ylim = a.get_ylim()
+    abs_y_max = np.max(np.abs(ylim))
+    ylim = (-abs_y_max, abs_y_max)
+    a.set_ylim(ylim)
+
+    # return the actual time in form of xlim. ain't pretty but works
+    return a.get_xlim()
 
 # pdipole is for a single dipole file, should be for a 
 # single dipole file combination (incl. param file)
@@ -496,7 +515,7 @@ def pdipole_exp2(ddata):
     ymax = 2 * max_hist
 
     # plot the spec here
-    pc = specfn.pspecone(f_exp.ax[0], fspec_mu_low)
+    pc = specfn.pspec_ax(f_exp.ax[0], fspec_mu_low)
     print f_exp.ax[0].get_xlim()
 
     # deal with the axes here
@@ -643,7 +662,7 @@ def pdipole_evoked_aligned(ddata):
     ymax = 2 * max_hist
 
     # plot the spec here
-    pc = specfn.pspecone(f_exp.ax[0], fspec_mu_low)
+    pc = specfn.pspec_ax(f_exp.ax[0], fspec_mu_low)
 
     # deal with the axes here
     f_exp.ax_twinx[n_dist].set_ylim((ymax, 0))

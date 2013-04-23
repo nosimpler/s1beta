@@ -1,8 +1,8 @@
 # cli.py - routines for the command line interface console s1sh.py
 #
-# v 1.7.43
-# rev 2013-04-20 (SL: minor)
-# last major: (MS: Aggregate spec method can now take lists of labels as input)
+# v 1.7.45
+# rev 2013-04-23 (SL: praw function, this might be an eventual replacement for the standard fig)
+# last major: (SL: minor)
 
 from cmd import Cmd
 from datetime import datetime
@@ -16,6 +16,8 @@ import specfn
 import dipolefn
 from praster import praster
 from ppsth import ppsth, ppsth_grid
+
+import praw
 
 class Console(Cmd):
     def __init__(self, file_input=""):
@@ -95,10 +97,11 @@ class Console(Cmd):
     def do_debug(self, args):
         """Qnd function to test other functions
         """
-        self.do_setdate('from_remote/2013-04-08')
-        self.do_load('evbeta_thresh_nonperceived-000')
-        self.do_calc_dipole_avg('')
-        self.do_pdipole('evaligned')
+        self.do_setdate('2013-04-20')
+        self.do_load('gamma_ping_L5_1x1-007')
+        self.do_praw('')
+        # self.do_calc_dipole_avg('')
+        # self.do_pdipole('evaligned')
         # self.do_specmax('in (testing, 0, 4) on [0, 1000.]')
         # self.do_avgtrials('dpl')
         # self.do_replot('')
@@ -110,6 +113,12 @@ class Console(Cmd):
         # self.do_show('L2Pyr_L5Pyr_wL2Bask changed in 0')
         # self.epscompress('spk')
         # self.do_psthgrid()
+
+    def do_praw(self, args):
+        '''praw is a fully automated function to replace the dipole plots with aggregate dipole/spec/spikes plots. Usage:
+           [s1] praw
+        '''
+        praw.praw(self.ddata)
 
     # update the dlist
     def __update_dlist(self):
@@ -535,7 +544,7 @@ class Console(Cmd):
                     xmax = float(arg.split('=')[-1])
 
                 else:
-                    print "Did not recognize argument %s. Not doing anything with it" %arg
+                    print "Did not recognize argument %s. Not doing anything with it" % arg
 
             # Check to ensure xmin less than xmax
             if xmin and xmax:

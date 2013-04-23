@@ -1,8 +1,8 @@
 # clidefs.py - these are all of the function defs for the cli
 #
-# v 1.7.42
-# rev 2013-04-17 (MS: Minor changes to exec_aggregatespec) 
-# last major: (SL: persistent error in exec_pdipole_evoked)
+# v 1.7.45
+# rev 2013-04-23 (SL: minor)
+# last major: (MS: Minor changes to exec_aggregatespec) 
 
 # Standard modules
 import fnmatch, os, re, sys
@@ -310,6 +310,7 @@ def exec_avgtrials(ddata, datatype):
                 # save the aggregate info
                 np.savez_compressed(fname_unique, time=timevec, freq=freqvec, TFR=spec_avg)
 
+# this function can now use specfn.generate_missing_spec(ddata, f_max)
 def regenerate_spec_data(ddata, max_freq=None):
     # regenerates and saves spec data
     p_exp = paramrw.ExpParams(ddata.fparam)
