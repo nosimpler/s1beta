@@ -1,8 +1,8 @@
 # cli.py - routines for the command line interface console s1sh.py
 #
-# v 1.7.46
-# rev 2013-04-25 (SL: updated do_vars() and do_show(). See help for info)
-# last major: (SL: praw function, this might be an eventual replacement for the standard fig)
+# v 1.7.46a
+# rev 2013-04-25 (SL: updated do_show() to account for N_trials = 0)
+# last major: (SL: updated do_vars() and do_show(). See help for info)
 
 from cmd import Cmd
 from datetime import datetime
@@ -98,8 +98,8 @@ class Console(Cmd):
         """Qnd function to test other functions
         """
         self.do_setdate('2013-04-25')
-        self.do_load('gamma_ping_L5_1x1-002')
-        self.do_show('spike in (1, 0)')
+        self.do_load('gamma_ping_L5_1x1-001')
+        self.do_show('spike in (4, 0)')
         # self.do_praw('')
         # self.do_calc_dipole_avg('')
         # self.do_pdipole('evaligned')
@@ -729,11 +729,19 @@ class Console(Cmd):
             print "Confused?"
             return 0
 
+        # will we always be making up for this
+        if not self.p_exp.N_trials:
+            N_trials = 1
+        else:
+            N_trials = 0
+
         # check to make sure both sim and trial exist
-        if (N < self.p_exp.N_sims) and (N_T < self.p_exp.N_trials):
+        if (N < self.p_exp.N_sims) and (N_T < N_trials):
+        # if (N < self.p_exp.N_sims) and (N_T < self.p_exp.N_trials):
             # create the filename
             fname_short = self.p_exp.trial_prefix_str % (N, N_T) + '-param.txt'
             fname = os.path.join(self.ddata.dfig[expmt_group]['param'], fname_short)
+
             if os.path.isfile(fname):
                 print fname
 
@@ -756,6 +764,8 @@ class Console(Cmd):
             print ""
         else:
             print "Either N or N_T might be incorrect"
+            # print N, N_T
+            # print self.p_exp.N_sims, self.p_exp.N_trials
             return 0
             # print dir(self.p_exp)
             # print dir(self.ddata)
