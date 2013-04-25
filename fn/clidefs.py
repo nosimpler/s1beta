@@ -1,8 +1,8 @@
 # clidefs.py - these are all of the function defs for the cli
 #
-# v 1.7.45
-# rev 2013-04-23 (SL: minor)
-# last major: (MS: Minor changes to exec_aggregatespec) 
+# v 1.7.47
+# rev 2013-04-25 (SL: added a qnd png_viewer_simple())
+# last major: (SL: minor)
 
 # Standard modules
 import fnmatch, os, re, sys
@@ -701,6 +701,25 @@ def file_viewer(ddata, expmt):
     else:
         dexpmt = os.path.join(ddata, expmt)
         view_img(dexpmt, 'png')
+
+# a really simple image viewer, views images in dimg
+def png_viewer_simple(dimg):
+    list_fpng = fio.file_match(dimg, '*.png')
+
+    # Create an empty file argument
+    files_arg = ''
+    for file in list_fpng:
+        files_arg += file + ' '
+
+    # uses xee
+    if sys.platform.startswith('darwin'):
+        app_img = 'open -a xee '
+        call([app_img + files_arg], shell=True)
+
+    # uses eye of gnome (eog)
+    elif sys.platform.startswith('linux'):
+        app_img = 'eog '
+        call([app_img + files_arg + '&'], shell=True)
 
 # Commonly used plot commands, just really writing them down.
 # def plotcmds():

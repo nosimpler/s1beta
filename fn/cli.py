@@ -1,8 +1,8 @@
 # cli.py - routines for the command line interface console s1sh.py
 #
-# v 1.7.46a
-# rev 2013-04-25 (SL: updated do_show() to account for N_trials = 0)
-# last major: (SL: updated do_vars() and do_show(). See help for info)
+# v 1.7.47
+# rev 2013-04-25 (SL: Fixed pngv(), a cross platform file viewer. Uses eog on Linux, xee on Mac)
+# last major: (SL: updated do_show() to account for N_trials = 0)
 
 from cmd import Cmd
 from datetime import datetime
@@ -99,7 +99,8 @@ class Console(Cmd):
         """
         self.do_setdate('2013-04-25')
         self.do_load('gamma_ping_L5_1x1-001')
-        self.do_show('spike in (4, 0)')
+        self.do_pngv('')
+        # self.do_show('spike in (4, 0)')
         # self.do_praw('')
         # self.do_calc_dipole_avg('')
         # self.do_pdipole('evaligned')
@@ -824,18 +825,35 @@ class Console(Cmd):
     def do_pngv(self, args):
         """Attempt to find the PNGs and open them
         """
-        if args == 'all':
-            clidefs.file_viewer(self.dsim, 'all')
+        # assume args is an experiment
+        if not args:
+            # try the first of them
+            expmt_group = self.ddata.expmt_groups[0]
         else:
-            # pretest to see if the experimental directory exists
-            if not os.path.isdir(os.path.join(self.dsim, args, 'spec')):
-                print "Defaulting to first. Try one of: "
-                clidefs.prettyprint(self.expmts)
-                expmt = os.path.join(self.dsim, self.expmts[0])
-            else:
-                expmt = args
+            expmt_group = args
 
-            file_viewer(self.dsim, expmt)
+        if expmt_group not in self.ddata.expmt_groups:
+            print "Try one of these:"
+            print self.ddata.expmt_groups
+            return 0
+
+        else:
+            # for now do just figdpl
+            dimg = os.path.join(self.ddata.dsim, expmt_group, 'figdpl')
+            clidefs.png_viewer_simple(dimg)
+
+        # if args == 'all':
+        #     clidefs.file_viewer(self.dsim, 'all')
+        # else:
+        #     # pretest to see if the experimental directory exists
+        #     if not os.path.isdir(os.path.join(self.dsim, args, 'spec')):
+        #         print "Defaulting to first. Try one of: "
+        #         clidefs.prettyprint(self.expmts)
+        #         expmt = os.path.join(self.dsim, self.expmts[0])
+        #     else:
+        #         expmt = args
+
+        #     file_viewer(self.dsim, expmt)
 
     def complete_pngv(self, text, line, j0, J):
         if text:
