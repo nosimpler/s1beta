@@ -1,8 +1,8 @@
 # cli.py - routines for the command line interface console s1sh.py
 #
-# v 1.7.45
-# rev 2013-04-23 (SL: praw function, this might be an eventual replacement for the standard fig)
-# last major: (SL: minor)
+# v 1.7.46
+# rev 2013-04-25 (SL: updated do_vars() and do_show(). See help for info)
+# last major: (SL: praw function, this might be an eventual replacement for the standard fig)
 
 from cmd import Cmd
 from datetime import datetime
@@ -97,9 +97,10 @@ class Console(Cmd):
     def do_debug(self, args):
         """Qnd function to test other functions
         """
-        self.do_setdate('2013-04-20')
-        self.do_load('gamma_ping_L5_1x1-007')
-        self.do_praw('')
+        self.do_setdate('2013-04-25')
+        self.do_load('gamma_ping_L5_1x1-002')
+        self.do_show('spike in (1, 0)')
+        # self.do_praw('')
         # self.do_calc_dipole_avg('')
         # self.do_pdipole('evaligned')
         # self.do_specmax('in (testing, 0, 4) on [0, 1000.]')
@@ -109,8 +110,6 @@ class Console(Cmd):
         # self.do_addalphahist('--xmin=0 --xmax=500')
         # self.do_avgtrials('dpl')
         # self.do_dipolemin('in (mu, 0, 2) on [400., 410.]')
-        # self.do_load('simple_synaptic-006')
-        # self.do_show('L2Pyr_L5Pyr_wL2Bask changed in 0')
         # self.epscompress('spk')
         # self.do_psthgrid()
 
@@ -169,6 +168,7 @@ class Console(Cmd):
             # set dsim after using ddata's readsim method
             self.dsim = self.ddata.read_sim(self.dproj, dir_check)
             self.p_exp = paramrw.ExpParams(self.ddata.fparam)
+            self.var_list = paramrw.changed_vars(self.ddata.fparam)
 
         else:
             print dir_check
@@ -306,12 +306,6 @@ class Console(Cmd):
         print "datelist is:", self.datelist
         print "expmts is:", self.expmts
 
-    ## Command definitions ##
-    # def do_file(self, args):
-    #     """Print .params file being read for simulations
-    #     """
-    #     print self.file_input
-
     def do_expmts(self, args):
         """Show list of experiments for active directory.
         """
@@ -322,13 +316,19 @@ class Console(Cmd):
             print "No active directory?"
 
     def do_vars(self, args):
-        """Show variables in simulation and their values
+        """Show changed variables in loaded simulation and their values. Usage:
+           [s1] vars
         """
-        self.do_expmts([])
+        print "\nVars changed in this simulation:"
 
+        # iterate through params and print them raw
         for var in self.var_list:
-            print var[0]+":", var[1]
+            print "  %s: %s" % (var[0], var[1])
 
+        # cheap newline
+        print ""
+
+    # this is an old function obsolete for this project
     def do_view(self, args):
         """Views the changes in the .params file. Use like 'load'
            but does not commit variables to workspace
@@ -439,12 +439,6 @@ class Console(Cmd):
     def do_freqpwrwithhist(self, args):
         clidefs.freqpwr_with_hist(self.ddata, self.dsim)
 
-    # def do_pspec(self, args):
-    #     """Regenerates spec plots in given directory
-    #     """
-    #     dfig_spec = self.simpaths.dfigs['spec']
-    #     fparam_list = self.simpaths.filelists['param']
-    #     fspec_list = self.simpaths.filelists['rawdpl']
     def do_calc_dipole_avg(self, args):
         """Calculates average dipole using dipolefn.calc_avgdpl_stimevoked:
            Usage: [s1] calc_dipole_avg
@@ -587,7 +581,6 @@ class Console(Cmd):
                     xmax = 'tstop'
 
         clidefs.exec_addalphahist(self.ddata, [xmin, xmax])
-        # clidefs.add_alpha_feed_hist(self.ddata, [xmin, xmax])
 
     def do_aggregatespec(self, args):
         """Creates aggregates all spec data with histograms into one massive fig.
@@ -711,102 +704,71 @@ class Console(Cmd):
 
     def do_show(self, args):
         """show: shows a list of params that starts with 'param' for simulation n
-           Usage: show <expmt> <changed> in <N>
+           Usage: show <expmt> in (<N>, <N_T>)
            where <expmt> is one of the experimental groups,
-                 <changed> is a keyword for all the changed params for this sim
-                 and <N> is the sim number. Does not currently query trials for seeds.
+                 <N> is the sim number, and <N_T> is the trial number
         """
         key_dict = self.p_exp.get_key_types()
+        # print self.p_exp.N_sims, self.p_exp.N_trials
 
         # print args
         vars = args.split(' in ')
-        expmt, search_str = vars[0].split(' ')
-        j_exp = int(vars[-1])
-        print expmt, search_str, j_exp
+        expmt_group = vars[0]
+        # expmt, search_str = vars[0].split(' ')
 
-        if expmt in self.ddata.expmt_groups:
-            if search_str == 'changed':
-                p_sim = self.p_exp.return_pdict(expmt, j_exp)
-                for key in key_dict['dynamic_keys']:
-                    print "%s: %4.5f" % (key, p_sim[key])
+        # check to see if the expmt_group is valid
+        if expmt_group not in self.ddata.expmt_groups:
+            print "Perhaps not a valid experiment? Try:"
+            print self.ddata.expmt_groups
+            return 0
 
-        # # print vars
-        # if len(vars) == 2:
-        #     # split was successful
-        #     s0 = vars[0].split()
+        # now get the tuple representing the N and N_T
+        try:
+            N, N_T = ast.literal_eval(vars[-1])
+        except:
+            print "Confused?"
+            return 0
 
-        #     # print s0
-        #     # try to split s0
-        #     # s0_vars = s0.split()
-        #     if len(s0) == 2:
-        #         expmt = s0[0]
-        #         prange = s0[1]
-        #     else:
-        #         print "Needs two arguments before ' in '"
-        #         return 0
+        # check to make sure both sim and trial exist
+        if (N < self.p_exp.N_sims) and (N_T < self.p_exp.N_trials):
+            # create the filename
+            fname_short = self.p_exp.trial_prefix_str % (N, N_T) + '-param.txt'
+            fname = os.path.join(self.ddata.dfig[expmt_group]['param'], fname_short)
+            if os.path.isfile(fname):
+                print fname
 
-        #     # s1 is the sim number
-        #     n = int(vars[1])
-        # else:
-        #     # attempt to split by space
-        #     s0 = vars[0].split()
-        #     # print s0
-        #     if len(s0) == 2:
-        #         expmt = s0[0]
-        #         prange = s0[1]
+            gid_dict, p = paramrw.read(fname)
+            print "\nChanged vars and some standard vars:"
+            for var in self.var_list:
+                print "  %s:" % var[0], p[var[0]]
 
-        #         # assume 0
-        #         n = 0
-        #     else:
-        #         # assume first is expmt and try to proceed with changed
-        #         expmt = s0[0]
-        #         prange = 'changed'
-        #         n = 0
+            # print some additional info
+            list_meta = [
+                'Trial',
+                'N_pyr_x',
+                'N_pyr_y',
+            ]
+            # print p.keys()
+            for key in list_meta:
+                if key in p.keys():
+                    print "  %s:" % key, p[key]
 
-        # # Find the param list to traverse based on expmt
-        # if expmt in self.expmts:
-        #     plist = [ex[1] for ex in self.param_list if ex[0] == expmt][0]
-        # else:
-        #     print "No such experiment?"
-        #     return 0
+            print ""
+        else:
+            print "Either N or N_T might be incorrect"
+            return 0
+            # print dir(self.p_exp)
+            # print dir(self.ddata)
+            # print self.p_exp.trial_prefix_str
+            # print self.ddata.dfig
+        # j_exp = int(vars[-1])
+        # print expmt, search_str, j_exp
 
-        # # print plist
-        # # Search for params based on prange
-        # if prange == 'changed':
-        #     # get the changed params and then print those values from the given simulation
-        #     if n < self.N_sims:
-        #         for line in self.var_list:
-        #             # Get the value of the param
-        #             with open(plist[n]) as f_params:
-        #                 params = (param.rstrip() for param in f_params)
-        #                 params = [param for param in params if param.startswith(line[0])]
-
-        #             print params[0]
-        #     else:
-        #         print "No such simulation"
-        #         return 0
-
-        # elif prange == 'all':
-        #     if n < self.N_sims:
-        #         with open(plist[n]) as f_params:
-        #             lines = (line.rstrip() for line in f_params)
-        #             lines = [line for line in lines if line]
-
-        #         clidefs.prettyprint(lines)
-        #     else:
-        #         print "No such simulation"
-        #         return 0
-
-        # else:
-        #     if n < self.N_sims:
-        #         with open(plist[n]) as f_params:
-        #             lines = (line.rstrip() for line in f_params)
-        #             lines = [line for line in lines if line.startswith(prange)]
-
-        #         clidefs.prettyprint(lines)
-        #     else:
-        #         print "No such simulation"
-        #         return 0
+        # if expmt in self.ddata.expmt_groups:
+        #     if search_str == 'changed':
+        #         p_sim = self.p_exp.return_pdict(expmt, j_exp)
+        #         for key in key_dict['dynamic_keys']:
+        #             print "%s: %4.5f" % (key, p_sim[key])
 
     def complete_show(self, text, line, j0, J):
         """Completion function for show

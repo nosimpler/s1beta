@@ -1,8 +1,8 @@
 # paramrw.py - routines for reading the param files
 #
-# v 1.7.39
-# rev 2013-04-08 (SL: find_param function to randomly find a param from a fparam file)
-# last major: (SL: added arange to the possibilities, I hope this doesn't break a lot of stuff)
+# v 1.7.46
+# rev 2013-04-25 (SL: updated changed_vars() function, but it may be redundant anyway)
+# last major: (SL: find_param function to randomly find a param from a fparam file)
 
 import re
 import fileio as fio
@@ -570,24 +570,25 @@ def create_pext(p, tstop):
 
     return p_ext, p_unique
 
-# # reads and interprets inputs from the params
-# def read_extinputs(f_param):
-#     # use the general reader
-#     gid_dict, p = read(f_param)
-# 
-#     N_extinput = len(gid_dict['extinput'])
-
 # Finds the changed variables
-def changed_vars(sim_list):
-    if len(sim_list) > 1:
-        print "Have more params in here than expected. Just sayin'"
-
+# sort of inefficient, probably should be part of something else
+# not worried about all that right now, as it appears to work
+# brittle in that the match string needs to be correct to find all the changed params
+# is redundant with(?) get_key_types() dynamic keys information
+def changed_vars(fparam):
     # Strip empty lines and comments
-    lines = fio.clean_lines(sim_list[0])
+    lines = fio.clean_lines(fparam)
     lines = [line for line in lines if line[0] != '#']
 
-    keyvals = list(line.split(": ") for line in lines)
-    var_list = list(line for line in keyvals if re.match('[KL\(]', line[1][0]))
+    keyvals = [line.split(": ") for line in lines]
+    var_list = [line for line in keyvals if re.match('[AKL\(]', line[1][0])]
+    # additional info to add
+    # list_meta = [
+    #     'N_trials',
+    #     'N_sims',
+    #     'Run_Date'
+    # ]
+    # var_list += [line for line in keyvals if line[0] in list_meta]
 
     return var_list
 

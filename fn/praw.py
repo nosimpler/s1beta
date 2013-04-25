@@ -1,8 +1,8 @@
 # praw.py - all of the raw data types on one fig
 #
-# v 1.7.45a
-# rev 2013-04-25 (SL: axis error fixed)
-# last major: (SL: created)
+# v 1.7.46
+# rev 2013-04-25 (SL: added crude check for L2 versus L5 spikes to plot)
+# last major: (SL: axis error fixed)
 
 import fileio as fio
 import numpy as np
@@ -53,12 +53,35 @@ def praw(ddata):
             pc = specfn.pspec_ax(f.ax[1], f_spec)
             # f.f.colorbar(pc, ax=f.ax[1])
 
-            # empty spike dict for L2 with keys that must match keys in s
-            s_new = {
-                'L2_pyramidal': None,
-                'L2_basket': None,
-            }
+            # get all spikes
             s = spikefn.spikes_from_file(f_param, f_spk)
+
+            # crude test to try and automatically choose L2 or L5 spikes
+            N_spikes_true = 0
+            N_spikes_false = 0
+
+            # test L2 pyrs first
+            for item in s['L2_pyramidal'].spike_list:
+                # could use a while loop here, but don't need to overcomplicate things
+                if item.size:
+                    N_spikes_true += 1
+                else:
+                    N_spikes_false += 1
+
+            # for now do a total replacement
+            # if there are a
+            if N_spikes_true:
+                # empty spike dict for L2 with keys that must match keys in s
+                s_new = {
+                    'L2_pyramidal': None,
+                    'L2_basket': None,
+                }
+            else:
+                # use L5 spikes instead
+                s_new = {
+                    'L5_pyramidal': None,
+                    'L5_basket': None,
+                }
 
             # clean out s to get the stuff I care about plotting
             for key in s.iterkeys():   
