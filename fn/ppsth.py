@@ -1,8 +1,8 @@
 # ppsth.py - Plots aggregate psth of all trials in an "experiment"
 #
-# v 1.7.38
-# rev 2013-04-01 (SL: minor)
-# last rev: (MS: minor)
+# v 1.7.48
+# rev 2013-04-28 (SL: changed class names from axes_create.py)
+# last rev: (SL: changed name of fig_psthgrid() to FigGrid())
 
 import numpy as np
 import itertools as it
@@ -10,7 +10,8 @@ import matplotlib.pyplot as plt
 import os
 import paramrw, spikefn
 import fileio as fio
-from axes_create import fig_psth, fig_psthgrid
+import axes_create as ac
+# from axes_create import ac.FigPSTH, ac.FigPSTHGrid
 
 def ppsth_grid(simpaths):
     # get filename lists in dictionaries of experiments
@@ -36,7 +37,7 @@ def ppsth_grid(simpaths):
     print N_rows, N_cols, tstop
 
     # ugly but slightly less ugly than the index arithmetic i had planned. muahaha
-    f = fig_psthgrid(N_rows, N_cols, tstop)
+    f = ac.FigGrid(N_rows, N_cols, tstop)
 
     # create coordinates for axes
     # this is backward-looking for a reason!
@@ -199,7 +200,7 @@ def ppsth(simpaths):
         bin_L5 = spikefn.hist_bin_opt(s_L5Pyr, N_trials)
 
         # create standard fig and axes
-        f = fig_psth(400.)
+        f = ac.FigPSTH(400.)
         f.ax['L2_psth'].hist(s_L2Pyr, bin_L2, facecolor='g', alpha=0.75)
         f.ax['L5_psth'].hist(s_L5Pyr, bin_L5, facecolor='g', alpha=0.75)
 

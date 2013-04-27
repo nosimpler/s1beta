@@ -1,8 +1,8 @@
 # axes_create.py - simple axis creation
 #
-# v 1.7.42
-# rev 2013-04-17 (MS: minor addition to label creation for aggregate spec figs)
-# last major: (SL: some changes in FigDipoleExp())
+# v 1.7.48
+# rev 2013-04-27 (SL: changed some class names)
+# last major: (SL: colorbar function, not sure it's really working properly yet)
 
 # usage:
 # testfig = FigStd()
@@ -204,7 +204,8 @@ class FigRaster():
     def close(self):
         plt.close(self.f)
 
-class fig_psth():
+class FigPSTH():
+# class fig_psth():
     def __init__(self, tstop):
         self.tstop = tstop
         self.f = plt.figure(figsize=(6, 5))
@@ -263,7 +264,8 @@ class fig_psth():
         plt.close(self.f)
 
 # create a grid of psth figures, and rasters(?)
-class fig_psthgrid():
+class FigGrid():
+# class FigPSTHGrid():
     def __init__(self, N_rows, N_cols, tstop):
         self.tstop = tstop
 
@@ -286,7 +288,7 @@ class fig_psthgrid():
         ybottom = 0.05
         ypad = 0.02
         ypanel = (1 - ytop - ybottom - ypad*(N_rows-1)) / N_rows
-        print ypanel
+        # print ypanel
 
         i = 0
         ystart = 1-ytop
@@ -322,6 +324,9 @@ class fig_psthgrid():
 
         # testing usage of string in title
         # self.ax[0][0].set_title(r'$\lambda_i$ = %d' % 0)
+
+    def savepng(self, file_name, dpi_set=300):
+        self.f.savefig(file_name, dpi=dpi_set)
 
     def close(self):
         plt.close(self.f)
@@ -467,6 +472,17 @@ class FigDipoleExp():
         self.ax = [self.f.add_subplot(self.gspec[i:(i+1)]) for i in range(self.N_expmt_groups)]
         self.ax_twinx = []
 
+    # extern function to create a colorbar on an arbitrary axis
+    # creates and rescales the specified axis and then scales down the rest of the axes accordingly
+    # I hope
+    def create_colorbar_axis(self, N_ax):
+        # print self.ax[N_ax]
+        cax, kw = mpl.colorbar.make_axes_gridspec(self.ax[N_ax])
+        # a = self.ax[N_ax].get_axes()
+        # for item in dir(self.ax[N_ax]):
+        #     if not item.startswith('__'):
+        #         print item
+
     # take an external list of dipoles and plot them
     # such a list is created externally
     def plot(self, t, dpl_list):
@@ -532,8 +548,9 @@ def testfn():
     # testfig = FigStd()
     # testfig.ax0.plot(x)
 
-    testfig = FigDipoleExp(3)
-    testfig.ax[0].plot(x)
+    # testfig = FigDipoleExp(3)
+    # testfig.create_colorbar_axis(1)
+    # testfig.ax[0].plot(x)
 
     # testfig = FigSpecWithHist()
     # testfig = FigAggregateSpecWithHist(3, 3)
@@ -543,7 +560,9 @@ def testfn():
     # testfig.ax['spec'].plot(x)
     # testfig.ax0.plot(x)
 
-    # testfig = fig_psth(100)
+    testfig = FigGrid(3, 3, 100)
+
+    # testfig = FigPSTH(100)
     # testfig.ax['L5_extpois'].plot(x)
 
     plt.savefig('testing.png', dpi=250)

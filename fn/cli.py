@@ -1,8 +1,8 @@
 # cli.py - routines for the command line interface console s1sh.py
 #
-# v 1.7.47
-# rev 2013-04-25 (SL: Fixed pngv(), a cross platform file viewer. Uses eog on Linux, xee on Mac)
-# last major: (SL: updated do_show() to account for N_trials = 0)
+# v 1.7.48
+# rev 2013-04-27 (SL: added a pdipole grid function but not totally fixed)
+# last major: (SL: Fixed pngv(), a cross platform file viewer. Uses eog on Linux, xee on Mac)
 
 from cmd import Cmd
 from datetime import datetime
@@ -98,8 +98,9 @@ class Console(Cmd):
         """Qnd function to test other functions
         """
         self.do_setdate('2013-04-25')
-        self.do_load('gamma_ping_L5_1x1-001')
-        self.do_pngv('')
+        self.do_load('gamma_ping_L5_1x1-005')
+        self.do_pdipole('grid')
+        # self.do_pngv('')
         # self.do_show('spike in (4, 0)')
         # self.do_praw('')
         # self.do_calc_dipole_avg('')
@@ -462,6 +463,7 @@ class Console(Cmd):
             'evoked',
             'evaligned',
             'avg',
+            'grid',
         ]
 
         # minimal checks in this function
@@ -515,6 +517,9 @@ class Console(Cmd):
             # plot average over all TRIALS of a param regime
             # requires that avg dipole data exist
             clidefs.exec_plotaverages(self.ddata, ylim)
+
+        elif runtype == 'grid':
+            dipolefn.pdipole_grid(self.ddata)
 
     def do_replot(self, args):
         """Regenerates plots in given directory. Usage:

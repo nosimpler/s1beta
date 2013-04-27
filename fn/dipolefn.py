@@ -1,8 +1,8 @@
 # dipolefn.py - dipole-based analysis functions
 #
-# v 1.7.45
-# rev 2013-04-23 (SL: added a proper pdipole to an axis handle)
-# last major: (SL: added calc_avgdpl_stimevoked() and related plot)
+# v 1.7.48
+# rev 2013-04-27 (SL: added pdipole_grid() but incomplete)
+# last major: (SL: added a proper pdipole to an axis handle)
 
 import fileio as fio
 import numpy as np
@@ -729,3 +729,50 @@ def pdipole_evoked_aligned(ddata):
 
     f_exp.savepng(fname_exp_fig)
     f_exp.close()
+
+# create a grid of all dipoles in this dir
+def pdipole_grid(ddata):
+    # iterate through expmt_groups
+    for expmt_group in ddata.expmt_groups:
+        fname_short = "%s-%s-dpl.png" % (ddata.sim_prefix, expmt_group)
+        fname = os.path.join(ddata.dsim, expmt_group, fname_short)
+
+        # simple usage, just checks how many dipole files (total in an expmt)
+        # and then plots dumbly to a grid
+        dpl_list = ddata.file_match(expmt_group, 'rawdpl')
+        param_list = ddata.file_match(expmt_group, 'param')
+
+        # assume tstop is the same everywhere
+        tstop = paramrw.find_param(param_list[0], 'tstop')
+
+        # length of the dpl list
+        N_dpl = len(dpl_list)
+
+        # make a 5-col figure
+        N_cols = 5
+
+        # force int arithmetic
+        # this is the BASE number of rows, one might be added!
+        N_rows = int(N_dpl) / int(N_cols)
+
+        # if the mod is not 0, add a row
+        if (N_dpl % N_cols):
+            N_rows += 1
+
+        # print N_dpl, N_cols, N_rows
+        f = ac.FigGrid(N_rows, N_cols, tstop)
+
+        l = []
+        r = 0
+        for ax_list in f.ax:
+            l.extend([(r,c) for c in range(len(ax_list))])
+            r += 1
+
+        # automatically truncates the loc list to the size of dpl_list
+        for loc, fdpl, fparam in it.izip(l, dpl_list, param_list):
+            r = loc[0]
+            c = loc[1]
+            pdipole_ax(f.ax[r][c], fdpl, fparam)
+
+        f.savepng(fname)
+        f.close()
