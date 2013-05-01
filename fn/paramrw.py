@@ -1,8 +1,8 @@
 # paramrw.py - routines for reading the param files
 #
-# v 1.7.46
-# rev 2013-04-25 (SL: updated changed_vars() function, but it may be redundant anyway)
-# last major: (SL: find_param function to randomly find a param from a fparam file)
+# v 1.7.49
+# rev 2013-05-01 (SL: fixed changed_vars() function)
+# last major: (SL: updated changed_vars() function, but it may be redundant anyway)
 
 import re
 import fileio as fio
@@ -580,16 +580,24 @@ def changed_vars(fparam):
     lines = fio.clean_lines(fparam)
     lines = [line for line in lines if line[0] != '#']
 
+    # grab the keys and vals in a list of lists
+    # each item of keyvals is a pair [key, val]
     keyvals = [line.split(": ") for line in lines]
-    var_list = [line for line in keyvals if re.match('[AKL\(]', line[1][0])]
-    # additional info to add
-    # list_meta = [
-    #     'N_trials',
-    #     'N_sims',
-    #     'Run_Date'
-    # ]
-    # var_list += [line for line in keyvals if line[0] in list_meta]
 
+    # match the list for changed items starting with "AKL[(" on the 1st char of the val
+    var_list = [line for line in keyvals if re.match('[AKL[\(]', line[1][0])]
+
+    # additional default info to add always
+    list_meta = [
+        'N_trials',
+        'N_sims',
+        'Run_Date'
+    ]
+
+    # list concatenate these lists
+    var_list += [line for line in keyvals if line[0] in list_meta]
+
+    # return the list of "changed" or "default" vars
     return var_list
 
 # debug test function

@@ -10,8 +10,8 @@
 # linspaces of values, and experimental values.
 # Limitation: Will not work for feed distributions
 
-sim_prefix: iclamp-1grid
-expmt_groups: {testing0}
+sim_prefix: rec_i
+expmt_groups: {testing}
 
 # numbers of cells making up the pyramidal grids
 N_pyr_x: 1
@@ -32,12 +32,14 @@ gbar_L5Pyr_L5Pyr_ampa: 5e-4
 gbar_L5Pyr_L5Pyr_nmda: 5e-4
 gbar_L2Pyr_L5Pyr: 2.5e-4
 gbar_L2Basket_L5Pyr: 1e-3
-gbar_L5Basket_L5Pyr: 2.5e-2
+gbar_L5Basket_L5Pyr: [0., 2.5e-2]
 
 # max conductances TO L5Baskets
 gbar_L5Basket_L5Basket: 2e-2
-gbar_L5Pyr_L5Basket: 5e-4
-gbar_L2Pyr_L5Basket: 2.5e-4
+gbar_L5Pyr_L5Basket: 4e-3
+# gbar_L5Pyr_L5Basket: 5e-4
+gbar_L2Pyr_L5Basket: 0.
+# gbar_L2Pyr_L5Basket: 2.5e-4
 
 # Ongoing proximal alpha rhythm
 distribution_prox: normal
@@ -129,11 +131,11 @@ save_spec_data: 1
 spec_max_freq: 41.
 
 # Tonic input to Pyr cells
-Itonic_A_L2Pyr_soma: 0.3
+Itonic_A_L2Pyr_soma: 0.
 Itonic_t0_L2Pyr_soma: 0.
 Itonic_T_L2Pyr_soma: -1
 
-Itonic_A_L5Pyr_soma: 0.
+Itonic_A_L5Pyr_soma: 0.3
 Itonic_t0_L5Pyr_soma: 50.
 Itonic_T_L5Pyr_soma: -1
 

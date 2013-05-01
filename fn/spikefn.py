@@ -1,8 +1,8 @@
 # spikefn.py - dealing with spikes
 #
-# v 1.7.41
-# rev 2013-04-12 (SL: pinput_hist() is a weird function)
-# last major: (SL: spikes from file requires ... fparam file, bin count function)
+# v 1.7.49
+# rev 2013-05-01 (SL: Added new function filter_spike_dict() that filters a spike_dict_from_file)
+# last major: (SL: pinput_hist() is a weird function)
 
 import fileio as fio
 import numpy as np
@@ -61,16 +61,19 @@ class Spikes():
         bins = hist_bin_opt(s_agg, 1)
         a.hist(s_agg, bins, normed=True, facecolor='g', alpha=0.75)
 
+# filters spike dict s_dict for keys that start with str_startswith
+# easy enough to modify for future conditions
+# just fix associated functions
+def filter_spike_dict(s_dict, str_startswith):
+    s_filt = {}
+    for key, val in s_dict.iteritems():
+        if key.startswith(str_startswith):
+            s_filt[key] = val
+
+    return s_filt
+
 def bin_count(bins_per_second, tinterval):
     return bins_per_second * tinterval / 1000.
-
-# splits ext gauss by supplied cell type
-# def split_extgauss(s, gid_dict, type):
-#     gid_cell = gid_dict[type]
-#     gid_extgauss_start = gid_dict['extgauss'][0]
-#     gid_extgauss_cell = [gid + gid_extgauss_start for gid in gid_dict[type]]
-#
-#     return Spikes(s, gid_extgauss_cell)
 
 # splits ext random feeds (of type exttype) by supplied cell type
 def split_extrand(s, gid_dict, celltype, exttype):

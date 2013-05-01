@@ -1,8 +1,8 @@
 # cli.py - routines for the command line interface console s1sh.py
 #
-# v 1.7.48
-# rev 2013-04-27 (SL: added a pdipole grid function but not totally fixed)
-# last major: (SL: Fixed pngv(), a cross platform file viewer. Uses eog on Linux, xee on Mac)
+# v 1.7.49
+# rev 2013-05-01 (SL: minor)
+# last major: (SL: added a pdipole grid function but not totally fixed)
 
 from cmd import Cmd
 from datetime import datetime
@@ -97,12 +97,12 @@ class Console(Cmd):
     def do_debug(self, args):
         """Qnd function to test other functions
         """
-        self.do_setdate('2013-04-25')
-        self.do_load('gamma_ping_L5_1x1-005')
-        self.do_pdipole('grid')
+        # self.do_setdate('2013-04-25')
+        self.do_load('rec_i-016')
+        self.do_praw('')
+        # self.do_pdipole('grid')
         # self.do_pngv('')
         # self.do_show('spike in (4, 0)')
-        # self.do_praw('')
         # self.do_calc_dipole_avg('')
         # self.do_pdipole('evaligned')
         # self.do_specmax('in (testing, 0, 4) on [0, 1000.]')
@@ -170,6 +170,7 @@ class Console(Cmd):
             # set dsim after using ddata's readsim method
             self.dsim = self.ddata.read_sim(self.dproj, dir_check)
             self.p_exp = paramrw.ExpParams(self.ddata.fparam)
+            print self.ddata.fparam
             self.var_list = paramrw.changed_vars(self.ddata.fparam)
 
         else:
