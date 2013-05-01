@@ -1,8 +1,8 @@
 # L5_pyramidal.py - establish class def for layer 5 pyramidal cells
 #
-# v 1.7.44
-# rev 2013-04-20 (SL: minor)
-# last rev: (SL: Updated IClamp procedures in L5Pyr())
+# v 1.7.50irec
+# rev 2013-05-01 (SL: created synapses dict and runs record_current_soma() defined in Cell())
+# last rev: (SL: minor)
 
 from neuron import h as nrn
 from class_cell import Pyr
@@ -44,6 +44,9 @@ class L5Pyr(Pyr):
 
         # insert iclamp
         self.list_IClamp = []
+
+        # run record current soma, defined in Cell()
+        self.record_current_soma()
 
     # insert IClamps in all situations
     # temporarily an external function taking the p dict
@@ -267,8 +270,10 @@ class L5Pyr(Pyr):
     def __synapse_create(self):
         # creates synapses onto this cell 
         # Somatic synapses
-        self.soma_gabaa = self.syn_gabaa_create(self.soma(0.5))
-        self.soma_gabab = self.syn_gabab_create(self.soma(0.5))
+        self.synapses = {
+            'soma_gabaa': self.syn_gabaa_create(self.soma(0.5)),
+            'soma_gabab': self.syn_gabab_create(self.soma(0.5)),
+        }
 
         # Dendritic synapses
         self.apicaltuft_gabaa = self.syn_gabaa_create(self.list_dend[3](0.5))
@@ -295,6 +300,7 @@ class L5Pyr(Pyr):
 
         # connections FROM L5Pyr TO here
         for gid_src, pos in it.izip(gid_dict['L5_pyramidal'], pos_dict['L5_pyramidal']):
+            # no autapses
             if gid_src != gid:
                 nc_dict['ampa'] = {
                     'pos_src': pos,
@@ -330,8 +336,10 @@ class L5Pyr(Pyr):
             }
 
             # soma synapses are defined in Pyr()
-            self.ncfrom_L5Basket.append(self.parconnect_from_src(gid_src, nc_dict, self.soma_gabaa))
-            self.ncfrom_L5Basket.append(self.parconnect_from_src(gid_src, nc_dict, self.soma_gabab))
+            self.ncfrom_L5Basket.append(self.parconnect_from_src(gid_src, nc_dict, self.synapses['soma_gabaa']))
+            self.ncfrom_L5Basket.append(self.parconnect_from_src(gid_src, nc_dict, self.synapses['soma_gabab']))
+            # self.ncfrom_L5Basket.append(self.parconnect_from_src(gid_src, nc_dict, self.soma_gabaa))
+            # self.ncfrom_L5Basket.append(self.parconnect_from_src(gid_src, nc_dict, self.soma_gabab))
 
         # connections FROM L2Pyr TO here
         for gid_src, pos in it.izip(gid_dict['L2_pyramidal'], pos_dict['L2_pyramidal']):

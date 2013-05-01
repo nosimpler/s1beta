@@ -1,14 +1,15 @@
 #!/usr/bin/env python
 # s1run.py - primary run function for s1 project
 #
-# v 1.7.40
-# rev 2013-04-09 (SL: Separated L2 and L5 dipole)
-# last major: (SL: Run_Date is sneakily added to the end of the copied original param file)
+# v 1.7.50irec
+# rev 2013-05-01 (SL: added file_current and current recording)
+# last major: (SL: Separated L2 and L5 dipole)
 
 import os
 import sys
 import time
 import shutil
+import itertools as it
 import numpy as np
 from mpi4py import MPI
 from multiprocessing import Pool
@@ -188,17 +189,19 @@ def exec_runsim(f_psim):
                 # Network(gridpyr_x, gridpyr_y)
                 net = Network(p)
 
+                # debug: off (0), on (1)
+                debug = 0
+
                 # create rotating data files and dirs on ONE central node
                 if rank == 0:
                     # create file names
                     file_dpl = ddir.create_filename(expmt_group, 'rawdpl', exp_prefix)
+                    file_current = ddir.create_filename(expmt_group, 'rawcurrent', exp_prefix)
                     file_param = ddir.create_filename(expmt_group, 'param', exp_prefix)
                     file_spikes = ddir.create_filename(expmt_group, 'rawspk', exp_prefix)
                     file_spec = ddir.create_filename(expmt_group, 'rawspec', exp_prefix)
 
-                # debug
-                debug = 0
-                if rank == 0:
+                    # if debug is set to 1, this debug block will run
                     if debug:
                         # net's method rec_debug(rank, gid)
                         v_debug = net.rec_debug(0, 8)
@@ -226,19 +229,32 @@ def exec_runsim(f_psim):
                 nrn.fcurrent()
                 nrn.frecord_init()
 
+                ## actual simulation ##
                 pc.psolve(nrn.tstop)
 
-                # combine dp_rec
+                # combine dp_rec, this combines on every proc
                 pc.allreduce(dp_rec_L2, 1)
                 pc.allreduce(dp_rec_L5, 1)
 
+                # aggregate the currents independently on each proc
+                net.aggregate_currents()
+
+                # combine the net.current{} variables on each proc
+                pc.allreduce(net.current['L5Pyr_soma'], 1)
+
                 # write time and calculated dipole to data file only if on the first proc
-                # only execute this statement on one processor
+                # only execute this statement on one proc
                 if rank == 0:
+                    # write the dipole
                     with open(file_dpl, 'a') as f:
                         for k in range(int(t_vec.size())):
                             # write t, total dipole, L2 dipole, L5 dipole
                             f.write("%03.3f\t%5.4f\t%5.4f\t%5.4f\n" % (t_vec.x[k], dp_rec_L2.x[k]+dp_rec_L5.x[k], dp_rec_L2.x[k], dp_rec_L5.x[k]))
+
+                    # write the L5Pyr somatic current to the file
+                    with open(file_current, 'w') as fc:
+                        for t, i in it.izip(t_vec.x, net.current['L5Pyr_soma'].x):
+                            fc.write("%03.3f\t%5.4e\n" % (t, i))
 
                     # write the params, but add a trial number
                     p['Sim_No'] = i
