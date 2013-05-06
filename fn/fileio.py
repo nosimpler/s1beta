@@ -1,8 +1,8 @@
 # fileio.py - general file input/output functions
 #
-# v 1.7.39
-# rev 2013-04-08 (SL: finds an aggregate file)
-# last rev: (SL: cleanup)
+# v 1.7.50irec
+# rev 2013-05-01 (SL: added file type for currents)
+# last rev: (SL: finds an aggregate file)
 
 import datetime, fnmatch, os, shutil, sys
 import itertools as it
@@ -105,6 +105,7 @@ class SimulationPaths():
         self.__datatypes = {
             'rawspk': '-spk.txt',
             'rawdpl': '-dpl.txt',
+            'rawcurrent': '-i.txt',
             'rawspec': '-spec.npz',
             'avgdpl': '-dplavg.txt',
             'avgspec': '-specavg.npz',

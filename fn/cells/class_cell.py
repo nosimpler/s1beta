@@ -1,8 +1,8 @@
 # class_cell.py - establish class def for general cell features
 #
-# v 1.7.43
-# rev 2013-04-20 (SL: updated IClamp procedures)
-# last rev: (SL: separated L2 and L5 dipoles)
+# v 1.7.50irec
+# rev 2013-05-01 (SL: record_current_soma() added as a general method)
+# last rev: (SL: updated IClamp procedures)
 
 import numpy as np
 import itertools as it
@@ -137,6 +137,33 @@ class Cell():
 
         # object must exist for NEURON somewhere and needs to be saved
         return stim
+
+    # simple function to record current
+    # for now only at the soma
+    def record_current_soma(self):
+        # a soma exists at self.soma
+        self.rec_i = nrn.Vector()
+
+        try:
+            # assumes that self.synapses is a dict that exists
+            list_syn_soma = [key for key in self.synapses.keys() if key.startswith('soma_')]
+
+            # matching dict from the list_syn_soma keys
+            self.dict_currents = dict.fromkeys(list_syn_soma)
+            # order doesn't matter here as long as it matches list_syn_soma
+            # self.list_currents = [nrn.Vector() for key in list_syn_soma]
+
+            for key in self.dict_currents.iterkeys():
+                self.dict_currents[key] = nrn.Vector()
+                self.dict_currents[key].record(self.synapses[key]._ref_i)
+
+            # iterate through vecs and keys and record the currents
+            # for vec, key in it.izip(self.list_currents, list_syn_soma):
+            #     vec.record(self.synapses[key]._ref_i)
+
+        except:
+            print "Warning in Cell(): record_current_soma() was called, but no self.synapses dict was found"
+            pass
 
     # For all synapses, section location 'secloc' is being explicitly supplied 
     # for clarity, even though they are (right now) always 0.5. Might change in future

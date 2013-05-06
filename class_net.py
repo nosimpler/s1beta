@@ -1,8 +1,8 @@
 # class_net.py - establishes the Network class and related methods
 #
-# v 1.7.44
-# rev 2013-04-20 (SL: added IClamps to L2Pyr())
-# last major: (SL: creating IClamps externally to the L5Pyr(), right after creation)
+# v 1.7.50irec
+# rev 2013-05-01 (SL: Network() new function aggregate_currents())
+# last major: (SL: added IClamps to L2Pyr())
 
 import itertools as it
 import numpy as np
@@ -22,6 +22,17 @@ class Network():
         # set the params internally for this net
         # better than passing it around like ...
         self.p = p
+
+        # Number of time points
+        # Originally used to create the empty vec for synaptic currents,
+        # ensuring that they exist on this node irrespective of whether
+        # or not cells of relevant type actually do
+        self.N_t = np.arange(0., nrn.tstop, self.p['dt']).size + 1
+
+        # Create a nrn.Vector() with size 1xself.N_t, zero'd
+        self.current = {
+            'L5Pyr_soma': nrn.Vector(self.N_t, 0),
+        }
 
         # int variables for grid of pyramidal cells (for now in both L2 and L5)
         self.gridpyr = {'x': self.p['N_pyr_x'], 'y': self.p['N_pyr_y']}
@@ -359,6 +370,20 @@ class Network():
         for gid in self.__gid_list:
             if self.pc.gid_exists(gid):
                 self.pc.spike_record(gid, self.spiketimes, self.spikegids)
+
+    # aggregate recording all the somatic voltages for L5 pyr
+    # this method must be run post-integration
+    def aggregate_currents(self):
+        # this is quite ugly
+        for cell in self.cells_list:
+            # check for celltype
+            if cell.celltype == 'L5_pyramidal':
+                # iterate over somatic currents, assumes this list exists
+                # is guaranteed in L5Pyr()
+                for key, I_soma in cell.dict_currents.iteritems():
+                    # self.current_L5Pyr_soma was created upon
+                    # in parallel, each node has its own Net()
+                    self.current['L5Pyr_soma'].add(I_soma)
 
     # recording debug function
     def rec_debug(self, rank_exec, gid):

@@ -1,8 +1,8 @@
 # axes_create.py - simple axis creation
 #
-# v 1.7.48
-# rev 2013-04-27 (SL: changed some class names)
-# last major: (SL: colorbar function, not sure it's really working properly yet)
+# v 1.7.51irec
+# rev 2013-05-06 (SL: fixed FigDipoleExp)
+# last major: (SL: changed some class names)
 
 # usage:
 # testfig = FigStd()
@@ -123,7 +123,7 @@ class FigSpecWithHist():
 # spec plus dipole 
 class FigSpec():
     def __init__(self):
-        self.f = plt.figure(figsize = (8, 6))
+        self.f = plt.figure(figsize=(8, 6))
         font_prop = {'size': 8}
         mpl.rc('font', **font_prop)
 
@@ -265,7 +265,6 @@ class FigPSTH():
 
 # create a grid of psth figures, and rasters(?)
 class FigGrid():
-# class FigPSTHGrid():
     def __init__(self, N_rows, N_cols, tstop):
         self.tstop = tstop
 
@@ -457,27 +456,49 @@ class FigAggregateSpecWithHist():
 
 # aggregate figures for the experiments
 class FigDipoleExp():
-    def __init__(self, N_expmt_groups):
-        self.N_expmt_groups = N_expmt_groups
+    def __init__(self, ax_handles):
+        # ax_handles is a list of axis handles in order
+        # previously called N_expmt_groups for legacy reasons (original intention)
+        # now generally repurposed for arbitrary numbers of axes with these handle names
+        self.ax_handles = ax_handles
+        self.N_expmt_groups = len(ax_handles)
         self.f = plt.figure(figsize=(6, 2*self.N_expmt_groups))
         font_prop = {'size': 8}
         mpl.rc('font', **font_prop)
 
-        # create a gridspec
-        self.gspec = gridspec.GridSpec(self.N_expmt_groups, 1)
+        # create a gridspec that has width of "50"
+        # there is some dark magic here whereby colorbars change the original axis by some
+        # unspecified dimension. Rescaling non-spec axes to 40/50 is not the same as rescaling
+        # non-spec axes 4/5, for reason that's unclear to me at the time of this writing
+        # 40/50 works though
+        # 'spec' must be specified in the name of the spec
+        self.gspec = gridspec.GridSpec(self.N_expmt_groups, 50)
         self.__create_axes()
         self.__set_ax_props()
 
     def __create_axes(self):
-        self.ax = [self.f.add_subplot(self.gspec[i:(i+1)]) for i in range(self.N_expmt_groups)]
-        self.ax_twinx = []
+        # self.ax = [self.f.add_subplot(self.gspec[i:(i+1)]) for i in range(self.N_expmt_groups)]
+        self.ax = dict.fromkeys(self.ax_handles)
+
+        # iterating like this because indices are useful in defining the recursive gspec locations
+        i = 0
+        for ax in self.ax_handles:
+            if 'spec' not in ax:
+                self.ax[ax] = self.f.add_subplot(self.gspec[i:(i+1), :40])
+            else:
+                self.ax[ax] = self.f.add_subplot(self.gspec[i:(i+1), :])
+
+            i += 1
+
+        # if ax_twinx keys exist, the keys will mirror those in self.ax
+        self.ax_twinx = {}
 
     # extern function to create a colorbar on an arbitrary axis
     # creates and rescales the specified axis and then scales down the rest of the axes accordingly
     # I hope
-    def create_colorbar_axis(self, N_ax):
+    def create_colorbar_axis(self, ax_name):
         # print self.ax[N_ax]
-        cax, kw = mpl.colorbar.make_axes_gridspec(self.ax[N_ax])
+        cax, kw = mpl.colorbar.make_axes_gridspec(self.ax[ax_name])
         # a = self.ax[N_ax].get_axes()
         # for item in dir(self.ax[N_ax]):
         #     if not item.startswith('__'):
@@ -492,8 +513,8 @@ class FigDipoleExp():
             dpl_min = []
 
             # check on all the mins and maxes
-            for dpl, ax in it.izip(dpl_list, self.ax):
-                ax.plot(t, dpl)
+            for dpl, ax_name in it.izip(dpl_list, self.ax_handles):
+                self.ax[ax_name].plot(t, dpl)
                 ylim_tmp = ax.get_ylim()
 
                 dpl_min.append(ylim_tmp[0])
@@ -504,21 +525,32 @@ class FigDipoleExp():
             ymax = np.max(dpl_max)
 
             # set the ylims for all, the same
-            for ax in self.ax:
-                ax.set_ylim((ymin, ymax))
+            for ax_name in self.ax.keys():
+                self.ax[ax_name].set_ylim((ymin, ymax))
 
     # creates a twinx axis for the specified axis
-    def create_axis_twinx(self, n):
-        if n < len(self.ax):
-            self.ax_twinx.append(self.ax[n].twinx())
+    def create_axis_twinx(self, ax_name):
+    # def create_axis_twinx(self, n):
+        # if n < len(self.ax):
+        # self.ax_twinx.append(self.ax[n].twinx())
+        if ax_name in self.ax.keys():
+            self.ax_twinx[ax_name] = self.ax[ax_name].twinx()
 
             # returns the index of most recently added element (now the length)
-            # modified to account for zero indexing
-            return len(self.ax_twinx)-1
+            return ax_name
+
+        else:
+
+            # returns valid axis name ONLY if it existed
+            # otherwise, None will break other code
+            return None
 
     def __set_ax_props(self):
-        for ax in self.ax[:-1]:
-            ax.set_xticklabels('')
+        # remove xtick labels for everyone but the last axis
+        for ax_name in self.ax_handles[:-1]:
+            self.ax[ax_name].set_xticklabels('')
+        # for ax in self.ax[:-1]:
+        #     ax.set_xticklabels('')
 
     def savepng(self, file_name, dpi_set=300):
         self.f.savefig(file_name, dpi=dpi_set)
@@ -548,9 +580,15 @@ def testfn():
     # testfig = FigStd()
     # testfig.ax0.plot(x)
 
-    # testfig = FigDipoleExp(3)
-    # testfig.create_colorbar_axis(1)
-    # testfig.ax[0].plot(x)
+    ax_handles = [
+        'spec',
+        'test1',
+        'test2',
+    ]
+
+    testfig = FigDipoleExp(ax_handles)
+    testfig.create_colorbar_axis('spec')
+    testfig.ax['spec'].plot(x)
 
     # testfig = FigSpecWithHist()
     # testfig = FigAggregateSpecWithHist(3, 3)
@@ -560,10 +598,13 @@ def testfn():
     # testfig.ax['spec'].plot(x)
     # testfig.ax0.plot(x)
 
-    testfig = FigGrid(3, 3, 100)
+    # testfig = FigGrid(3, 3, 100)
 
     # testfig = FigPSTH(100)
     # testfig.ax['L5_extpois'].plot(x)
+
+    # testfig = FigSpec()
+    # testfig.ax['dipole'].plot(x)
 
     plt.savefig('testing.png', dpi=250)
     testfig.close()

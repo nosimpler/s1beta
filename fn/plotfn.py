@@ -1,8 +1,8 @@
 # plotfn.py - pall and possibly other plot routines
 #
-# v 1.7.39
-# rev 2013-04-08 (SL: changed praster)
-# last major: (SL: name fixes forgot to commit)
+# v 1.7.51irec
+# rev 2013-05-06 (SL: minor)
+# last major: (SL: changed praster)
 
 from praster import praster
 import axes_create as ac
@@ -81,6 +81,8 @@ def pall(ddir, p_exp, spec_results, xlim=[0., 'tstop']):
         dfig_list = []
 
         # aggregate all file types from individual expmts into lists
+        # NB The only reason this works is because the analysis results are returned
+        # IDENTICALLY!
         for expmt_group in ddir.expmt_groups:
             # these should be equivalent lengths
             param_list.extend(ddir.file_match(expmt_group, 'param'))
@@ -88,6 +90,7 @@ def pall(ddir, p_exp, spec_results, xlim=[0., 'tstop']):
             spk_list.extend(ddir.file_match(expmt_group, 'rawspk'))
 
             # append as many copies of expmt dfig dict as there were runs in expmt
+            # this must be done because we're iterating over ALL expmts at the same time
             for i in range(len(ddir.file_match(expmt_group, 'param'))):
                 dfig_list.append(ddir.dfig[expmt_group])
 

@@ -1,8 +1,8 @@
 # clidefs.py - these are all of the function defs for the cli
 #
-# v 1.7.47
-# rev 2013-04-25 (SL: added a qnd png_viewer_simple())
-# last major: (SL: minor)
+# v 1.7.51irec
+# rev 2013-05-06 (SL: added spec_current function)
+# last major: (SL: added a qnd png_viewer_simple())
 
 # Standard modules
 import fnmatch, os, re, sys
@@ -309,6 +309,19 @@ def exec_avgtrials(ddata, datatype):
 
                 # save the aggregate info
                 np.savez_compressed(fname_unique, time=timevec, freq=freqvec, TFR=spec_avg)
+
+# run the spectral analyses on the somatic current time series
+def exec_spec_current(ddata):
+    p_exp = paramrw.ExpParams(ddata.fparam)
+    opts = {
+        'type': 'current',
+        'f_max': 90.,
+        'save_data': 0,
+        'runtype': 'debug',
+    }
+
+    spec_results = specfn.analysis_typespecific(ddata, p_exp, opts)
+    return spec_results
 
 # this function can now use specfn.generate_missing_spec(ddata, f_max)
 def regenerate_spec_data(ddata, max_freq=None):
