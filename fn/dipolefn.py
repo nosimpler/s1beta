@@ -1,8 +1,8 @@
 # dipolefn.py - dipole-based analysis functions
 #
-# v 1.7.48
-# rev 2013-04-27 (SL: added pdipole_grid() but incomplete)
-# last major: (SL: added a proper pdipole to an axis handle)
+# v 1.7.51irec
+# rev 2013-05-06 (SL: changed how FigDipoleExp() is called, not totally tested)
+# last major: (SL: added pdipole_grid() but incomplete)
 
 import fileio as fio
 import numpy as np
@@ -360,7 +360,8 @@ def pdipole_exp(ddata, ylim=[]):
 
     # create one figure comparing across all
     N_expmt_groups = len(ddata.expmt_groups)
-    f_exp = ac.FigDipoleExp(N_expmt_groups)
+    f_exp = ac.FigDipoleExp(ddata.expmt_groups)
+    # f_exp = ac.FigDipoleExp(N_expmt_groups)
 
     # empty list for the aggregate dipole data
     dpl_exp = []
@@ -494,20 +495,35 @@ def pdipole_exp2(ddata):
 
     # create one figure comparing across all
     N_expmt_groups = len(ddata.expmt_groups)
-    f_exp = ac.FigDipoleExp(4)
+    ax_handles = [
+        'spec',
+        'input',
+        'dpl_mu_low',
+        'dpl_mu_high',
+    ]
+    f_exp = ac.FigDipoleExp(ax_handles)
+    # f_exp = ac.FigDipoleExp(4)
 
     # plot the ctrl dipoles
-    f_exp.ax[2].plot(dpl_mu_low.t, dpl_mu_low.dpl, color='k')
-    f_exp.ax[2].hold(True)
-    f_exp.ax[3].plot(dpl_mu_high.t, dpl_mu_high.dpl, color='k')
-    f_exp.ax[3].hold(True)
+    f_exp.ax['dpl_mu_low'].plot(dpl_mu_low.t, dpl_mu_low.dpl, color='k')
+    f_exp.ax['dpl_mu_low'].hold(True)
+    f_exp.ax['dpl_mu_high'].plot(dpl_mu_high.t, dpl_mu_high.dpl, color='k')
+    f_exp.ax['dpl_mu_high'].hold(True)
+    # f_exp.ax[2].plot(dpl_mu_low.t, dpl_mu_low.dpl, color='k')
+    # f_exp.ax[2].hold(True)
+    # f_exp.ax[3].plot(dpl_mu_high.t, dpl_mu_high.dpl, color='k')
+    # f_exp.ax[3].hold(True)
 
     # function creates an f_exp.ax_twinx list and returns the index of the new feed
-    n_dist = f_exp.create_axis_twinx(1)
+    ax_twin_name = f_exp.create_axis_twinx('input')
+    if not ax_twin_name:
+        print "You've got bigger problems, I'm afraid"
+    # n_dist = f_exp.create_axis_twinx(1)
 
     # input hist information: predicated on the fact that the input histograms
     # should be identical for *all* of the inputs represented in this figure
-    spikefn.pinput_hist(f_exp.ax[1], f_exp.ax_twinx[n_dist], s['alpha_feed_prox'].spike_list, s['alpha_feed_dist'].spike_list, n_bins)
+    spikefn.pinput_hist(f_exp.ax['input'], f_exp.ax_twinx['input'], s['alpha_feed_prox'].spike_list, s['alpha_feed_dist'].spike_list, n_bins)
+    # spikefn.pinput_hist(f_exp.ax[1], f_exp.ax_twinx[n_dist], s['alpha_feed_prox'].spike_list, s['alpha_feed_dist'].spike_list, n_bins)
 
     # grab the max counts for both hists
     # the [0] item of hist are the counts
@@ -515,15 +531,18 @@ def pdipole_exp2(ddata):
     ymax = 2 * max_hist
 
     # plot the spec here
-    pc = specfn.pspec_ax(f_exp.ax[0], fspec_mu_low)
+    pc = specfn.pspec_ax(f_exp.ax['spec'], fspec_mu_low)
+    # pc = specfn.pspec_ax(f_exp.ax[0], fspec_mu_low)
     print f_exp.ax[0].get_xlim()
 
     # deal with the axes here
-    f_exp.ax_twinx[n_dist].set_ylim((ymax, 0))
-    f_exp.ax[1].set_ylim((0, ymax))
+    f_exp.ax_twinx['input'].set_ylim((ymax, 0))
+    f_exp.ax['input'].set_ylim((0, ymax))
+    # f_exp.ax_twinx[n_dist].set_ylim((ymax, 0))
+    # f_exp.ax[1].set_ylim((0, ymax))
 
-    f_exp.ax[1].set_xlim((50., tstop))
-    f_exp.ax_twinx[n_dist].set_xlim((50., tstop))
+    f_exp.ax['input'].set_xlim((50., tstop))
+    f_exp.ax_twinx['input'].set_xlim((50., tstop))
 
     # empty list for the aggregate dipole data
     dpl_exp = []
@@ -558,15 +577,15 @@ def pdipole_exp2(ddata):
         if 'mu_low' in expmt_group:
             dpl_mu_low_ev = Dipole(flist[0])
             dpl_mu_low_ev.baseline_renormalize(fparam)
-            f_exp.ax[2].plot(dpl_mu_low_ev.t, dpl_mu_low_ev.dpl)
+            f_exp.ax['dpl_mu_low'].plot(dpl_mu_low_ev.t, dpl_mu_low_ev.dpl)
 
         elif 'mu_high' in expmt_group:
             dpl_mu_high_ev = Dipole(flist[0])
             dpl_mu_high_ev.baseline_renormalize(fparam)
-            f_exp.ax[3].plot(dpl_mu_high_ev.t, dpl_mu_high_ev.dpl)
+            f_exp.ax['dpl_mu_high'].plot(dpl_mu_high_ev.t, dpl_mu_high_ev.dpl)
 
-    f_exp.ax[2].set_xlim(50., tstop)
-    f_exp.ax[3].set_xlim(50., tstop)
+    f_exp.ax['dpl_mu_low'].set_xlim(50., tstop)
+    f_exp.ax['dpl_mu_high'].set_xlim(50., tstop)
 
     f_exp.savepng(fname_exp_fig)
     f_exp.close()
@@ -641,12 +660,19 @@ def pdipole_evoked_aligned(ddata):
 
     # create one figure comparing across all
     N_expmt_groups = len(ddata.expmt_groups)
-    f_exp = ac.FigDipoleExp(4)
+    ax_handles = [
+        'spec',
+        'input',
+        'dpl_mu',
+        'spk',
+    ]
+    f_exp = ac.FigDipoleExp(ax_handles)
+    # f_exp = ac.FigDipoleExp(4)
 
     # plot the ctrl dipoles
-    f_exp.ax[2].plot(dpl_mu_low.t, dpl_mu_low.dpl, color='k')
-    f_exp.ax[2].hold(True)
-    f_exp.ax[2].plot(dpl_mu_high.t, dpl_mu_high.dpl)
+    f_exp.ax['dpl_mu'].plot(dpl_mu_low.t, dpl_mu_low.dpl, color='k')
+    f_exp.ax['dpl_mu'].hold(True)
+    f_exp.ax['dpl_mu'].plot(dpl_mu_high.t, dpl_mu_high.dpl)
 
     # function creates an f_exp.ax_twinx list and returns the index of the new feed
     n_dist = f_exp.create_axis_twinx(1)
@@ -654,7 +680,8 @@ def pdipole_evoked_aligned(ddata):
     # input hist information: predicated on the fact that the input histograms
     # should be identical for *all* of the inputs represented in this figure
     # places 2 histograms on two axes (meant to be one axis flipped)
-    hists = spikefn.pinput_hist(f_exp.ax[1], f_exp.ax_twinx[n_dist], s['alpha_feed_prox'].spike_list, s['alpha_feed_dist'].spike_list, n_bins)
+    hists = spikefn.pinput_hist(f_exp.ax['input'], f_exp.ax_twinx['input'], s['alpha_feed_prox'].spike_list, s['alpha_feed_dist'].spike_list, n_bins)
+    # hists = spikefn.pinput_hist(f_exp.ax[1], f_exp.ax_twinx[n_dist], s['alpha_feed_prox'].spike_list, s['alpha_feed_dist'].spike_list, n_bins)
 
     # grab the max counts for both hists
     # the [0] item of hist are the counts
@@ -662,16 +689,19 @@ def pdipole_evoked_aligned(ddata):
     ymax = 2 * max_hist
 
     # plot the spec here
-    pc = specfn.pspec_ax(f_exp.ax[0], fspec_mu_low)
+    pc = specfn.pspec_ax(f_exp.ax['spec'], fspec_mu_low)
+    # pc = specfn.pspec_ax(f_exp.ax[0], fspec_mu_low)
 
     # deal with the axes here
-    f_exp.ax_twinx[n_dist].set_ylim((ymax, 0))
-    f_exp.ax[1].set_ylim((0, ymax))
+    f_exp.ax['input'].set_ylim((0, ymax))
+    f_exp.ax_twinx['input'].set_ylim((ymax, 0))
+    # f_exp.ax_twinx[n_dist].set_ylim((ymax, 0))
+    # f_exp.ax[1].set_ylim((0, ymax))
 
     # f_exp.ax[1].set_xlim((50., tstop))
 
     # turn hold on
-    f_exp.ax[2].hold(True)
+    f_exp.ax[dpl_mu].hold(True)
 
     # empty list for the aggregate dipole data
     dpl_exp = []
@@ -699,14 +729,14 @@ def pdipole_evoked_aligned(ddata):
             list_spk = ddata.file_match(expmt_group, 'rawspk')
             list_s_dict = [spikefn.spikes_from_file(fparam, fspk) for fspk in list_spk]
             list_evoked = [s_dict['evprox0'].spike_list[0][0] for s_dict in list_s_dict]
-            lines_spk = [f_exp.ax[2].axvline(x=x_val, linewidth=0.5, color='r') for x_val in list_evoked]
-            lines_spk = [f_exp.ax[3].axvline(x=x_val, linewidth=0.5, color='r') for x_val in list_evoked]
+            lines_spk = [f_exp.ax['dpl_mu'].axvline(x=x_val, linewidth=0.5, color='r') for x_val in list_evoked]
+            lines_spk = [f_exp.ax['spk'].axvline(x=x_val, linewidth=0.5, color='r') for x_val in list_evoked]
 
         # handle mu_low and mu_high separately
         if 'mu_low' in expmt_group:
             dpl_mu_low_ev = Dipole(flist[0])
             dpl_mu_low_ev.baseline_renormalize(fparam)
-            f_exp.ax[3].plot(dpl_mu_low_ev.t, dpl_mu_low_ev.dpl, color='k')
+            f_exp.ax['spk'].plot(dpl_mu_low_ev.t, dpl_mu_low_ev.dpl, color='k')
 
             # get xlim stuff
             t0 = dpl_mu_low_ev.t[0]
@@ -715,12 +745,14 @@ def pdipole_evoked_aligned(ddata):
         elif 'mu_high' in expmt_group:
             dpl_mu_high_ev = Dipole(flist[0])
             dpl_mu_high_ev.baseline_renormalize(fparam)
-            f_exp.ax[3].plot(dpl_mu_high_ev.t, dpl_mu_high_ev.dpl, color='b')
+            f_exp.ax['spk'].plot(dpl_mu_high_ev.t, dpl_mu_high_ev.dpl, color='b')
 
-    f_exp.ax[1].set_xlim(50., tstop)
+    f_exp.ax['input'].set_xlim(50., tstop)
 
-    for ax in f_exp.ax[2:]:
+    for ax_name in f_exp.ax_handles[2:]:
         ax.set_xlim((t0, T))
+    # for ax in f_exp.ax[2:]:
+    #     ax.set_xlim((t0, T))
 
     # for ax in f_exp.ax_twinx:
     #     ax.set_xlim(500., tstop)

@@ -1,8 +1,8 @@
 # cli.py - routines for the command line interface console s1sh.py
 #
-# v 1.7.49
-# rev 2013-05-01 (SL: minor)
-# last major: (SL: added a pdipole grid function but not totally fixed)
+# v 1.7.51irec
+# rev 2013-05-06 (SL: added temporary spec_current call)
+# last major: (SL: minor)
 
 from cmd import Cmd
 from datetime import datetime
@@ -97,8 +97,9 @@ class Console(Cmd):
     def do_debug(self, args):
         """Qnd function to test other functions
         """
-        # self.do_setdate('2013-04-25')
-        self.do_load('rec_i-016')
+        self.do_setdate('2013-05-01')
+        self.do_load('rec_i-025')
+        # self.do_spec_current('')
         self.do_praw('')
         # self.do_pdipole('grid')
         # self.do_pngv('')
@@ -114,6 +115,9 @@ class Console(Cmd):
         # self.do_dipolemin('in (mu, 0, 2) on [400., 410.]')
         # self.epscompress('spk')
         # self.do_psthgrid()
+
+    def do_spec_current(self, args):
+        self.spec_current_tmp = clidefs.exec_spec_current(self.ddata)
 
     def do_praw(self, args):
         '''praw is a fully automated function to replace the dipole plots with aggregate dipole/spec/spikes plots. Usage:

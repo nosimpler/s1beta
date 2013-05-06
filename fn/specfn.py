@@ -1,8 +1,8 @@
 # specfn.py - Average time-frequency energy representation using Morlet wavelet method
 #
-# v 1.7.45
-# rev 2013-04-23 (SL: Renamed pspecone() to pspec_ax(). Added fn generate_missing_spec())
-# last major: (SL: a true pspec to plot to an axis)
+# v 1.7.51irec
+# rev 2013-05-06 (SL: added plot to axis fn in MorletSpec() and functions for current spec)
+# last major: (SL: Renamed pspecone() to pspec_ax(). Added fn generate_missing_spec())
 
 import os
 import sys
@@ -19,15 +19,17 @@ import fileio as fio
 import spikefn 
 import axes_create as ac
 
-# general spec write/read functions
+# general spec write function
 def write(fdata_spec, t_vec, f_vec, TFR):
     np.savez_compressed(fdata_spec, time=t_vec, freq=f_vec, TFR=TFR)
     # np.savetxt(file_write, self.TFR, fmt = "%5.4f")
 
+# general spec read function
 def read(fdata_spec):
     data_spec = np.load(fdata_spec)
     return data_spec
 
+# MorletSpec class
 class MorletSpec():
     # fdata_spec will be created based on fparam and fdata, a general time series
     def __init__(self, fparam, fdata, fdata_spec, max_freq=None, save_data=None):
@@ -74,6 +76,12 @@ class MorletSpec():
 
         else:
             print "tstop not greater than %4.2f ms. Skipping wavelet analysis." % self.tmin
+
+    def plot_to_ax(self, ax_spec, dt):
+        # pc = ax.imshow(self.TFR, extent=[xmin, xmax, self.freqvec[-1], self.freqvec[0]], aspect='auto', origin='upper')
+        pc = ax_spec.imshow(self.TFR, aspect='auto', origin='upper')
+
+        return pc
 
     # also creates self.timevec
     def __traces2TFR(self):
@@ -394,6 +402,73 @@ spec_results = []
 # callback function to aggregate spec results
 def append_spec(spec_obj):
     spec_results.append(spec_obj)
+
+# Does spec analysis for all files in simulation directory
+# ddata comes from fileio
+def analysis_typespecific(ddata, p_exp, opts=None):
+# def analysis_typespecific(ddata, p_exp, max_freq=None, save_data=None):
+    # 'opts' input are the options in a dictionary
+    # if opts is defined, then make it well formed
+    # the valid keys of opts are in list_opts
+    opts_run = {
+        'type': 'dpl',
+        'f_max': None,
+        'save_data': 0,
+        'runtype': 'parallel',
+    }
+
+    # check if opts is supplied
+    if opts:
+        # assume opts is a dict
+        # iterate through provided opts and assign if the key is present
+        # otherwise, ignore
+        for key, val in opts.iteritems():
+            if key in opts_run.keys():
+                opts_run[key] = val
+
+    # preallocate lists for use below
+    list_param = []
+    list_ts = []
+    list_spec = []
+
+    # aggregrate all file from individual expmts into lists
+    for expmt_group in ddata.expmt_groups:
+        # get the list of params
+        # returns an alpha SORTED list
+        # add to list of all param files
+        param_tmp = ddata.file_match(expmt_group, 'param')
+        list_param.extend(param_tmp)
+
+        # get the list of dipoles
+        if opts_run['type'] == 'dpl':
+            list_ts.extend(ddata.file_match(expmt_group, 'rawdpl'))
+        elif opts_run['type'] == 'current':
+            list_ts.extend(ddata.file_match(expmt_group, 'rawcurrent'))
+
+        print list_ts
+
+        # create list of spec output names
+        # this is sorted because of file_match
+        exp_prefix_list = [fio.strip_extprefix(fparam) for fparam in param_tmp]
+        list_spec.extend([ddata.create_filename(expmt_group, 'rawspec', exp_prefix) for exp_prefix in exp_prefix_list])
+
+    # perform analysis on all runs from all exmpts at same time
+    if opts_run['runtype'] == 'parallel':
+        pl = Pool()
+        for fparam, fts, fspec in it.izip(list_param, list_ts, list_spec):
+            pl.apply_async(MorletSpec, (fparam, fts, fspec, opts_run['f_max'], opts_run['save_data']), callback=append_spec)
+
+        pl.close()
+        pl.join()
+
+        # sort the spec results by the spec object's name and return
+        return sorted(spec_results, key=lambda spec_obj: spec_obj.name)
+
+    if opts_run['runtype'] == 'debug':
+        for fparam, fts, fspec in it.izip(list_param, list_ts, list_spec):
+            spec_results.append(MorletSpec(fparam, fts, fspec, opts_run['f_max'], opts_run['save_data']))
+
+        return spec_results
 
 # Does spec analysis for all files in simulation directory
 # ddata comes from fileio
