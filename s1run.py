@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # s1run.py - primary run function for s1 project
 #
-# v 1.7.50irec
-# rev 2013-05-01 (SL: added file_current and current recording)
-# last major: (SL: Separated L2 and L5 dipole)
+# v 1.7.52
+# rev 2013-05-07 (SL: Added current recording for the L2Pyr)
+# last major: (SL: added file_current and current recording)
 
 import os
 import sys
@@ -241,6 +241,7 @@ def exec_runsim(f_psim):
 
                 # combine the net.current{} variables on each proc
                 pc.allreduce(net.current['L5Pyr_soma'], 1)
+                pc.allreduce(net.current['L2Pyr_soma'], 1)
 
                 # write time and calculated dipole to data file only if on the first proc
                 # only execute this statement on one proc
@@ -253,8 +254,8 @@ def exec_runsim(f_psim):
 
                     # write the L5Pyr somatic current to the file
                     with open(file_current, 'w') as fc:
-                        for t, i in it.izip(t_vec.x, net.current['L5Pyr_soma'].x):
-                            fc.write("%03.3f\t%5.4e\n" % (t, i))
+                        for t, i_L2, i_L5 in it.izip(t_vec.x, net.current['L2Pyr_soma'].x, net.current['L5Pyr_soma'].x):
+                            fc.write("%03.3f\t%5.4e\t%5.4e\n" % (t, i_L2, i_L5))
 
                     # write the params, but add a trial number
                     p['Sim_No'] = i
@@ -303,6 +304,14 @@ def exec_runsim(f_psim):
 
             t_start_analysis = time.time()
 
+            # new spec analysis opts
+            # opts_spec = {
+            #     'type': 'dpl',
+            #     'f_max': '50',
+            #     'save_data': 1,
+            #     'runtype': 'parallel',
+            # }
+
             # run the spectral analysis and temporarily keep data in memory in spec_results
             spec_results = specfn.analysis(ddir, p_exp)
 
@@ -312,6 +321,8 @@ def exec_runsim(f_psim):
             plot_start = time.time()
 
             # run plots and epscompress function
+            # spec results is passed as an argument here
+            # because it's not necessarily saved
             plotfn.pall(ddir, p_exp, spec_results)
 
             # do the relevant png optimization

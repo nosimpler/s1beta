@@ -1,8 +1,8 @@
 # praw.py - all of the raw data types on one fig
 #
-# v 1.7.51irec
-# rev 2013-05-06 (SL: Using new FigDipoleExp())
-# last major: (SL: Plots raw L5 somatic current)
+# v 1.7.52
+# rev 2013-05-07 (SL: added spec_current)
+# last major: (SL: Using new FigDipoleExp())
 
 import fileio as fio
 import numpy as np
@@ -25,6 +25,7 @@ def praw(ddata):
     dproj = '/repo/data/s1'
 
     # check on spec data
+    # generates both spec because both are needed here
     specfn.generate_missing_spec(ddata)
 
     # test experiment
@@ -49,8 +50,12 @@ def praw(ddata):
         l_param = ddata.file_match(expmt_group, 'param')
         l_spec = ddata.file_match(expmt_group, 'rawspec')
         l_current = ddata.file_match(expmt_group, 'rawcurrent')
+        l_spec_current = ddata.file_match(expmt_group, 'rawspeccurrent')
 
-        for f_dpl, f_spk, f_spec, f_current, f_param in it.izip(l_dpl, l_spk, l_spec, l_current, l_param):
+        for (f_dpl, f_spk, f_spec, f_current, f_spec_current, f_param
+        in it.izip(l_dpl, l_spk, l_spec, l_current, l_spec_current, l_param)):
+
+            print f_spec_current
             # into the pdipole directory, this will plot dipole, spec, and spikes
             # create the axis handle
             f = ac.FigDipoleExp(ax_handles)
@@ -65,6 +70,10 @@ def praw(ddata):
             # plot the dipole-based spec data
             pc = specfn.pspec_ax(f.ax['spec_dpl'], f_spec)
             f.f.colorbar(pc, ax=f.ax['spec_dpl'])
+
+            # plot the current-based spec data
+            pci = specfn.pspec_ax(f.ax['spec_I'], f_spec_current)
+            f.f.colorbar(pci, ax=f.ax['spec_I'])
 
             # get all spikes
             s = spikefn.spikes_from_file(f_param, f_spk)

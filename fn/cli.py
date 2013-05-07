@@ -1,8 +1,8 @@
 # cli.py - routines for the command line interface console s1sh.py
 #
-# v 1.7.51irec
-# rev 2013-05-06 (SL: added temporary spec_current call)
-# last major: (SL: minor)
+# v 1.7.52
+# rev 2013-05-07 (SL: Fixed do_show())
+# last major: (SL: added temporary spec_current call)
 
 from cmd import Cmd
 from datetime import datetime
@@ -97,13 +97,13 @@ class Console(Cmd):
     def do_debug(self, args):
         """Qnd function to test other functions
         """
-        self.do_setdate('2013-05-01')
-        self.do_load('rec_i-025')
+        self.do_setdate('2013-05-06')
+        self.do_load('rec_i_L2-002')
         # self.do_spec_current('')
         self.do_praw('')
         # self.do_pdipole('grid')
         # self.do_pngv('')
-        # self.do_show('spike in (4, 0)')
+        # self.do_show('testing in (0, 0)')
         # self.do_calc_dipole_avg('')
         # self.do_pdipole('evaligned')
         # self.do_specmax('in (testing, 0, 4) on [0, 1000.]')
@@ -323,7 +323,7 @@ class Console(Cmd):
             print "No active directory?"
 
     def do_vars(self, args):
-        """Show changed variables in loaded simulation and their values. Usage:
+        """Show changed variables in loaded simulation and their values. vars comes from p_exp. Usage:
            [s1] vars
         """
         print "\nVars changed in this simulation:"
@@ -754,12 +754,16 @@ class Console(Cmd):
             fname = os.path.join(self.ddata.dfig[expmt_group]['param'], fname_short)
 
             if os.path.isfile(fname):
-                print fname
+                print "\nFile: %s" % fname
 
             gid_dict, p = paramrw.read(fname)
-            print "\nChanged vars and some standard vars:"
+            print "Changed vars and some standard vars:"
+
+            # self.var_list contains stuff from p_exp AND individual p
+            # so just select out what is in p
             for var in self.var_list:
-                print "  %s:" % var[0], p[var[0]]
+                if var[0] in p.keys():
+                    print "  %s:" % var[0], p[var[0]]
 
             # print some additional info
             list_meta = [
@@ -767,7 +771,6 @@ class Console(Cmd):
                 'N_pyr_x',
                 'N_pyr_y',
             ]
-            # print p.keys()
             for key in list_meta:
                 if key in p.keys():
                     print "  %s:" % key, p[key]
@@ -775,21 +778,8 @@ class Console(Cmd):
             print ""
         else:
             print "Either N or N_T might be incorrect"
-            # print N, N_T
-            # print self.p_exp.N_sims, self.p_exp.N_trials
-            return 0
-            # print dir(self.p_exp)
-            # print dir(self.ddata)
-            # print self.p_exp.trial_prefix_str
-            # print self.ddata.dfig
-        # j_exp = int(vars[-1])
-        # print expmt, search_str, j_exp
 
-        # if expmt in self.ddata.expmt_groups:
-        #     if search_str == 'changed':
-        #         p_sim = self.p_exp.return_pdict(expmt, j_exp)
-        #         for key in key_dict['dynamic_keys']:
-        #             print "%s: %4.5f" % (key, p_sim[key])
+            return 0
 
     def complete_show(self, text, line, j0, J):
         """Completion function for show

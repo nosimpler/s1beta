@@ -1,8 +1,8 @@
 # L2_pyramidal.py - est class def for layer 2 pyramidal cells
 #
-# v 1.7.44
-# rev 2013-04-20 (SL: Added IClamp def, very much redundant with L5Pyr())
-# last rev: (MS: inactive example code for adding iclamps)
+# v 1.7.52
+# rev 2013-05-07 (SL: Added self.synapses and current recording)
+# last rev: (SL: Added IClamp def, very much redundant with L5Pyr())
 
 from neuron import h as nrn
 from class_cell import Pyr
@@ -40,6 +40,9 @@ class L2Pyr(Pyr):
 
         # create synapses
         self.__synapse_create()
+
+        # run record_current_soma(), defined in Cell()
+        self.record_current_soma()
 
     # insert IClamps in all situations
     # temporarily an external function taking the p dict
@@ -167,8 +170,10 @@ class L2Pyr(Pyr):
     def __synapse_create(self):
         # creates synapses onto this cell 
         # Somatic synapses
-        self.soma_gabaa = self.syn_gabaa_create(self.soma(0.5))
-        self.soma_gabab = self.syn_gabab_create(self.soma(0.5))
+        self.synapses = {
+            'soma_gabaa': self.syn_gabaa_create(self.soma(0.5)),
+            'soma_gabab': self.syn_gabab_create(self.soma(0.5)),
+        }
 
         # Dendritic synapses
         # Here list_dend[3] is the oblique apical dendritic section, different from the L5Pyr!
@@ -233,8 +238,8 @@ class L2Pyr(Pyr):
                 'lamtha': 50.,
             }
 
-            self.ncfrom_L2Basket.append(self.parconnect_from_src(gid_src, nc_dict, self.soma_gabaa))
-            self.ncfrom_L2Basket.append(self.parconnect_from_src(gid_src, nc_dict, self.soma_gabab))
+            self.ncfrom_L2Basket.append(self.parconnect_from_src(gid_src, nc_dict, self.synapses['soma_gabaa']))
+            self.ncfrom_L2Basket.append(self.parconnect_from_src(gid_src, nc_dict, self.synapses['soma_gabab']))
 
         # connections FROM L5 basket cells TO this L2Pyr cell
         # for gid_src in gid_dict['L5_basket']:
@@ -245,8 +250,8 @@ class L2Pyr(Pyr):
         #         'lamtha': 70.
         #     }
 
-        #     self.ncfrom_L5Basket.append(self.parconnect_from_src(gid_src, nc_dict, self.soma_gabaa))
-        #     self.ncfrom_L5Basket.append(self.parconnect_from_src(gid_src, nc_dict, self.soma_gabab))
+        #     self.ncfrom_L5Basket.append(self.parconnect_from_src(gid_src, nc_dict, self.synapes['soma_gabaa']))
+        #     self.ncfrom_L5Basket.append(self.parconnect_from_src(gid_src, nc_dict, self.synapes['soma_gabab']))
 
     # may be reorganizable
     def parreceive(self, gid, gid_dict, pos_dict, p_ext):

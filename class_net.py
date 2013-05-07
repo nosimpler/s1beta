@@ -1,8 +1,8 @@
 # class_net.py - establishes the Network class and related methods
 #
-# v 1.7.50irec
-# rev 2013-05-01 (SL: Network() new function aggregate_currents())
-# last major: (SL: added IClamps to L2Pyr())
+# v 1.7.52
+# rev 2013-05-07 (SL: added aggregate current for L2Pyr at soma)
+# last major: (SL: Network() new function aggregate_currents())
 
 import itertools as it
 import numpy as np
@@ -32,6 +32,7 @@ class Network():
         # Create a nrn.Vector() with size 1xself.N_t, zero'd
         self.current = {
             'L5Pyr_soma': nrn.Vector(self.N_t, 0),
+            'L2Pyr_soma': nrn.Vector(self.N_t, 0),
         }
 
         # int variables for grid of pyramidal cells (for now in both L2 and L5)
@@ -105,8 +106,6 @@ class Network():
         # create sources and init
         self.__create_all_src()
         self.__state_init()
-        # if self.rank == 0:
-        #     print "Reminder: No initialization in this network"
 
         # parallel network connector
         self.__parnet_connect()
@@ -384,6 +383,12 @@ class Network():
                     # self.current_L5Pyr_soma was created upon
                     # in parallel, each node has its own Net()
                     self.current['L5Pyr_soma'].add(I_soma)
+
+            elif cell.celltype == 'L2_pyramidal':
+                for key, I_soma in cell.dict_currents.iteritems():
+                    # self.current_L5Pyr_soma was created upon
+                    # in parallel, each node has its own Net()
+                    self.current['L2Pyr_soma'].add(I_soma)
 
     # recording debug function
     def rec_debug(self, rank_exec, gid):

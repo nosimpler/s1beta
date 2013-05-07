@@ -1,8 +1,8 @@
 # specfn.py - Average time-frequency energy representation using Morlet wavelet method
 #
-# v 1.7.51irec
-# rev 2013-05-06 (SL: added plot to axis fn in MorletSpec() and functions for current spec)
-# last major: (SL: Renamed pspecone() to pspec_ax(). Added fn generate_missing_spec())
+# v 1.7.52
+# rev 2013-05-07 (SL: Fixed some save data functions)
+# last major: (SL: added plot to axis fn in MorletSpec() and functions for current spec)
 
 import os
 import sys
@@ -62,7 +62,7 @@ class MorletSpec():
             self.width = 7.
 
             # Calculate sampling frequency
-            self.fs = 1000./self.p_dict['dt']
+            self.fs = 1000. / self.p_dict['dt']
 
             # Generate Spec data
             self.TFR = self.__traces2TFR()
@@ -70,8 +70,17 @@ class MorletSpec():
             # Add time vector as first row of TFR data
             # self.TFR = np.vstack([self.timevec, self.TFR])
 
-            # Write data to file
-            if self.p_dict['save_spec_data'] or save_data:
+            # Write data to file ONLY if save_data is ALSO true
+            # eg. save_data is an overwriting mechanism
+            # if self.p_dict['save_spec_data'] and save_data:
+            if save_data == None:
+                # if save_data is unspecified, check the p_dict
+                if self.p_dict['save_spec_data']:
+                    print fdata_spec
+                    write(fdata_spec, self.timevec, self.freqvec, self.TFR)
+
+            elif save_data:
+                # if save_data IS specified, and IF the value evaluates True, THEN write also
                 write(fdata_spec, self.timevec, self.freqvec, self.TFR)
 
         else:
@@ -394,6 +403,21 @@ def generate_missing_spec(ddata, f_max=40):
         # should exist
         spec = []
 
+    # do the one for current, too. Might as well at this point
+    l_speccurrent = ddata.file_match(expmt_group, 'rawspeccurrent')
+
+    if not l_speccurrent:
+        p_exp = paramrw.ExpParams(ddata.fparam)
+        opts = {
+            'type': 'current',
+            'f_max': 90.,
+            'save_data': 1,
+            'runtype': 'debug',
+        }
+        spec_current = specfn.analysis_typespecific(ddata, p_exp, opts)
+    else:
+        spec_current = []
+
     return spec
 
 # this must be globally available for callback function append_spec
@@ -406,6 +430,7 @@ def append_spec(spec_obj):
 # Does spec analysis for all files in simulation directory
 # ddata comes from fileio
 def analysis_typespecific(ddata, p_exp, opts=None):
+# def analysis(ddata, p_exp, max_freq=None, save_data=None):
 # def analysis_typespecific(ddata, p_exp, max_freq=None, save_data=None):
     # 'opts' input are the options in a dictionary
     # if opts is defined, then make it well formed
@@ -450,7 +475,7 @@ def analysis_typespecific(ddata, p_exp, opts=None):
         # create list of spec output names
         # this is sorted because of file_match
         exp_prefix_list = [fio.strip_extprefix(fparam) for fparam in param_tmp]
-        list_spec.extend([ddata.create_filename(expmt_group, 'rawspec', exp_prefix) for exp_prefix in exp_prefix_list])
+        list_spec.extend([ddata.create_filename(expmt_group, 'rawspeccurrent', exp_prefix) for exp_prefix in exp_prefix_list])
 
     # perform analysis on all runs from all exmpts at same time
     if opts_run['runtype'] == 'parallel':

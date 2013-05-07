@@ -1,8 +1,8 @@
 # fileio.py - general file input/output functions
 #
-# v 1.7.50irec
-# rev 2013-05-01 (SL: added file type for currents)
-# last rev: (SL: finds an aggregate file)
+# v 1.7.52
+# rev 2013-05-07 (SL: Added new data type to SimulationPaths() and cleaned comments out)
+# last rev: (SL: added file type for currents)
 
 import datetime, fnmatch, os, shutil, sys
 import itertools as it
@@ -107,6 +107,7 @@ class SimulationPaths():
             'rawdpl': '-dpl.txt',
             'rawcurrent': '-i.txt',
             'rawspec': '-spec.npz',
+            'rawspeccurrent': '-speci.npz',
             'avgdpl': '-dplavg.txt',
             'avgspec': '-specavg.npz',
             'figavgdpl': '-dplavg.eps',
@@ -272,40 +273,6 @@ class SimulationPaths():
         file_list.sort()
 
         return file_list
-
-    # *** OLD METHODS FROM OLD SIMULATIONPATHS ***
-    # grab lists of non-fig files
-    # def __getfiles(self):
-    #     filelists = {}
-    #     for key in self.datatypes:
-    #         if not key.startswith('fig'):
-    #             subdir = os.path.join(self.dsim, key)
-    #             fext = self.datatypes[key]
-    #             filelists[key] = file_match(subdir, fext)
-
-    #     return filelists
-
-    # # simple path creations for figures
-    # def __dfigs_create(self):
-    #     return {
-    #         'spikes': os.path.join(self.dsim, 'figspk'),
-    #         'dipole': os.path.join(self.dsim, 'figdpl'),
-    #         'spec': os.path.join(self.dsim, 'figspec'),
-    #     }
-
-    # # these are the "experiment" names (versus individual trials)
-    # def __get_exp_names(self):
-    #     expnames = []
-    #     # Reads the unique experiment names
-    #     for file in self.filelists['param']:
-    #         # get the parts of the name we care about
-    #         parts = file.split('/')[-1].split('.')[0].split('-')[:2]
-    #         name = parts[0] + '-' + parts[1]
-
-    #         if name not in expnames:
-    #             expnames.append(name)
-
-    #     return expnames
 
     def exp_files_of_type(self, datatype):
         # create dict of experiments

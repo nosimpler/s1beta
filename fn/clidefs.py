@@ -1,8 +1,8 @@
 # clidefs.py - these are all of the function defs for the cli
 #
-# v 1.7.51irec
-# rev 2013-05-06 (SL: added spec_current function)
-# last major: (SL: added a qnd png_viewer_simple())
+# v 1.7.52
+# rev 2013-05-07 (SL: minor, made save_data default for current spec)
+# last major: (SL: added spec_current function)
 
 # Standard modules
 import fnmatch, os, re, sys
@@ -13,7 +13,7 @@ from subprocess import call
 from glob import iglob
 from time import time
 
-# my runa1 module
+# local modules
 import spikefn
 import plotfn
 import fileio as fio
@@ -316,7 +316,7 @@ def exec_spec_current(ddata):
     opts = {
         'type': 'current',
         'f_max': 90.,
-        'save_data': 0,
+        'save_data': 1,
         'runtype': 'debug',
     }
 
