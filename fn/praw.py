@@ -1,8 +1,8 @@
 # praw.py - all of the raw data types on one fig
 #
-# v 1.7.52
-# rev 2013-05-07 (SL: added spec_current)
-# last major: (SL: Using new FigDipoleExp())
+# v 1.7.53
+# rev 2013-05-08 (SL: fixed the error I had accidentally introduced ... without checking ... )
+# last major: (SL: added spec_current)
 
 import fileio as fio
 import numpy as np
@@ -52,10 +52,8 @@ def praw(ddata):
         l_current = ddata.file_match(expmt_group, 'rawcurrent')
         l_spec_current = ddata.file_match(expmt_group, 'rawspeccurrent')
 
-        for (f_dpl, f_spk, f_spec, f_current, f_spec_current, f_param
-        in it.izip(l_dpl, l_spk, l_spec, l_current, l_spec_current, l_param)):
-
-            print f_spec_current
+        for f_dpl, f_spk, f_spec, f_current, f_spec_current, f_param \
+        in it.izip(l_dpl, l_spk, l_spec, l_current, l_spec_current, l_param):
             # into the pdipole directory, this will plot dipole, spec, and spikes
             # create the axis handle
             f = ac.FigDipoleExp(ax_handles)

@@ -1,8 +1,8 @@
 # L2_pyramidal.py - est class def for layer 2 pyramidal cells
 #
-# v 1.7.52
-# rev 2013-05-07 (SL: Added self.synapses and current recording)
-# last rev: (SL: Added IClamp def, very much redundant with L5Pyr())
+# v 1.7.53
+# rev 2013-05-08 (SL: parameterized gabab/a conductances separately)
+# last rev: (SL: Added self.synapses and current recording)
 
 from neuron import h as nrn
 from class_cell import Pyr
@@ -230,16 +230,22 @@ class L2Pyr(Pyr):
 
         # connections FROM L2 basket cells TO this L2Pyr cell
         for gid_src, pos in it.izip(gid_dict['L2_basket'], pos_dict['L2_basket']):
-
-            nc_dict = {
+            nc_dict['gabaa'] = {
                 'pos_src': pos,
-                'A_weight': p['gbar_L2Basket_L2Pyr'],
+                'A_weight': p['gbar_gabaa_L2Basket_L2Pyr'],
                 'A_delay': 1.,
                 'lamtha': 50.,
             }
 
-            self.ncfrom_L2Basket.append(self.parconnect_from_src(gid_src, nc_dict, self.synapses['soma_gabaa']))
-            self.ncfrom_L2Basket.append(self.parconnect_from_src(gid_src, nc_dict, self.synapses['soma_gabab']))
+            nc_dict['gabab'] = {
+                'pos_src': pos,
+                'A_weight': p['gbar_gabab_L2Basket_L2Pyr'],
+                'A_delay': 1.,
+                'lamtha': 50.,
+            }
+
+            self.ncfrom_L2Basket.append(self.parconnect_from_src(gid_src, nc_dict['gabaa'], self.synapses['soma_gabaa']))
+            self.ncfrom_L2Basket.append(self.parconnect_from_src(gid_src, nc_dict['gabab'], self.synapses['soma_gabab']))
 
         # connections FROM L5 basket cells TO this L2Pyr cell
         # for gid_src in gid_dict['L5_basket']:

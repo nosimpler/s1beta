@@ -1,8 +1,8 @@
 # specfn.py - Average time-frequency energy representation using Morlet wavelet method
 #
-# v 1.7.52
-# rev 2013-05-07 (SL: Fixed some save data functions)
-# last major: (SL: added plot to axis fn in MorletSpec() and functions for current spec)
+# v 1.7.53
+# rev 2013-05-08 (SL: removed debug print msg)
+# last major: (SL: Fixed some save data functions)
 
 import os
 import sys
@@ -76,7 +76,6 @@ class MorletSpec():
             if save_data == None:
                 # if save_data is unspecified, check the p_dict
                 if self.p_dict['save_spec_data']:
-                    print fdata_spec
                     write(fdata_spec, self.timevec, self.freqvec, self.TFR)
 
             elif save_data:

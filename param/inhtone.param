@@ -49,7 +49,7 @@ gbar_L2Pyr_L2Pyr_ampa: 0.
 gbar_L2Pyr_L2Pyr_nmda: 0.
 # gbar_L2Pyr_L2Pyr_ampa: 5e-4
 # gbar_L2Pyr_L2Pyr_nmda: 5e-4
-gbar_L2Basket_L2Pyr: 5.56e-3
+# gbar_L2Basket_L2Pyr: 5.56e-3
 # gbar_L2Basket_L2Pyr: 5e-2
 
 # max conductances TO L2Baskets
@@ -65,7 +65,7 @@ gbar_L5Pyr_L5Pyr_nmda: 0.
 gbar_L2Pyr_L5Pyr: 2.5e-4
 gbar_L2Basket_L5Pyr: 5e-4
 # gbar_L2Basket_L5Pyr: 1e-3
-gbar_L5Basket_L5Pyr: 2.7e-3
+# gbar_L5Basket_L5Pyr: 2.7e-3
 # gbar_L5Basket_L5Pyr: 2.5e-2
 
 # max conductances TO L5Baskets
@@ -172,3 +172,9 @@ Itonic_T_L5Pyr_soma: -1
 Itonic_T_L2Pyr_soma: -1
 Itonic_t0_L2Pyr_soma: 50.
 Itonic_A_L2Pyr_soma: 0.
+
+# new params from default
+gbar_gabab_L2Basket_L2Pyr: 5e-2
+gbar_gabaa_L2Basket_L2Pyr: 5e-2
+gbar_gabab_L5Basket_L5Pyr: 2.5e-2
+gbar_gabaa_L5Basket_L5Pyr: 2.5e-2

@@ -1,8 +1,8 @@
 # params_default.py - list of default params and values
 #
-# v 1.7.44
-# rev 2013-04-20 (SL: added IClamp params to L2Pyr)
-# last major: (SL: Added basic IClamp params for L5Pyr)
+# v 1.7.53
+# rev 2013-05-08 (SL: parameterized gabaa/b conductances)
+# last major: (SL: added IClamp params to L2Pyr)
 
 # flat file of default values
 # tuples for different "experiments"
@@ -52,7 +52,8 @@ def get_params_default():
         # max conductances TO L2Pyrs
         'gbar_L2Pyr_L2Pyr_ampa': 5e-4,
         'gbar_L2Pyr_L2Pyr_nmda': 5e-4,
-        'gbar_L2Basket_L2Pyr': 5e-2,
+        'gbar_gabaa_L2Basket_L2Pyr': 5e-2,
+        'gbar_gabab_L2Basket_L2Pyr': 5e-2,
 
         # max conductances TO L2Baskets
         'gbar_L2Pyr_L2Basket': 5e-4,
@@ -63,7 +64,8 @@ def get_params_default():
         'gbar_L5Pyr_L5Pyr_nmda': 5e-4,
         'gbar_L2Pyr_L5Pyr': 2.5e-4,
         'gbar_L2Basket_L5Pyr': 1e-3,
-        'gbar_L5Basket_L5Pyr': 2.5e-2,
+        'gbar_gabaa_L5Basket_L5Pyr': 2.5e-2,
+        'gbar_gabab_L5Basket_L5Pyr': 2.5e-2,
 
         # max conductances TO L5Baskets
         'gbar_L5Basket_L5Basket': 2e-2,
