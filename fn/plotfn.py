@@ -1,13 +1,14 @@
 # plotfn.py - pall and possibly other plot routines
 #
-# v 1.7.51irec
-# rev 2013-05-06 (SL: minor)
-# last major: (SL: changed praster)
+# v 1.7.54
+# rev 2013-05-24 (SL: added pspec)
+# last major: (SL: minor)
 
 from praster import praster
 import axes_create as ac
-import paramrw
 import dipolefn
+import paramrw
+import pspec
 import specfn
 import os
 import itertools as it
@@ -35,7 +36,7 @@ def pkernel(dfig, f_param, f_spk, f_dpl, data_spec, key_types, xlim=[0, 'tstop']
     # plot kernels
     praster(f_param, tstop, f_spk, dfig_spk)
     dipolefn.pdipole(f_dpl, f_param, dfig_dpl, key_types, pdipole_dict)
-    specfn.pspec(data_spec, f_dpl, dfig_spec, p_dict, key_types, xlim)
+    pspec.pspec_dpl(data_spec, f_dpl, dfig_spec, p_dict, key_types, xlim)
 
     return 0
 
@@ -51,7 +52,7 @@ def pkernel_with_hist(dfig, f_param, f_spk, f_dpl, data_spec, key_types, xlim=[0
 
     # plot kernels
     dipolefn.pdipole_with_hist(f_dpl, f_spk, dfig_dpl, p_dict, gid_dict, key_types, xlim)
-    specfn.pspec_with_hist(data_spec, f_dpl, f_spk, dfig_spec, p_dict, gid_dict, key_types, xlim)
+    pspec.pspec_with_hist(data_spec, f_dpl, f_spk, dfig_spec, p_dict, gid_dict, key_types, xlim)
 
     return 0
 

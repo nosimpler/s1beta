@@ -1,12 +1,13 @@
 # praw.py - all of the raw data types on one fig
 #
-# v 1.7.53
-# rev 2013-05-08 (SL: fixed the error I had accidentally introduced ... without checking ... )
+# v 1.7.54
+# rev 2013-05-08 (SL: parallel praw)
 # last major: (SL: added spec_current)
 
 import fileio as fio
 import numpy as np
 import itertools as it
+import multiprocessing as mp
 import ast
 import os
 import paramrw
@@ -18,25 +19,109 @@ import matplotlib.pyplot as plt
 from neuron import h as nrn
 import axes_create as ac
 
+def pkernel(dfig_dpl, f_dpl, f_spk, f_spec, f_current, f_spec_current, f_param, ax_handles):
+    T = paramrw.find_param(f_param, 'tstop')
+    xlim = (50., T)
+
+    # into the pdipole directory, this will plot dipole, spec, and spikes
+    # create the axis handle
+    f = ac.FigDipoleExp(ax_handles)
+
+    # create the figure name
+    fprefix = fio.strip_extprefix(f_dpl) + '-dpl'
+    fname = os.path.join(dfig_dpl, fprefix + '.png')
+
+    # grab the dipole
+    dpl = dipolefn.Dipole(f_dpl)
+
+    # plot the dipole to the agg axes
+    dpl.plot(f.ax['dpl_agg'], xlim)
+    dpl.plot(f.ax['dpl_agg_L5'], xlim)
+    # f.ax['dpl_agg_L5'].hold(True)
+    # dpl.plot(f.ax['dpl_agg_L5'], xlim, 'L5')
+    dpl.plot(f.ax['dpl'], xlim, 'L2')
+
+    # f.ysymmetry(f.ax['dpl'])
+    dpl.plot(f.ax['dpl_L5'], xlim, 'L5')
+    # print dpl.max('L5', (0., -1)), dpl.max('L5', (50., -1))
+    # print f.ax['dpl_L5'].get_ylim()
+    # f.ax['dpl_L5'].set_ylim((-1e5, 1e5))
+    # f.ysymmetry(f.ax['dpl_L5'])
+
+    # plot the current
+    I_soma = currentfn.SynapticCurrent(f_current)
+    I_soma.plot_to_axis(f.ax['I_soma'], 'L2')
+    I_soma.plot_to_axis(f.ax['I_soma_L5'], 'L5')
+
+    # plot the dipole-based spec data
+    pc = specfn.pspec_ax(f.ax['spec_dpl'], f_spec)
+    f.f.colorbar(pc, ax=f.ax['spec_dpl'])
+
+    pc = specfn.pspec_ax(f.ax['spec_dpl_L5'], f_spec)
+    f.f.colorbar(pc, ax=f.ax['spec_dpl_L5'])
+
+    # grab the current spec and plot them
+    spec_L2, spec_L5 = data_spec_current = specfn.read(f_spec_current, type='current')
+    pc_L2 = f.ax['spec_I'].imshow(spec_L2['TFR'], aspect='auto', origin='upper')
+    pc_L5 = f.ax['spec_I_L5'].imshow(spec_L5['TFR'], aspect='auto', origin='upper')
+
+    # plot the current-based spec data
+    # pci = specfn.pspec_ax(f.ax['spec_I'], f_spec_current, type='current')
+    f.f.colorbar(pc_L2, ax=f.ax['spec_I'])
+    f.f.colorbar(pc_L5, ax=f.ax['spec_I_L5'])
+
+    # get all spikes
+    s = spikefn.spikes_from_file(f_param, f_spk)
+
+    # these work primarily because of how the keys are done
+    # in the spike dict s (consequence of spikefn.spikes_from_file())
+    s_L2 = spikefn.filter_spike_dict(s, 'L2_')
+    s_L5 = spikefn.filter_spike_dict(s, 'L5_')
+
+    # resize xlim based on our 50 ms cutoff thingy
+    xlim = (50., xlim[1])
+
+    # plot the spikes
+    spikefn.spike_png(f.ax['spk'], s_L2)
+    spikefn.spike_png(f.ax['spk_L5'], s_L5)
+
+    f.ax['dpl'].set_xlim(xlim)
+    # f.ax['dpl_L5'].set_xlim(xlim)
+    # f.ax['spec_dpl'].set_xlim(xlim)
+    f.ax['spk'].set_xlim(xlim)
+    f.ax['spk_L5'].set_xlim(xlim)
+
+    f.savepng(fname)
+    f.close()
+
+    return 0
+
+# dummy function for callback
+def cb(r):
+    pass
+
 # For a given ddata (SimulationPaths object), find the mean dipole
 # over ALL trials in ALL conditions in EACH experiment
 def praw(ddata):
     # grab the original dipole from a specific dir
     dproj = '/repo/data/s1'
 
+    runtype = 'parallel'
+    # runtype = 'debug'
+
     # check on spec data
     # generates both spec because both are needed here
     specfn.generate_missing_spec(ddata)
 
     # test experiment
-    expmt_group = ddata.expmt_groups[0]
+    # expmt_group = ddata.expmt_groups[0]
 
     ax_handles = [
+        'dpl_agg',
         'dpl',
         'spec_dpl',
-        'spk_L2',
-        'spk_L5',
-        'I_soma_L5Pyr',
+        'spk',
+        'I_soma',
         'spec_I',
     ]
 
@@ -52,46 +137,16 @@ def praw(ddata):
         l_current = ddata.file_match(expmt_group, 'rawcurrent')
         l_spec_current = ddata.file_match(expmt_group, 'rawspeccurrent')
 
-        for f_dpl, f_spk, f_spec, f_current, f_spec_current, f_param \
-        in it.izip(l_dpl, l_spk, l_spec, l_current, l_spec_current, l_param):
-            # into the pdipole directory, this will plot dipole, spec, and spikes
-            # create the axis handle
-            f = ac.FigDipoleExp(ax_handles)
+        if runtype == 'parallel':
+            pl = mp.Pool()
 
-            # create the figure name
-            fprefix = fio.strip_extprefix(f_dpl) + '-dpl'
-            fname = os.path.join(dfig_dpl, fprefix + '.png')
+            for f_dpl, f_spk, f_spec, f_current, f_spec_current, f_param \
+            in it.izip(l_dpl, l_spk, l_spec, l_current, l_spec_current, l_param):
+                pl.apply_async(pkernel, (dfig_dpl, f_dpl, f_spk, f_spec, f_current, f_spec_current, f_param, ax_handles), callback=cb)
+            pl.close()
+            pl.join()
 
-            # grab the dipole
-            xlim = dipolefn.pdipole_ax(f.ax['dpl'], f_dpl, f_param)
-
-            # plot the dipole-based spec data
-            pc = specfn.pspec_ax(f.ax['spec_dpl'], f_spec)
-            f.f.colorbar(pc, ax=f.ax['spec_dpl'])
-
-            # plot the current-based spec data
-            pci = specfn.pspec_ax(f.ax['spec_I'], f_spec_current)
-            f.f.colorbar(pci, ax=f.ax['spec_I'])
-
-            # get all spikes
-            s = spikefn.spikes_from_file(f_param, f_spk)
-
-            # these work primarily because of how the keys are done
-            # in the spike dict s (consequence of spikefn.spikes_from_file())
-            s_L2 = spikefn.filter_spike_dict(s, 'L2_')
-            s_L5 = spikefn.filter_spike_dict(s, 'L5_')
-
-            # resize xlim based on our 50 ms cutoff thingy
-            xlim = (50., xlim[1])
-
-            # plot the spikes
-            spikefn.spike_png(f.ax['spk_L2'], s_L2)
-            spikefn.spike_png(f.ax['spk_L5'], s_L5)
-
-            f.ax['dpl'].set_xlim(xlim)
-            f.ax['spec_dpl'].set_xlim(xlim)
-            f.ax['spk_L2'].set_xlim(xlim)
-            f.ax['spk_L5'].set_xlim(xlim)
-
-            f.savepng(fname)
-            f.close()
+        elif runtype == 'debug':
+            for f_dpl, f_spk, f_spec, f_current, f_spec_current, f_param \
+            in it.izip(l_dpl, l_spk, l_spec, l_current, l_spec_current, l_param):
+                pkernel(dfig_dpl, f_dpl, f_spk, f_spec, f_current, f_spec_current, f_param, ax_handles)

@@ -1,8 +1,8 @@
 # spikefn.py - dealing with spikes
 #
-# v 1.7.49
-# rev 2013-05-01 (SL: Added new function filter_spike_dict() that filters a spike_dict_from_file)
-# last major: (SL: pinput_hist() is a weird function)
+# v 1.7.53
+# rev 2013-05-24 (SL: thinner markers)
+# last major: (SL: Added new function filter_spike_dict() that filters a spike_dict_from_file)
 
 import fileio as fio
 import numpy as np
@@ -194,7 +194,7 @@ def get_markerstyle(key):
     elif 'extpois' in key:
         markerstyle += 'k.'
     elif 'pyramidal' in key:
-        markerstyle += 'k2'
+        markerstyle += 'k.'
     elif 'basket' in key:
         markerstyle += 'r|'
 
@@ -235,7 +235,7 @@ def spike_png(a, s_dict):
         for spk_cell in s_dict[key].spike_list:
             # a.plot(np.array([451.6]), e_ticks[i] * np.ones(1), 'k.', markersize=2.5)
             # print len(s_dict[key].tick_marks), len(spk_cell)
-            a.plot(spk_cell, s_dict[key].tick_marks[i] * np.ones(len(spk_cell)), markerstyle, markeredgewidth=2, markersize=5)
+            a.plot(spk_cell, s_dict[key].tick_marks[i] * np.ones(len(spk_cell)), markerstyle, markeredgewidth=1, markersize=3)
             i += 1
 
     a.set_ylim([0, 1])

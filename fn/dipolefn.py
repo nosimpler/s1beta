@@ -1,8 +1,8 @@
 # dipolefn.py - dipole-based analysis functions
 #
-# v 1.7.51irec
-# rev 2013-05-06 (SL: changed how FigDipoleExp() is called, not totally tested)
-# last major: (SL: added pdipole_grid() but incomplete)
+# v 1.7.54
+# rev 2013-05-24 (SL: added max(), plot() function)
+# last major: (SL: changed how FigDipoleExp() is called, not totally tested)
 
 import fileio as fio
 import numpy as np
@@ -25,6 +25,7 @@ class Dipole():
 
     def __parse_f(self, f_dpl):
         x = np.loadtxt(open(f_dpl, 'r'))
+        # better implemented as a dict
         self.t = x[:, 0]
         self.dpl = x[:, 1]
 
@@ -32,6 +33,54 @@ class Dipole():
         if x.shape[1] > 3:
             self.dpl_L2 = x[:, 2]
             self.dpl_L5 = x[:, 3]
+
+    # finds the max value within a specified xlim
+    def max(self, layer, xlim):
+        # better implemented as a dict
+        if layer is None:
+            dpl_tmp = self.dpl
+        elif layer == 'L2':
+            dpl_tmp = self.dpl_L2
+        elif layer == 'L5':
+            dpl_tmp = self.dpl_L5
+
+        if xlim[0] < 0.:
+            xmin = 0.
+        else:
+            xmin = xlim[0]
+
+        if xlim[1] > self.t[-1]:
+            xmax = self.t[-1]
+        elif xlim[1] == -1:
+            xmax = self.t[-1]
+        else:
+            xmax = xlim[1]
+
+        # output t_tmp
+        # t_tmp = self.t[(self.t > xmin) & (self.t < xmax)]
+        dpl_tmp = dpl_tmp[(self.t > xmin) & (self.t < xmax)]
+
+        return np.max(dpl_tmp)
+
+    # simple layer-specific plot function
+    def plot(self, ax, xlim, layer=None):
+        # plot the whole thing and just change the xlim and the ylim
+        if layer is None:
+            ax.plot(self.t, self.dpl)
+            ymax = self.max(None, xlim)
+            ylim = (-ymax, ymax)
+            ax.set_ylim(ylim)
+        elif layer == 'L2':
+            ax.plot(self.t, self.dpl_L2)
+        elif layer == 'L5':
+            ax.plot(self.t, self.dpl_L5)
+            ymax = self.max('L5', xlim)
+            ylim = (-ymax, ymax)
+            ax.set_ylim(ylim)
+
+        ax.set_xlim(xlim)
+
+        return ax.get_xlim()
 
     # standard dipole baseline in this model is -50.207 fAm per pair of pyr cells in network
     # ext function to renormalize
@@ -361,7 +410,6 @@ def pdipole_exp(ddata, ylim=[]):
     # create one figure comparing across all
     N_expmt_groups = len(ddata.expmt_groups)
     f_exp = ac.FigDipoleExp(ddata.expmt_groups)
-    # f_exp = ac.FigDipoleExp(N_expmt_groups)
 
     # empty list for the aggregate dipole data
     dpl_exp = []
@@ -502,7 +550,6 @@ def pdipole_exp2(ddata):
         'dpl_mu_high',
     ]
     f_exp = ac.FigDipoleExp(ax_handles)
-    # f_exp = ac.FigDipoleExp(4)
 
     # plot the ctrl dipoles
     f_exp.ax['dpl_mu_low'].plot(dpl_mu_low.t, dpl_mu_low.dpl, color='k')
@@ -532,7 +579,6 @@ def pdipole_exp2(ddata):
 
     # plot the spec here
     pc = specfn.pspec_ax(f_exp.ax['spec'], fspec_mu_low)
-    # pc = specfn.pspec_ax(f_exp.ax[0], fspec_mu_low)
     print f_exp.ax[0].get_xlim()
 
     # deal with the axes here
@@ -667,7 +713,6 @@ def pdipole_evoked_aligned(ddata):
         'spk',
     ]
     f_exp = ac.FigDipoleExp(ax_handles)
-    # f_exp = ac.FigDipoleExp(4)
 
     # plot the ctrl dipoles
     f_exp.ax['dpl_mu'].plot(dpl_mu_low.t, dpl_mu_low.dpl, color='k')
@@ -690,7 +735,6 @@ def pdipole_evoked_aligned(ddata):
 
     # plot the spec here
     pc = specfn.pspec_ax(f_exp.ax['spec'], fspec_mu_low)
-    # pc = specfn.pspec_ax(f_exp.ax[0], fspec_mu_low)
 
     # deal with the axes here
     f_exp.ax['input'].set_ylim((0, ymax))

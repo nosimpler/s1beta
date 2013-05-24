@@ -1,8 +1,8 @@
 # currentfn.py - current-based analysis functions
 #
-# v 1.7.52
-# rev 2013-05-07 (SL: added L2Pyr somatic current)
-# last major: (SL: created)
+# v 1.7.54
+# rev 2013-05-24 (SL: added layers for plot to axis command)
+# last major: (SL: added L2Pyr somatic current)
 
 import numpy as np
 
@@ -18,8 +18,14 @@ class SynapticCurrent():
         self.I_soma_L5Pyr = x[:, 2]
 
     # external plot function
-    def plot_to_axis(self, a):
-        a.plot(self.t, self.I_soma_L5Pyr)
+    def plot_to_axis(self, a, layer=None):
+        # layer=None is redundant with L5Pyr, but it might be temporary
+        if layer is None:
+            a.plot(self.t, -self.I_soma_L5Pyr)
+        elif layer is 'L2':
+            a.plot(self.t, -self.I_soma_L2Pyr)
+        elif layer is 'L5':
+            a.plot(self.t, -self.I_soma_L5Pyr)
 
         # set the xlim
         a.set_xlim((50., self.t[-1]))

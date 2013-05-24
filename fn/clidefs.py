@@ -1,8 +1,8 @@
 # clidefs.py - these are all of the function defs for the cli
 #
-# v 1.7.52
-# rev 2013-05-07 (SL: minor, made save_data default for current spec)
-# last major: (SL: added spec_current function)
+# v 1.7.54
+# rev 2013-05-24 (SL: moved spec to pspec)
+# last major: (SL: minor, made save_data default for current spec)
 
 # Standard modules
 import fnmatch, os, re, sys
@@ -311,14 +311,17 @@ def exec_avgtrials(ddata, datatype):
                 np.savez_compressed(fname_unique, time=timevec, freq=freqvec, TFR=spec_avg)
 
 # run the spectral analyses on the somatic current time series
-def exec_spec_current(ddata):
+def exec_spec_current(ddata, opts_in=None):
     p_exp = paramrw.ExpParams(ddata.fparam)
-    opts = {
-        'type': 'current',
-        'f_max': 90.,
-        'save_data': 1,
-        'runtype': 'debug',
-    }
+    if opts_in is None:
+        opts = {
+            'type': 'current',
+            'f_max': 150.,
+            'save_data': 1,
+            'runtype': 'debug',
+        }
+    else:
+        opts = opts_in
 
     spec_results = specfn.analysis_typespecific(ddata, p_exp, opts)
     return spec_results
@@ -579,12 +582,12 @@ def exec_plotaverages(ddata, ylim=[]):
     if spec_list:
         if runtype == 'debug':
             for f_spec, f_dpl, dfig_spec, pdict in it.izip(spec_list, dpl_list, dfig_spec_list, pdict_list):
-                specfn.pspec(f_spec, f_dpl, dfig_spec, pdict, key_types)
+                pspec.pspec_dpl(f_spec, f_dpl, dfig_spec, pdict, key_types)
 
         elif runtype == 'parallel':
             pl = Pool()
             for f_spec, f_dpl, dfig_spec, pdict in it.izip(spec_list, dpl_list, dfig_spec_list, pdict_list):
-                pl.apply_async(specfn.pspec, (f_spec, f_dpl, dfig_spec, pdict, key_types))
+                pl.apply_async(pspec.pspec_dpl, (f_spec, f_dpl, dfig_spec, pdict, key_types))
 
             pl.close()
             pl.join()

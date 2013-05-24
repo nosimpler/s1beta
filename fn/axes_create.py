@@ -1,8 +1,8 @@
 # axes_create.py - simple axis creation
 #
-# v 1.7.51irec
-# rev 2013-05-06 (SL: fixed FigDipoleExp)
-# last major: (SL: changed some class names)
+# v 1.7.54
+# rev 2013-05-24 (SL: created FigBase(), made some changes in axis dicts)
+# last major: (SL: fixed FigDipoleExp)
 
 # usage:
 # testfig = FigStd()
@@ -18,7 +18,31 @@ import matplotlib.gridspec as gridspec
 import itertools as it
 import numpy as np
 
-class FigStd():
+# Base figure class
+class FigBase():
+    def __init__(self):
+        # self.f is typically set by the super class
+        self.f = None
+
+    # generic function to take an axis handle and make the y-axis even
+    def ysymmetry(self, ax):
+        ylim = ax.get_ylim()
+        yabs_max = np.max(np.abs(ylim))
+        ylim_new = (-yabs_max, yabs_max)
+        ax.set_ylim(ylim_new)
+
+        return ylim_new
+
+    # generic save png function to file_name at dpi=dpi_set
+    def savepng(self, file_name, dpi_set=300):
+        self.f.savefig(file_name, dpi=dpi_set)
+
+    # obligatory close function
+    def close(self):
+        plt.close(self.f)
+
+# Simple one axis window
+class FigStd(FigBase):
     def __init__(self):
         self.f = plt.figure(figsize = (12, 6))
         font_prop = {'size': 8}
@@ -30,13 +54,7 @@ class FigStd():
     def save(self, file_name):
         self.f.savefig(file_name)
 
-    def savepng(self, file_name, dpi_set=300):
-        self.f.savefig(file_name, dpi=dpi_set)
-
-    def close(self):
-        plt.close(self.f)
-
-class FigDplWithHist():
+class FigDplWithHist(FigBase):
     def __init__(self):
         self.f = plt.figure(figsize=(12, 6))
         font_prop = {'size': 8}
@@ -54,11 +72,6 @@ class FigDplWithHist():
         self.ax['feed_prox'] = self.f.add_subplot(self.gs1[1, :])
         self.ax['feed_dist'] = self.f.add_subplot(self.gs1[0, :])
 
-        # self.__set_hist_props()
-
-        # self.ax['feed_prox'].set_xticklabels('')
-        # self.ax['feed_dist'].set_xticklabels('')
-
     def set_hist_props(self, hist_data):
         for key in self.ax.keys():
             if 'feed' in key:
@@ -68,23 +81,11 @@ class FigDplWithHist():
             if 'feed_dist' in key:
                 self.ax[key].set_xticklabels('')
 
-    # def __set_hist_props(self):
-    #     for key in self.ax.keys():
-    #         if 'feed_dist' in key:
-    #             self.ax[key].set_xticklabels('')
-    #             # self.ax[key].set_yticklabels
-
     def save(self, file_name):
         self.f.savefig(file_name)
 
-    def savepng(self, file_name, dpi_set=300):
-        self.f.savefig(file_name, dpi=dpi_set)
-
-    def close(self):
-        plt.close(self.f)
-
 # spec plus dipole plus alpha feed histograms
-class FigSpecWithHist():
+class FigSpecWithHist(FigBase):
     def __init__(self):
         self.f = plt.figure(figsize=(8, 8))
         font_prop = {'size': 8}
@@ -114,14 +115,8 @@ class FigSpecWithHist():
             if 'feed_dist' in key:
                 self.ax[key].set_xticklabels('')
 
-    def savepng(self, fig_name, dpiset=250):
-        self.f.savefig(fig_name, dpi=dpiset)
-
-    def close(self):
-        plt.close(self.f)
-
 # spec plus dipole 
-class FigSpec():
+class FigSpec(FigBase):
     def __init__(self):
         self.f = plt.figure(figsize=(8, 6))
         font_prop = {'size': 8}
@@ -137,10 +132,7 @@ class FigSpec():
         self.ax['dipole'] = self.f.add_subplot(self.gs0[:, :])
         self.ax['spec'] = self.f.add_subplot(self.gs1[:, :])
 
-    def close(self):
-        plt.close(self.f)
-
-class FigFreqpwrWithHist():
+class FigFreqpwrWithHist(FigBase):
     def __init__(self):
         self.f = plt.figure(figsize = (12, 6))
         font_prop = {'size': 8}
@@ -160,10 +152,7 @@ class FigFreqpwrWithHist():
     def save(self, file_name):
         self.f.savefig(file_name)
 
-    def close(self):
-        plt.close(self.f)
-
-class FigRaster():
+class FigRaster(FigBase):
     def __init__(self, tstop):
         self.tstop = tstop
         self.f = plt.figure(figsize=(6, 8))
@@ -201,11 +190,7 @@ class FigRaster():
         ax.set_xticklabels('')
         ax.set_xlim(0, self.tstop)
 
-    def close(self):
-        plt.close(self.f)
-
-class FigPSTH():
-# class fig_psth():
+class FigPSTH(FigBase):
     def __init__(self, tstop):
         self.tstop = tstop
         self.f = plt.figure(figsize=(6, 5))
@@ -260,11 +245,8 @@ class FigPSTH():
         ax.set_xticklabels('')
         ax.set_xlim(0, self.tstop)
 
-    def close(self):
-        plt.close(self.f)
-
 # create a grid of psth figures, and rasters(?)
-class FigGrid():
+class FigGrid(FigBase):
     def __init__(self, N_rows, N_cols, tstop):
         self.tstop = tstop
 
@@ -324,13 +306,7 @@ class FigGrid():
         # testing usage of string in title
         # self.ax[0][0].set_title(r'$\lambda_i$ = %d' % 0)
 
-    def savepng(self, file_name, dpi_set=300):
-        self.f.savefig(file_name, dpi=dpi_set)
-
-    def close(self):
-        plt.close(self.f)
-
-class FigAggregateSpecWithHist():
+class FigAggregateSpecWithHist(FigBase):
     def __init__(self, N_rows, N_cols):
         self.N_rows = N_rows
         self.N_cols = N_cols
@@ -451,18 +427,15 @@ class FigAggregateSpecWithHist():
     def save(self, file_name):
         self.f.savefig(file_name, dpi=250)
 
-    def close(self):
-        plt.close(self.f)
-
 # aggregate figures for the experiments
-class FigDipoleExp():
+class FigDipoleExp(FigBase):
     def __init__(self, ax_handles):
         # ax_handles is a list of axis handles in order
         # previously called N_expmt_groups for legacy reasons (original intention)
         # now generally repurposed for arbitrary numbers of axes with these handle names
         self.ax_handles = ax_handles
         self.N_expmt_groups = len(ax_handles)
-        self.f = plt.figure(figsize=(6, 2*self.N_expmt_groups))
+        self.f = plt.figure(figsize=(8, 2*self.N_expmt_groups))
         font_prop = {'size': 8}
         mpl.rc('font', **font_prop)
 
@@ -472,7 +445,7 @@ class FigDipoleExp():
         # non-spec axes 4/5, for reason that's unclear to me at the time of this writing
         # 40/50 works though
         # 'spec' must be specified in the name of the spec
-        self.gspec = gridspec.GridSpec(self.N_expmt_groups, 50)
+        self.gspec = gridspec.GridSpec(self.N_expmt_groups, 55)
         self.__create_axes()
         self.__set_ax_props()
 
@@ -484,9 +457,13 @@ class FigDipoleExp():
         i = 0
         for ax in self.ax_handles:
             if 'spec' not in ax:
-                self.ax[ax] = self.f.add_subplot(self.gspec[i:(i+1), :40])
+                self.ax[ax] = self.f.add_subplot(self.gspec[i:(i+1), :20])
+                self.ax[ax+'_L5'] = self.f.add_subplot(self.gspec[i:(i+1), 30:50])
+                # self.ax[ax] = self.f.add_subplot(self.gspec[i:(i+1), :40])
             else:
-                self.ax[ax] = self.f.add_subplot(self.gspec[i:(i+1), :])
+                self.ax[ax] = self.f.add_subplot(self.gspec[i:(i+1), :25])
+                self.ax[ax+'_L5'] = self.f.add_subplot(self.gspec[i:(i+1), 30:])
+                # self.ax[ax] = self.f.add_subplot(self.gspec[i:(i+1), :])
 
             i += 1
 
@@ -552,12 +529,6 @@ class FigDipoleExp():
         # for ax in self.ax[:-1]:
         #     ax.set_xticklabels('')
 
-    def savepng(self, file_name, dpi_set=300):
-        self.f.savefig(file_name, dpi=dpi_set)
-
-    def close(self):
-        plt.close(self.f)
-
 # creates title string based on params that change during simulation
 def create_title(p_dict, key_types):
     title = []
@@ -588,6 +559,7 @@ def testfn():
 
     testfig = FigDipoleExp(ax_handles)
     testfig.create_colorbar_axis('spec')
+    # testfig.create_colorbar_axis('spectest')
     testfig.ax['spec'].plot(x)
 
     # testfig = FigSpecWithHist()

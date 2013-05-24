@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # s1run.py - primary run function for s1 project
 #
-# v 1.7.52
-# rev 2013-05-07 (SL: Added current recording for the L2Pyr)
-# last major: (SL: added file_current and current recording)
+# v 1.7.54
+# rev 2013-05-24 (SL: current outputs)
+# last major: (SL: Added current recording for the L2Pyr)
 
 import os
 import sys
@@ -250,12 +250,19 @@ def exec_runsim(f_psim):
                     with open(file_dpl, 'a') as f:
                         for k in range(int(t_vec.size())):
                             # write t, total dipole, L2 dipole, L5 dipole
-                            f.write("%03.3f\t%5.4f\t%5.4f\t%5.4f\n" % (t_vec.x[k], dp_rec_L2.x[k]+dp_rec_L5.x[k], dp_rec_L2.x[k], dp_rec_L5.x[k]))
+                            f.write("%03.3f\t" % t_vec.x[k])
+                            f.write("%5.4f\t" % (dp_rec_L2.x[k] + dp_rec_L5.x[k]))
+                            f.write("%5.4f\t" % dp_rec_L2.x[k])
+                            f.write("%5.4f\n" % dp_rec_L5.x[k])
 
-                    # write the L5Pyr somatic current to the file
+                    # write the somatic current to the file
+                    # for now does not write the total but just L2 somatic and L5 somatic
                     with open(file_current, 'w') as fc:
                         for t, i_L2, i_L5 in it.izip(t_vec.x, net.current['L2Pyr_soma'].x, net.current['L5Pyr_soma'].x):
-                            fc.write("%03.3f\t%5.4e\t%5.4e\n" % (t, i_L2, i_L5))
+                            fc.write("%03.3f\t" % t)
+                            # fc.write("%5.4f\t" % (i_L2 + i_L5))
+                            fc.write("%5.4f\t" % i_L2)
+                            fc.write("%5.4f\n" % i_L5)
 
                     # write the params, but add a trial number
                     p['Sim_No'] = i
@@ -305,6 +312,7 @@ def exec_runsim(f_psim):
             t_start_analysis = time.time()
 
             # new spec analysis opts
+            # not currently active but for future - see specfn.analysis_typespecific()
             # opts_spec = {
             #     'type': 'dpl',
             #     'f_max': '50',

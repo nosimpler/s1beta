@@ -1,8 +1,8 @@
 # cli.py - routines for the command line interface console s1sh.py
 #
-# v 1.7.52
-# rev 2013-05-07 (SL: Fixed do_show())
-# last major: (SL: added temporary spec_current call)
+# v 1.7.54
+# rev 2013-05-24 (SL: fixed and am using __split_args(), added spec_current() stuff)
+# last major: (SL: Fixed do_show())
 
 from cmd import Cmd
 from datetime import datetime
@@ -62,7 +62,8 @@ class Console(Cmd):
         args_tmp = args.split(' ')
 
         # only take the args that start with -- and include a =
-        args_opt = [arg for arg in args_tmp if arg.startswith('--')]
+        # drop the leading --
+        args_opt = [arg[2:] for arg in args_tmp if arg.startswith('--')]
         args_opt = [arg for arg in args_opt if '=' in arg]
 
         # final output list of tuples (?) or lists of args and values
@@ -97,9 +98,9 @@ class Console(Cmd):
     def do_debug(self, args):
         """Qnd function to test other functions
         """
-        self.do_setdate('2013-05-06')
-        self.do_load('rec_i_L2-002')
-        # self.do_spec_current('')
+        # self.do_setdate('2013-05-14')
+        self.do_load('gamma_L5weak_L2weak-000')
+        # self.do_spec_current('--f_max=80.')
         self.do_praw('')
         # self.do_pdipole('grid')
         # self.do_pngv('')
@@ -117,7 +118,25 @@ class Console(Cmd):
         # self.do_psthgrid()
 
     def do_spec_current(self, args):
-        self.spec_current_tmp = clidefs.exec_spec_current(self.ddata)
+        # parse list of opts
+        l_opts = self.__split_args(args)
+
+        # "default" opts
+        opts = {
+            'type': 'current',
+            'f_max': 150.,
+            'save_data': 1,
+            'runtype': 'debug',
+        }
+
+        # check l_opts for valid keys in opts and attempt to assign
+        if len(l_opts):
+            for key, val in l_opts:
+                if key in opts.keys():
+                    opts[key] = ast.literal_eval(val)
+
+        # actually run the analysis
+        self.spec_current_tmp = clidefs.exec_spec_current(self.ddata, opts)
 
     def do_praw(self, args):
         '''praw is a fully automated function to replace the dipole plots with aggregate dipole/spec/spikes plots. Usage:
@@ -134,7 +153,10 @@ class Console(Cmd):
         """Sets the date string to the specified date
         """
         if args:
-            dcheck = os.path.join(self.dproj, args)
+            if args == 'today':
+                dcheck = os.path.join(self.dproj, datetime.now().strftime("%Y-%m-%d"))
+            else:
+                dcheck = os.path.join(self.dproj, args)
 
             if os.path.exists(dcheck):
                 self.ddate = dcheck
