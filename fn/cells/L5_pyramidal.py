@@ -1,8 +1,8 @@
 # L5_pyramidal.py - establish class def for layer 5 pyramidal cells
 #
-# v 1.7.53
-# rev 2013-05-08 (SL: paramaterized gabaa/b conductances)
-# last rev: (SL: created synapses dict and runs record_current_soma() defined in Cell())
+# v 1.7.56
+# rev 2013-05-31 (MS: fixed namespace descrepancy in parameterization of gabab/a conductances)
+# last rev: (SL: paramaterized gabaa/b conductances)
 
 from neuron import h as nrn
 from class_cell import Pyr
@@ -330,14 +330,14 @@ class L5Pyr(Pyr):
         for gid_src, pos in it.izip(gid_dict['L5_basket'], pos_dict['L5_basket']):
             nc_dict['gabaa'] = {
                 'pos_src': pos,
-                'A_weight': p['gbar_gabaa_L5Basket_L5Pyr'],
+                'A_weight': p['gbar_L5Basket_L5Pyr_gabaa'],
                 'A_delay': 1.,
                 'lamtha': 70.,
             }
 
             nc_dict['gabab'] = {
                 'pos_src': pos,
-                'A_weight': p['gbar_gabab_L5Basket_L5Pyr'],
+                'A_weight': p['gbar_L5Basket_L5Pyr_gabab'],
                 'A_delay': 1.,
                 'lamtha': 70.,
             }

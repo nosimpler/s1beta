@@ -161,7 +161,7 @@ Itonic_t0_L5Pyr_soma: 50.
 Itonic_T_L5Pyr_soma: -1
 
 # new params from default
-gbar_gabab_L2Basket_L2Pyr: 5e-2
-gbar_gabaa_L2Basket_L2Pyr: 5e-2
-gbar_gabab_L5Basket_L5Pyr: 2.5e-2
-gbar_gabaa_L5Basket_L5Pyr: 2.5e-2
+gbar_L2Basket_L2Pyr_gabab: 5e-2
+gbar_L2Basket_L2Pyr_gabaa: 5e-2
+gbar_L5Basket_L5Pyr_gabab: 2.5e-2
+gbar_L5Basket_L5Pyr_gabaa: 2.5e-2

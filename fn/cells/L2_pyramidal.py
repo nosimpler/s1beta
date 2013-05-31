@@ -1,8 +1,8 @@
 # L2_pyramidal.py - est class def for layer 2 pyramidal cells
 #
-# v 1.7.53
-# rev 2013-05-08 (SL: parameterized gabab/a conductances separately)
-# last rev: (SL: Added self.synapses and current recording)
+# v 1.7.56
+# rev 2013-05-31 (MS: fixed namespace descrepancy in parameterization of gabab/a conductances)
+# last rev: (SL: parameterized gabab/a conductances separately)
 
 from neuron import h as nrn
 from class_cell import Pyr
@@ -232,14 +232,14 @@ class L2Pyr(Pyr):
         for gid_src, pos in it.izip(gid_dict['L2_basket'], pos_dict['L2_basket']):
             nc_dict['gabaa'] = {
                 'pos_src': pos,
-                'A_weight': p['gbar_gabaa_L2Basket_L2Pyr'],
+                'A_weight': p['gbar_L2Basket_L2Pyr_gabaa'],
                 'A_delay': 1.,
                 'lamtha': 50.,
             }
 
             nc_dict['gabab'] = {
                 'pos_src': pos,
-                'A_weight': p['gbar_gabab_L2Basket_L2Pyr'],
+                'A_weight': p['gbar_L2Basket_L2Pyr_gabab'],
                 'A_delay': 1.,
                 'lamtha': 50.,
             }
