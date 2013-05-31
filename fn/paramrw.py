@@ -1,8 +1,8 @@
 # paramrw.py - routines for reading the param files
 #
-# v 1.7.49
-# rev 2013-05-01 (SL: fixed changed_vars() function)
-# last major: (SL: updated changed_vars() function, but it may be redundant anyway)
+# v 1.7.57
+# rev 2013-05-31 (SL: using -1 for tstops from now on to reflect stop with simulation)
+# last major: (SL: fixed changed_vars() function)
 
 import re
 import fileio as fio
@@ -551,8 +551,8 @@ def create_pext(p, tstop):
         'loc': 'proximal'
     }
 
-    # define pois_T as 0 to reset automatically to tstop
-    if p['pois_T'] == 0:
+    # define pois_T as 0 or -1 to reset automatically to tstop
+    if p['pois_T'] in (0, -1):
         p['pois_T'] = tstop
 
     # Poisson distributed inputs to proximal

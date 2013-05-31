@@ -1,8 +1,8 @@
 # specfn.py - Average time-frequency energy representation using Morlet wavelet method
 #
-# v 1.7.54
-# rev 2013-05-24 (SL: retooled read to handle new types, removed pspecs, created a new spec kernel)
-# last major: (SL: removed debug print msg)
+# v 1.7.57
+# rev 2013-05-31 (SL: added dpl_laminar option to analysis_typespecific)
+# last major: (SL: retooled read to handle new types, removed pspecs, created a new spec kernel)
 
 import os
 import sys
@@ -13,22 +13,22 @@ import matplotlib.pyplot as plt
 import paramrw
 import fileio as fio
 import multiprocessing as mp
-# from multiprocessing import Pool
 from neuron import h as nrn
 
 import fileio as fio
 import currentfn
+import dipolefn
 import spikefn 
 import axes_create as ac
 
 # general spec write function
 def write(fdata_spec, t_vec, f_vec, TFR):
     np.savez_compressed(fdata_spec, time=t_vec, freq=f_vec, TFR=TFR)
+
     # np.savetxt(file_write, self.TFR, fmt = "%5.4f")
 
 # general spec read function
 def read(fdata_spec, type='dpl'):
-
     if type == 'dpl':
         data_spec = np.load(fdata_spec)
         return data_spec
@@ -50,7 +50,7 @@ def read(fdata_spec, type='dpl'):
 
         return spec_L2, spec_L5
 
-# MorletSpec class
+# MorletSpec class based on a time vec tvec and a time series vec tsvec
 class MorletSpecSingle():
     # fdata_spec will be created based on fparam and fdata, a general time series
     def __init__(self, fdata_spec, tvec, tsvec, fparam, f_max=None, save_data=None):
@@ -75,17 +75,14 @@ class MorletSpecSingle():
 
         # truncate these vectors appropriately based on tmin
         if self.p_dict['tstop'] > self.tmin:
+            # must be done in this order! timeseries first!
             self.tsvec = self.tsvec[self.tvec > self.tmin]
             self.tvec = self.tvec[self.tvec > self.tmin]
 
         # Check that tstop is greater than tmin
         if self.p_dict['tstop'] > self.tmin:
-            # Remove first self.tmin ms of simulation
-            # self.S = self.S[self.tmin / self.p_dict['dt']:, 1]
-
             # Array of frequencies over which to sort
             self.f = np.arange(1., self.f_max)
-            # self.freqvec = np.arange(1., max_freq)
 
             # Number of cycles in wavelet (>5 advisable)
             self.width = 7.
@@ -105,14 +102,20 @@ class MorletSpecSingle():
             if save_data == None:
                 # if save_data is unspecified, check the p_dict
                 if self.p_dict['save_spec_data']:
-                    write(fdata_spec, self.timevec, self.freqvec, self.TFR)
+                    # write(fdata_spec, self.timevec, self.freqvec, self.TFR)
+                    self.save(fdata_spec)
 
             elif save_data:
                 # if save_data IS specified, and IF the value evaluates True, THEN write also
-                write(fdata_spec, self.timevec, self.freqvec, self.TFR)
+                self.save(fdata_spec)
+                # write(fdata_spec, self.timevec, self.freqvec, self.TFR)
 
         else:
             print "tstop not greater than %4.2f ms. Skipping wavelet analysis." % self.tmin
+
+    # externally callable save function
+    def save(self, fdata_spec):
+        write(fdata_spec, self.timevec, self.freqvec, self.TFR)
 
     def plot_to_ax(self, ax_spec, dt):
         # pc = ax.imshow(self.TFR, extent=[xmin, xmax, self.freqvec[-1], self.freqvec[0]], aspect='auto', origin='upper')
@@ -218,11 +221,23 @@ class MorletSpec():
         self.name = fdata_spec
 
         # function is called this way because paramrw.read() returns 2 outputs
-        self.p_dict = paramrw.read(fparam)[1]
+        _, self.p_dict = paramrw.read(fparam)
+        # self.p_dict = paramrw.read(fparam)[1]
 
         # Import dipole data and remove extra dimensions from signal array.
-        data_raw = np.loadtxt(open(fdata, 'rb'))
-        self.S = data_raw.squeeze()
+        # data_raw = np.loadtxt(open(fdata, 'rb'))
+        dpl = dipolefn.Dipole(fdata)
+
+        # use the Dipole() function convert_fAm_to_nAm() to convert ... from fAm to nAm
+        dpl.convert_fAm_to_nAm()
+
+        # using dpl.units to do spectral units, possibly units/Hz
+        self.units = "(%s)^2" % dpl.units
+
+        # time vec from the Dipole() object
+        self.timevec = dpl.t
+
+        self.S = dpl.dpl['agg']
 
         # maximum frequency of analysis
         if not max_freq:
@@ -234,7 +249,9 @@ class MorletSpec():
         # Check that tstop is greater than tmin
         if self.p_dict['tstop'] > self.tmin:
             # Remove first self.tmin ms of simulation
-            self.S = self.S[self.tmin / self.p_dict['dt']:, 1]
+            self.S = self.S[self.timevec > self.tmin]
+            self.timevec = self.timevec[self.timevec > self.tmin]
+            # self.S = self.S[self.tmin / self.p_dict['dt']:, 1]
 
             # Array of frequencies over which to sort
             self.freqvec = np.arange(1., max_freq)
@@ -247,9 +264,6 @@ class MorletSpec():
 
             # Generate Spec data
             self.TFR = self.__traces2TFR()
-
-            # Add time vector as first row of TFR data
-            # self.TFR = np.vstack([self.timevec, self.TFR])
 
             # Write data to file ONLY if save_data is ALSO true
             # eg. save_data is an overwriting mechanism
@@ -278,7 +292,7 @@ class MorletSpec():
 
         # range should probably be 0 to len(self.S_trans)
         # shift tvec to reflect change
-        self.timevec = 1000. * np.arange(1, len(self.S_trans)+1)/self.fs + self.tmin - self.p_dict['dt']
+        # self.timevec = 1000. * np.arange(1, len(self.S_trans)+1)/self.fs + self.tmin - self.p_dict['dt']
 
         B = np.zeros((len(self.freqvec), len(self.S_trans)))
 
@@ -467,21 +481,23 @@ def analysis_typespecific(ddata, p_exp, opts=None):
         list_param.extend(param_tmp)
 
         # get the list of dipoles
-        if opts_run['type'] == 'dpl':
+        if opts_run['type'] in ('dpl', 'dpl_laminar'):
             list_ts.extend(ddata.file_match(expmt_group, 'rawdpl'))
+
         elif opts_run['type'] == 'current':
             list_ts.extend(ddata.file_match(expmt_group, 'rawcurrent'))
 
         # create list of spec output names
         # this is sorted because of file_match
         exp_prefix_list = [fio.strip_extprefix(fparam) for fparam in param_tmp]
-        list_spec.extend([ddata.create_filename(expmt_group, 'rawspeccurrent', exp_prefix) for exp_prefix in exp_prefix_list])
 
     # perform analysis on all runs from all exmpts at same time
     if opts_run['type'] == 'current':
+        list_spec.extend([ddata.create_filename(expmt_group, 'rawspeccurrent', exp_prefix) for exp_prefix in exp_prefix_list])
         spec_results_L2 = []
         spec_results_L5 = []
-        # spec_results_L2 and _L5 are both defined globally
+
+        # spec_results_L2 and _L5 now defined locally
         for fparam, fts, fspec in it.izip(list_param, list_ts, list_spec):
             I_syn = currentfn.SynapticCurrent(fts)
             spec_results_L2.append(MorletSpecSingle(fspec, I_syn.t, I_syn.I_soma_L2Pyr, fparam, opts_run['f_max'], save_data=0))
@@ -495,6 +511,37 @@ def analysis_typespecific(ddata, p_exp, opts=None):
 
         return spec_results_L2, spec_results_L5
 
+    elif opts_run['type'] == 'dpl_laminar':
+        # these should be OUTPUT filenames that are being generated
+        list_spec.extend([ddata.create_filename(expmt_group, 'rawspec', exp_prefix) for exp_prefix in exp_prefix_list])
+        # also in this case, the original spec results will be overwritten
+        # and replaced by laminar specific ones and aggregate ones
+        # in this case, list_ts is a list of dipole
+        spec_results = []
+        spec_results_L2 = []
+        spec_results_L5 = []
+
+        # spec_results_L2 and _L5
+        for fparam, fts, fspec in it.izip(list_param, list_ts, list_spec):
+            dpl = dipolefn.Dipole(fts)
+
+            # do the conversion prior to generating these spec
+            dpl.convert_fAm_to_nAm()
+
+            # append various spec results
+            spec_results.append(MorletSpecSingle(fspec, dpl.t, dpl.dpl['agg'], fparam, opts_run['f_max'], save_data=0))
+            spec_results_L2.append(MorletSpecSingle(fspec, dpl.t, dpl.dpl['L2'], fparam, opts_run['f_max'], save_data=0))
+            spec_results_L5.append(MorletSpecSingle(fspec, dpl.t, dpl.dpl['L5'], fparam, opts_run['f_max'], save_data=0))
+
+        # spec_single_ are data from MorletSpecSingle
+        for spec_agg, spec_L2, spec_L5, fspec in it.izip(spec_results, spec_results_L2, spec_results_L5, list_spec):
+            # the nomenclature "time" and "freq" are used here for backward compatibility only and
+            # should be deprecated
+            np.savez_compressed(fspec, time=spec_agg.t, freq=spec_agg.f, TFR=spec_agg.TFR, t_L2=spec_L2.t, f_L2=spec_L2.f, TFR_L2=spec_L2.TFR, t_L5=spec_L5.t, f_L5=spec_L5.f, TFR_L5=spec_L5.TFR)
+
+        return spec_results_L2, spec_results_L5
+
+    # probably not a real else.
     else:
         if opts_run['runtype'] == 'parallel':
             pl = mp.Pool()
@@ -513,11 +560,10 @@ def analysis_typespecific(ddata, p_exp, opts=None):
 
             return spec_results
 
-
 # Does spec analysis for all files in simulation directory
-# ddata comes from fileio
+# ddata is a SimulationPaths() object from fileio
 def analysis(ddata, p_exp, max_freq=None, save_data=None):
-    runtype = 'parallel'
+    runtype = 'debug'
 
     # preallocate lists for use below
     param_list = []
@@ -597,7 +643,7 @@ def freqpwr_analysis(dspec):
         'max_pwr': max_pwr,
         'freq_at_max': freq_at_max,
         'freq': freqvec,
-        'expmt': expmt
+        'expmt': expmt,
     }
 
 def pfreqpwr(file_name, results_list, fparam_list, key_types):
@@ -619,6 +665,7 @@ def pfreqpwr(file_name, results_list, fparam_list, key_types):
     f.ax0.set_ylabel('Avg_pwr')
 
     f.save(file_name)
+    f.close()
 
 def pfreqpwr_with_hist(file_name, freqpwr_result, f_spk, gid_dict, p_dict, key_types):
     f = ac.FigFreqpwrWithHist()
@@ -662,7 +709,7 @@ def pfreqpwr_with_hist(file_name, freqpwr_result, f_spk, gid_dict, p_dict, key_t
     f.f.suptitle(title_str)
     # title_str = [key + ': %2.1f' % p_dict[key] for key in key_types['dynamic_keys']]
 
-    plt.savefig(file_name)
+    f.savepng(file_name)
     f.close()
 
 def aggregate_with_hist(f, ax, dspec, f_dpl, f_spk, p_dict, gid_dict):

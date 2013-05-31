@@ -1,8 +1,8 @@
 # dipolefn.py - dipole-based analysis functions
 #
-# v 1.7.54
-# rev 2013-05-24 (SL: added max(), plot() function)
-# last major: (SL: changed how FigDipoleExp() is called, not totally tested)
+# v 1.7.57
+# rev 2013-05-31 (SL: dpl in Dipole() is now a dict, added ext units function)
+# last major: (SL: added max(), plot() function)
 
 import fileio as fio
 import numpy as np
@@ -27,22 +27,39 @@ class Dipole():
         x = np.loadtxt(open(f_dpl, 'r'))
         # better implemented as a dict
         self.t = x[:, 0]
-        self.dpl = x[:, 1]
+        self.dpl = {
+            'agg': x[:, 1],
+            'L2': x[:, 2],
+            'L5': x[:, 3],
+        }
+
+        # string that holds the units
+        self.units = 'fAm'
 
         # assume these are present if there are enough vectors
         if x.shape[1] > 3:
             self.dpl_L2 = x[:, 2]
             self.dpl_L5 = x[:, 3]
 
+    # conversion from fAm to nAm
+    def convert_fAm_to_nAm(self):
+        for key in self.dpl.keys():
+            self.dpl[key] *= 1e-6
+
+        # change the units string
+        self.units = 'nAm'
+
     # finds the max value within a specified xlim
     def max(self, layer, xlim):
         # better implemented as a dict
         if layer is None:
-            dpl_tmp = self.dpl
-        elif layer == 'L2':
-            dpl_tmp = self.dpl_L2
-        elif layer == 'L5':
-            dpl_tmp = self.dpl_L5
+            dpl_tmp = self.dpl['agg']
+        elif layer in self.dpl.keys():
+            dpl_tmp = self.dpl[layer]
+        # elif layer == 'L2':
+        #     dpl_tmp = self.dpl['L2']
+        # elif layer == 'L5':
+        #     dpl_tmp = self.dpl['L5']
 
         if xlim[0] < 0.:
             xmin = 0.
@@ -63,22 +80,23 @@ class Dipole():
         return np.max(dpl_tmp)
 
     # simple layer-specific plot function
-    def plot(self, ax, xlim, layer=None):
+    def plot(self, ax, xlim, layer='agg'):
         # plot the whole thing and just change the xlim and the ylim
-        if layer is None:
-            ax.plot(self.t, self.dpl)
-            ymax = self.max(None, xlim)
-            ylim = (-ymax, ymax)
-            ax.set_ylim(ylim)
-        elif layer == 'L2':
-            ax.plot(self.t, self.dpl_L2)
-        elif layer == 'L5':
-            ax.plot(self.t, self.dpl_L5)
-            ymax = self.max('L5', xlim)
+        # if layer is None:
+        #     ax.plot(self.t, self.dpl['agg'])
+        #     ymax = self.max(None, xlim)
+        #     ylim = (-ymax, ymax)
+        #     ax.set_ylim(ylim)
+        if layer in self.dpl.keys():
+            ax.plot(self.t, self.dpl[layer])
+            ymax = self.max(layer, xlim)
             ylim = (-ymax, ymax)
             ax.set_ylim(ylim)
 
-        ax.set_xlim(xlim)
+            ax.set_xlim(xlim)
+
+        else:
+            print "raise some error"
 
         return ax.get_xlim()
 
@@ -97,7 +115,7 @@ class Dipole():
         dpl_offset = N_pyr * 50.207
 
         # simple baseline shift of the dipole
-        self.dpl += dpl_offset
+        self.dpl['agg'] += dpl_offset
 
 # ddata is a fio.SimulationPaths() object
 def calc_aggregate_dipole(ddata):
@@ -119,11 +137,11 @@ def calc_aggregate_dipole(ddata):
             if f_dpl is dpl_list[0]:
                 # assume time vec stays the same throughout
                 t_vec = dpl.t
-                x_dpl = dpl.dpl
+                x_dpl = dpl.dpl['agg']
 
             else:
                 # guaranteed to exist after dpl_list[0]
-                x_dpl += dpl.dpl
+                x_dpl += dpl.dpl['agg']
 
         # poor man's mean
         x_dpl /= len(dpl_list)
@@ -171,7 +189,7 @@ def calc_avgdpl_stimevoked(ddata):
 
             # truncate the dipole related vectors
             dpl.t = dpl.t[dpl.t > t0]
-            dpl.dpl = dpl.dpl[dpl.t > t0]
+            dpl.dpl['agg'] = dpl.dpl['agg'][dpl.t > t0]
             t_truncated.append(dpl.t[0])
 
         # find the t0_max value to compare on other dipoles
@@ -180,14 +198,14 @@ def calc_avgdpl_stimevoked(ddata):
         for dpl, t_adj in it.izip(dpl_list, t_truncated):
             # negative numbers mean that this vector needs to be shortened by that many ms
             T_new = dpl.t[-1] + t_adj
-            dpl.dpl = dpl.dpl[dpl.t < T_new]
+            dpl.dpl['agg'] = dpl.dpl['agg'][dpl.t < T_new]
             dpl.t = dpl.t[dpl.t < T_new]
 
             if dpl is dpl_list[0]:
-                dpl_total = dpl.dpl
+                dpl_total = dpl.dpl['agg']
 
             else:
-                dpl_total += dpl.dpl
+                dpl_total += dpl.dpl['agg']
 
         dpl_mean = dpl_total / len(dpl_list)
         t_dpl = dpl_list[0].t
@@ -202,7 +220,7 @@ def pdipole_ax(a, f_dpl, f_param):
     dpl = Dipole(f_dpl)
     dpl.baseline_renormalize(f_param)
 
-    a.plot(dpl.t, dpl.dpl)
+    a.plot(dpl.t, dpl.dpl['agg'])
 
     # any further xlim sets can be done by whoever wants to do them later
     a.set_xlim((0., dpl.t[-1]))
@@ -241,7 +259,7 @@ def pdipole(f_dpl, f_param, dfig, key_types, plot_dict):
 
     # truncate them using logical indexing
     t_range = dpl.t[(dpl.t >= xmin) & (dpl.t <= xmax)]
-    dpl_range = dpl.dpl[(dpl.t >= xmin) & (dpl.t <= xmax)]
+    dpl_range = dpl.dpl['agg'][(dpl.t >= xmin) & (dpl.t <= xmax)]
 
     f = ac.FigStd()
     f.ax0.plot(t_range, dpl_range)
@@ -285,7 +303,8 @@ def pdipole_evoked(dfig, f_dpl, f_spk, f_param, ylim=[]):
     # draw vertical lines for each item in this
 
     # x_dipole is dipole data
-    x_dipole = np.loadtxt(open(f_dpl, 'r'))
+    # x_dipole = np.loadtxt(open(f_dpl, 'r'))
+    dpl = Dipole(f_dpl)
 
     # split to find file prefix
     file_prefix = f_dpl.split('/')[-1].split('.')[0]
@@ -300,8 +319,8 @@ def pdipole_evoked(dfig, f_dpl, f_spk, f_param, ylim=[]):
     #     xmax = xlim[1] / p_dict['dt']
 
     # these are the vectors for now, but this is going to change
-    t_vec = x_dipole[:, 0]
-    dp_total = x_dipole[:, 1]
+    t_vec = dpl.t
+    dp_total = dpl.dpl['agg']
 
     f = ac.FigStd()
 
@@ -333,6 +352,7 @@ def pdipole_evoked(dfig, f_dpl, f_spk, f_param, ylim=[]):
     f.close()
 
 # Plots dipole with histogram of alpha feed inputs
+# this function has not been converted to use the Dipole() class yet
 def pdipole_with_hist(f_dpl, f_spk, dfig, p_dict, gid_dict, key_types, xlim=[0., 'tstop']):
     # ddipole is dipole data
     ddipole = np.loadtxt(f_dpl)
@@ -436,11 +456,11 @@ def pdipole_exp(ddata, ylim=[]):
 
                 # assume time vec stays the same throughout
                 t_vec = dpl.t
-                x_dpl = dpl.dpl
+                x_dpl = dpl.dpl['agg']
 
             else:
                 # guaranteed to exist after dpl_list[0]
-                x_dpl += dpl.dpl
+                x_dpl += dpl.dpl['agg']
 
         # poor man's mean
         x_dpl /= len(dpl_list)
@@ -483,6 +503,7 @@ def pdipole_exp2(ddata):
     runtype = 'somethingotherthandebug'
     # runtype = 'debug'
 
+    # really shoddy testing code! sorry!
     if runtype == 'debug':
         ddate = '2013-04-08'
         dsim = 'mubaseline-15-000'
@@ -552,20 +573,15 @@ def pdipole_exp2(ddata):
     f_exp = ac.FigDipoleExp(ax_handles)
 
     # plot the ctrl dipoles
-    f_exp.ax['dpl_mu_low'].plot(dpl_mu_low.t, dpl_mu_low.dpl, color='k')
+    f_exp.ax['dpl_mu_low'].plot(dpl_mu_low.t, dpl_mu_low.dpl['agg'], color='k')
     f_exp.ax['dpl_mu_low'].hold(True)
-    f_exp.ax['dpl_mu_high'].plot(dpl_mu_high.t, dpl_mu_high.dpl, color='k')
+    f_exp.ax['dpl_mu_high'].plot(dpl_mu_high.t, dpl_mu_high.dpl['agg'], color='k')
     f_exp.ax['dpl_mu_high'].hold(True)
-    # f_exp.ax[2].plot(dpl_mu_low.t, dpl_mu_low.dpl, color='k')
-    # f_exp.ax[2].hold(True)
-    # f_exp.ax[3].plot(dpl_mu_high.t, dpl_mu_high.dpl, color='k')
-    # f_exp.ax[3].hold(True)
 
     # function creates an f_exp.ax_twinx list and returns the index of the new feed
     ax_twin_name = f_exp.create_axis_twinx('input')
     if not ax_twin_name:
         print "You've got bigger problems, I'm afraid"
-    # n_dist = f_exp.create_axis_twinx(1)
 
     # input hist information: predicated on the fact that the input histograms
     # should be identical for *all* of the inputs represented in this figure
@@ -623,12 +639,12 @@ def pdipole_exp2(ddata):
         if 'mu_low' in expmt_group:
             dpl_mu_low_ev = Dipole(flist[0])
             dpl_mu_low_ev.baseline_renormalize(fparam)
-            f_exp.ax['dpl_mu_low'].plot(dpl_mu_low_ev.t, dpl_mu_low_ev.dpl)
+            f_exp.ax['dpl_mu_low'].plot(dpl_mu_low_ev.t, dpl_mu_low_ev.dpl['agg'])
 
         elif 'mu_high' in expmt_group:
             dpl_mu_high_ev = Dipole(flist[0])
             dpl_mu_high_ev.baseline_renormalize(fparam)
-            f_exp.ax['dpl_mu_high'].plot(dpl_mu_high_ev.t, dpl_mu_high_ev.dpl)
+            f_exp.ax['dpl_mu_high'].plot(dpl_mu_high_ev.t, dpl_mu_high_ev.dpl['agg'])
 
     f_exp.ax['dpl_mu_low'].set_xlim(50., tstop)
     f_exp.ax['dpl_mu_high'].set_xlim(50., tstop)

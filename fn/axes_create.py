@@ -1,8 +1,8 @@
 # axes_create.py - simple axis creation
 #
-# v 1.7.54
-# rev 2013-05-24 (SL: created FigBase(), made some changes in axis dicts)
-# last major: (SL: fixed FigDipoleExp)
+# v 1.7.57
+# rev 2013-05-31 (SL: added set_fontsize() to FigBase())
+# last major: (SL: created FigBase(), made some changes in axis dicts)
 
 # usage:
 # testfig = FigStd()
@@ -33,6 +33,14 @@ class FigBase():
 
         return ylim_new
 
+    # set the font size globally
+    def set_fontsize(self, s):
+        font_prop = {
+            'size': s,
+        }
+
+        mpl.rc('font', **font_prop)
+
     # generic save png function to file_name at dpi=dpi_set
     def savepng(self, file_name, dpi_set=300):
         self.f.savefig(file_name, dpi=dpi_set)
@@ -44,9 +52,8 @@ class FigBase():
 # Simple one axis window
 class FigStd(FigBase):
     def __init__(self):
-        self.f = plt.figure(figsize = (12, 6))
-        font_prop = {'size': 8}
-        mpl.rc('font', **font_prop)
+        self.f = plt.figure(figsize=(12, 6))
+        self.set_fontsize(8)
 
         gs0 = gridspec.GridSpec(1, 1)
         self.ax0 = self.f.add_subplot(gs0[:])
@@ -530,6 +537,8 @@ class FigDipoleExp(FigBase):
         #     ax.set_xticklabels('')
 
 # creates title string based on params that change during simulation
+# title_str = ac.create_title(blah)
+# title_str = f.create_title(blah)
 def create_title(p_dict, key_types):
     title = []
 

@@ -34,9 +34,8 @@ gbar_L5Pyr_L5Pyr_ampa: 5e-4
 gbar_L5Pyr_L5Pyr_nmda: 5e-4
 gbar_L2Pyr_L5Pyr: 2.5e-4
 gbar_L2Basket_L5Pyr: 1e-3
-gbar_L5Basket_L5Pyr_gabaa: 0.
-# gbar_L5Basket_L5Pyr_gabaa: 2.5e-2
-gbar_L5Basket_L5Pyr_gabab: L(0., 1e-1, 11)
+gbar_L5Basket_L5Pyr_gabaa: 2.5e-2
+gbar_L5Basket_L5Pyr_gabab: 1e-2
 
 # max conductances TO L5Baskets
 gbar_L5Basket_L5Basket: 2e-2

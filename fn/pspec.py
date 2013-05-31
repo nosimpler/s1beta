@@ -1,8 +1,8 @@
 # pspec.py - Very long plotting methods having to do with spec.
 #
-# v 1.7.54
-# rev 2013-05-24 (SL: moved from specfn.py)
-# last major:
+# v 1.7.57
+# rev 2013-05-31 (SL: using savepng from FigBase())
+# last major: (SL: moved from specfn.py)
 
 import os
 import sys
@@ -104,7 +104,8 @@ def pspec_dpl(dspec, f_dpl, dfig, p_dict, key_types, xlim=[0., 'tstop']):
     f.f.suptitle(title_str)
     # title_str = [key + ': %2.1f' % p_dict[key] for key in key_types['dynamic_keys']]
 
-    plt.savefig(fig_name, dpi=300)
+    # use our fig classes to save and close
+    f.savepng(fig_name)
     f.close()
 
 # Spectral plotting kernel with alpha feed histogram for ONE simulation run

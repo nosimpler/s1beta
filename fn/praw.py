@@ -1,8 +1,8 @@
 # praw.py - all of the raw data types on one fig
 #
-# v 1.7.54
-# rev 2013-05-08 (SL: parallel praw)
-# last major: (SL: added spec_current)
+# v 1.7.57
+# rev 2013-05-31 (SL: using convert function for dipole before calculating spec)
+# last major: (SL: parallel praw)
 
 import fileio as fio
 import numpy as np
@@ -33,6 +33,7 @@ def pkernel(dfig_dpl, f_dpl, f_spk, f_spec, f_current, f_spec_current, f_param, 
 
     # grab the dipole
     dpl = dipolefn.Dipole(f_dpl)
+    dpl.convert_fAm_to_nAm()
 
     # plot the dipole to the agg axes
     dpl.plot(f.ax['dpl_agg'], xlim)

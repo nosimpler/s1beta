@@ -12,31 +12,33 @@ N_pyr_x: 10
 N_pyr_y: 10
 
 # Numerics
-tstop: 550.
+tstop: 250.
 dt: 0.025
 
 # PING L2 params
+Itonic_A_L2Pyr_soma: 0.
 Itonic_T_L2Pyr_soma: -1
 Itonic_t0_L2Pyr_soma: 0.
-Itonic_A_L2Pyr_soma: 0.
 
-gbar_L2Pyr_L2Basket: 3.6e-3
-# gbar_L2Basket_L2Pyr: 5.42e-3
+gbar_L2Pyr_L2Basket: 1e-3
+gbar_L2Basket_L2Pyr_gabaa: 7e-3
+gbar_L2Basket_L2Pyr_gabab: 0.
 
-L2Pyr_Pois_A_weight: [0., 7e-4]
-# L2Pyr_Pois_A_weight: 5.5e-4
-L2Pyr_Pois_lamtha: 100.
+L2Pyr_Pois_A_weight: 8e-4
+L2Pyr_Pois_lamtha: L[80., 0., 5]
+
+# max conductances TO L2Baskets
+gbar_L2Basket_L2Basket: 1e-2
 
 # maximal conductances for all synapses
 # gbar_L5Basket_L5Pyr: 0.
 gbar_L5Pyr_L5Basket: 0.
+gbar_L5Basket_L5Pyr_gabab: 0.
+gbar_L5Basket_L5Pyr_gabaa: 0.
 
 # max conductances TO L2Pyrs
 gbar_L2Pyr_L2Pyr_ampa: 0.
 gbar_L2Pyr_L2Pyr_nmda: 0.
-
-# max conductances TO L2Baskets
-gbar_L2Basket_L2Basket: 0.
 
 # max conductances TO L5Pyrs
 gbar_L5Pyr_L5Pyr_ampa: 0.
@@ -55,13 +57,13 @@ distribution_prox: normal
 distribution_dist: normal
 
 # Ongoing proximal alpha rhythm
-t0_input_prox: 50.
+t0_input_prox: 1000.
 tstop_input_prox: 1000.
 f_input_prox: 10.
 f_stdev_prox: 20.
 
 # Ongoing distal alpha rhythm
-t0_input_dist: 50.
+t0_input_dist: 1000.
 tstop_input_dist: 1000.
 f_input_dist: 10.
 f_stdev_dist: 20.
@@ -136,7 +138,7 @@ L5Basket_Pois_A_weight: 0.
 L5Basket_Pois_lamtha: 0.
 
 # analysis
-save_spec_data: 0
+save_spec_data: 1
 spec_max_freq: 80
 
 # N_trials
@@ -159,9 +161,3 @@ pois_T: 0
 Itonic_A_L5Pyr_soma: 0.
 Itonic_t0_L5Pyr_soma: 50.
 Itonic_T_L5Pyr_soma: -1
-
-# new params from default
-gbar_L2Basket_L2Pyr_gabab: 5e-2
-gbar_L2Basket_L2Pyr_gabaa: 5e-2
-gbar_L5Basket_L5Pyr_gabab: 2.5e-2
-gbar_L5Basket_L5Pyr_gabaa: 2.5e-2

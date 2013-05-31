@@ -1,8 +1,8 @@
 # cli.py - routines for the command line interface console s1sh.py
 #
-# v 1.7.54
-# rev 2013-05-24 (SL: fixed and am using __split_args(), added spec_current() stuff)
-# last major: (SL: Fixed do_show())
+# v 1.7.57
+# rev 2013-05-31 (SL: added __check_args() for use with __split_args(), renamed specanalysis())
+# last major: (SL: fixed and am using __split_args(), added spec_current() stuff)
 
 from cmd import Cmd
 from datetime import datetime
@@ -78,6 +78,20 @@ class Console(Cmd):
 
         return arg_list
 
+    # generalized function for checking and assigning args
+    def __check_args(self, dict_opts, list_opts):
+        # assumes list_opts comes from __split_args()
+        if len(list_opts):
+            # iterate through possible key vals in list_opts
+            for key, val in list_opts:
+                # check to see if the possible keys are in dict_opts
+                if key in dict_opts.keys():
+                    # assign the key/val pair in place
+                    # this operation acts IN PLACE on the supplied dict_opts!!
+                    # therefore, no return value necessary
+                    dict_opts[key] = ast.literal_eval(val)
+
+    # checks to see if a default server file is found, if not, ask for one
     def __check_server(self):
         f_server = os.path.join(self.dproj, '.server_default')
 
@@ -98,8 +112,9 @@ class Console(Cmd):
     def do_debug(self, args):
         """Qnd function to test other functions
         """
-        # self.do_setdate('2013-05-14')
-        self.do_load('gamma_L5weak_L2weak-000')
+        self.do_setdate('2013-05-28')
+        self.do_load('gamma_L5rand_L2strong-000')
+        self.do_spec_current('')
         # self.do_spec_current('--f_max=80.')
         self.do_praw('')
         # self.do_pdipole('grid')
@@ -110,7 +125,7 @@ class Console(Cmd):
         # self.do_specmax('in (testing, 0, 4) on [0, 1000.]')
         # self.do_avgtrials('dpl')
         # self.do_replot('')
-        # self.do_specanalysis('max_freq=50')
+        # self.do_spec_regenerate('--f_max=50.')
         # self.do_addalphahist('--xmin=0 --xmax=500')
         # self.do_avgtrials('dpl')
         # self.do_dipolemin('in (mu, 0, 2) on [400., 410.]')
@@ -123,7 +138,7 @@ class Console(Cmd):
 
         # "default" opts
         opts = {
-            'type': 'current',
+            'type': 'dpl_laminar',
             'f_max': 150.,
             'save_data': 1,
             'runtype': 'debug',
@@ -425,36 +440,24 @@ class Console(Cmd):
             datatype = args
             clidefs.exec_avgtrials(self.ddata, datatype)
 
-    def do_specanalysis(self, args):
+    def do_spec_regenerate(self, args):
         """Regenerates spec data and saves it to proper expmt directories. Usage:
-           Can pass arguments to set max_freq, tstart, and tstop of analysis
-           Args must be passed in form arg1=val, arg2=val, arg3=val
-           Can pass any combination/permutation of args or no args at all
+           [s1] spec_regenerate {--f_max=80.}
         """
-        # preallocate variables so they always exist
-        max_freq = None
-        tstart = None
-        tstop = None
 
-        # Parse args if they exist
-        if args:
-            arg_list = args.split(', ')
+        # use __split_args()
+        l_opts = self.__split_args(args)
 
-            # Assign value to above variables if the value exists as input
-            for arg in arg_list:
-                if arg.startswith('max_freq'):
-                    max_freq = float(arg.split('=')[-1])
+        # these are the opts for which we are looking
+        opts = {
+            'f_max': None,
+        }
 
-                else:
-                    print "Did not recognize argument. Not doing anything with it" 
+        # parse the opts
+        self.__check_args(opts, l_opts)
 
-                # elif arg.startswith('tstart'):
-                #     tstart = float(arg.split('=')[-1])
- 
-                # elif arg.startswith('tstop'):
-                #     tstop = float(arg.split('=')[-1])
-
-        self.spec_results = clidefs.regenerate_spec_data(self.ddata, max_freq)
+        # use exec_spec_regenerate to run
+        self.spec_results = clidefs.exec_spec_regenerate(self.ddata, opts['f_max'])
 
     def do_freqpwr(self, args):
         """Averages spec power over time and plots freq vs power. Fn can act per expmt or over entire simulation. If maxpwr supplied as arg, also plots freq at which max avg pwr occurs v.s input freq

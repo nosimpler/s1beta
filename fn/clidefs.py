@@ -1,8 +1,8 @@
 # clidefs.py - these are all of the function defs for the cli
 #
-# v 1.7.54
-# rev 2013-05-24 (SL: moved spec to pspec)
-# last major: (SL: minor, made save_data default for current spec)
+# v 1.7.57
+# rev 2013-05-31 (SL: exec_spec_regenerate())
+# last major: (SL: moved spec to pspec)
 
 # Standard modules
 import fnmatch, os, re, sys
@@ -243,7 +243,7 @@ def exec_avgtrials(ddata, datatype):
         if datakey == 'rawspec':
             if not len(rawdata_list):
                 # generate the data!
-                regenerate_spec_data(ddata)
+                exec_spec_regenerate(ddata)
                 rawdata_list = ddata.file_match(expmt_group, datakey)
 
         # simple length check, but will proceed bluntly anyway.
@@ -315,7 +315,7 @@ def exec_spec_current(ddata, opts_in=None):
     p_exp = paramrw.ExpParams(ddata.fparam)
     if opts_in is None:
         opts = {
-            'type': 'current',
+            'type': 'dpl_laminar',
             'f_max': 150.,
             'save_data': 1,
             'runtype': 'debug',
@@ -327,10 +327,10 @@ def exec_spec_current(ddata, opts_in=None):
     return spec_results
 
 # this function can now use specfn.generate_missing_spec(ddata, f_max)
-def regenerate_spec_data(ddata, max_freq=None):
+def exec_spec_regenerate(ddata, f_max=None):
     # regenerates and saves spec data
     p_exp = paramrw.ExpParams(ddata.fparam)
-    spec_results = specfn.analysis(ddata, p_exp, max_freq, save_data=1)
+    spec_results = specfn.analysis(ddata, p_exp, f_max, save_data=1)
 
     return spec_results
 
@@ -350,7 +350,7 @@ def freqpwr_analysis(ddata, dsim, maxpwr):
     # If no save spec reslts exist, redo spec analysis
     if not spec_results:
         print "No saved spec data found. Performing spec analysis...",
-        spec_results = regenerate_spec_data(ddata)
+        spec_results = exec_spec_regenerate(ddata)
 
         print "now doing spec freq-pwr analysis"
 
@@ -438,7 +438,7 @@ def freqpwr_with_hist(ddata, dsim):
     # If no save spec reslts exist, redo spec analysis
     if not spec_results:
         print "No saved spec data found. Performing spec analysis...",
-        spec_results = regenerate_spec_data(ddata)
+        spec_results = exec_spec_regenerate(ddata)
 
         print "now doing spec freq-pwr analysis"
 
@@ -461,13 +461,17 @@ def regenerate_plots(ddata, xlim=[0, 'tstop']):
     # ** should be guaranteed to be identical **
     p_exp = paramrw.ExpParams(ddata.fparam)
 
+
+    # grab the list of spec results that exists
+    # there is a method in SimulationPaths/ddata for this specifically, this should be deprecated
     spec_results = fio.file_match(ddata.dsim, '-spec.npz')
 
     # generate data if no spec exists here
     if not spec_results:
         print "No saved spec data found. Performing spec anaylsis ... "
-        spec_results = regenerate_spec_data(ddata)
+        spec_results = exec_spec_regenerate(ddata)
 
+    # run our core pall plot
     plotfn.pall(ddata, p_exp, spec_results, xlim)
 
 # function to add alpha feed hists
@@ -479,7 +483,7 @@ def exec_addalphahist(ddata, xlim=[0, 'tstop']):
     # generate data if no spec exists here
     if not spec_results:
         print "No saved spec data found. Performing spec anaylsis ... "
-        spec_results = regenerate_spec_data(ddata)
+        spec_results = exec_spec_regenerate(ddata)
 
     plotfn.pdpl_pspec_with_hist(ddata, p_exp, spec_results, xlim)
 
@@ -491,7 +495,7 @@ def exec_aggregatespec(ddata, labels):
     # generate data if no spec exists here
     if not spec_results:
         print "No saved spec data found. Performing spec anaylsis ... "
-        spec_results = regenerate_spec_data(ddata)
+        spec_results = exec_spec_regenerate(ddata)
 
     plotfn.aggregate_spec_with_hist(ddata, p_exp, spec_results, labels)
 
