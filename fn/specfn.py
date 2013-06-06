@@ -1,8 +1,8 @@
 # specfn.py - Average time-frequency energy representation using Morlet wavelet method
 #
-# v 1.7.57
-# rev 2013-05-31 (SL: added dpl_laminar option to analysis_typespecific)
-# last major: (SL: retooled read to handle new types, removed pspecs, created a new spec kernel)
+# v 1.7.58
+# rev 2013-06-06 (SL: Changed pspec_ax(), will break other things atm)
+# last major: (SL: added dpl_laminar option to analysis_typespecific)
 
 import os
 import sys
@@ -377,20 +377,56 @@ class MorletSpec():
 # spectral plotting kernel should be simpler and take just a file name and an axis handle
 # Spectral plotting kernel for ONE simulation run
 # ax_spec is the axis handle. fspec is the file name
-def pspec_ax(ax_spec, fspec):
+def pspec_ax(ax_spec, fspec, xlim, layer=None):
     # read is a function in this file to read the fspec
     data_spec = read(fspec)
-    TFR = data_spec['TFR']
 
-    if 'f' in data_spec.keys():
-        f = data_spec['f']
+    if layer in (None, 'agg'):
+        TFR = data_spec['TFR']
+
+        if 'f' in data_spec.keys():
+            f = data_spec['f']
+        else:
+            f = data_spec['freq']
+
     else:
-        f = data_spec['freq']
+        TFR_layer = 'TFR_%s' % layer
+        f_layer = 'f_%s' % layer
 
-    pc = ax_spec.imshow(TFR, aspect='auto', origin='upper')
+        if TFR_layer in data_spec.keys():
+            TFR = data_spec[TFR_layer]
+            f = data_spec[f_layer]
+
+    extent_xy = [xlim[0], xlim[1], f[-1], 0.]
+    pc = ax_spec.imshow(TFR, extent=extent_xy, aspect='auto', origin='upper')
+    [vmin, vmax] = pc.get_clim()
+    # print np.min(TFR), np.max(TFR)
+    # print vmin, vmax
     # ax_spec.colorbar(pc, ax=ax_spec)
 
+    # return (vmin, vmax)
     return pc
+
+# return the max spectral power (simple) for a series of files
+def spec_max(ddata, expmt_group, layer='agg'):
+    # grab the spec list, assumes it exists
+    list_spec = ddata.file_match(expmt_group, 'rawspec')
+
+    # really only perform these actions if there are items in the list
+    if len(list_spec):
+        # simple prealloc
+        val_max = np.zeros(len(list_spec))
+
+        # iterate through list_spec
+        i = 0
+        for fspec in list_spec:
+            data_spec = read(fspec)
+
+            # for now only do the TFR for the aggregate data
+            val_max[i] = np.max(data_spec['TFR'])
+            i += 1
+
+        return spec_max
 
 # common function to generate spec if it appears to be missing
 def generate_missing_spec(ddata, f_max=40):

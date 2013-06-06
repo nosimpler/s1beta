@@ -1,8 +1,8 @@
 # cli.py - routines for the command line interface console s1sh.py
 #
-# v 1.7.57
-# rev 2013-05-31 (SL: added __check_args() for use with __split_args(), renamed specanalysis())
-# last major: (SL: fixed and am using __split_args(), added spec_current() stuff)
+# v 1.7.58
+# rev 2013-06-06 (SL: added plot methods)
+# last major: (SL: added __check_args() for use with __split_args(), renamed specanalysis())
 
 from cmd import Cmd
 from datetime import datetime
@@ -112,11 +112,11 @@ class Console(Cmd):
     def do_debug(self, args):
         """Qnd function to test other functions
         """
-        self.do_setdate('2013-05-28')
-        self.do_load('gamma_L5rand_L2strong-000')
-        self.do_spec_current('')
+        # self.do_setdate('2013-05-25')
+        self.do_load('gamma_distal_phase-001')
+        self.do_pgamma_distal_phase('')
         # self.do_spec_current('--f_max=80.')
-        self.do_praw('')
+        # self.do_praw('')
         # self.do_pdipole('grid')
         # self.do_pngv('')
         # self.do_show('testing in (0, 0)')
@@ -131,6 +131,12 @@ class Console(Cmd):
         # self.do_dipolemin('in (mu, 0, 2) on [400., 410.]')
         # self.epscompress('spk')
         # self.do_psthgrid()
+
+    def do_pgamma_distal_phase(self, args):
+        clidefs.exec_pgamma_distal_phase(self.ddata)
+
+    def do_pgamma_stdev(self, args):
+        clidefs.exec_pgamma_stdev(self.ddata)
 
     def do_spec_current(self, args):
         # parse list of opts

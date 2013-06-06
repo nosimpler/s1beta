@@ -1,8 +1,8 @@
 # axes_create.py - simple axis creation
 #
-# v 1.7.57
-# rev 2013-05-31 (SL: added set_fontsize() to FigBase())
-# last major: (SL: created FigBase(), made some changes in axis dicts)
+# v 1.7.58
+# rev 2013-06-06 (SL: added saveeps() general method, not that exciting)
+# last major: (SL: added set_fontsize() to FigBase())
 
 # usage:
 # testfig = FigStd()
@@ -44,6 +44,10 @@ class FigBase():
     # generic save png function to file_name at dpi=dpi_set
     def savepng(self, file_name, dpi_set=300):
         self.f.savefig(file_name, dpi=dpi_set)
+
+    # generic save, works for png but supposed to be for eps
+    def saveeps(self, file_name):
+        self.f.savefig(file_name)
 
     # obligatory close function
     def close(self):

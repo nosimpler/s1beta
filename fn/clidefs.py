@@ -1,8 +1,8 @@
 # clidefs.py - these are all of the function defs for the cli
 #
-# v 1.7.57
-# rev 2013-05-31 (SL: exec_spec_regenerate())
-# last major: (SL: moved spec to pspec)
+# v 1.7.58
+# rev 2013-06-06 (SL: added plot methods)
+# last major: (SL: exec_spec_regenerate())
 
 # Standard modules
 import fnmatch, os, re, sys
@@ -21,6 +21,7 @@ import paramrw
 import specfn
 import dipolefn
 import axes_create
+import pmanu_gamma as pgamma
 
 # Returns length of any list
 def number_of_sims(some_list):
@@ -499,6 +500,14 @@ def exec_aggregatespec(ddata, labels):
 
     plotfn.aggregate_spec_with_hist(ddata, p_exp, spec_results, labels)
 
+# plot for gamma stdev on a given ddata
+def exec_pgamma_stdev(ddata):
+    pgamma.pgamma_stdev(ddata)
+
+# plot for gamma distal phase on a given ddata
+def exec_pgamma_distal_phase(ddata):
+    pgamma.pgamma_distal_phase(ddata)
+
 # plot data averaged over trials
 # dipole and spec should be split up at some point (soon)
 # ylim specified here is ONLY for the dipole
@@ -740,8 +749,3 @@ def png_viewer_simple(dimg):
     elif sys.platform.startswith('linux'):
         app_img = 'eog '
         call([app_img + files_arg + '&'], shell=True)
-
-# Commonly used plot commands, just really writing them down.
-# def plotcmds():
-    # geges
-    # In cppub, load rho_eges-000

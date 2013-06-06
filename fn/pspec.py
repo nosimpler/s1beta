@@ -1,8 +1,8 @@
 # pspec.py - Very long plotting methods having to do with spec.
 #
-# v 1.7.57
-# rev 2013-05-31 (SL: using savepng from FigBase())
-# last major: (SL: moved from specfn.py)
+# v 1.7.58
+# rev 2013-06-06 (SL: minor)
+# last major: (SL: using savepng from FigBase())
 
 import os
 import sys
@@ -60,7 +60,7 @@ def pspec_dpl(dspec, f_dpl, dfig, p_dict, key_types, xlim=[0., 'tstop']):
     else:
         xmax = xlim[1]
 
-    # vector indeces corresponding to xmin and xmax
+    # vector indices corresponding to xmin and xmax
     xmin_ind = xmin / p_dict['dt']
     xmax_ind = xmax / p_dict['dt']
 

@@ -1,8 +1,8 @@
 # dipolefn.py - dipole-based analysis functions
 #
-# v 1.7.57
-# rev 2013-05-31 (SL: dpl in Dipole() is now a dict, added ext units function)
-# last major: (SL: added max(), plot() function)
+# v 1.7.58
+# rev 2013-06-06 (SL: added FigDistalPhase())
+# last major: (SL: dpl in Dipole() is now a dict, added ext units function)
 
 import fileio as fio
 import numpy as np
@@ -90,8 +90,9 @@ class Dipole():
         if layer in self.dpl.keys():
             ax.plot(self.t, self.dpl[layer])
             ymax = self.max(layer, xlim)
-            ylim = (-ymax, ymax)
-            ax.set_ylim(ylim)
+            print ymax
+            # ylim = (-ymax, ymax)
+            # ax.set_ylim(ylim)
 
             ax.set_xlim(xlim)
 
