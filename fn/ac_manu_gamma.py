@@ -1,8 +1,8 @@
 # ac_manu_gamma.py - axes for gamma manuscript paper figs
 #
-# v 1.7.57
-# rev 2013-05-31 (SL: created)
-# last major:
+# v 1.7.59a
+# rev 2013-06-07 (SL: added new fig specs)
+# last major: (SL: created)
 
 import matplotlib as mpl
 import axes_create as ac
@@ -11,6 +11,41 @@ import matplotlib.gridspec as gridspec
 import itertools as it
 import numpy as np
 
+# strong ping and weak ping examples in Layer 5
+class FigL5PingExample(ac.FigBase):
+    def __init__(self):
+        self.f = plt.figure(figsize=(7, 5))
+
+        # set_fontsize() is part of FigBase()
+        self.set_fontsize(8)
+
+        # various gridspecs
+        self.gspec = {
+            'left': gridspec.GridSpec(3, 50),
+            'right': gridspec.GridSpec(3, 50),
+        }
+
+        # repositioning the gspec
+        l = np.arange(0.1, 0.95, 0.45)
+        r = l + 0.4
+        print l, r
+
+        # create the gridspec
+        self.gspec['left'].update(wspace=0, hspace=0.15, bottom=0.1, top=0.94, left=l[0], right=r[0])
+        self.gspec['right'].update(wspace=0, hspace=0.15, bottom=0.1, top=0.94, left=l[1], right=r[1])
+
+        # create axes and handles
+        self.ax = {
+            'spec_L': self.f.add_subplot(self.gspec['left'][:1, :]),
+            'dpl_L': self.f.add_subplot(self.gspec['left'][1:2, :40]),
+            'raster_L': self.f.add_subplot(self.gspec['left'][2:, :40]),
+
+            'spec_R': self.f.add_subplot(self.gspec['right'][:1, :]),
+            'dpl_R': self.f.add_subplot(self.gspec['right'][1:2, :40]),
+            'raster_R': self.f.add_subplot(self.gspec['right'][2:, :40]),
+        }
+
+# 2 examples of different phases and the aggregate spectral power as a function of delay
 class FigDistalPhase(ac.FigBase):
     def __init__(self):
         self.f = plt.figure(figsize=(13, 4))
@@ -113,6 +148,6 @@ if __name__ == '__main__':
     # testfig.ax['spec'].plot(x)
 
     # testfig = FigTest()
-    testfig = FigDistalPhase()
+    testfig = FigL5PingExample()
     testfig.savepng(f_test)
     testfig.close()
