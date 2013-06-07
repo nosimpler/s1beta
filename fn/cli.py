@@ -1,8 +1,8 @@
 # cli.py - routines for the command line interface console s1sh.py
 #
-# v 1.7.58
-# rev 2013-06-06 (SL: added plot methods)
-# last major: (SL: added __check_args() for use with __split_args(), renamed specanalysis())
+# v 1.7.59
+# rev 2013-06-07 (SL: Added gamma figs)
+# last major: (SL: added plot methods)
 
 from cmd import Cmd
 from datetime import datetime
@@ -112,9 +112,10 @@ class Console(Cmd):
     def do_debug(self, args):
         """Qnd function to test other functions
         """
-        # self.do_setdate('2013-05-25')
-        self.do_load('gamma_distal_phase-001')
-        self.do_pgamma_distal_phase('')
+        # self.do_setdate('2013-06-02')
+        # self.do_load('gamma_distal_phase-001')
+        self.do_pgamma_compare_ping('')
+        # self.do_pgamma_distal_phase('')
         # self.do_spec_current('--f_max=80.')
         # self.do_praw('')
         # self.do_pdipole('grid')
@@ -133,10 +134,35 @@ class Console(Cmd):
         # self.do_psthgrid()
 
     def do_pgamma_distal_phase(self, args):
-        clidefs.exec_pgamma_distal_phase(self.ddata)
+        '''Generates gamma fig for distal phase. Requires spec data for layers to exist. Usage:
+           [s1] spec_current
+           [s1] pgamma_distal_phase {--spec0=0 --spec1=1}
+        '''
+
+        opts = {
+            'spec0': 0,
+            'spec1': 1,
+        }
+
+        l_opts = self.__split_args(args)
+        self.__check_args(opts, l_opts)
+
+        clidefs.exec_pgamma_distal_phase(self.ddata, opts)
 
     def do_pgamma_stdev(self, args):
+        '''Generates gamma fig for standard deviation. Requires spec data for layers to exist. Usage:
+           [s1] spec_current
+           [s1] pgamma_stdev
+        '''
         clidefs.exec_pgamma_stdev(self.ddata)
+
+    def do_pgamma_compare_ping(self, args):
+        '''Generates gamma fig for comparison of PING and weak PING. Will need 2 data sets! Usage:
+            [s1] pgamma_compare_ping
+        '''
+        # l_opts = self.__split_args(args)
+        # self.__check_args(opts, l_opts)
+        clidefs.exec_pgamma_compare_ping()
 
     def do_spec_current(self, args):
         # parse list of opts

@@ -1,8 +1,8 @@
 # clidefs.py - these are all of the function defs for the cli
 #
-# v 1.7.58
-# rev 2013-06-06 (SL: added plot methods)
-# last major: (SL: exec_spec_regenerate())
+# v 1.7.59
+# rev 2013-06-07 (SL: gamma methods)
+# last major: (SL: added plot methods)
 
 # Standard modules
 import fnmatch, os, re, sys
@@ -500,13 +500,18 @@ def exec_aggregatespec(ddata, labels):
 
     plotfn.aggregate_spec_with_hist(ddata, p_exp, spec_results, labels)
 
+# comparison between a PING (ddata0) and a weak PING (ddata1) data set
+def exec_pgamma_compare_ping():
+# def exec_pgamma_compare_ping(ddata0, ddata1, opts):
+    pgamma.compare_ping()
+
 # plot for gamma stdev on a given ddata
 def exec_pgamma_stdev(ddata):
     pgamma.pgamma_stdev(ddata)
 
 # plot for gamma distal phase on a given ddata
-def exec_pgamma_distal_phase(ddata):
-    pgamma.pgamma_distal_phase(ddata)
+def exec_pgamma_distal_phase(ddata, opts):
+    pgamma.pgamma_distal_phase(ddata, opts['spec0'], opts['spec1'])
 
 # plot data averaged over trials
 # dipole and spec should be split up at some point (soon)

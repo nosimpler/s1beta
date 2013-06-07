@@ -1,8 +1,8 @@
 # specfn.py - Average time-frequency energy representation using Morlet wavelet method
 #
-# v 1.7.58
-# rev 2013-06-06 (SL: Changed pspec_ax(), will break other things atm)
-# last major: (SL: added dpl_laminar option to analysis_typespecific)
+# v 1.7.59
+# rev 2013-06-07 (SL: added stationary sum of spectral power with no averaging, for arb ts)
+# last major: (SL: Changed pspec_ax(), will break other things atm)
 
 import os
 import sys
@@ -680,6 +680,26 @@ def freqpwr_analysis(dspec):
         'freq_at_max': freq_at_max,
         'freq': freqvec,
         'expmt': expmt,
+    }
+
+# stationary sum as a crude measure of spectral power at a given frequency
+# this function is different from freqpwr_analysis in that it does not do an
+# average based on number of times
+def specpwr_stationary(t, f, TFR):
+    # aggregate sum of power of all calculated frequencies
+    p = TFR.sum(axis=1)
+
+    # calculate max power
+    p_max = p.max()
+
+    # calculate max f
+    f_max = f[p==p_max]
+
+    return {
+        'p': p,
+        'f': f,
+        'p_max': p_max,
+        'f_max': f_max,
     }
 
 def pfreqpwr(file_name, results_list, fparam_list, key_types):
