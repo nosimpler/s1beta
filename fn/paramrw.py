@@ -1,8 +1,8 @@
 # paramrw.py - routines for reading the param files
 #
-# v 1.7.57
-# rev 2013-05-31 (SL: using -1 for tstops from now on to reflect stop with simulation)
-# last major: (SL: fixed changed_vars() function)
+# v 1.8.0
+# rev 2013-06-08 (SL: merged into master)
+# last major: (SL: changed output for resorting to default, non-active keys)
 
 import re
 import fileio as fio
@@ -326,20 +326,28 @@ class ExpParams():
         # create a copy of params_default through which to iterate
         self.p_all = get_params_default()
 
+        # debug code
+        # n_keys_from_default = 0
+
         # now find ONLY the values that are present in the supplied p_all_input
         # based on the default dict
         for key in self.p_all.keys():
+            # automatically expects that keys are either in p_all_input OR will resort
+            # to default value
             if key in p_all_input:
                 # pop val off so the remaining items in p_all_input are extraneous
                 self.p_all[key] = p_all_input.pop(key)
 
-            else:
-                if key not in self.expmt_group_params:
-                    print "Param struct missing %s, resorting to default val" % key
+            # else:
+            #     if key not in self.expmt_group_params:
+            #         # add to count of keys that came from default only
+            #         n_keys_from_default += 1
+
+        # print "Keys taken from default: %i" % n_keys_from_default
 
         # now display extraneous keys, if there were any
         if len(p_all_input):
-            print "Keys were not found in default params: %s" % str(p_all_input.keys())
+            print "Invalid keys from param file not found in default params: %s" % str(p_all_input.keys())
 
     # creates all combination of non-exp params
     def __create_paramlist(self):
