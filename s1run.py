@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # s1run.py - primary run function for s1 project
 #
-# v 1.7.54
-# rev 2013-05-24 (SL: current outputs)
-# last major: (SL: Added current recording for the L2Pyr)
+# v 1.8.1
+# rev 2013-06-10 (SL: minor)
+# last major: (SL: current outputs)
 
 import os
 import sys
@@ -180,13 +180,11 @@ def exec_runsim(f_psim):
 
                 # create prefix for files everyone knows about
                 exp_prefix = p_exp.trial_prefix_str % (i, j)
-                # exp_prefix = "%s-%03d-T%02d" % (p_exp.sim_prefix, i, j)
 
                 # spike file needs to be known by all nodes
                 file_spikes_tmp = fio.file_spike_tmp(dproj)
 
                 # Create network from class_net's Network class
-                # Network(gridpyr_x, gridpyr_y)
                 net = Network(p)
 
                 # debug: off (0), on (1)
