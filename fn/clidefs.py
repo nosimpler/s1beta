@@ -1,8 +1,8 @@
 # clidefs.py - these are all of the function defs for the cli
 #
-# v 1.7.59
-# rev 2013-06-07 (SL: gamma methods)
-# last major: (SL: added plot methods)
+# v 1.8.2
+# rev 2013-06-11 (SL: added calc_dpl_mean() and calc_dpl_regression())
+# last major: (SL: gamma methods)
 
 # Standard modules
 import fnmatch, os, re, sys
@@ -39,6 +39,28 @@ def get_subdir_list(dcheck):
 
     else:
         return []
+
+# calculates the mean dipole over a specified range
+def exec_calc_dpl_mean(ddata, opts={}):
+    for expmt_group in ddata.expmt_groups:
+        list_fdpl = ddata.file_match(expmt_group, 'rawdpl')
+
+        # order of l_dpl is same as list_fdpl
+        l_dpl = [dipolefn.Dipole(f) for f in list_fdpl]
+
+        for dpl in l_dpl:
+            print dpl.mean_stationary(opts)
+
+# calculates the linear regression, shows values of slope (m) and int (b)
+# and plots line to dipole fig (in place)
+def exec_calc_dpl_regression(ddata, opts={}):
+     for expmt_group in ddata.expmt_groups:
+        list_fdpl = ddata.file_match(expmt_group, 'rawdpl')
+        list_figdpl = ddata.file_match(expmt_group, 'figdpl')
+
+        # this is to overwrite the fig
+        for f, ffig in it.izip(list_fdpl, list_figdpl):
+            dipolefn.plinear_regression(ffig, f)
 
 def exec_pdipole_evoked(ddata, ylim=[]):
     # runtype = 'parallel'

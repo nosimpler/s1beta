@@ -1,8 +1,8 @@
 # fileio.py - general file input/output functions
 #
-# v 1.7.52
-# rev 2013-05-07 (SL: Added new data type to SimulationPaths() and cleaned comments out)
-# last rev: (SL: added file type for currents)
+# v 1.8.2
+# rev 2013-06-11 (SL: changed eps to png)
+# last rev: (SL: Added new data type to SimulationPaths() and cleaned comments out)
 
 import datetime, fnmatch, os, shutil, sys
 import itertools as it
@@ -110,11 +110,11 @@ class SimulationPaths():
             'rawspeccurrent': '-speci.npz',
             'avgdpl': '-dplavg.txt',
             'avgspec': '-specavg.npz',
-            'figavgdpl': '-dplavg.eps',
-            'figavgspec': '-specavg.eps',
-            'figdpl': '-dpl.eps',
-            'figspec': '-spec.eps',
-            'figspk': '-spk.eps',
+            'figavgdpl': '-dplavg.png',
+            'figavgspec': '-specavg.png',
+            'figdpl': '-dpl.png',
+            'figspec': '-spec.png',
+            'figspk': '-spk.png',
             'param': '-param.txt',
         }
 

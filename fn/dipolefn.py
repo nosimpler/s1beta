@@ -1,8 +1,8 @@
 # dipolefn.py - dipole-based analysis functions
 #
-# v 1.7.58
-# rev 2013-06-06 (SL: added FigDistalPhase())
-# last major: (SL: dpl in Dipole() is now a dict, added ext units function)
+# v 1.8.2
+# rev 2013-06-11 (SL: added mean_stationary(), linear regression, new baseline norm)
+# last major: (SL: added FigDistalPhase())
 
 import fileio as fio
 import numpy as np
@@ -36,11 +36,6 @@ class Dipole():
         # string that holds the units
         self.units = 'fAm'
 
-        # assume these are present if there are enough vectors
-        if x.shape[1] > 3:
-            self.dpl_L2 = x[:, 2]
-            self.dpl_L5 = x[:, 3]
-
     # conversion from fAm to nAm
     def convert_fAm_to_nAm(self):
         for key in self.dpl.keys():
@@ -49,27 +44,60 @@ class Dipole():
         # change the units string
         self.units = 'nAm'
 
+    # average stationary dipole over a time window
+    def mean_stationary(self, opts_input={}):
+        # opts is default AND input to below, can be modified by opts_input
+        opts = {
+            't0': 50.,
+            'tstop': self.t[-1],
+            'layer': 'agg',
+        }
+
+        # attempt to override the keys in opts
+        for key in opts_input.keys():
+            # check for each of the keys in opts
+            if key in opts.keys():
+                # special rule for tstop
+                if key == 'tstop':
+                    # if value in tstop is -1, then use end to T
+                    if opts_input[key] == -1:
+                        opts[key] = self.t[-1]
+                else:
+                    opts[key] = opts_input[key]
+
+        # check for layer in keys
+        if opts['layer'] in self.dpl.keys():
+            # get the dipole that matches the xlim
+            x_dpl = self.dpl[opts['layer']][(self.t > opts['t0']) & (self.t < opts['tstop'])]
+
+            # directly return the average
+            return np.mean(x_dpl, axis=0)
+
+        else:
+            print "Layer not found. Try one of %s" % self.dpl.keys()
+
     # finds the max value within a specified xlim
     def max(self, layer, xlim):
         # better implemented as a dict
         if layer is None:
             dpl_tmp = self.dpl['agg']
+
         elif layer in self.dpl.keys():
             dpl_tmp = self.dpl[layer]
-        # elif layer == 'L2':
-        #     dpl_tmp = self.dpl['L2']
-        # elif layer == 'L5':
-        #     dpl_tmp = self.dpl['L5']
 
+        # setting xmin
         if xlim[0] < 0.:
             xmin = 0.
         else:
             xmin = xlim[0]
 
+        # set xmax
         if xlim[1] > self.t[-1]:
             xmax = self.t[-1]
+
         elif xlim[1] == -1:
             xmax = self.t[-1]
+
         else:
             xmax = xlim[1]
 
@@ -101,22 +129,53 @@ class Dipole():
 
         return ax.get_xlim()
 
-    # standard dipole baseline in this model is -50.207 fAm per pair of pyr cells in network
     # ext function to renormalize
+    # this function changes in place but does NOT write the new values to the file
     def baseline_renormalize(self, f_param):
         N_pyr_x = paramrw.find_param(f_param, 'N_pyr_x')
         N_pyr_y = paramrw.find_param(f_param, 'N_pyr_y')
 
-        # N_pyr cells in grid. This is per layer.
+        # N_pyr cells in grid. This is PER LAYER
         N_pyr = N_pyr_x * N_pyr_y
 
         # dipole offset calculation: increasing number of pyr cells (L2 and L5, simultaneously)
-        # with no inputs, resulted in a roughly linear, roughly stationary (100 ms) dipole baseline
-        # of -50.207 fAm. This represents the resultant correction.
-        dpl_offset = N_pyr * 50.207
+        # with no inputs resulted in an aggregate dipole over the interval [50., 1000.] ms that
+        # eventually plateaus at -48 fAm. The range over this interval is something like 3 fAm
+        # so the resultant correction is here, per dipole
+        # dpl_offset = N_pyr * 50.207
 
-        # simple baseline shift of the dipole
-        self.dpl['agg'] += dpl_offset
+        dpl_offset = {
+            # these values will be subtracted
+            'L2': N_pyr * 0.0443,
+            'L5': N_pyr * -49.0502
+            # 'L5': N_pyr * -48.3642,
+
+            # will be calculated next, this is a placeholder
+            # 'agg': None,
+        }
+
+        # L2 dipole offset can be roughly baseline shifted over the entire range of t
+        self.dpl['L2'] -= dpl_offset['L2']
+
+        # L5 dipole offset should be different for interval [50., 500.] and then it can be offset
+        # slope (m) and intercept (b) params for L5 dipole offset
+        # uncorrected for N_cells
+        # these values were fit over the range [37., 750.)
+        m = 3.4770508e-3
+        b = -51.231085
+
+        # these values were fit over the range [750., 5000]
+        t1 = 750.
+        m1 = 1.01e-4
+        b1 = -48.412078
+
+        # piecewise normalization
+        self.dpl['L5'][self.t <= 37.] -= dpl_offset['L5']
+        self.dpl['L5'][(self.t > 37.) & (self.t < t1)] -= N_pyr * (m * self.t[(self.t > 37.) & (self.t < t1)] + b)
+        self.dpl['L5'][self.t >= t1] -= N_pyr * (m1 * self.t[self.t >= t1] + b1)
+
+        # recalculate the aggregate dipole based on the baseline normalized ones
+        self.dpl['agg'] = self.dpl['L2'] + self.dpl['L5']
 
 # ddata is a fio.SimulationPaths() object
 def calc_aggregate_dipole(ddata):
@@ -215,6 +274,34 @@ def calc_avgdpl_stimevoked(ddata):
         with open(fname_data, 'w') as f:
             for t, x in it.izip(t_dpl, dpl_mean):
                 f.write("%03.3f\t%5.4f\n" % (t, x))
+
+# one off function to plot linear regression
+def plinear_regression(ffig_dpl, fdpl):
+    dpl = Dipole(fdpl)
+    layer = 'L5'
+    t0 = 750.
+
+    # dipole for the given layer, truncated
+    # order matters here
+    x_dpl = dpl.dpl[layer][(dpl.t > t0)]
+    t = dpl.t[dpl.t > t0]
+
+    # take the transpose (T) of a vector of the times and ones for each element
+    A = np.vstack([t, np.ones(len(t))]).T
+
+    # find the slope and the y-int of the line fit with least squares method (min. of Euclidean 2-norm)
+    m, c = np.linalg.lstsq(A, x_dpl)[0]
+    print m, c
+
+    # plot me
+    f = ac.FigStd()
+    f.ax0.plot(t, x_dpl)
+    f.ax0.hold(True)
+    f.ax0.plot(t, m*t + c, 'r')
+
+    # save over the original
+    f.savepng(ffig_dpl)
+    f.close()
 
 # plot a dipole to an axis from corresponding dipole and param files
 def pdipole_ax(a, f_dpl, f_param):

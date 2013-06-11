@@ -1,8 +1,8 @@
 # cli.py - routines for the command line interface console s1sh.py
 #
-# v 1.7.59
-# rev 2013-06-07 (SL: Added gamma figs)
-# last major: (SL: added plot methods)
+# v 1.8.2
+# rev 2013-06-11 (SL: Fixed args functions, added calc_dpl_mean())
+# last major: (SL: Added gamma figs)
 
 from cmd import Cmd
 from datetime import datetime
@@ -58,23 +58,20 @@ class Console(Cmd):
 
     # splits argstring in format of --opt0=val0 --opt1=val1
     def __split_args(self, args):
-        # split based on space
-        args_tmp = args.split(' ')
+        # split based on leading --
+        args_tmp = args.split(' --')
 
         # only take the args that start with -- and include a =
         # drop the leading --
-        args_opt = [arg[2:] for arg in args_tmp if arg.startswith('--')]
-        args_opt = [arg for arg in args_opt if '=' in arg]
-
-        # final output list of tuples (?) or lists of args and values
+        # args_opt = [arg[2:] for arg in args_tmp if arg.startswith('--')]
+        args_opt = [arg for arg in args_tmp if '=' in arg]
         arg_list = []
-
-        # iterate through args
         for arg in args_opt:
-            if arg:
-                # append output to the final list
+            # getting rid of first case, ugh, hack!
+            if arg.startswith('--'):
+                arg_list.append(arg[2:].split('='))
+            else:
                 arg_list.append(arg.split('='))
-                # opt, val = arg.split('=')
 
         return arg_list
 
@@ -113,8 +110,10 @@ class Console(Cmd):
         """Qnd function to test other functions
         """
         # self.do_setdate('2013-06-02')
-        # self.do_load('gamma_distal_phase-001')
-        self.do_pgamma_compare_ping('')
+        self.do_load('baseline-002')
+        # self.do_calc_dpl_regression('')
+        self.do_calc_dpl_mean("--t0=100. --tstop=1000. --layer='L2'")
+        # self.do_pgamma_compare_ping('')
         # self.do_pgamma_distal_phase('')
         # self.do_spec_current('--f_max=80.')
         # self.do_praw('')
@@ -132,6 +131,25 @@ class Console(Cmd):
         # self.do_dipolemin('in (mu, 0, 2) on [400., 410.]')
         # self.epscompress('spk')
         # self.do_psthgrid()
+
+    def do_calc_dpl_mean(self, args):
+        '''Returns the mean dipole to screen. Usage:
+           [s1] calc_dpl_mean
+        '''
+        opts = {
+            't0': 50.,
+            'tstop': -1,
+            'layer': 'agg',
+        }
+
+        l_opts = self.__split_args(args)
+        self.__check_args(opts, l_opts)
+
+        # run the function
+        clidefs.exec_calc_dpl_mean(self.ddata, opts)
+
+    def do_calc_dpl_regression(self, args):
+        clidefs.exec_calc_dpl_regression(self.ddata)
 
     def do_pgamma_distal_phase(self, args):
         '''Generates gamma fig for distal phase. Requires spec data for layers to exist. Usage:
