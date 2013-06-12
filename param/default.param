@@ -132,7 +132,7 @@ Itonic_T_L5Pyr_soma: -1
 
 # analysis
 save_spec_data: 0
-spec_max_freq: 41.
+f_max_spec: 41.
 
 # N_trials
 N_trials: 0

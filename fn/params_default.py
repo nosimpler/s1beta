@@ -1,8 +1,8 @@
 # params_default.py - master list of changeable params. most set to default val of inactive
 #
-# v 1.8.1
-# rev 2013-06-10 (SL: fixed minimum delay bug)
-# last major: (SL: merged, values are all set to inactive)
+# v 1.8.5
+# rev 2013-06-12 (MS: renamed spec_max_freq as f_max_spec)
+# last major: (SL: fixed minimum delay bug)
 
 # Note that nearly all start times are set BEYOND tstop for this file
 # Most values here are set to whatever default value inactivates them, such as 0 for conductance
@@ -134,7 +134,7 @@ def get_params_default():
 
         # analysis
         'save_spec_data': 0,
-        'spec_max_freq': 40.,
+        'f_max_spec': 40.,
 
         # IClamp params for L2Pyr
         'Itonic_A_L2Pyr_soma': 0.,

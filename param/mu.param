@@ -86,7 +86,7 @@ gbar_evdist_L2Basket: 5e-4
 
 # analysis
 save_spec_data: 1
-spec_max_freq: 41.
+f_max_spec: 41.
 
 # N_trials
 N_trials: 1

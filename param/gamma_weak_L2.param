@@ -139,7 +139,7 @@ L5Basket_Pois_lamtha: 0.
 
 # analysis
 save_spec_data: 1
-spec_max_freq: 80
+f_max_spec: 80
 
 # N_trials
 N_trials: 0

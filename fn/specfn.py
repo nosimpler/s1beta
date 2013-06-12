@@ -1,8 +1,8 @@
 # specfn.py - Average time-frequency energy representation using Morlet wavelet method
 #
-# v 1.8.4a
-# rev 2013-06-12 (MS: renamed freqpwr_analysis as specpwr_stationary_avg(). Other minor)
-# last major: (MS: Moved pfreqpwr() to pspec.py(). Added calc_stderror() to calculate standard error of power spectral analysis on avg spec data, but is general enough to work on any list of vector data. Other minor)
+# v 1.8.5
+# rev 2013-06-12 (MS: now adding one to maximum freq of spectral analysis so maximum frequency is included by default in anaylsis. Other minor)
+# last major: (MS: renamed freqpwr_analysis as specpwr_stationary_avg(). Other minor)
 
 import os
 import sys
@@ -65,10 +65,11 @@ class MorletSpecSingle():
         self.p_dict = paramrw.read(fparam)[1]
 
         # maximum frequency of analysis
+        # Add 1 to ensure analysis is inclusive of maximum frequency
         if not f_max:
-            self.f_max = self.p_dict['spec_max_freq']
+            self.f_max = self.p_dict['f_max_spec'] + 1
         else:
-            self.f_max = f_max
+            self.f_max = f_max + 1
 
         # cutoff time in ms
         self.tmin = 50.
@@ -216,7 +217,7 @@ class MorletSpecSingle():
 # MorletSpec class
 class MorletSpec():
     # fdata_spec will be created based on fparam and fdata, a general time series
-    def __init__(self, fparam, fdata, fdata_spec, max_freq=None, save_data=None):
+    def __init__(self, fparam, fdata, fdata_spec, f_max=None, save_data=None):
         # Save variable portion of fdata_spec as identifying attribute
         self.name = fdata_spec
 
@@ -240,8 +241,8 @@ class MorletSpec():
         self.S = dpl.dpl['agg']
 
         # maximum frequency of analysis
-        if not max_freq:
-            max_freq = self.p_dict['spec_max_freq']
+        if not f_max:
+            f_max = self.p_dict['f_max_spec'] + 1
 
         # cutoff time in ms
         self.tmin = 50.
@@ -249,12 +250,12 @@ class MorletSpec():
         # Check that tstop is greater than tmin
         if self.p_dict['tstop'] > self.tmin:
             # Remove first self.tmin ms of simulation
-            self.S = self.S[self.timevec > self.tmin]
-            self.timevec = self.timevec[self.timevec > self.tmin]
+            self.S = self.S[self.timevec >= self.tmin]
+            self.timevec = self.timevec[self.timevec >= self.tmin]
             # self.S = self.S[self.tmin / self.p_dict['dt']:, 1]
 
             # Array of frequencies over which to sort
-            self.freqvec = np.arange(1., max_freq)
+            self.freqvec = np.arange(1., f_max)
 
             # Number of cycles in wavelet (>5 advisable)
             self.width = 7.
@@ -598,7 +599,7 @@ def analysis_typespecific(ddata, p_exp, opts=None):
 
 # Does spec analysis for all files in simulation directory
 # ddata is a SimulationPaths() object from fileio
-def analysis(ddata, p_exp, max_freq=None, save_data=None):
+def analysis(ddata, p_exp, f_max=None, save_data=None):
     runtype = 'debug'
 
     # preallocate lists for use below
@@ -628,7 +629,7 @@ def analysis(ddata, p_exp, max_freq=None, save_data=None):
     if runtype == 'parallel':
         pl = mp.Pool()
         for fparam, fdpl, fspec in it.izip(param_list, dpl_list, spec_list):
-            pl.apply_async(MorletSpec, (fparam, fdpl, fspec, max_freq, save_data), callback=append_spec)
+            pl.apply_async(MorletSpec, (fparam, fdpl, fspec, f_max, save_data), callback=append_spec)
 
         pl.close()
         pl.join()
@@ -638,7 +639,7 @@ def analysis(ddata, p_exp, max_freq=None, save_data=None):
 
     if runtype == 'debug':
         for fparam, fdpl, fspec in it.izip(param_list, dpl_list, spec_list):
-            spec_results.append(MorletSpec(fparam, fdpl, fspec, max_freq, save_data))
+            spec_results.append(MorletSpec(fparam, fdpl, fspec, f_max, save_data))
 
         return spec_results
 

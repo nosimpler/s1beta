@@ -83,7 +83,7 @@ gbar_evprox_late_L5Basket: {4e-2, 2.7e-3, 3.471e-3}
 
 # analysis
 save_spec_data: 0
-spec_max_freq: 41.
+f_max_spec: 41.
 
 # N_trials
 N_trials: 25

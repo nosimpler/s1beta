@@ -46,7 +46,7 @@ input_dist_A_delay_L5: 5.
 
 # analysis
 save_spec_data: 1
-spec_max_freq: 61.
+f_max_spec: 60.
 
 # n trials
 N_trials: 0

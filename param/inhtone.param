@@ -125,7 +125,7 @@ gbar_evdist_L2Basket: 5e-4
 
 # analysis
 save_spec_data: 0
-spec_max_freq: 41.
+f_max_spec: 41.
 
 # Poisson input
 pois_T: 500.
