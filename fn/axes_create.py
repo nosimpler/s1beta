@@ -1,8 +1,8 @@
 # axes_create.py - simple axis creation
 #
-# v 1.8.4
-# rev 2013-06-12 (MS: added set_title() method in FigBase())
-# last major: (SL: added saveeps() general method, not that exciting)
+# v 1.8.4a
+# rev 2013-06-12 (MS: set_title() now uses external create_title() fn)
+# last major: (MS: added set_title() method in FigBase())
 
 # usage:
 # testfig = FigStd()
@@ -48,18 +48,8 @@ class FigBase():
         # get param dict
         p_dict = paramrw.read(fparam)[1]
 
-        # preallocate title list
-        title = []
-
-        for key in key_types['dynamic_keys']:
-            # Rules for when to use scientific notation
-            if p_dict[key] >= 0.1 or p_dict[key] == 0:
-                title.append(key + ': %2.1f' %p_dict[key])
-            else:
-                title.append(key + ': %2.1e' %p_dict[key])
-
-        # set title in alphabetical order
-        title.sort()
+        # create_title() is external fn
+        title = create_title(p_dict, key_types)
         self.f.suptitle(title)
 
     # generic save png function to file_name at dpi=dpi_set

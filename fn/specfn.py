@@ -1,8 +1,8 @@
 # specfn.py - Average time-frequency energy representation using Morlet wavelet method
 #
-# v 1.8.4
-# rev 2013-06-12 (MS: Moved pfreqpwr() to pspec.py(). Added calc_stderror() to calculate standard error of power spectral analysis on avg spec data, but is general enough to work on any list of vector data. Other minor)
-# last major: (SL: added stationary sum of spectral power with no averaging, for arb ts)
+# v 1.8.4a
+# rev 2013-06-12 (MS: renamed freqpwr_analysis as specpwr_stationary_avg(). Other minor)
+# last major: (MS: Moved pfreqpwr() to pspec.py(). Added calc_stderror() to calculate standard error of power spectral analysis on avg spec data, but is general enough to work on any list of vector data. Other minor)
 
 import os
 import sys
@@ -647,7 +647,7 @@ def from_expmt(spec_result_list, expmt_group):
     return [spec_result for spec_result in spec_result_list if expmt_group in spec_result.name]
 
 # Averages spec power over time, returning an array of average pwr per frequency 
-def freqpwr_analysis(dspec):
+def specpwr_stationary_avg(dspec):
     # dspec may be either raw spec data or pathway to saved spec data
 
     # if dspec is an instance of MorletSpec,  get data from object
@@ -671,14 +671,14 @@ def freqpwr_analysis(dspec):
         expmt = dspec.split('/')[6].split('.')[0]
 
     # axis = 1 sums over columns
-    avg_pwr = TFR.sum(axis=1) / len(timevec)
-    max_pwr = avg_pwr.max()
-    freq_at_max = freqvec[avg_pwr==max_pwr]
+    pwr_avg = TFR.sum(axis=1) / len(timevec)
+    pwr_max = pwr_avg.max()
+    f_at_max = freqvec[pwr_avg==pwr_max]
 
     return {
-        'avgpwr': avg_pwr,
-        'max_pwr': max_pwr,
-        'freq_at_max': freq_at_max,
+        'p_avg': pwr_avg,
+        'p_max': pwr_max,
+        'f_max': f_at_max,
         'freq': freqvec,
         'expmt': expmt,
     }

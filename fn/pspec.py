@@ -1,8 +1,8 @@
 # pspec.py - Very long plotting methods having to do with spec.
 #
-# v 1.8.4
-# rev 2013-06-12 (MS: Moved pfreqpwr() here and added pfreqpwr_ax() as a stationarity analysis plot kernel  and pyerrorbars_ax() as a y-axis error bar plotting kernel)
-# last major: (SL: using savepng from FigBase())
+# v 1.8.4a
+# rev 2013-06-12 (MS: renamed pfreqpwr() as pspecpwr() and pfreqpwr_ax() as pspecpwr_ax()) 
+# last major: (MS: Moved pfreqpwr() here and added pfreqpwr_ax() as a stationarity analysis plot kernel  and pyerrorbars_ax() as a y-axis error bar plotting kernel)
 
 import os
 import sys
@@ -215,24 +215,24 @@ def pspec_with_hist(dspec, f_dpl, f_spk, dfig, p_dict, gid_dict, key_types, xlim
     f.savepng(fig_name)
     f.close()
 
-def pfreqpwr(file_name, results_list, fparam_list, key_types, error_vec=[]):
+def pspecpwr(file_name, results_list, fparam_list, key_types, error_vec=[]):
     # instantiate fig
     f = ac.FigStd()
 
-    # pfreqpwr is a plot kernel for freqpwr plotting
-    legend_list = pfreqpwr_ax(f.ax0, results_list, fparam_list, key_types)
+    # pspecpwr_ax is a plot kernel for specpwr plotting
+    legend_list = pspecpwr_ax(f.ax0, results_list, fparam_list, key_types)
 
     # Add error bars if necessary
     if len(error_vec):
         # errors are only used with avg'ed data. There will be only one entry in results_list
-        pyerrorbars_ax(f.ax0, results_list[0]['freq'], results_list[0]['avgpwr'], error_vec)
+        pyerrorbars_ax(f.ax0, results_list[0]['freq'], results_list[0]['p_avg'], error_vec)
 
     # insert legend
     f.ax0.legend(legend_list, loc='upper right')
 
     # axes labels
     f.ax0.set_xlabel('Freq (Hz)')
-    f.ax0.set_ylabel('Avg_pwr')
+    f.ax0.set_ylabel('Avgerage Power (nAm^2)')
 
     # add title
     # f.set_title(fparam_list[0], key_types)
@@ -243,16 +243,16 @@ def pfreqpwr(file_name, results_list, fparam_list, key_types, error_vec=[]):
     f.close()
 
 # frequency-power analysis plotting kernel
-def pfreqpwr_ax(ax_freqpwr, freqpwr_list, fparam_list, key_types):
-    ax_freqpwr.hold(True)
+def pspecpwr_ax(ax_specpwr, specpwr_list, fparam_list, key_types):
+    ax_specpwr.hold(True)
 
     # Preallocate legend list
     legend_list = []
 
     # iterate over freqpwr results and param list to plot and construct legend
-    for result, fparam in it.izip(freqpwr_list, fparam_list):
+    for result, fparam in it.izip(specpwr_list, fparam_list):
         # Plot to axis
-        ax_freqpwr.plot(result['freq'], result['avgpwr'])
+        ax_specpwr.plot(result['freq'], result['p_avg'])
 
         # Build legend
         p = paramrw.read(fparam)[1]

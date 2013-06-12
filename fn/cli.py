@@ -1,8 +1,8 @@
 # cli.py - routines for the command line interface console s1sh.py
 #
-# v 1.8.4
-# rev 2013-06-12 (MS: added stationarity analysis, freqpwr_avg(), for avg spec data)
-# last major: (SL: save to 'pub' function)
+# v 1.8.4a
+# rev 2013-06-12 (MS: freqpwr() renamed spec_stationary_avg(), freqpwr_avg renamed spec_avg_stationary_avg())
+# last major: (MS: added stationarity analysis, freqpwr_avg(), for avg spec data)
 
 from cmd import Cmd
 from datetime import datetime
@@ -510,17 +510,18 @@ class Console(Cmd):
         # use exec_spec_regenerate to run
         self.spec_results = clidefs.exec_spec_regenerate(self.ddata, opts['f_max'])
 
-    def do_freqpwr(self, args):
+    def do_spec_stationary_avg(self, args):
         """Averages spec power over time and plots freq vs power. Fn can act per expmt or over entire simulation. If maxpwr supplied as arg, also plots freq at which max avg pwr occurs v.s input freq
         """
         if args == 'maxpwr':
-            clidefs.exec_freqpwr(self.ddata, self.dsim, maxpwr=1)
+            clidefs.exec_spec_stationary_avg(self.ddata, self.dsim, maxpwr=1)
 
         else:
-            clidefs.exec_freqpwr(self.ddata, self.dsim, maxpwr=0)
+            clidefs.exec_spec_stationary_avg(self.ddata, self.dsim, maxpwr=0)
 
-    def do_freqpwr_avg(self, args):
-        """Performs time-averaged stationarity analyis on avg'ed spec data
+    def do_spec_avg_stationary_avg(self, args):
+        """Performs time-averaged stationarity analysis on avg'ed spec data.
+           Sorry for the terrible name...
         """
         # parse args
         l_opts = self.__split_args(args) 
@@ -533,7 +534,7 @@ class Console(Cmd):
         # parse opts
         self.__check_args(opts, l_opts)
 
-        clidefs.exec_freqpwr_avg(self.ddata, self.dsim, opts)
+        clidefs.exec_spec_avg_stationary_avg(self.ddata, self.dsim, opts)
 
     def do_freqpwrwithhist(self, args):
         clidefs.freqpwr_with_hist(self.ddata, self.dsim)
