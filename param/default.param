@@ -12,7 +12,7 @@ N_pyr_x: 10
 N_pyr_y: 10 
 
 # Poisson input
-pois_T: 1000.
+T_pois: 1000.
 
 # maximal conductances for all synapses
 # max conductances TO L2Pyrs

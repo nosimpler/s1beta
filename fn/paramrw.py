@@ -559,9 +559,9 @@ def create_pext(p, tstop):
         'loc': 'proximal'
     }
 
-    # define pois_T as 0 or -1 to reset automatically to tstop
-    if p['pois_T'] in (0, -1):
-        p['pois_T'] = tstop
+    # define T_pois as 0 or -1 to reset automatically to tstop
+    if p['T_pois'] in (0, -1):
+        p['T_pois'] = tstop
 
     # Poisson distributed inputs to proximal
     p_unique['extpois'] = {
@@ -572,7 +572,7 @@ def create_pext(p, tstop):
         'L5_pyramidal': (p['L5Pyr_Pois_A_weight'], 1., p['L5Pyr_Pois_lamtha']),
         'lamtha_space': 100.,
         'prng_seedcore': int(p['prng_seedcore_extpois']),
-        't_interval': (0., p['pois_T']),
+        't_interval': (0., p['T_pois']),
         'loc': 'proximal'
     }
 

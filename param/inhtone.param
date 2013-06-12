@@ -128,7 +128,7 @@ save_spec_data: 0
 f_max_spec: 41.
 
 # Poisson input
-pois_T: 500.
+T_pois: 500.
 
 # n trials
 N_trials: 0

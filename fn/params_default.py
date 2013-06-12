@@ -163,6 +163,6 @@ def get_params_default():
         'prng_seedcore_evprox_late': 0,
 
         # default end time for pois inputs
-        'pois_T': 250.,
+        'T_pois': 250.,
         'dt': 0.025,
     }
