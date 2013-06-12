@@ -1,7 +1,7 @@
 # pspec.py - Very long plotting methods having to do with spec.
 #
-# v 1.7.58
-# rev 2013-06-06 (SL: minor)
+# v 1.8.4
+# rev 2013-06-12 (MS: Moved pfreqpwr() here and added pfreqpwr_ax() as a stationarity analysis plot kernel  and pyerrorbars_ax() as a y-axis error bar plotting kernel)
 # last major: (SL: using savepng from FigBase())
 
 import os
@@ -214,3 +214,54 @@ def pspec_with_hist(dspec, f_dpl, f_spk, dfig, p_dict, gid_dict, key_types, xlim
 
     f.savepng(fig_name)
     f.close()
+
+def pfreqpwr(file_name, results_list, fparam_list, key_types, error_vec=[]):
+    # instantiate fig
+    f = ac.FigStd()
+
+    # pfreqpwr is a plot kernel for freqpwr plotting
+    legend_list = pfreqpwr_ax(f.ax0, results_list, fparam_list, key_types)
+
+    # Add error bars if necessary
+    if len(error_vec):
+        # errors are only used with avg'ed data. There will be only one entry in results_list
+        pyerrorbars_ax(f.ax0, results_list[0]['freq'], results_list[0]['avgpwr'], error_vec)
+
+    # insert legend
+    f.ax0.legend(legend_list, loc='upper right')
+
+    # axes labels
+    f.ax0.set_xlabel('Freq (Hz)')
+    f.ax0.set_ylabel('Avg_pwr')
+
+    # add title
+    # f.set_title(fparam_list[0], key_types)
+
+    f.save(file_name)
+    # f.saveeps(file_name)
+    # f.savepng(file_name)
+    f.close()
+
+# frequency-power analysis plotting kernel
+def pfreqpwr_ax(ax_freqpwr, freqpwr_list, fparam_list, key_types):
+    ax_freqpwr.hold(True)
+
+    # Preallocate legend list
+    legend_list = []
+
+    # iterate over freqpwr results and param list to plot and construct legend
+    for result, fparam in it.izip(freqpwr_list, fparam_list):
+        # Plot to axis
+        ax_freqpwr.plot(result['freq'], result['avgpwr'])
+
+        # Build legend
+        p = paramrw.read(fparam)[1]
+        lgd_temp = [key + ': %2.1f' %p[key] for key in key_types['dynamic_keys']]
+        legend_list.append(reduce(lambda x, y: x+', '+y, lgd_temp[:]))
+
+    # Do not need to return axis, apparently
+    return legend_list
+
+# Plot vertical error bars
+def pyerrorbars_ax(ax, x, y, yerr_vec):
+    ax.errorbar(x, y, xerr=None, yerr=yerr_vec, fmt=None, ecolor='blue')

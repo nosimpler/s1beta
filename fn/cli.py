@@ -1,8 +1,8 @@
 # cli.py - routines for the command line interface console s1sh.py
 #
-# v 1.8.3
-# rev 2013-06-12 (SL: save to 'pub' function)
-# last major: (SL: Fixed args functions, added calc_dpl_mean())
+# v 1.8.4
+# rev 2013-06-12 (MS: added stationarity analysis, freqpwr_avg(), for avg spec data)
+# last major: (SL: save to 'pub' function)
 
 from cmd import Cmd
 from datetime import datetime
@@ -514,10 +514,26 @@ class Console(Cmd):
         """Averages spec power over time and plots freq vs power. Fn can act per expmt or over entire simulation. If maxpwr supplied as arg, also plots freq at which max avg pwr occurs v.s input freq
         """
         if args == 'maxpwr':
-            clidefs.freqpwr_analysis(self.ddata, self.dsim, maxpwr=1)
+            clidefs.exec_freqpwr(self.ddata, self.dsim, maxpwr=1)
 
         else:
-            clidefs.freqpwr_analysis(self.ddata, self.dsim, maxpwr=0)
+            clidefs.exec_freqpwr(self.ddata, self.dsim, maxpwr=0)
+
+    def do_freqpwr_avg(self, args):
+        """Performs time-averaged stationarity analyis on avg'ed spec data
+        """
+        # parse args
+        l_opts = self.__split_args(args) 
+
+        # "default" opts
+        opts = {
+            'errorbars': None
+        }
+
+        # parse opts
+        self.__check_args(opts, l_opts)
+
+        clidefs.exec_freqpwr_avg(self.ddata, self.dsim, opts)
 
     def do_freqpwrwithhist(self, args):
         clidefs.freqpwr_with_hist(self.ddata, self.dsim)

@@ -1,8 +1,8 @@
 # specfn.py - Average time-frequency energy representation using Morlet wavelet method
 #
-# v 1.7.59
-# rev 2013-06-07 (SL: added stationary sum of spectral power with no averaging, for arb ts)
-# last major: (SL: Changed pspec_ax(), will break other things atm)
+# v 1.8.4
+# rev 2013-06-12 (MS: Moved pfreqpwr() to pspec.py(). Added calc_stderror() to calculate standard error of power spectral analysis on avg spec data, but is general enough to work on any list of vector data. Other minor)
+# last major: (SL: added stationary sum of spectral power with no averaging, for arb ts)
 
 import os
 import sys
@@ -670,21 +670,19 @@ def freqpwr_analysis(dspec):
         # get experiment name
         expmt = dspec.split('/')[6].split('.')[0]
 
+    # axis = 1 sums over columns
     avg_pwr = TFR.sum(axis=1) / len(timevec)
     max_pwr = avg_pwr.max()
     freq_at_max = freqvec[avg_pwr==max_pwr]
 
     return {
-        'avg_pwr': avg_pwr,
+        'avgpwr': avg_pwr,
         'max_pwr': max_pwr,
         'freq_at_max': freq_at_max,
         'freq': freqvec,
         'expmt': expmt,
     }
 
-# stationary sum as a crude measure of spectral power at a given frequency
-# this function is different from freqpwr_analysis in that it does not do an
-# average based on number of times
 def specpwr_stationary(t, f, TFR):
     # aggregate sum of power of all calculated frequencies
     p = TFR.sum(axis=1)
@@ -702,26 +700,34 @@ def specpwr_stationary(t, f, TFR):
         'f_max': f_max,
     }
 
-def pfreqpwr(file_name, results_list, fparam_list, key_types):
-    f = ac.FigStd()
-    f.ax0.hold(True)
+def calc_stderror(data_list):
+    # np.std returns standard deviation
+    # axis=0 performs standard deviation over rows
+    error_vec = np.std(data_list, axis=0)
 
-    legend_list = []
+    return error_vec
 
-    for result, fparam in it.izip(results_list, fparam_list):
-        f.ax0.plot(result['freq'], result['avg_pwr'])
-
-        p = paramrw.read(fparam)[1]
-        lgd_temp = [key + ': %2.1f' %p[key] for key in key_types['dynamic_keys']]
-        legend_list.append(reduce(lambda x, y: x+', '+y, lgd_temp[:]))
-
-    f.ax0.legend(legend_list, loc = 'upper right')
-
-    f.ax0.set_xlabel('Freq (Hz)')
-    f.ax0.set_ylabel('Avg_pwr')
-
-    f.save(file_name)
-    f.close()
+# Moved to pspec.py
+# def pfreqpwr(file_name, results_list, fparam_list, key_types):
+#     f = ac.FigStd()
+#     f.ax0.hold(True)
+# 
+#     legend_list = []
+# 
+#     for result, fparam in it.izip(results_list, fparam_list):
+#         f.ax0.plot(result['freq'], result['avg_pwr'])
+# 
+#         p = paramrw.read(fparam)[1]
+#         lgd_temp = [key + ': %2.1f' %p[key] for key in key_types['dynamic_keys']]
+#         legend_list.append(reduce(lambda x, y: x+', '+y, lgd_temp[:]))
+# 
+#     f.ax0.legend(legend_list, loc = 'upper right')
+# 
+#     f.ax0.set_xlabel('Freq (Hz)')
+#     f.ax0.set_ylabel('Avg_pwr')
+# 
+#     f.save(file_name)
+#     f.close()
 
 def pfreqpwr_with_hist(file_name, freqpwr_result, f_spk, gid_dict, p_dict, key_types):
     f = ac.FigFreqpwrWithHist()
@@ -730,7 +736,7 @@ def pfreqpwr_with_hist(file_name, freqpwr_result, f_spk, gid_dict, p_dict, key_t
     xmin = 50.
     xmax = p_dict['tstop']
 
-    f.ax['freqpwr'].plot(freqpwr_result['freq'], freqpwr_result['avg_pwr'])
+    f.ax['freqpwr'].plot(freqpwr_result['freq'], freqpwr_result['avgpwr'])
 
     # grab alpha feed data. spikes_from_file() from spikefn.py
     s_dict = spikefn.spikes_from_file(gid_dict, f_spk)

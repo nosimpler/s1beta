@@ -1,8 +1,8 @@
 # axes_create.py - simple axis creation
 #
-# v 1.7.58
-# rev 2013-06-06 (SL: added saveeps() general method, not that exciting)
-# last major: (SL: added set_fontsize() to FigBase())
+# v 1.8.4
+# rev 2013-06-12 (MS: added set_title() method in FigBase())
+# last major: (SL: added saveeps() general method, not that exciting)
 
 # usage:
 # testfig = FigStd()
@@ -40,6 +40,27 @@ class FigBase():
         }
 
         mpl.rc('font', **font_prop)
+
+    # creates title string based on params that change during simulation
+    # title_str = ac.create_title(blah)
+    # title_str = f.create_title(blah)
+    def set_title(self, fparam, key_types):
+        # get param dict
+        p_dict = paramrw.read(fparam)[1]
+
+        # preallocate title list
+        title = []
+
+        for key in key_types['dynamic_keys']:
+            # Rules for when to use scientific notation
+            if p_dict[key] >= 0.1 or p_dict[key] == 0:
+                title.append(key + ': %2.1f' %p_dict[key])
+            else:
+                title.append(key + ': %2.1e' %p_dict[key])
+
+        # set title in alphabetical order
+        title.sort()
+        self.f.suptitle(title)
 
     # generic save png function to file_name at dpi=dpi_set
     def savepng(self, file_name, dpi_set=300):
