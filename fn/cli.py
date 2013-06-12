@@ -1,8 +1,8 @@
 # cli.py - routines for the command line interface console s1sh.py
 #
-# v 1.8.2
-# rev 2013-06-11 (SL: Fixed args functions, added calc_dpl_mean())
-# last major: (SL: Added gamma figs)
+# v 1.8.3
+# rev 2013-06-12 (SL: save to 'pub' function)
+# last major: (SL: Fixed args functions, added calc_dpl_mean())
 
 from cmd import Cmd
 from datetime import datetime
@@ -110,9 +110,10 @@ class Console(Cmd):
         """Qnd function to test other functions
         """
         # self.do_setdate('2013-06-02')
-        self.do_load('baseline-002')
+        self.do_load('baseline-031')
+        self.do_save('')
         # self.do_calc_dpl_regression('')
-        self.do_calc_dpl_mean("--t0=100. --tstop=1000. --layer='L2'")
+        # self.do_calc_dpl_mean("--t0=100. --tstop=1000. --layer='L2'")
         # self.do_pgamma_compare_ping('')
         # self.do_pgamma_distal_phase('')
         # self.do_spec_current('--f_max=80.')
@@ -723,19 +724,11 @@ class Console(Cmd):
         """
         ppsth_grid(self.simpaths)
 
-    # def do_psth(self, args):
-    #     # self.do_setdate('2012-11-07')
-    #     # self.do_load('inhtone-001')
-    #     ppsth(self.simpaths)
-
-    # def do_summary(self, args):
-    #     epslist = fio.file_match(self.simpaths.dfigs['spikes'], '.eps')
-    #     clidefs.pdf_create(self.dsim, 'testing', epslist)
-
+    # save currently fails when no dir is loaded
     def do_save(self, args):
         """Copies the entire current directory over to the cppub directory
         """
-        copy_to_pub(self.dsim)
+        clidefs.exec_save(self.dproj, self.ddate, self.dsim)
 
     def do_runsim(self, args):
         """Run the simulation code

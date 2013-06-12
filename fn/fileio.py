@@ -1,8 +1,8 @@
 # fileio.py - general file input/output functions
 #
-# v 1.8.2
-# rev 2013-06-11 (SL: changed eps to png)
-# last rev: (SL: Added new data type to SimulationPaths() and cleaned comments out)
+# v 1.8.3
+# rev 2013-06-12 (SL: dir_copy() function)
+# last rev: (SL: changed eps to png)
 
 import datetime, fnmatch, os, shutil, sys
 import itertools as it
@@ -93,6 +93,24 @@ def dir_check(d):
 def dir_create(d):
     if not dir_check(d):
         os.makedirs(d)
+
+# non-destructive copy routine
+def dir_copy(din, dout):
+    # this command should work on most posix systems
+    cmd_cp = 'cp -R %s %s' % (din, dout)
+
+    # if the dir doesn't already exist, copy it over
+    if not dir_check(dout):
+        # print the actual command when successful
+        print cmd_cp
+
+        # use call to run the command
+        subprocess.call(cmd_cp, shell=True)
+
+        return 0
+
+    else:
+        print "Directory already exists."
 
 # creates data dirs and a dictionary of useful types
 # self.dfig is a dictionary of experiments, which is each a dictionary of data type

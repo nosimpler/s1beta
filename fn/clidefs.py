@@ -1,8 +1,8 @@
 # clidefs.py - these are all of the function defs for the cli
 #
-# v 1.8.2
-# rev 2013-06-11 (SL: added calc_dpl_mean() and calc_dpl_regression())
-# last major: (SL: gamma methods)
+# v 1.8.3
+# rev 2013-06-12 (SL: save to pub function)
+# last major: (SL: added calc_dpl_mean() and calc_dpl_regression())
 
 # Standard modules
 import fnmatch, os, re, sys
@@ -651,20 +651,23 @@ def exec_sync(droot, server_remote, dsubdir, fshort_exclude='exclude_eps.txt'):
 
     call(cmd_rsync, shell=True)
 
-# at the moment broken, i removed the data_root() function
-def copy_to_pub(dsim):
-    # check to see if sim dir exists
-    # check to see if analogous dir in cppub exists
-    # if doesn't exist, copy it. otherwise ... figure out later.
-    dsub = dsim.split('/')[-1]
-    dpub = os.path.join(data_root(), 'cppub', dsub)
+# save to cppub
+def exec_save(dproj, ddate, dsim):
+    if fio.dir_check(dsim):
+        dsave_root = os.path.join(dproj, 'pub')
 
-    if os.path.exists(dpub):
-        print "Directory already exists, will not overwrite."
-        return 0
+        # check to see if this dir exists or not, and create it if not
+        fio.dir_create(dsave_root)
+
+        dsave_short = '%s_%s' % (ddate.split('/')[-1], dsim.split('/')[-1])
+        dsave = os.path.join(dsave_root, dsave_short)
+
+        # use fileio routine to non-destructively copy dir
+        fio.dir_copy(dsim, dsave)
+
     else:
-        cpcmd = 'cp -R ' + dsim + ' ' + dpub
-        call(cpcmd, shell=True)
+        print "Not sure I can find that directory."
+        return 1
 
 # Creates a pdf from a file list and saves it generically to ddata
 def pdf_create(ddata, fprefix, flist):
