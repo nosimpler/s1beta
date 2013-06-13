@@ -1,8 +1,8 @@
 # plotfn.py - pall and possibly other plot routines
 #
-# v 1.7.54
-# rev 2013-05-24 (SL: added pspec)
-# last major: (SL: minor)
+# v 1.8.7a
+# rev 2013-06-13 (SL: removed xlim input to pspec.pspec_dpl())
+# last major: (SL: added pspec)
 
 from praster import praster
 import axes_create as ac
@@ -36,7 +36,10 @@ def pkernel(dfig, f_param, f_spk, f_dpl, data_spec, key_types, xlim=[0, 'tstop']
     # plot kernels
     praster(f_param, tstop, f_spk, dfig_spk)
     dipolefn.pdipole(f_dpl, f_param, dfig_dpl, key_types, pdipole_dict)
-    pspec.pspec_dpl(data_spec, f_dpl, dfig_spec, p_dict, key_types, xlim)
+
+    # usage of xlim to pspec is temporarily disabled. pspec_dpl() will use internal states for plotting
+    pspec.pspec_dpl(data_spec, f_dpl, dfig_spec, p_dict, key_types)
+    # pspec.pspec_dpl(data_spec, f_dpl, dfig_spec, p_dict, key_types, xlim)
 
     return 0
 
