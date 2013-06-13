@@ -1,8 +1,8 @@
 # pspec.py - Very long plotting methods having to do with spec.
 #
-# v 1.8.4a
-# rev 2013-06-12 (MS: renamed pfreqpwr() as pspecpwr() and pfreqpwr_ax() as pspecpwr_ax()) 
-# last major: (MS: Moved pfreqpwr() here and added pfreqpwr_ax() as a stationarity analysis plot kernel  and pyerrorbars_ax() as a y-axis error bar plotting kernel)
+# v 1.8.7
+# rev 2013-06-13 (SL: addressing major bug in time axis of pspec_dpl(), updated to use Dipole())
+# last major: (MS: renamed pfreqpwr() as pspecpwr() and pfreqpwr_ax() as pspecpwr_ax()) 
 
 import os
 import sys
@@ -18,12 +18,13 @@ from neuron import h as nrn
 
 import fileio as fio
 import currentfn
+import dipolefn
 import specfn
 import spikefn 
 import axes_create as ac
 
 # this is actually a plot kernel for one sim that does dipole, etc.
-def pspec_dpl(dspec, f_dpl, dfig, p_dict, key_types, xlim=[0., 'tstop']):
+def pspec_dpl(dspec, f_dpl, dfig, p_dict, key_types, xlim=None):
     # if dspec is an instance of MorletSpec, get data from object
     if isinstance(dspec, specfn.MorletSpec):
         timevec = dspec.timevec
@@ -48,52 +49,58 @@ def pspec_dpl(dspec, f_dpl, dfig, p_dict, key_types, xlim=[0., 'tstop']):
     # fig_name = os.path.join(dfig, fprefix+'.eps')
     fig_name = os.path.join(dfig, fprefix+'.png')
 
-    # set xmin value
-    if xlim[0] > timevec[0]:
-        xmin = xlim[0]
-    else:
-        xmin = timevec[0]
+    if xlim is not None:
+        print "WARNING: xlim input is temporarily disabled. Needs to be fixed in pspec.pspec_dpl()"
 
-    # set xmax value
-    if xlim[1] == 'tstop':
-        xmax = p_dict['tstop']
-    else:
-        xmax = xlim[1]
+    # for now, a temporary variable for xlim
+    xlim_new = (timevec[0], timevec[-1])
+
+    # # set xmin value
+    # if xlim[0] > timevec[0]:
+    #     xmin = xlim[0]
+    # else:
+    #     xmin = timevec[0]
+
+    # # set xmax value
+    # if xlim[1] == 'tstop':
+    #     xmax = p_dict['tstop']
+    # else:
+    #     xmax = xlim[1]
 
     # vector indices corresponding to xmin and xmax
-    xmin_ind = xmin / p_dict['dt']
-    xmax_ind = xmax / p_dict['dt']
+    # xmin_ind = xmin / p_dict['dt']
+    # xmax_ind = xmax / p_dict['dt']
 
     # f.f is the figure handle!
     f = ac.FigSpec()
 
-    pc = f.ax['spec'].imshow(TFR[:, xmin_ind:xmax_ind+1], extent=[xmin, xmax, freqvec[-1], freqvec[0]], aspect='auto', origin='upper')
+    # make the extent the entire extent for now
+    extent_xy = [xlim_new[0], xlim_new[-1], freqvec[-1], freqvec[0]]
+    pc = f.ax['spec'].imshow(TFR, extent=extent_xy, aspect='auto', origin='upper')
+    # pc = f.ax['spec'].imshow(TFR[:, xmin_ind:xmax_ind+1], extent=[xmin, xmax, freqvec[-1], freqvec[0]], aspect='auto', origin='upper')
     f.f.colorbar(pc, ax=f.ax['spec'])
 
     # grab the dipole data
-    data_dipole = np.loadtxt(open(f_dpl, 'r'))
+    # data_dipole = np.loadtxt(open(f_dpl, 'r'))
+    dpl = dipolefn.Dipole(f_dpl)
+
+    # plot routine
+    dpl.plot(f.ax['dipole'], xlim_new, 'agg')
 
     # assign vectors
-    t_dpl = data_dipole[xmin_ind:xmax_ind+1, 0]
-    dp_total = data_dipole[xmin_ind:xmax_ind+1, 1]
+    # t_dpl = data_dipole[xmin_ind:xmax_ind+1, 0]
+    # dp_total = data_dipole[xmin_ind:xmax_ind+1, 1]
 
     # plot and create an xlim
-    f.ax['dipole'].plot(t_dpl, dp_total)
-    x = (xmin, xmax)
+    # f.ax['dipole'].plot(t_dpl, dp_total)
+    # x = (xmin, xmax)
     xticks = f.ax['spec'].get_xticks()
-    xticks[0] = xmin
+    xticks[0] = xlim_new[0]
 
     # for now, set the xlim for the other one, force it!
-    f.ax['dipole'].set_xlim(x)
+    f.ax['dipole'].set_xlim(xlim_new)
     f.ax['dipole'].set_xticks(xticks)
     f.ax['spec'].set_xticks(xticks)
-
-    # set yticks on spectrogram to include 0
-    # freq_max = f.ax['spec'].get_ylim()[0]
-    # print freq_max
-    # yticks = np.arange(0., freq_max+1, 5.)
-    # print yticks
-    # f.ax['spec'].set_yticks(yticks)
 
     # axis labels
     f.ax['spec'].set_xlabel('Time (ms)')
@@ -102,7 +109,6 @@ def pspec_dpl(dspec, f_dpl, dfig, p_dict, key_types, xlim=[0., 'tstop']):
     # create title
     title_str = ac.create_title(p_dict, key_types)
     f.f.suptitle(title_str)
-    # title_str = [key + ': %2.1f' % p_dict[key] for key in key_types['dynamic_keys']]
 
     # use our fig classes to save and close
     f.savepng(fig_name)

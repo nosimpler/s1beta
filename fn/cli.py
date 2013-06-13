@@ -1,8 +1,8 @@
 # cli.py - routines for the command line interface console s1sh.py
 #
-# v 1.8.4a
-# rev 2013-06-12 (MS: freqpwr() renamed spec_stationary_avg(), freqpwr_avg renamed spec_avg_stationary_avg())
-# last major: (MS: added stationarity analysis, freqpwr_avg(), for avg spec data)
+# v 1.8.7
+# rev 2013-06-13 (SL: fixed bug in specmax)
+# last major: (MS: freqpwr() renamed spec_stationary_avg(), freqpwr_avg renamed spec_avg_stationary_avg())
 
 from cmd import Cmd
 from datetime import datetime
@@ -110,8 +110,8 @@ class Console(Cmd):
         """Qnd function to test other functions
         """
         # self.do_setdate('2013-06-02')
-        self.do_load('baseline-031')
-        self.do_save('')
+        self.do_load('gamma_weak_L2-002')
+        # self.do_save('')
         # self.do_calc_dpl_regression('')
         # self.do_calc_dpl_mean("--t0=100. --tstop=1000. --layer='L2'")
         # self.do_pgamma_compare_ping('')
@@ -123,7 +123,7 @@ class Console(Cmd):
         # self.do_show('testing in (0, 0)')
         # self.do_calc_dipole_avg('')
         # self.do_pdipole('evaligned')
-        # self.do_specmax('in (testing, 0, 4) on [0, 1000.]')
+        self.do_specmax('in (spike, 0, 0) on [0, 1000.]')
         # self.do_avgtrials('dpl')
         # self.do_replot('')
         # self.do_spec_regenerate('--f_max=50.')
@@ -805,12 +805,9 @@ class Console(Cmd):
                  <N> is the sim number, and <N_T> is the trial number
         """
         key_dict = self.p_exp.get_key_types()
-        # print self.p_exp.N_sims, self.p_exp.N_trials
 
-        # print args
         vars = args.split(' in ')
         expmt_group = vars[0]
-        # expmt, search_str = vars[0].split(' ')
 
         # check to see if the expmt_group is valid
         if expmt_group not in self.ddata.expmt_groups:
@@ -829,11 +826,10 @@ class Console(Cmd):
         if not self.p_exp.N_trials:
             N_trials = 1
         else:
-            N_trials = 0
+            N_trials = self.p_exp.N_trials
 
         # check to make sure both sim and trial exist
         if (N < self.p_exp.N_sims) and (N_T < N_trials):
-        # if (N < self.p_exp.N_sims) and (N_T < self.p_exp.N_trials):
             # create the filename
             fname_short = self.p_exp.trial_prefix_str % (N, N_T) + '-param.txt'
             fname = os.path.join(self.ddata.dfig[expmt_group]['param'], fname_short)

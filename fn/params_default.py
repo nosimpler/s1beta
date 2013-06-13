@@ -1,8 +1,8 @@
 # params_default.py - master list of changeable params. most set to default val of inactive
 #
-# v 1.8.5
-# rev 2013-06-12 (MS: renamed spec_max_freq as f_max_spec)
-# last major: (SL: fixed minimum delay bug)
+# v 1.8.7
+# rev 2013-06-13 (SL: changed T_pois to never end)
+# last major: (MS: renamed spec_max_freq as f_max_spec)
 
 # Note that nearly all start times are set BEYOND tstop for this file
 # Most values here are set to whatever default value inactivates them, such as 0 for conductance
@@ -163,6 +163,6 @@ def get_params_default():
         'prng_seedcore_evprox_late': 0,
 
         # default end time for pois inputs
-        'T_pois': 250.,
+        'T_pois': -1,
         'dt': 0.025,
     }

@@ -1,8 +1,8 @@
 # dipolefn.py - dipole-based analysis functions
 #
-# v 1.8.2
-# rev 2013-06-11 (SL: added mean_stationary(), linear regression, new baseline norm)
-# last major: (SL: added FigDistalPhase())
+# v 1.8.7
+# rev 2013-06-13 (SL: removed debug output)
+# last major: (SL: added mean_stationary(), linear regression, new baseline norm)
 
 import fileio as fio
 import numpy as np
@@ -118,7 +118,6 @@ class Dipole():
         if layer in self.dpl.keys():
             ax.plot(self.t, self.dpl[layer])
             ymax = self.max(layer, xlim)
-            print ymax
             # ylim = (-ymax, ymax)
             # ax.set_ylim(ylim)
 

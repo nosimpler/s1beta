@@ -1,8 +1,8 @@
 # clidefs.py - these are all of the function defs for the cli
 #
-# v 1.8.4a
-# rev 2013-06-12 (MS: renamed stationarity fns and variables to more accurately reflect nature of analysis) 
-# last major: (MS: exec_freqpwr_avg() for stationarity analysis on avg spec data)
+# v 1.8.7
+# rev 2013-06-13 (SL: added useless debugging to specmax())
+# last major: (MS: renamed stationarity fns and variables to more accurately reflect nature of analysis) 
 
 # Standard modules
 import fnmatch, os, re, sys
@@ -182,14 +182,20 @@ def exec_specmax(ddata, expmt_group, n_sim, n_trial, t_interval):
     # load the associated dipole file
     # find the specific file
     # assume just the first file
-    fdpl = [file for file in dpl_list if trial_prefix in file][0]
-    fspec = [file for file in spec_list if trial_prefix in file][0]
+    try:
+        fdpl = [file for file in dpl_list if trial_prefix in file][0]
+        fspec = [file for file in spec_list if trial_prefix in file][0]
+    except IndexError:
+        print "List index out of range."
+        print trial_prefix
 
     data = specfn.read(fspec)
     # print data['freq']
     # print data['TFR'].shape
     pwr_max = data['TFR'].max()
     max_mask = data['TFR']==pwr_max
+
+    # this is a shift of 50 ms because the spec analysis incorrectly shifts its zero
     t_at_max = data['time'][max_mask.sum(axis=0)==1]
     f_at_max = data['freq'][max_mask.sum(axis=1)==1]
 

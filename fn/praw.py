@@ -1,8 +1,8 @@
 # praw.py - all of the raw data types on one fig
 #
-# v 1.7.57
-# rev 2013-05-31 (SL: using convert function for dipole before calculating spec)
-# last major: (SL: parallel praw)
+# v 1.8.7
+# rev 2013-06-13 (SL: fixed pspec_ax() call)
+# last major: (SL: using convert function for dipole before calculating spec)
 
 import fileio as fio
 import numpy as np
@@ -55,10 +55,10 @@ def pkernel(dfig_dpl, f_dpl, f_spk, f_spec, f_current, f_spec_current, f_param, 
     I_soma.plot_to_axis(f.ax['I_soma_L5'], 'L5')
 
     # plot the dipole-based spec data
-    pc = specfn.pspec_ax(f.ax['spec_dpl'], f_spec)
+    pc = specfn.pspec_ax(f.ax['spec_dpl'], f_spec, xlim)
     f.f.colorbar(pc, ax=f.ax['spec_dpl'])
 
-    pc = specfn.pspec_ax(f.ax['spec_dpl_L5'], f_spec)
+    pc = specfn.pspec_ax(f.ax['spec_dpl_L5'], f_spec, xlim)
     f.f.colorbar(pc, ax=f.ax['spec_dpl_L5'])
 
     # grab the current spec and plot them

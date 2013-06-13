@@ -1,8 +1,8 @@
 # class_cell.py - establish class def for general cell features
 #
-# v 1.7.52
-# rev 2013-05-07 (SL: minor)
-# last rev: (SL: record_current_soma() added as a general method)
+# v 1.8.7
+# rev 2013-06-13 (SL: minor)
+# last rev: (SL: minor)
 
 import numpy as np
 import itertools as it
@@ -167,7 +167,7 @@ class Cell():
         syn_gabaa = nrn.Exp2Syn(secloc)
         syn_gabaa.e = -80
         syn_gabaa.tau1 = 0.5
-        syn_gabaa.tau2 = 5
+        syn_gabaa.tau2 = 5.
 
         return syn_gabaa
 
@@ -177,7 +177,7 @@ class Cell():
         syn_gabab = nrn.Exp2Syn(secloc)
         syn_gabab.e = -80
         syn_gabab.tau1 = 1
-        syn_gabab.tau2 = 20
+        syn_gabab.tau2 = 20.
 
         return syn_gabab
 
