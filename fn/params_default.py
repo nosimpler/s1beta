@@ -1,8 +1,8 @@
 # params_default.py - master list of changeable params. most set to default val of inactive
 #
-# v 1.8.7
-# rev 2013-06-13 (SL: changed T_pois to never end)
-# last major: (MS: renamed spec_max_freq as f_max_spec)
+# v 1.8.7b
+# rev 2013-06-13 (SL: changed tonic I to start at 0 by default)
+# last major: (SL: changed T_pois to never end)
 
 # Note that nearly all start times are set BEYOND tstop for this file
 # Most values here are set to whatever default value inactivates them, such as 0 for conductance
@@ -138,12 +138,12 @@ def get_params_default():
 
         # IClamp params for L2Pyr
         'Itonic_A_L2Pyr_soma': 0.,
-        'Itonic_t0_L2Pyr_soma': 50.,
+        'Itonic_t0_L2Pyr_soma': 0.,
         'Itonic_T_L2Pyr_soma': -1.,
 
         # IClamp params for L5Pyr
         'Itonic_A_L5Pyr_soma': 0.,
-        'Itonic_t0_L5Pyr_soma': 50.,
+        'Itonic_t0_L5Pyr_soma': 0.,
         'Itonic_T_L5Pyr_soma': -1.,
 
         # numerics
