@@ -1,8 +1,8 @@
 # fileio.py - general file input/output functions
 #
-# v 1.8.3
-# rev 2013-06-12 (SL: dir_copy() function)
-# last rev: (SL: changed eps to png)
+# v 1.8.8
+# rev 2013-06-17 (SL: added prettyprint() here, but it might be now in multiple places)
+# last rev: (SL: dir_copy() function)
 
 import datetime, fnmatch, os, shutil, sys
 import itertools as it
@@ -17,6 +17,11 @@ def clean_lines(file):
         lines = [line for line in lines if line]
 
     return lines
+
+# this make a little more sense in fileio
+def prettyprint(iterable_items):
+    for item in iterable_items:
+        print item
 
 # create gid dict from a file
 def gid_dict_from_file(fparam):

@@ -1,22 +1,21 @@
 # cli.py - routines for the command line interface console s1sh.py
 #
-# v 1.8.7
-# rev 2013-06-13 (SL: fixed bug in specmax)
-# last major: (MS: freqpwr() renamed spec_stationary_avg(), freqpwr_avg renamed spec_avg_stationary_avg())
+# v 1.8.8
+# rev 2013-06-17 (SL: updated load function to load most recent data set)
+# last major: (SL: fixed bug in specmax)
 
 from cmd import Cmd
 from datetime import datetime
-import clidefs
-import ast, multiprocessing, os, signal, subprocess
+import ast, multiprocessing, os, signal, subprocess, time
 import readline as rl
 import itertools as it
+
+import clidefs
 import fileio as fio
 import paramrw
 import specfn
 import dipolefn
-from praster import praster
-from ppsth import ppsth, ppsth_grid
-
+import ppsth
 import praw
 
 class Console(Cmd):
@@ -123,7 +122,7 @@ class Console(Cmd):
         # self.do_show('testing in (0, 0)')
         # self.do_calc_dipole_avg('')
         # self.do_pdipole('evaligned')
-        self.do_specmax('in (spike, 0, 0) on [0, 1000.]')
+        # self.do_specmax('in (spike, 0, 0) on [0, 1000.]')
         # self.do_avgtrials('dpl')
         # self.do_replot('')
         # self.do_spec_regenerate('--f_max=50.')
@@ -226,8 +225,9 @@ class Console(Cmd):
 
             if os.path.exists(dcheck):
                 self.ddate = dcheck
+
             else:
-                self.ddate = 'cppub'
+                self.ddate = os.path.join(self.dproj, 'pub')
 
         self.__update_dlist()
 
@@ -250,23 +250,46 @@ class Console(Cmd):
            Usage example:
            [s1sh] setdate 2013-01-01
            [s1sh] load mucomplex-000
+
+           Running without arguments will load the last modified directory found in the date dir:
+           [s1] load
         """
-        # dir_check is the attempt at creating this directory
-        dir_check = os.path.join(self.dproj, self.ddate, args)
+        if not args:
+            # attempt to load the most recent in the dproj/ddate
+            # find the most recent directory in this folder
+            list_d = []
+
+            for dsim_short in os.listdir(self.ddate):
+                # check to see if dsim_tmp is actually a dir
+                dsim_tmp = os.path.join(self.ddate, dsim_short)
+
+                # append to list along with its modified time (mtime)
+                if os.path.isdir(dsim_tmp):
+                    list_d.append((dsim_tmp, time.ctime(os.path.getmtime(dsim_tmp))))
+
+            # sort by mtime
+            list_d.sort(key=lambda x: x[1])
+
+            # grab the directory name of the most recent dir
+            dcheck = list_d[-1][0]
+
+        else:
+            # dir_check is the attempt at creating this directory
+            dcheck = os.path.join(self.dproj, self.ddate, args)
 
         # check existence of the path
-        if os.path.exists(dir_check):
+        if os.path.exists(dcheck):
             # create blank ddata structure from SimPaths
             self.ddata = fio.SimulationPaths()
 
             # set dsim after using ddata's readsim method
-            self.dsim = self.ddata.read_sim(self.dproj, dir_check)
+            self.dsim = self.ddata.read_sim(self.dproj, dcheck)
             self.p_exp = paramrw.ExpParams(self.ddata.fparam)
             print self.ddata.fparam
             self.var_list = paramrw.changed_vars(self.ddata.fparam)
 
         else:
-            print dir_check
+            print dcheck
             print "Could not find that dir, maybe check your date?"
 
     def complete_load(self, text, line, j0, J):
@@ -739,7 +762,7 @@ class Console(Cmd):
     def do_psthgrid(self, args):
         """Aggregate plot of psth
         """
-        ppsth_grid(self.simpaths)
+        ppsth.ppsth_grid(self.simpaths)
 
     # save currently fails when no dir is loaded
     def do_save(self, args):

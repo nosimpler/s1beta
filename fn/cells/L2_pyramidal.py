@@ -1,8 +1,8 @@
 # L2_pyramidal.py - est class def for layer 2 pyramidal cells
 #
-# v 1.7.56
-# rev 2013-05-31 (MS: fixed namespace descrepancy in parameterization of gabab/a conductances)
-# last rev: (SL: parameterized gabab/a conductances separately)
+# v 1.8.8
+# rev 2013-06-17 (SL: minor)
+# last rev: (MS: fixed namespace descrepancy in parameterization of gabab/a conductances)
 
 from neuron import h as nrn
 from class_cell import Pyr
@@ -155,7 +155,7 @@ class L2Pyr(Pyr):
             # in a section. This method is significantly faster than using
             # a for loop to iterate over all segments to set mech values
 
-            # Insert 'hh' mechansim
+            # Insert 'hh' mechanism
             sec.insert('hh')
             sec.gkbar_hh = 0.01
             sec.gl_hh = 4.26e-5

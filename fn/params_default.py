@@ -1,8 +1,8 @@
 # params_default.py - master list of changeable params. most set to default val of inactive
 #
-# v 1.8.7b
-# rev 2013-06-13 (SL: changed tonic I to start at 0 by default)
-# last major: (SL: changed T_pois to never end)
+# v 1.8.8
+# rev 2013-06-17 (SL: changed default Poisson rates to 0)
+# last major: (SL: changed tonic I to start at 0 by default)
 
 # Note that nearly all start times are set BEYOND tstop for this file
 # Most values here are set to whatever default value inactivates them, such as 0 for conductance
@@ -26,28 +26,28 @@ def get_params_default():
         'L2Basket_Gauss_mu': 1000.,
         'L2Basket_Gauss_sigma': 3.6,
         'L2Basket_Pois_A_weight': 0.,
-        'L2Basket_Pois_lamtha': 10.,
+        'L2Basket_Pois_lamtha': 0.,
 
         # L2 Pyr params
         'L2Pyr_Gauss_A_weight': 0.,
         'L2Pyr_Gauss_mu': 1000.,
         'L2Pyr_Gauss_sigma': 3.6,
         'L2Pyr_Pois_A_weight': 0.,
-        'L2Pyr_Pois_lamtha': 10.,
+        'L2Pyr_Pois_lamtha': 0.,
 
         # L5 Pyr params
         'L5Pyr_Gauss_A_weight': 0.,
         'L5Pyr_Gauss_mu': 1000.,
         'L5Pyr_Gauss_sigma': 4.8,
         'L5Pyr_Pois_A_weight': 0.,
-        'L5Pyr_Pois_lamtha': 10.,
+        'L5Pyr_Pois_lamtha': 0.,
 
         # L5 Basket params
         'L5Basket_Gauss_A_weight': 0.,
         'L5Basket_Gauss_mu': 1000.,
         'L5Basket_Gauss_sigma': 2.,
         'L5Basket_Pois_A_weight': 0.,
-        'L5Basket_Pois_lamtha': 10.,
+        'L5Basket_Pois_lamtha': 0.,
 
         # maximal conductances for all synapses
         # max conductances TO L2Pyrs

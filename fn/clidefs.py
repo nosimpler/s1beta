@@ -1,8 +1,8 @@
 # clidefs.py - these are all of the function defs for the cli
 #
-# v 1.8.7
-# rev 2013-06-13 (SL: added useless debugging to specmax())
-# last major: (MS: renamed stationarity fns and variables to more accurately reflect nature of analysis) 
+# v 1.8.8
+# rev 2013-06-17 (SL: minor)
+# last major: (SL: added useless debugging to specmax())
 
 # Standard modules
 import fnmatch, os, re, sys
@@ -531,7 +531,6 @@ def regenerate_plots(ddata, xlim=[0, 'tstop']):
     # recreate p_exp ... don't like this
     # ** should be guaranteed to be identical **
     p_exp = paramrw.ExpParams(ddata.fparam)
-
 
     # grab the list of spec results that exists
     # there is a method in SimulationPaths/ddata for this specifically, this should be deprecated
