@@ -1,8 +1,8 @@
 # pspec.py - Very long plotting methods having to do with spec.
 #
-# v 1.8.7
-# rev 2013-06-13 (SL: addressing major bug in time axis of pspec_dpl(), updated to use Dipole())
-# last major: (MS: renamed pfreqpwr() as pspecpwr() and pfreqpwr_ax() as pspecpwr_ax()) 
+# v 1.8.9
+# rev 2013-06-17 (SL: pspec_dpl() now plots stationary estimate)
+# last major: (SL: addressing major bug in time axis of pspec_dpl(), updated to use Dipole())
 
 import os
 import sys
@@ -13,7 +13,6 @@ import matplotlib.pyplot as plt
 import paramrw
 import fileio as fio
 import multiprocessing as mp
-# from multiprocessing import Pool
 from neuron import h as nrn
 
 import fileio as fio
@@ -24,6 +23,7 @@ import spikefn
 import axes_create as ac
 
 # this is actually a plot kernel for one sim that does dipole, etc.
+# needs f_param not p_dict
 def pspec_dpl(dspec, f_dpl, dfig, p_dict, key_types, xlim=None):
     # if dspec is an instance of MorletSpec, get data from object
     if isinstance(dspec, specfn.MorletSpec):
@@ -86,6 +86,10 @@ def pspec_dpl(dspec, f_dpl, dfig, p_dict, key_types, xlim=None):
 
     # plot routine
     dpl.plot(f.ax['dipole'], xlim_new, 'agg')
+
+    # this should not really be here ...
+    pgram = specfn.Welch(dpl.t, dpl.dpl['agg'], p_dict['dt'])
+    pgram.plot_to_ax(f.ax['pgram'])
 
     # assign vectors
     # t_dpl = data_dipole[xmin_ind:xmax_ind+1, 0]

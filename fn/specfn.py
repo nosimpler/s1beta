@@ -1,8 +1,8 @@
 # specfn.py - Average time-frequency energy representation using Morlet wavelet method
 #
-# v 1.8.5
-# rev 2013-06-12 (MS: now adding one to maximum freq of spectral analysis so maximum frequency is included by default in anaylsis. Other minor)
-# last major: (MS: renamed freqpwr_analysis as specpwr_stationary_avg(). Other minor)
+# v 1.8.9
+# rev 2013-06-17 (SL: Added simple Welch() class)
+# last major: (MS: adding 1 to max f of spec analysis so max f included by default. Other minor)
 
 import os
 import sys
@@ -49,6 +49,46 @@ def read(fdata_spec, type='dpl'):
         }
 
         return spec_L2, spec_L5
+
+# core class for frequency analysis assuming stationary time series
+class Welch():
+    def __init__(self, t_vec, ts_vec, dt):
+        # assign data internally
+        self.t_vec = t_vec
+        self.ts_vec = ts_vec
+        self.dt = dt
+
+        # only assign length if same
+        if len(self.t_vec) == len(self.ts_vec):
+            self.N = len(ts_vec)
+        else:
+            # raise an exception for real sometime in the future, for now just say something
+            print "in specfn.Welch(), your lengths don't match! Something will fail!"
+
+        # in fact, this will fail (see above)
+        self.N_fft = self.__nextpow2(self.N)
+
+        # grab the dt (in ms) and calc sampling frequency
+        self.fs = 1000. / self.dt
+
+        # calculate the actual Welch
+        self.f, self.P = sps.welch(self.ts_vec, self.fs, window='hanning', nperseg=self.N, noverlap=0, nfft=self.N_fft, return_onesided=True, scaling='spectrum')
+
+    # simple plot to an axis
+    def plot_to_ax(self, ax):
+        ax.plot(self.f, self.P)
+        ax.set_xlim((0., 100.))
+
+    # return the next power of 2 generally for a given L
+    def __nextpow2(self, L):
+        n = 2
+        # j = 1
+        while n < L:
+            # j += 1
+            n *= 2
+
+        return n
+        # return n, j
 
 # MorletSpec class based on a time vec tvec and a time series vec tsvec
 class MorletSpecSingle():

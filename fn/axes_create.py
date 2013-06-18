@@ -1,8 +1,8 @@
 # axes_create.py - simple axis creation
 #
-# v 1.8.4a
-# rev 2013-06-12 (MS: set_title() now uses external create_title() fn)
-# last major: (MS: added set_title() method in FigBase())
+# v 1.8.9
+# rev 2013-06-17 (SL: added new axis to the spec)
+# last major: (MS: set_title() now uses external create_title() fn)
 
 # usage:
 # testfig = FigStd()
@@ -147,12 +147,16 @@ class FigSpec(FigBase):
         # the right margin is a hack and NOT guaranteed!
         # it's making space for the stupid colorbar that creates a new grid to replace gs1
         # when called, and it doesn't update the params of gs1
-        self.gs0 = gridspec.GridSpec(2, 1, height_ratios=[1, 3], bottom=0.65, top=0.95, left=0.1, right=0.82)
-        self.gs1 = gridspec.GridSpec(1, 4, wspace=0.05, hspace=0., bottom=0.10, top=0.60, left=0.1, right=1.)
+        self.gspec = {
+            'dpl': gridspec.GridSpec(2, 1, height_ratios=[1, 3], bottom=0.85, top=0.95, left=0.1, right=0.82),
+            'spec': gridspec.GridSpec(1, 4, wspace=0.05, hspace=0., bottom=0.30, top=0.80, left=0.1, right=1.),
+            'pgram': gridspec.GridSpec(2, 1, height_ratios=[1, 3], bottom=0.05, top=0.25, left=0.1, right=0.82),
+        }
 
         self.ax = {}
-        self.ax['dipole'] = self.f.add_subplot(self.gs0[:, :])
-        self.ax['spec'] = self.f.add_subplot(self.gs1[:, :])
+        self.ax['dipole'] = self.f.add_subplot(self.gspec['dpl'][:, :])
+        self.ax['spec'] = self.f.add_subplot(self.gspec['spec'][:, :])
+        self.ax['pgram'] = self.f.add_subplot(self.gspec['pgram'][:, :])
 
 class FigFreqpwrWithHist(FigBase):
     def __init__(self):
@@ -581,10 +585,10 @@ def testfn():
         'test2',
     ]
 
-    testfig = FigDipoleExp(ax_handles)
-    testfig.create_colorbar_axis('spec')
+    # testfig = FigDipoleExp(ax_handles)
+    # testfig.create_colorbar_axis('spec')
     # testfig.create_colorbar_axis('spectest')
-    testfig.ax['spec'].plot(x)
+    # testfig.ax['spec'].plot(x)
 
     # testfig = FigSpecWithHist()
     # testfig = FigAggregateSpecWithHist(3, 3)
@@ -599,8 +603,8 @@ def testfn():
     # testfig = FigPSTH(100)
     # testfig.ax['L5_extpois'].plot(x)
 
-    # testfig = FigSpec()
-    # testfig.ax['dipole'].plot(x)
+    testfig = FigSpec()
+    testfig.ax['dipole'].plot(x)
 
     plt.savefig('testing.png', dpi=250)
     testfig.close()
