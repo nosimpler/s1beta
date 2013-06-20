@@ -1,8 +1,8 @@
 # params_default.py - master list of changeable params. most set to default val of inactive
 #
-# v 1.8.8
-# rev 2013-06-17 (SL: changed default Poisson rates to 0)
-# last major: (SL: changed tonic I to start at 0 by default)
+# v 1.8.10
+# rev 2013-06-20 (MS: merge feedsynapses_new with master)
+# last major: (MS: Differentiate between AMPA and NMDA conductances for external feed synapses on all cell types)
 
 # Note that nearly all start times are set BEYOND tstop for this file
 # Most values here are set to whatever default value inactivates them, such as 0 for conductance
@@ -90,16 +90,22 @@ def get_params_default():
         'events_per_cycle_dist': 2,
 
         # thalamic input amplitudes abd delays
-        'input_prox_A_weight_L2Pyr': 0.,
-        'input_prox_A_weight_L5Pyr': 0.,
-        'input_prox_A_weight_inh': 0.,
+        'input_prox_A_weight_L2Pyr_ampa': 0.,
+        'input_prox_A_weight_L2Pyr_nmda': 0.,
+        'input_prox_A_weight_L5Pyr_ampa': 0.,
+        'input_prox_A_weight_L5Pyr_nmda': 0.,
+        'input_prox_A_weight_inh_ampa': 0.,
+        'input_prox_A_weight_inh_nmda': 0.,
         'input_prox_A_delay_L2': 0.1,
         'input_prox_A_delay_L5': 1.0,
 
         # current values, not sure where these distal values come from, need to check
-        'input_dist_A_weight_L2Pyr': 0.,
-        'input_dist_A_weight_L5Pyr': 0.,
-        'input_dist_A_weight_inh': 0.,
+        'input_dist_A_weight_L2Pyr_ampa': 0.,
+        'input_dist_A_weight_L2Pyr_nmda': 0.,
+        'input_dist_A_weight_L5Pyr_ampa': 0.,
+        'input_dist_A_weight_L5Pyr_nmda': 0.,
+        'input_dist_A_weight_inh_ampa': 0.,
+        'input_dist_A_weight_inh_nmda': 0.,
         'input_dist_A_delay_L2': 5.,
         'input_dist_A_delay_L5': 5.,
 

@@ -1,8 +1,8 @@
 # L2_basket.py - establish class def for layer 2 basket cells
 #
-# v 1.7.17
-# rev 2013-02-07 (SL: minor)
-# last rev: (SL: removed autapses)
+# v 1.8.10
+# rev 2013-06-20 (MS: Merge feedsynapes_new with master)
+# last rev: (MS: Added NMDA synapse for external feed. Conductance set in external param files)
 
 import itertools as it
 from neuron import h as nrn
@@ -62,26 +62,30 @@ class L2Basket(BasketSingle):
     def parreceive(self, gid, gid_dict, pos_dict, p_ext):
         # for some gid relating to the input feed:
         for gid_src, p_src, pos in it.izip(gid_dict['extinput'], p_ext, pos_dict['extinput']):
-            # check if params are defined in the p_src
-            if 'L2Basket' in p_src.keys():
+            # check if AMPA params are defined in the p_src
+            if 'L2Basket_ampa' in p_src.keys():
                 # create an nc_dict
-                nc_dict = {
+                nc_dict_ampa = {
                     'pos_src': pos,
-                    'A_weight': p_src['L2Basket'][0],
-                    'A_delay': p_src['L2Basket'][1],
+                    'A_weight': p_src['L2Basket_ampa'][0],
+                    'A_delay': p_src['L2Basket_ampa'][1],
                     'lamtha': p_src['lamtha']
                 }
 
-                # connections depend on location of input
-                if p_src['loc'] is 'proximal':
-                    self.ncfrom_extinput.append(self.parconnect_from_src(gid_src, nc_dict, self.soma_ampa))
+                # AMPA synapse
+                self.ncfrom_extinput.append(self.parconnect_from_src(gid_src, nc_dict_ampa, self.soma_ampa))
 
-                elif p_src['loc'] is 'distal':
-                    self.ncfrom_extinput.append(self.parconnect_from_src(gid_src, nc_dict, self.soma_ampa))
+            # Check if NMDA params are defined in p_src
+            if 'L2Basket_nmda' in p_src.keys():
+                nc_dict_nmda = {
+                    'pos_src': pos,
+                    'A_weight': p_src['L2Basket_nmda'][0],
+                    'A_delay': p_src['L2Basket_nmda'][1],
+                    'lamtha': p_src['lamtha']
+                }
 
-                    # if f_input is 0, treat as an evoked input
-                    if not p_src['f_input']:
-                        self.ncfrom_extinput.append(self.parconnect_from_src(gid_src, nc_dict, self.soma_nmda))
+                # NMDA synapse
+                self.ncfrom_extinput.append(self.parconnect_from_src(gid_src, nc_dict_nmda, self.soma_nmda))
 
     # one parreceive function to handle all types of external parreceives
     # types must be defined explicitly here

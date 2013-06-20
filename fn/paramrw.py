@@ -1,8 +1,8 @@
 # paramrw.py - routines for reading the param files
 #
-# v 1.8.0
-# rev 2013-06-08 (SL: merged into master)
-# last major: (SL: changed output for resorting to default, non-active keys)
+# v 1.8.10
+# rev 2013-06-20 (MS: Merge feedsynapses_new with master)
+# last major: (MS: Added ampa synapse properties for all cell types to external feed dicts)
 
 import re
 import fileio as fio
@@ -434,7 +434,7 @@ def feed_validate(p_ext, d, tstop):
                     d[key] = (d[key][0] * 5., d[key][1])
 
         # if L5 delay is -1, use same delays as L2 unless L2 delay is 0.1 in which case use 1.
-        if d['L5Pyr'][1] == -1:
+        if d['L5Pyr_ampa'][1] == -1:
             for key in d.keys():
                 if key.startswith('L5'):
                     if d['L2Pyr'][1] != 0.1:
@@ -462,10 +462,14 @@ def create_pext(p, tstop):
         't0': p['t0_input_prox'],
         'tstop': p['tstop_input_prox'],
         'stdev': p['f_stdev_prox'],
-        'L2Pyr': (p['input_prox_A_weight_L2Pyr'], p['input_prox_A_delay_L2']),
-        'L5Pyr': (p['input_prox_A_weight_L5Pyr'], p['input_prox_A_delay_L5']),
-        'L2Basket': (p['input_prox_A_weight_inh'], p['input_prox_A_delay_L2']),
-        'L5Basket': (p['input_prox_A_weight_inh'], p['input_prox_A_delay_L5']),
+        'L2Pyr_ampa': (p['input_prox_A_weight_L2Pyr_ampa'], p['input_prox_A_delay_L2']),
+        'L2Pyr_nmda': (p['input_prox_A_weight_L2Pyr_nmda'], p['input_prox_A_delay_L2']),
+        'L5Pyr_ampa': (p['input_prox_A_weight_L5Pyr_ampa'], p['input_prox_A_delay_L5']),
+        'L5Pyr_nmda': (p['input_prox_A_weight_L5Pyr_nmda'], p['input_prox_A_delay_L5']),
+        'L2Basket_ampa': (p['input_prox_A_weight_inh_ampa'], p['input_prox_A_delay_L2']),
+        'L2Basket_nmda': (p['input_prox_A_weight_inh_nmda'], p['input_prox_A_delay_L2']),
+        'L5Basket_ampa': (p['input_prox_A_weight_inh_ampa'], p['input_prox_A_delay_L5']),
+        'L5Basket_nmda': (p['input_prox_A_weight_inh_nmda'], p['input_prox_A_delay_L5']),
         'events_per_cycle': p['events_per_cycle_prox'],
         'prng_seedcore': int(p['prng_seedcore_input_prox']),
         'distribution': p['distribution_prox'],
@@ -481,9 +485,12 @@ def create_pext(p, tstop):
         't0': p['t0_input_dist'],
         'tstop': p['tstop_input_dist'],
         'stdev': p['f_stdev_dist'],
-        'L2Pyr': (p['input_dist_A_weight_L2Pyr'], p['input_dist_A_delay_L2']),
-        'L5Pyr': (p['input_dist_A_weight_L5Pyr'], p['input_dist_A_delay_L5']),
-        'L2Basket': (p['input_dist_A_weight_inh'], p['input_dist_A_delay_L2']),
+        'L2Pyr_ampa': (p['input_dist_A_weight_L2Pyr_ampa'], p['input_dist_A_delay_L2']),
+        'L2Pyr_nmda': (p['input_dist_A_weight_L2Pyr_nmda'], p['input_dist_A_delay_L2']),
+        'L5Pyr_ampa': (p['input_dist_A_weight_L5Pyr_ampa'], p['input_dist_A_delay_L5']),
+        'L5Pyr_nmda': (p['input_dist_A_weight_L5Pyr_nmda'], p['input_dist_A_delay_L5']),
+        'L2Basket_ampa': (p['input_dist_A_weight_inh_ampa'], p['input_dist_A_delay_L2']),
+        'L2Basket_nmda': (p['input_dist_A_weight_inh_nmda'], p['input_dist_A_delay_L2']),
         'events_per_cycle': p['events_per_cycle_dist'],
         'prng_seedcore': int(p['prng_seedcore_input_dist']),
         'distribution': p['distribution_dist'],

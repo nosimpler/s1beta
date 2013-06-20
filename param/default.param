@@ -55,15 +55,21 @@ f_stdev_dist: 20.
 events_per_cycle_dist: 2
 
 # thalamic input amplitudes and delays
-input_prox_A_weight_L2Pyr: 4e-5
-input_prox_A_weight_L5Pyr: 4e-5
-input_prox_A_weight_inh: 8e-5
+input_prox_A_weight_L2Pyr_ampa: 4e-5
+input_prox_A_weight_L5Pyr_ampa: 4e-5
+input_prox_A_weight_inh_ampa: 8e-5
+input_prox_A_weight_L2Pyr_nmda: 0.
+input_prox_A_weight_L5Pyr_ampa: 0.
+input_prox_A_weight_inh_nmda: 0.
 input_prox_A_delay_L2: 0.1
 input_prox_A_delay_L5: 1.0
 
-input_dist_A_weight_L2Pyr: 4e-5
-input_dist_A_weight_L5Pyr: 4e-5
-input_dist_A_weight_inh: 8e-5
+input_dist_A_weight_L2Pyr_ampa: 4e-5
+input_dist_A_weight_L5Pyr_ampa: 4e-5
+input_dist_A_weight_inh_ampa: 8e-5
+input_dist_A_weight_L2Pyr_nmda: 0.
+input_dist_A_weight_L5Pyr_nmda: 0.
+input_dist_A_weight_inh_nmda: 0. 
 input_dist_A_delay_L2: 5.0
 input_dist_A_delay_L5: 5.0
 
@@ -132,7 +138,7 @@ Itonic_T_L5Pyr_soma: -1
 
 # analysis
 save_spec_data: 0
-f_max_spec: 41.
+f_max_spec: 40.
 
 # N_trials
 N_trials: 0

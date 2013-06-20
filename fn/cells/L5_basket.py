@@ -1,8 +1,8 @@
 # L5_basket.py - establish class def for layer 5 basket cells
 #
-# v 1.7.14
-# rev 2013-02-07 (SL: minor)
-# last rev: (SL: removed autapses)
+# v 1.8.10
+# rev 2013-06-20 (MS: Merge feedsynapses_new with master)
+# last rev: (MS: added NMDA synapses for alpha feeds)
 
 import itertools as it
 from neuron import h as nrn
@@ -23,6 +23,7 @@ class L5Basket(BasketSingle):
     def __synapse_create(self):
         # ceates synapses onto this cell 
         self.soma_ampa = self.syn_ampa_create(self.soma(0.5))
+        self.soma_nmda = self.syn_nmda_create(self.soma(0.5))
         self.soma_gabaa = self.syn_gabaa_create(self.soma(0.5))
 
     def __biophysics(self):
@@ -68,16 +69,29 @@ class L5Basket(BasketSingle):
     # parallel receive function parreceive()
     def parreceive(self, gid, gid_dict, pos_dict, p_ext):
         for gid_src, p_src, pos in it.izip(gid_dict['extinput'], p_ext, pos_dict['extinput']):
-            if 'L5Basket' in p_src.keys():
-                # if p_src['loc'] is 'proximal':
-                nc_dict = {
+            # Check if AMPA params are define in p_src
+            if 'L5Basket_ampa' in p_src.keys():
+                nc_dict_ampa = {
                     'pos_src': pos,
-                    'A_weight': p_src['L5Basket'][0],
-                    'A_delay': p_src['L5Basket'][1],
+                    'A_weight': p_src['L5Basket_ampa'][0],
+                    'A_delay': p_src['L5Basket_ampa'][1],
                     'lamtha': p_src['lamtha']
                 }
 
-                self.ncfrom_extinput.append(self.parconnect_from_src(gid_src, nc_dict, self.soma_ampa))
+                # AMPA synapse
+                self.ncfrom_extinput.append(self.parconnect_from_src(gid_src, nc_dict_ampa, self.soma_ampa))
+
+            # Check if nmda params are define in p_src
+            if 'L5Basket_nmda' in p_src.keys():
+                nc_dict_nmda = {
+                    'pos_src': pos,
+                    'A_weight': p_src['L5Basket_nmda'][0],
+                    'A_delay': p_src['L5Basket_nmda'][1],
+                    'lamtha': p_src['lamtha']
+                }
+
+                # NMDA synapse
+                self.ncfrom_extinput.append(self.parconnect_from_src(gid_src, nc_dict_nmda, self.soma_nmda))
 
     # one parreceive function to handle all types of external parreceives
     # types must be defined explicitly here

@@ -1,8 +1,8 @@
 # L2_pyramidal.py - est class def for layer 2 pyramidal cells
 #
-# v 1.8.8
-# rev 2013-06-17 (SL: minor)
-# last rev: (MS: fixed namespace descrepancy in parameterization of gabab/a conductances)
+# v 1.8.10
+# rev 2013-06-20 (MS: Merge feedsynapses_new with master)
+# last rev: (MS: Added NMDA synapses for alpha feeds)
 
 from neuron import h as nrn
 from class_cell import Pyr
@@ -262,26 +262,43 @@ class L2Pyr(Pyr):
     # may be reorganizable
     def parreceive(self, gid, gid_dict, pos_dict, p_ext):
         for gid_src, p_src, pos in it.izip(gid_dict['extinput'], p_ext, pos_dict['extinput']):
-            # only connect extinput to synapses if the params exist in this param dict
-            if 'L2Pyr' in p_src.keys():
-                nc_dict = {
+            # Check if AMPA params defined in p_src
+            if 'L2Pyr_ampa' in p_src.keys():
+                nc_dict_ampa = {
                     'pos_src': pos,
-                    'A_weight': p_src['L2Pyr'][0],
-                    'A_delay': p_src['L2Pyr'][1],
+                    'A_weight': p_src['L2Pyr_ampa'][0],
+                    'A_delay': p_src['L2Pyr_ampa'][1],
                     'lamtha': p_src['lamtha']
                 }
 
+                # Proximal feed AMPA synapses
                 if p_src['loc'] is 'proximal':
-                    self.ncfrom_extinput.append(self.parconnect_from_src(gid_src, nc_dict, self.basal2_ampa))
-                    self.ncfrom_extinput.append(self.parconnect_from_src(gid_src, nc_dict, self.basal3_ampa))
-                    self.ncfrom_extinput.append(self.parconnect_from_src(gid_src, nc_dict, self.apicaloblique_ampa))
+                    self.ncfrom_extinput.append(self.parconnect_from_src(gid_src, nc_dict_ampa, self.basal2_ampa))
+                    self.ncfrom_extinput.append(self.parconnect_from_src(gid_src, nc_dict_ampa, self.basal3_ampa))
+                    self.ncfrom_extinput.append(self.parconnect_from_src(gid_src, nc_dict_ampa, self.apicaloblique_ampa))
 
+                # Distal feed AMPA synapses
                 elif p_src['loc'] is 'distal':
-                    self.ncfrom_extinput.append(self.parconnect_from_src(gid_src, nc_dict, self.apicaltuft_ampa))
+                    self.ncfrom_extinput.append(self.parconnect_from_src(gid_src, nc_dict_ampa, self.apicaltuft_ampa))
 
-                    # if this evoked, do nmda
-                    if not p_src['f_input']:
-                        self.ncfrom_extinput.append(self.parconnect_from_src(gid_src, nc_dict, self.apicaltuft_nmda))
+            # Check is NMDA params defined in p_src
+            if 'L2Pyr_nmda' in p_src.keys():
+                nc_dict_nmda = {
+                    'pos_src': pos,
+                    'A_weight': p_src['L2Pyr_nmda'][0],
+                    'A_delay': p_src['L2Pyr_nmda'][1],
+                    'lamtha': p_src['lamtha']
+                }
+
+                # Proximal feed NMDA synapses
+                if p_src['loc'] is 'proximal':
+                    self.ncfrom_extinput.append(self.parconnect_from_src(gid_src, nc_dict_nmda, self.basal2_nmda))
+                    self.ncfrom_extinput.append(self.parconnect_from_src(gid_src, nc_dict_nmda, self.basal3_nmda))
+                    self.ncfrom_extinput.append(self.parconnect_from_src(gid_src, nc_dict_nmda, self.apicaloblique_nmda))
+
+                # Distal feed NMDA synapses
+                elif p_src['loc'] is 'distal':
+                    self.ncfrom_extinput.append(self.parconnect_from_src(gid_src, nc_dict_nmda, self.apicaltuft_nmda))
 
     # one parreceive function to handle all types of external parreceives
     # types must be defined explicitly here
