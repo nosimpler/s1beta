@@ -1,7 +1,7 @@
 # clidefs.py - these are all of the function defs for the cli
 #
-# v 1.8.8
-# rev 2013-06-17 (SL: minor)
+# v 1.8.11
+# rev 2013-06-21 (MS: updated exec_avgtrials() to work with revised Dipole() class. Other minor) 
 # last major: (SL: added useless debugging to specmax())
 
 # Standard modules
@@ -304,28 +304,35 @@ def exec_avgtrials(ddata, datatype):
             # average dipole data
             if datakey == 'rawdpl':
                 for f_dpl, f_param in it.izip(unique_list, unique_param_list):
-                    dpl = dipolefn.Dipole(f_dpl, f_param)
+                    dpl = dipolefn.Dipole(f_dpl)
+                    # dpl = dipolefn.Dipole(f_dpl, f_param)
 
                     # ah, this is required becaused the dpl *file* still contains the raw, un-normalized data
-                    dpl.baseline_renormalize()
+                    dpl.baseline_renormalize(f_param)
 
                     # initialize and use x_dpl
                     if f_dpl is unique_list[0]:
                         # assume time vec stays the same throughout
                         t_vec = dpl.t
-                        x_dpl = dpl.dpl
+                        x_dpl_agg = dpl.dpl['agg']
+                        x_dpl_L2 = dpl.dpl['L2']
+                        x_dpl_L5 = dpl.dpl['L5']
 
                     else:
-                        x_dpl += dpl.dpl
+                        x_dpl_agg += dpl.dpl['agg']
+                        x_dpl_L2 += dpl.dpl['L2']
+                        x_dpl_L5 += dpl.dpl['L5']
 
                 # poor man's mean
-                x_dpl /= len(unique_list)
+                x_dpl_agg /= len(unique_list)
+                x_dpl_L2 /= len(unique_list)
+                x_dpl_L5 /= len(unique_list)
 
                 # write this data to the file
                 # np.savetxt(fname_unique, avg_data, '%5.4f')
                 with open(fname_unique, 'w') as f:
-                    for t, x in it.izip(t_vec, x_dpl):
-                        f.write("%03.3f\t%5.4f\n" % (t, x))
+                    for t, x_agg, x_L2, x_L5 in it.izip(t_vec, x_dpl_agg, x_dpl_L2, x_dpl_L5):
+                        f.write("%03.3f\t%5.4f\t%5.4f\t%5.4f\n" % (t, x_agg, x_L2, x_L5))
 
             # average spec data
             elif datakey == 'rawspec':
@@ -467,7 +474,6 @@ def exec_spec_avg_stationary_avg(ddata, dsim, opts):
     # plot per expmt
     if analysis_type == 'expmt':
         for expmt_group in ddata.expmt_groups:
-            print expmt_group
             # if error bars indicated
             if opts['errorbars']:
                 # get exmpt group raw spec data
@@ -586,8 +592,8 @@ def exec_pgamma_distal_phase(ddata, opts):
 # dipole and spec should be split up at some point (soon)
 # ylim specified here is ONLY for the dipole
 def exec_plotaverages(ddata, ylim=[]):
-    runtype = 'parallel'
-    # runtype = 'debug'
+    # runtype = 'parallel'
+    runtype = 'debug'
 
     # this is a qnd check to create the fig dir if it doesn't already exist
     # backward compatibility check for sims that didn't auto-create these dirs
@@ -621,7 +627,7 @@ def exec_plotaverages(ddata, ylim=[]):
         # dpl_list_expmt is so i can iterate through them in a sec
         dpl_list_expmt = fio.file_match(ddata.dfig[expmt_group]['avgdpl'], '-dplavg.txt')
         dpl_list += dpl_list_expmt
-        spec_list += fio.file_match(ddata.dfig[expmt_group]['avgspec'], '-avgspec.npz')
+        spec_list += fio.file_match(ddata.dfig[expmt_group]['avgspec'], '-specavg.npz')
 
         # create redundant list of avg dipole dirs and avg spec dirs
         # unique parts are expmt group names

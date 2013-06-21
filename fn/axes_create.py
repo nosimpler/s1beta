@@ -1,8 +1,8 @@
 # axes_create.py - simple axis creation
 #
-# v 1.8.9
-# rev 2013-06-17 (SL: added new axis to the spec)
-# last major: (MS: set_title() now uses external create_title() fn)
+# v 1.8.11
+# rev 2013-06-cw2117 (MS: fixed error in row labeling in FigAggregateWithHist())
+# last major: (SL: added new axis to the spec)
 
 # usage:
 # testfig = FigStd()
@@ -439,16 +439,22 @@ class FigAggregateSpecWithHist(FigBase):
             x = self.left_margin / 2.
             y = 1. - self.top_margin - self.gap_height - gap / 2 - gap * i
 
+            # self.f.text(x, y, key+': %s' %p_dict[key], fontsize=36, rotation='vertical', horizontalalignment='left', verticalalignment='center')
+
+            # try using key as a key in param dict
             try:
+                self.f.text(x, y, key+': %s' %p_dict[key], fontsize=36, rotation='vertical', horizontalalignment='left', verticalalignment='center')
+
+            # if this doesn't work, use individual parts of key as labels
+            except:
+                # check to see if there are enough args in key
                 if len(key) == self.N_rows:
                     self.f.text(x, y, key[i], fontsize=36, rotation='vertical', horizontalalignment='left', verticalalignment='center')
 
+                # if not, do nothing
                 else:
-                    print "Not enough row labels passed. Not using any"
+                    print "Dude, the number of labels don't match the number of rows. I can't do nothing now."
                     return 0
-
-            except TypeError:
-                self.f.text(x, y, key+': %s' %p_dict[key], fontsize=36, rotation='vertical', horizontalalignment='left', verticalalignment='center')
 
     def save(self, file_name):
         self.f.savefig(file_name, dpi=250)

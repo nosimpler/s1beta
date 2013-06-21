@@ -1,8 +1,8 @@
 # cli.py - routines for the command line interface console s1sh.py
 #
-# v 1.8.8
-# rev 2013-06-17 (SL: updated load function to load most recent data set)
-# last major: (SL: fixed bug in specmax)
+# v 1.8.11
+# rev 2013-06-21 (MS: minor)
+# last major: (SL: updated load function to load most recent data set)
 
 from cmd import Cmd
 from datetime import datetime
@@ -716,7 +716,6 @@ class Console(Cmd):
            column_label should be a param that changes trial to trial
         """
         arg_list = [arg for arg in args.split('--') if arg is not '']
-        print arg_list
 
         # Parse args
         for arg in arg_list:

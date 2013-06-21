@@ -1,8 +1,8 @@
 # dipolefn.py - dipole-based analysis functions
 #
-# v 1.8.7
-# rev 2013-06-13 (SL: removed debug output)
-# last major: (SL: added mean_stationary(), linear regression, new baseline norm)
+# v 1.8.11
+# rev 2013-06-21 (MS: updated pdipole() to work with revised Dipole() class. Updated pdipole_with_hist to work with new spikes_from_file() fn)
+# last major: (SL: removed debug output)
 
 import fileio as fio
 import numpy as np
@@ -333,6 +333,9 @@ def pdipole(f_dpl, f_param, dfig, key_types, plot_dict):
     # split to find file prefix
     file_prefix = f_dpl.split('/')[-1].split('.')[0]
 
+    # grabbing the p_dict from the f_param
+    _, p_dict = paramrw.read(f_param)
+
     # get xmin and xmax from the plot_dict
     if plot_dict['xmin'] is None:
         xmin = 0.
@@ -340,7 +343,7 @@ def pdipole(f_dpl, f_param, dfig, key_types, plot_dict):
         xmin = plot_dict['xmin']
 
     if plot_dict['xmax'] is None:
-        xmax = dpl.p['tstop']
+        xmax = p_dict['tstop']
     else:
         xmax = plot_dict['xmax']
 
@@ -356,9 +359,6 @@ def pdipole(f_dpl, f_param, dfig, key_types, plot_dict):
         pass
     else:
         f.ax0.set_ylim(plot_dict['ymin'], plot_dict['ymax'])
-
-    # grabbing the p_dict from the f_param
-    _, p_dict = paramrw.read(f_param)
 
     # useful for title strings
     title_str = ac.create_title(p_dict, key_types)
@@ -440,12 +440,16 @@ def pdipole_evoked(dfig, f_dpl, f_spk, f_param, ylim=[]):
 
 # Plots dipole with histogram of alpha feed inputs
 # this function has not been converted to use the Dipole() class yet
-def pdipole_with_hist(f_dpl, f_spk, dfig, p_dict, gid_dict, key_types, xlim=[0., 'tstop']):
+def pdipole_with_hist(f_dpl, f_spk, dfig, f_param, key_types, xlim=[0., 'tstop']):
+# def pdipole_with_hist(f_dpl, f_spk, dfig, p_dict, gid_dict, key_types, xlim=[0., 'tstop']):
     # ddipole is dipole data
     ddipole = np.loadtxt(f_dpl)
 
     # split to find file prefix
     file_prefix = f_dpl.split('/')[-1].split('.')[0]
+
+    # load param file
+    _, p_dict = paramrw.read(f_param)
 
     # set xmin value
     xmin = xlim[0] / p_dict['dt']
@@ -461,7 +465,7 @@ def pdipole_with_hist(f_dpl, f_spk, dfig, p_dict, gid_dict, key_types, xlim=[0.,
     dp_total = ddipole[xmin:xmax+1, 1]
 
     # get feed input times.
-    s_dict = spikefn.spikes_from_file(gid_dict, f_spk)
+    s_dict = spikefn.spikes_from_file(f_param, f_spk)
 
     # check for existance of alpha feed keys in s_dict.
     s_dict = spikefn.alpha_feed_verify(s_dict, p_dict)

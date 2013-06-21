@@ -1,8 +1,8 @@
 # pspec.py - Very long plotting methods having to do with spec.
 #
-# v 1.8.9
-# rev 2013-06-17 (SL: pspec_dpl() now plots stationary estimate)
-# last major: (SL: addressing major bug in time axis of pspec_dpl(), updated to use Dipole())
+# v 1.8.11
+# rev 2013-06-21 (MS: aggregate_with_hist() now lives here. Updated aggregate_with_hist and pspec_with_hist to work with new spikes_from_file() fn)
+# last major: (SL: pspec_dpl() now plots stationary estimate)
 
 import os
 import sys
@@ -119,9 +119,10 @@ def pspec_dpl(dspec, f_dpl, dfig, p_dict, key_types, xlim=None):
     f.close()
 
 # Spectral plotting kernel with alpha feed histogram for ONE simulation run
-def pspec_with_hist(dspec, f_dpl, f_spk, dfig, p_dict, gid_dict, key_types, xlim=[0., 'tstop']):
+def pspec_with_hist(dspec, f_dpl, f_spk, dfig, f_param, key_types, xlim=[0., 'tstop']):
+# def pspec_with_hist(dspec, f_dpl, f_spk, dfig, p_dict, gid_dict, key_types, xlim=[0., 'tstop']):
     # if dspec is an instance of MorletSpec,  get data from object
-    if isinstance(dspec, MorletSpec):
+    if isinstance(dspec, specfn.MorletSpec):
         timevec = dspec.timevec
         freqvec = dspec.freqvec
         TFR = dspec.TFR
@@ -142,6 +143,9 @@ def pspec_with_hist(dspec, f_dpl, f_spk, dfig, p_dict, gid_dict, key_types, xlim
 
     # Create the fig name
     fig_name = os.path.join(dfig, fprefix+'.png')
+
+    # load param dict
+    _, p_dict = paramrw.read(f_param)
 
     # set xmin value
     if xlim[0] > timevec[0]:
@@ -175,7 +179,7 @@ def pspec_with_hist(dspec, f_dpl, f_spk, dfig, p_dict, gid_dict, key_types, xlim
     x = (xmin, xmax)
 
     # grab alpha feed data. spikes_from_file() from spikefn.py
-    s_dict = spikefn.spikes_from_file(gid_dict, f_spk)
+    s_dict = spikefn.spikes_from_file(f_param, f_spk)
 
     # check for existance of alpha feed keys in s_dict.
     s_dict = spikefn.alpha_feed_verify(s_dict, p_dict)
@@ -275,3 +279,83 @@ def pspecpwr_ax(ax_specpwr, specpwr_list, fparam_list, key_types):
 # Plot vertical error bars
 def pyerrorbars_ax(ax, x, y, yerr_vec):
     ax.errorbar(x, y, xerr=None, yerr=yerr_vec, fmt=None, ecolor='blue')
+
+def aggregate_with_hist(f, ax, dspec, f_dpl, f_spk, f_param):
+# def aggregate_with_hist(f, ax, dspec, f_dpl, f_spk, p_dict, gid_dict):
+    # load param dict
+    _, p_dict = paramrw.read(f_param)
+
+    # if dspec is an instance of MorletSpec,  get data from object
+    if isinstance(dspec, specfn.MorletSpec):
+        timevec = dspec.timevec
+        freqvec = dspec.freqvec
+        TFR = dspec.TFR
+
+    # otherwise dspec is path name and data must be loaded from file
+    else:
+        data_spec = np.load(dspec)
+
+        timevec = data_spec['time']
+        freqvec = data_spec['freq']
+        TFR = data_spec['TFR']
+
+    xmin = timevec[0]
+    xmax = p_dict['tstop']
+    x = (xmin, xmax)
+
+    pc = ax['spec'].imshow(TFR, extent=[timevec[0], timevec[-1], freqvec[-1], freqvec[0]], aspect='auto', origin='upper')
+    f.f.colorbar(pc, ax=ax['spec'])
+
+    # grab the dipole data
+    data_dipole = np.loadtxt(open(f_dpl, 'r'))
+
+    t_dpl = data_dipole[xmin/p_dict['dt']:, 0]
+    dp_total = data_dipole[xmin/p_dict['dt']:, 1]
+
+    ax['dipole'].plot(t_dpl, dp_total)
+
+    # grab alpha feed data. spikes_from_file() from spikefn.py
+    s_dict = spikefn.spikes_from_file(f_param, f_spk)
+
+    # check for existance of alpha feed keys in s_dict.
+    s_dict = spikefn.alpha_feed_verify(s_dict, p_dict)
+
+    # Account for possible delays
+    s_dict = spikefn.add_delay_times(s_dict, p_dict)
+
+    # set number of bins (150 bins/1000ms)
+    bins = 150. * (xmax - xmin) / 1000.
+
+    hist = {}
+
+    # Proximal feed
+    hist['feed_prox'] = ax['feed_prox'].hist(s_dict['alpha_feed_prox'].spike_list, bins, range=[xmin, xmax], color='red', label='Proximal feed')
+
+    # Distal feed
+    hist['feed_dist'] = ax['feed_dist'].hist(s_dict['alpha_feed_dist'].spike_list, bins, range=[xmin, xmax], color='green', label='Distal feed')
+
+    # for now, set the xlim for the other one, force it!
+    ax['dipole'].set_xlim(x)
+    ax['spec'].set_xlim(x)
+    ax['feed_prox'].set_xlim(x)
+    ax['feed_dist'].set_xlim(x)
+
+    # set hist axis props
+    f.set_hist_props(ax, hist)
+
+    # axis labels
+    ax['spec'].set_xlabel('Time (ms)')
+    ax['spec'].set_ylabel('Frequency (Hz)')
+
+    # Add legend to histogram
+    for key in ax.keys():
+        if 'feed' in key:
+            ax[key].legend()
+
+    # create title
+    # title_str = ac.create_title(p_dict, key_types)
+    # f.f.suptitle(title_str)
+    # title_str = [key + ': %2.1f' % p_dict[key] for key in key_types['dynamic_keys']]
+
+    # plt.savefig(fig_name)
+    # f.close()

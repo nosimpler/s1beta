@@ -1,8 +1,8 @@
 # plotfn.py - pall and possibly other plot routines
 #
-# v 1.8.7a
-# rev 2013-06-13 (SL: removed xlim input to pspec.pspec_dpl())
-# last major: (SL: added pspec)
+# v 1.8.11
+# rev 2013-06-21 (MS: now passing around f_param instead of p_dict)
+# last major: (SL: removed xlim input to pspec.pspec_dpl())
 
 from praster import praster
 import axes_create as ac
@@ -45,8 +45,8 @@ def pkernel(dfig, f_param, f_spk, f_dpl, data_spec, key_types, xlim=[0, 'tstop']
 
 # Kernel for plotting dipole and spec with alpha feed histograms
 def pkernel_with_hist(dfig, f_param, f_spk, f_dpl, data_spec, key_types, xlim=[0., 'tstop']):
-    gid_dict, p_dict = paramrw.read(f_param)
-    tstop = p_dict['tstop']
+    # gid_dict, p_dict = paramrw.read(f_param)
+    # tstop = p_dict['tstop']
 
     # fig dirs
     dfig_dpl = dfig['figdpl']
@@ -54,8 +54,8 @@ def pkernel_with_hist(dfig, f_param, f_spk, f_dpl, data_spec, key_types, xlim=[0
     dfig_spk = dfig['figspk']
 
     # plot kernels
-    dipolefn.pdipole_with_hist(f_dpl, f_spk, dfig_dpl, p_dict, gid_dict, key_types, xlim)
-    pspec.pspec_with_hist(data_spec, f_dpl, f_spk, dfig_spec, p_dict, gid_dict, key_types, xlim)
+    dipolefn.pdipole_with_hist(f_dpl, f_spk, dfig_dpl, f_param, key_types, xlim)
+    pspec.pspec_with_hist(data_spec, f_dpl, f_spk, dfig_spec, f_param, key_types, xlim)
 
     return 0
 
@@ -134,8 +134,8 @@ def pall(ddir, p_exp, spec_results, xlim=[0., 'tstop']):
 
 # Plots dipole and spec with alpha feed histograms
 def pdpl_pspec_with_hist(ddir, p_exp, spec_results, xlim=[0., 'tstop']):
-    runtype = 'debug'
-    # runtype = 'parallel'
+    # runtype = 'debug'
+    runtype = 'parallel'
 
     # preallocate lists for use below
     param_list = []
@@ -199,16 +199,16 @@ def aggregate_spec_with_hist(ddir, p_exp, spec_results, labels):
         print 'yay'
         pl = Pool()
         for f_param, f_spk, f_dpl, dspec, ax in it.izip(param_list, spk_list, dpl_list, spec_list, f.ax_list):
-            gid_dict, p_dict = paramrw.read(f_param)
-            pl.apply_async(specfn.aggregate_with_hist, (f, ax, dspec, f_dpl, f_spk, p_dict, gid_dict))
+            _, p_dict = paramrw.read(f_param)
+            pl.apply_async(specfn.aggregate_with_hist, (f, ax, dspec, f_dpl, f_spk, fparam, p_dict))
 
         pl.close()
         pl.join()
         
     elif runtype is 'debug':
         for f_param, f_spk, f_dpl, dspec, ax in it.izip(param_list, spk_list, dpl_list, spec_list, f.ax_list):
-            gid_dict, p_dict = paramrw.read(f_param)
-            specfn.aggregate_with_hist(f, ax, dspec, f_dpl, f_spk, p_dict, gid_dict)
+            # _, p_dict = paramrw.read(f_param)
+            pspec.aggregate_with_hist(f, ax, dspec, f_dpl, f_spk, f_param)
 
     # add row labels
     f.add_row_labels(param_list, labels[0])

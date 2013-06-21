@@ -1,8 +1,8 @@
 # spikefn.py - dealing with spikes
 #
-# v 1.7.53
-# rev 2013-05-24 (SL: thinner markers)
-# last major: (SL: Added new function filter_spike_dict() that filters a spike_dict_from_file)
+# v 1.8.11
+# rev 2013-06-21 (MS: fixed bug when only one alpha feed exists)
+# last major: (SL: thinner markers)
 
 import fileio as fio
 import numpy as np
@@ -174,7 +174,8 @@ def spikes_from_file(fparam, fspikes):
     else:
         # not sure why this is done here
         # handle the extinput: this is a LIST!
-        s_dict['extinput'] = [Spikes(s, [gid]) for gid in gid_dict['extinput']]
+        s_dict['extinput'] = Spikes(s, [gid_dict['extinput'][0]])
+        # s_dict['extinput'] = [Spikes(s, [gid]) for gid in gid_dict['extinput']]
 
     return s_dict
 
@@ -251,7 +252,7 @@ def add_delay_times(s_dict, p_dict):
 
     # else, check to see if delays are the same anyway
     # else:
-    if s_dict['alpha_feed_prox'] and p_dict['input_prox_A_delay_L2'] == p_dict['input_prox_A_delay_L5']:
+    if s_dict['alpha_feed_prox'].spike_list and p_dict['input_prox_A_delay_L2'] == p_dict['input_prox_A_delay_L5']:
         s_dict['alpha_feed_prox'].spike_list = [num+p_dict['input_prox_A_delay_L2'] for num in s_dict['alpha_feed_prox'].spike_list]
 
     # Distal
@@ -261,7 +262,7 @@ def add_delay_times(s_dict, p_dict):
 
     # else, check to see if delays are the same anyway
     # else:
-    if s_dict['alpha_feed_dist'] and p_dict['input_dist_A_delay_L2'] == p_dict['input_dist_A_delay_L5']: 
+    if s_dict['alpha_feed_dist'].spike_list and p_dict['input_dist_A_delay_L2'] == p_dict['input_dist_A_delay_L5']: 
         s_dict['alpha_feed_dist'].spike_list = [num+p_dict['input_dist_A_delay_L2'] for num in s_dict['alpha_feed_dist'].spike_list]
 
     return s_dict

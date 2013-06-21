@@ -1,8 +1,8 @@
 # specfn.py - Average time-frequency energy representation using Morlet wavelet method
 #
-# v 1.8.9
-# rev 2013-06-17 (SL: Added simple Welch() class)
-# last major: (MS: adding 1 to max f of spec analysis so max f included by default. Other minor)
+# v 1.8.11
+# rev 2013-06-21 (MS: aggregate_with_hist() moved to pspec.py)
+# last major: (SL: Added simple Welch() class)
 
 import os
 import sys
@@ -814,82 +814,6 @@ def pfreqpwr_with_hist(file_name, freqpwr_result, f_spk, gid_dict, p_dict, key_t
 
     f.savepng(file_name)
     f.close()
-
-def aggregate_with_hist(f, ax, dspec, f_dpl, f_spk, p_dict, gid_dict):
-    # if dspec is an instance of MorletSpec,  get data from object
-    if isinstance(dspec, MorletSpec):
-        timevec = dspec.timevec
-        freqvec = dspec.freqvec
-        TFR = dspec.TFR
-
-    # otherwise dspec is path name and data must be loaded from file
-    else:
-        data_spec = np.load(dspec)
-
-        timevec = data_spec['time']
-        freqvec = data_spec['freq']
-        TFR = data_spec['TFR']
-
-    xmin = timevec[0]
-    xmax = p_dict['tstop']
-    x = (xmin, xmax)
-
-    pc = ax['spec'].imshow(TFR, extent=[timevec[0], timevec[-1], freqvec[-1], freqvec[0]], aspect='auto', origin='upper')
-    f.f.colorbar(pc, ax=ax['spec'])
-
-    # grab the dipole data
-    data_dipole = np.loadtxt(open(f_dpl, 'r'))
-
-    t_dpl = data_dipole[xmin/p_dict['dt']:, 0]
-    dp_total = data_dipole[xmin/p_dict['dt']:, 1]
-
-    ax['dipole'].plot(t_dpl, dp_total)
-
-    # grab alpha feed data. spikes_from_file() from spikefn.py
-    s_dict = spikefn.spikes_from_file(gid_dict, f_spk)
-
-    # check for existance of alpha feed keys in s_dict.
-    s_dict = spikefn.alpha_feed_verify(s_dict, p_dict)
-
-    # Account for possible delays
-    s_dict = spikefn.add_delay_times(s_dict, p_dict)
-
-    # set number of bins (150 bins/1000ms)
-    bins = 150. * (xmax - xmin) / 1000.
-
-    hist = {}
-
-    # Proximal feed
-    hist['feed_prox'] = ax['feed_prox'].hist(s_dict['alpha_feed_prox'].spike_list, bins, range=[xmin, xmax], color='red', label='Proximal feed')
-
-    # Distal feed
-    hist['feed_dist'] = ax['feed_dist'].hist(s_dict['alpha_feed_dist'].spike_list, bins, range=[xmin, xmax], color='green', label='Distal feed')
-
-    # for now, set the xlim for the other one, force it!
-    ax['dipole'].set_xlim(x)
-    ax['spec'].set_xlim(x)
-    ax['feed_prox'].set_xlim(x)
-    ax['feed_dist'].set_xlim(x)
-
-    # set hist axis props
-    f.set_hist_props(ax, hist)
-
-    # axis labels
-    ax['spec'].set_xlabel('Time (ms)')
-    ax['spec'].set_ylabel('Frequency (Hz)')
-
-    # Add legend to histogram
-    for key in ax.keys():
-        if 'feed' in key:
-            ax[key].legend()
-
-    # create title
-    # title_str = ac.create_title(p_dict, key_types)
-    # f.f.suptitle(title_str)
-    # title_str = [key + ': %2.1f' % p_dict[key] for key in key_types['dynamic_keys']]
-
-    # plt.savefig(fig_name)
-    # f.close()
 
 def pmaxpwr(file_name, results_list, fparam_list):
     f = ac.FigStd()
