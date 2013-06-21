@@ -1,7 +1,7 @@
 # class_cell.py - establish class def for general cell features
 #
-# v 1.8.7
-# rev 2013-06-13 (SL: minor)
+# v 1.8.12cells
+# rev 2013-06-21 (MS: create_dends_new() creates dends based on dictionary of dend props)
 # last rev: (SL: minor)
 
 import numpy as np
@@ -288,7 +288,10 @@ class Pyr(Cell):
         # store cell_name as self variable for later use
         self.name = soma_props['name']
         
-        # preallocate list to store dends
+        # preallocate dict to store dends
+        self.dends = {}
+
+        # for legacy use with L5Pyr
         self.list_dend = []
 
     # Create dictionary of section names with entries to scale section lengths to length along z-axis
@@ -316,9 +319,30 @@ class Pyr(Cell):
 
         return d
 
-    # Creates dendritic sections
+    # Creates dendritic sections based only on dictionary of dendrite props
+    def create_dends_new(self, p_dend_props):
+        # iterate over keys in p_dend_props. Create dend for each key.
+        for key in p_dend_props.iterkeys():
+            # create dend
+            self.dends[key] = nrn.Section(name=self.name+'_'+key)
+
+            # set dend props
+            self.dends[key].L = p_dend_props[key]['L']
+            self.dends[key].diam = p_dend_props[key]['diam']
+            self.dends[key].Ra = p_dend_props[key]['Ra']
+            self.dends[key].cm = p_dend_props[key]['cm']
+
+            # set dend nseg
+            if p_dend_props[key]['L'] > 100:
+                self.dends[key].nseg = int(p_dend_props[key]['L'] / 50)
+
+                # make dend.nseg odd for all sections
+                if not self.dends[key].nseg % 2:
+                    self.dends[key].nseg += 1
+
+    #Ccreates dendritic sections based on dend props, soma props, and list of dend names
+    # Legacy function for use by L5Pyr(). Will be deprecated in future commit.
     def create_dends(self, list_names, dend_props, soma_props):
-        # create dends and set dend props
         for sect_name in list_names:
             self.list_dend.append(nrn.Section(name=self.name+'_'+sect_name))
             self.list_dend[-1].L = dend_props[sect_name]['L']
@@ -328,7 +352,7 @@ class Pyr(Cell):
             self.list_dend[-1].Ra = soma_props['Ra']
             self.list_dend[-1].cm = soma_props['cm']
 
-            # set nseg for each dend
+            # set nseg for dend
             if dend_props[sect_name]['L'] > 100:
                 self.list_dend[-1].nseg = int(dend_props[sect_name]['L'] / 50)
 

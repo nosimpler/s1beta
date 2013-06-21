@@ -1,8 +1,8 @@
 # L2_pyramidal.py - est class def for layer 2 pyramidal cells
 #
-# v 1.8.10
-# rev 2013-06-20 (MS: Merge feedsynapses_new with master)
-# last rev: (MS: Added NMDA synapses for alpha feeds)
+# v 1.8.12cell
+# rev 2013-06-21 (MS: all fns involving dendrites now use dendrite dictionary)
+# last rev: (MS: Merge feedsynapses_new with master)
 
 from neuron import h as nrn
 from class_cell import Pyr
@@ -16,17 +16,17 @@ import itertools as it
 class L2Pyr(Pyr):
     def __init__(self, pos):
         # Set somatic and dendritic properties
-        soma_props = self.__set_soma_props(pos)
-        dend_props, dend_names = self.__set_dend_props()
+        p_soma_props = self.__get_soma_props(pos)
+        p_dend_props = self.__get_dend_props()
+        # p_dend_props, dend_names = self.__get_dend_props()
 
         # usage: Pyr.__init__(self, soma_props)
-        Pyr.__init__(self, soma_props)
+        Pyr.__init__(self, p_soma_props)
         self.celltype = 'L2_pyramidal'
 
         # geometry
-        # creates self.list_dend
-        # Dend Cm and dend Ra set with Soma Cm and Soma Ra
-        self.create_dends(dend_names, dend_props, soma_props)
+        # creates dict of dends: self.dends
+        self.create_dends_new(p_dend_props)
         self.__connect_sections()
         # self.__set_3Dshape()
 
@@ -79,8 +79,8 @@ class L2Pyr(Pyr):
         # so names must be actual section names, or else it will fail silently
         self.list_IClamp = [self.insert_IClamp(sect_name, props_IClamp) for sect_name in sect_list_IClamp]
 
-    # Set somatic properties
-    def __set_soma_props(self, pos):
+    # Returns hardcoded somatic properties
+    def __get_soma_props(self, pos):
         return {
             'pos': pos,
             'L': 22.1,
@@ -90,41 +90,88 @@ class L2Pyr(Pyr):
             'name': 'L2Pyr',
         }
 
-    # Sets dendritic properties
-    def __set_dend_props(self):
-        # Hardcode dend properties
-        dend_props = {
-            'apical_trunk': {'L': 59.5, 'diam': 4.25},
-            'apical_1': {'L': 306., 'diam': 4.08},
-            'apical_tuft': {'L': 238., 'diam': 3.4},
-            'apical_oblique': {'L': 340., 'diam': 3.91},
-            'basal_1': {'L': 85., 'diam': 4.25},
-            'basal_2': {'L': 255., 'diam': 2.72},
-            'basal_3': {'L': 255., 'diam': 2.72},
+    # Returns hardcoded dendritic properties
+    def __get_dend_props(self):
+        return {
+            'apical_trunk': {
+                'L': 59.5,
+                'diam': 4.25,
+                'cm': 0.6195,
+                'Ra': 200.,
+            },
+            'apical_1': {
+                'L': 306., 
+                'diam': 4.08,
+                'cm': 0.6195,
+                'Ra': 200.,
+            },
+            'apical_tuft': {
+                'L': 238., 
+                'diam': 3.4,
+                'cm': 0.6195,
+                'Ra': 200.,
+            },
+            'apical_oblique': {
+                'L': 340., 
+                'diam': 3.91,
+                'cm': 0.6195,
+                'Ra': 200.,
+            },
+            'basal_1': {
+                'L': 85., 
+                'diam': 4.25,
+                'cm': 0.6195,
+                'Ra': 200.,
+            },
+            'basal_2': {
+                'L': 255., 
+                'diam': 2.72,
+                'cm': 0.6195,
+                'Ra': 200.,
+            },
+            'basal_3': {
+                'L': 255., 
+                'diam': 2.72,
+                'cm': 0.6195,
+                'Ra': 200.,
+            },
         }
 
         # This order matters!
-        dend_order = ['apical_trunk', 'apical_1', 'apical_tuft', 'apical_oblique',
-                      'basal_1', 'basal_2', 'basal_3']
+        # dend_order = ['apical_trunk', 'apical_1', 'apical_tuft', 'apical_oblique',
+        #              'basal_1', 'basal_2', 'basal_3']
 
-        return dend_props, dend_order
+        # return dend_props, dend_order
 
     # Connects sections of THIS cell together
     def __connect_sections(self):
         # child.connect(parent, parent_end, {child_start=0})
         # Distal (Apical)
-        self.list_dend[0].connect(self.soma, 1, 0)
-        self.list_dend[1].connect(self.list_dend[0], 1, 0)
+        self.dends['apical_trunk'].connect(self.soma, 1, 0)
+        self.dends['apical_1'].connect(self.dends['apical_trunk'], 1, 0)
+        self.dends['apical_tuft'].connect(self.dends['apical_1'], 1, 0)
 
-        self.list_dend[2].connect(self.list_dend[1], 1, 0)
+        # apical_oblique comes off distal end of apical_trunk
+        self.dends['apical_oblique'].connect(self.dends['apical_trunk'], 1, 0)
 
-        # dend[4] comes off of dend[0](1)
-        self.list_dend[3].connect(self.list_dend[0], 1, 0)
+        # Proximal (basal)
+        self.dends['basal_1'].connect(self.soma, 0, 0)
+        self.dends['basal_2'].connect(self.dends['basal_1'], 1, 0)
+        self.dends['basal_3'].connect(self.dends['basal_1'], 1, 0)
 
-        # Proximal (Basal)
-        self.list_dend[4].connect(self.soma, 0, 0)
-        self.list_dend[5].connect(self.list_dend[4], 1, 0)
-        self.list_dend[6].connect(self.list_dend[4], 1, 0)
+        # # Distal (Apical)
+        # self.list_dend[0].connect(self.soma, 1, 0)
+        # self.list_dend[1].connect(self.list_dend[0], 1, 0)
+
+        # self.list_dend[2].connect(self.list_dend[1], 1, 0)
+
+        # # dend[4] comes off of dend[0](1)
+        # self.list_dend[3].connect(self.list_dend[0], 1, 0)
+
+        # # Proximal (Basal)
+        # self.list_dend[4].connect(self.soma, 0, 0)
+        # self.list_dend[5].connect(self.list_dend[4], 1, 0)
+        # self.list_dend[6].connect(self.list_dend[4], 1, 0)
 
     # Adds biophysics to soma
     def __biophys_soma(self):
@@ -145,27 +192,38 @@ class L2Pyr(Pyr):
 
     # Defining biophysics for dendrites
     def __biophys_dends(self):
-        # set dend biophysics specified in Pyr()
-        # self.pyr_biophys_dends()
-
-        # set dend biophysics not specified in Pyr()
-        for sec in self.list_dend:
+        # set dend biophysics
+        # iterate over keys in self.dends and set biophysics for each dend
+        for key in self.dends.iterkeys():
             # neuron syntax is used to set values for mechanisms
             # sec.gbar_mech = x sets value of gbar for mech to x for all segs
             # in a section. This method is significantly faster than using
             # a for loop to iterate over all segments to set mech values
 
             # Insert 'hh' mechanism
-            sec.insert('hh')
-            sec.gkbar_hh = 0.01
-            sec.gl_hh = 4.26e-5
-            sec.gnabar_hh = 0.15
-            sec.el_hh = -65
+            self.dends[key].insert('hh')
+            self.dends[key].gkbar_hh = 0.01
+            self.dends[key].gl_hh = 4.26e-5
+            self.dends[key].gnabar_hh = 0.15
+            self.dends[key].el_hh = -65
 
             # Insert 'km' mechanism
             # Units: pS/um^2
-            sec.insert('km')
-            sec.gbar_km = 250
+            self.dends[key].insert('km')
+            self.dends[key].gbar_km = 250
+
+        # for sec in self.list_dend:
+            # # Insert 'hh' mechanism
+            # sec.insert('hh')
+            # sec.gkbar_hh = 0.01
+            # sec.gl_hh = 4.26e-5
+            # sec.gnabar_hh = 0.15
+            # sec.el_hh = -65
+
+            # # Insert 'km' mechanism
+            # # Units: pS/um^2
+            # sec.insert('km')
+            # sec.gbar_km = 250
 
     def __synapse_create(self):
         # creates synapses onto this cell 
@@ -176,18 +234,17 @@ class L2Pyr(Pyr):
         }
 
         # Dendritic synapses
-        # Here list_dend[3] is the oblique apical dendritic section, different from the L5Pyr!
-        self.apicaloblique_ampa = self.syn_ampa_create(self.list_dend[3](0.5))
-        self.apicaloblique_nmda = self.syn_nmda_create(self.list_dend[3](0.5))
+        self.apicaloblique_ampa = self.syn_ampa_create(self.dends['apical_oblique'](0.5))
+        self.apicaloblique_nmda = self.syn_nmda_create(self.dends['apical_oblique'](0.5))
 
-        self.basal2_ampa = self.syn_ampa_create(self.list_dend[5](0.5))
-        self.basal2_nmda = self.syn_nmda_create(self.list_dend[5](0.5))
+        self.basal2_ampa = self.syn_ampa_create(self.dends['basal_2'](0.5))
+        self.basal2_nmda = self.syn_nmda_create(self.dends['basal_2'](0.5))
 
-        self.basal3_ampa = self.syn_ampa_create(self.list_dend[6](0.5))
-        self.basal3_nmda = self.syn_nmda_create(self.list_dend[6](0.5))
+        self.basal3_ampa = self.syn_ampa_create(self.dends['basal_3'](0.5))
+        self.basal3_nmda = self.syn_nmda_create(self.dends['basal_3'](0.5))
 
-        self.apicaltuft_ampa = self.syn_ampa_create(self.list_dend[2](0.5))
-        self.apicaltuft_nmda = self.syn_nmda_create(self.list_dend[2](0.5))
+        self.apicaltuft_ampa = self.syn_ampa_create(self.dends['apical_tuft'](0.5))
+        self.apicaltuft_nmda = self.syn_nmda_create(self.dends['apical_tuft'](0.5))
 
     # collect receptor-type-based connections here
     def parconnect(self, gid, gid_dict, pos_dict, p):
