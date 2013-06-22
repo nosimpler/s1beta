@@ -1,8 +1,8 @@
 # spikefn.py - dealing with spikes
 #
-# v 1.8.12
-# rev 2013-06-22 (SL: plotting in spike_png() now has ordered keys)
-# last major: (MS: fixed bug when only one alpha feed exists)
+# v 1.8.13
+# rev 2013-06-22 (SL: fixed a bug in spikes_from_file())
+# last major: (SL: plotting in spike_png() now has ordered keys)
 
 import fileio as fio
 import numpy as np
@@ -174,8 +174,7 @@ def spikes_from_file(fparam, fspikes):
     else:
         # not sure why this is done here
         # handle the extinput: this is a LIST!
-        s_dict['extinput'] = Spikes(s, [gid_dict['extinput'][0]])
-        # s_dict['extinput'] = [Spikes(s, [gid]) for gid in gid_dict['extinput']]
+        s_dict['extinput'] = [Spikes(s, [gid]) for gid in gid_dict['extinput']]
 
     return s_dict
 
