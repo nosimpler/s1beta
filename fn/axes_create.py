@@ -1,8 +1,8 @@
 # axes_create.py - simple axis creation
 #
-# v 1.8.11
-# rev 2013-06-cw2117 (MS: fixed error in row labeling in FigAggregateWithHist())
-# last major: (SL: added new axis to the spec)
+# v 1.8.12
+# rev 2013-06-22 (SL: Added several functions to base class)
+# last major: (MS: fixed error in row labeling in FigAggregateWithHist())
 
 # usage:
 # testfig = FigStd()
@@ -12,17 +12,29 @@
 
 import paramrw
 import matplotlib as mpl
+from matplotlib import ticker
 # mpl.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import itertools as it
 import numpy as np
+import os
 
 # Base figure class
 class FigBase():
     def __init__(self):
         # self.f is typically set by the super class
         self.f = None
+
+    # function to set the scientific notation limits
+    def set_notation_scientific(self, list_ax_handles):
+        # set the formatter
+        fmt = ticker.ScalarFormatter()
+        fmt.set_powerlimits((-3, 3))
+        for h in list_ax_handles:
+            self.ax[h].yaxis.set_major_formatter(fmt)
+
+        return fmt
 
     # generic function to take an axis handle and make the y-axis even
     def ysymmetry(self, ax):
@@ -32,6 +44,68 @@ class FigBase():
         ax.set_ylim(ylim_new)
 
         return ylim_new
+
+    # equalizes SIZE of the ylim but keeps the center of the axis whatever makes sense for the data
+    def equalize_ylim_size(self, list_handles):
+        list_ylim_size = []
+
+        # create a dict of ylims from list_handles
+        ylim = dict.fromkeys(list_handles)
+
+        # grab the current sizes
+        for h in list_handles:
+            # outputs of tuples for dict entries in ylim
+            ylim[h] = f.ax[h].get_ylim()
+            ylim_size = np.abs(ylim[h][-1] - ylim[h][0])
+            list_ylim_size.append(ylim_size)
+
+        # figure out which was the biggest
+        ylim_size_max = np.max(list_ylim_size)
+
+        # iterate through the handles again, if the size is less than the max size,
+        # then adjust it appropriately
+
+    # checks on all yaxes and then sets them
+    def equalize_ylim(self, list_handles):
+        # list_cols = ['L', 'M', 'R']
+        # list_handles = [type+col for col in list_cols]
+
+        list_ylim = []
+
+        # assumes axes are in a self.ax dictionary, and the keys of the dict
+        # are the names given in list_handles
+        for h in list_handles:
+            ymin_local, ymax_local = self.ax[h].get_ylim()
+
+            # append to list
+            list_ylim.extend([ymin_local, ymax_local])
+
+        # calculate the ylim
+        ylim = [np.min(list_ylim), np.max(list_ylim)]
+
+        # now set for all handles
+        for h in list_handles:
+            self.ax[h].set_ylim(ylim)
+
+        return ylim
+
+    # equalizing the color lims is a slightly different process that requires the pc_dict to be passed
+    def equalize_speclim(self, pc_dict):
+        list_lim_spec = []
+
+        # assume that the handles have clims that will be assigned by the pc_dict
+        for h in pc_dict.keys():
+            vmin, vmax = pc_dict[h].get_clim()
+            list_lim_spec.extend([vmin, vmax])
+
+        # create a ylim from list_lim_spec
+        ylim = (np.min(list_lim_spec), np.max(list_lim_spec))
+
+        for h in pc_dict.keys():
+            # can this be done: set_clim(ylim)
+            pc_dict[h].set_clim(ylim[0], ylim[1])
+
+        return ylim
 
     # set the font size globally
     def set_fontsize(self, s):
@@ -56,9 +130,16 @@ class FigBase():
     def savepng(self, file_name, dpi_set=300):
         self.f.savefig(file_name, dpi=dpi_set)
 
+    # new png save
+    def savepng_new(self, dpng, fprefix, dpi_set=300):
+        # add png
+        fname = os.path.join(dpng, fprefix+'.png')
+        self.f.savefig(fname, dpi=dpi_set)
+
     # generic save, works for png but supposed to be for eps
-    def saveeps(self, file_name):
-        self.f.savefig(file_name)
+    def saveeps(self, deps, fprefix):
+        fname = os.path.join(deps, fprefix+'.eps')
+        self.f.savefig(fname)
 
     # obligatory close function
     def close(self):

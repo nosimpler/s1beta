@@ -1,8 +1,8 @@
 # clidefs.py - these are all of the function defs for the cli
 #
-# v 1.8.11
-# rev 2013-06-21 (MS: updated exec_avgtrials() to work with revised Dipole() class. Other minor) 
-# last major: (SL: added useless debugging to specmax())
+# v 1.8.12
+# rev 2013-06-22 (SL: added a throwaway function that will eventually be properly used)
+# last major: (MS: updated exec_avgtrials() to work with revised Dipole() class. Other minor) 
 
 # Standard modules
 import fnmatch, os, re, sys
@@ -40,6 +40,23 @@ def get_subdir_list(dcheck):
 
     else:
         return []
+
+def exec_throwaway(ddata):
+    # take the 14th dipole, do some stuff to it, resave it
+    expmt_group = ddata.expmt_groups[0]
+    i = 14
+    f_dpl = ddata.file_match(expmt_group, 'rawdpl')[i]
+    f_param = ddata.file_match(expmt_group, 'param')[i]
+
+    # print ddata.sim_prefix, ddata.dsim
+    f_name_short = '%s-dpltest.txt' % ddata.sim_prefix
+    f_name = os.path.join(ddata.dsim, expmt_group, f_name_short)
+    print f_name
+
+    dpl = dipolefn.Dipole(f_dpl)
+    dpl.baseline_renormalize(f_param)
+    dpl.convert_fAm_to_nAm()
+    dpl.write(f_name)
 
 # calculates the mean dipole over a specified range
 def exec_calc_dpl_mean(ddata, opts={}):
@@ -575,6 +592,10 @@ def exec_aggregatespec(ddata, labels):
 
     plotfn.aggregate_spec_with_hist(ddata, p_exp, spec_results, labels)
 
+# comparison of all layers and aggregate data
+def exec_pgamma_laminar(ddata):
+    pgamma.laminar(ddata)
+
 # comparison between a PING (ddata0) and a weak PING (ddata1) data set
 def exec_pgamma_compare_ping():
 # def exec_pgamma_compare_ping(ddata0, ddata1, opts):
@@ -586,7 +607,7 @@ def exec_pgamma_stdev(ddata):
 
 # plot for gamma distal phase on a given ddata
 def exec_pgamma_distal_phase(ddata, opts):
-    pgamma.pgamma_distal_phase(ddata, opts['spec0'], opts['spec1'])
+    pgamma.pgamma_distal_phase(ddata, opts['spec0'], opts['spec1'], opts['spec2'])
 
 # plot data averaged over trials
 # dipole and spec should be split up at some point (soon)

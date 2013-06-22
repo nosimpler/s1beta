@@ -1,8 +1,8 @@
 # spikefn.py - dealing with spikes
 #
-# v 1.8.11
-# rev 2013-06-21 (MS: fixed bug when only one alpha feed exists)
-# last major: (SL: thinner markers)
+# v 1.8.12
+# rev 2013-06-22 (SL: plotting in spike_png() now has ordered keys)
+# last major: (MS: fixed bug when only one alpha feed exists)
 
 import fileio as fio
 import numpy as np
@@ -224,7 +224,13 @@ def spike_png(a, s_dict):
     # define start point
     tick_start = 1
 
-    for key in s_dict.keys():
+    # sort the keys by alpha: consistency in names will lead to consistent behavior here
+    # reverse=True because _basket comes before _pyramidal, and the spikes plot bottom up
+    key_list = [key for key in s_dict.keys()]
+    key_list.sort(reverse=True)
+
+    # for key in s_dict.keys():
+    for key in key_list:
         # print key, s_dict[key].spike_list
         s_dict[key].tick_marks = y_ticks[tick_start:tick_start+s_dict[key].N_cells]
         tick_start += s_dict[key].N_cells
@@ -236,7 +242,7 @@ def spike_png(a, s_dict):
         for spk_cell in s_dict[key].spike_list:
             # a.plot(np.array([451.6]), e_ticks[i] * np.ones(1), 'k.', markersize=2.5)
             # print len(s_dict[key].tick_marks), len(spk_cell)
-            a.plot(spk_cell, s_dict[key].tick_marks[i] * np.ones(len(spk_cell)), markerstyle, markeredgewidth=1, markersize=3)
+            a.plot(spk_cell, s_dict[key].tick_marks[i] * np.ones(len(spk_cell)), markerstyle, markeredgewidth=1, markersize=1.5)
             i += 1
 
     a.set_ylim([0, 1])

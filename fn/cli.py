@@ -1,8 +1,8 @@
 # cli.py - routines for the command line interface console s1sh.py
 #
-# v 1.8.11
-# rev 2013-06-21 (MS: minor)
-# last major: (SL: updated load function to load most recent data set)
+# v 1.8.12
+# rev 2013-06-22 (SL: cleaned out several remaining old functions, added/modified gamma plots)
+# last major: (MS: minor)
 
 from cmd import Cmd
 from datetime import datetime
@@ -108,13 +108,16 @@ class Console(Cmd):
     def do_debug(self, args):
         """Qnd function to test other functions
         """
-        # self.do_setdate('2013-06-02')
-        self.do_load('gamma_weak_L2-002')
+        # self.do_setdate('pub')
+        self.do_load('gamma_sub_test_L5-012')
+        self.do_throwaway('')
+        # self.do_pgamma_distal_phase('--spec0=5 --spec1=13 --spec2=25')
+        # self.do_pgamma_laminar('')
+        # self.do_pgamma_compare_ping('')
+        # self.do_pgamma_stdev('')
         # self.do_save('')
         # self.do_calc_dpl_regression('')
         # self.do_calc_dpl_mean("--t0=100. --tstop=1000. --layer='L2'")
-        # self.do_pgamma_compare_ping('')
-        # self.do_pgamma_distal_phase('')
         # self.do_spec_current('--f_max=80.')
         # self.do_praw('')
         # self.do_pdipole('grid')
@@ -131,6 +134,9 @@ class Console(Cmd):
         # self.do_dipolemin('in (mu, 0, 2) on [400., 410.]')
         # self.epscompress('spk')
         # self.do_psthgrid()
+
+    def do_throwaway(self, args):
+        clidefs.exec_throwaway(self.ddata)
 
     def do_calc_dpl_mean(self, args):
         '''Returns the mean dipole to screen. Usage:
@@ -154,12 +160,13 @@ class Console(Cmd):
     def do_pgamma_distal_phase(self, args):
         '''Generates gamma fig for distal phase. Requires spec data for layers to exist. Usage:
            [s1] spec_current
-           [s1] pgamma_distal_phase {--spec0=0 --spec1=1}
+           [s1] pgamma_distal_phase {--spec0=0 --spec1=1, --spec2=2}
         '''
 
         opts = {
             'spec0': 0,
             'spec1': 1,
+            'spec2': 1,
         }
 
         l_opts = self.__split_args(args)
@@ -173,6 +180,12 @@ class Console(Cmd):
            [s1] pgamma_stdev
         '''
         clidefs.exec_pgamma_stdev(self.ddata)
+
+    def do_pgamma_laminar(self, args):
+        '''Generates a comparison figure of aggregate, L2 and L5 data. Taken from 1 data set. Usage:
+           [s1] pgamma_laminar
+        '''
+        clidefs.exec_pgamma_laminar(self.ddata)
 
     def do_pgamma_compare_ping(self, args):
         '''Generates gamma fig for comparison of PING and weak PING. Will need 2 data sets! Usage:
@@ -442,6 +455,10 @@ class Console(Cmd):
         # iterate through params and print them raw
         for var in self.var_list:
             print "  %s: %s" % (var[0], var[1])
+
+        # also print experimental groups
+        print "\nExperimental groups:"
+        self.do_expmts('')
 
         # cheap newline
         print ""
@@ -769,44 +786,19 @@ class Console(Cmd):
         """
         clidefs.exec_save(self.dproj, self.ddate, self.dsim)
 
-    def do_runsim(self, args):
-        """Run the simulation code
-        """
-        try:
-            cmd_list = []
-            cmd_list.append('mpiexec -n %i ./s1run.py %s' % (self.nprocs, self.file_input))
+    # currently doesn't work with mpi interfacing
+    # def do_runsim(self, args):
+    #     """Run the simulation code
+    #     """
+    #     try:
+    #         cmd_list = []
+    #         cmd_list.append('mpiexec -n %i ./s1run.py %s' % (self.nprocs, self.file_input))
 
-            for cmd in cmd_list:
-                subprocess.call(cmd, shell=True)
+    #         for cmd in cmd_list:
+    #             subprocess.call(cmd, shell=True)
 
-        except (KeyboardInterrupt):
-            print "Caught a break"
-
-    def do_runpwr(self, args):
-        exec_pwr(self.dsim)
-
-    def do_runrates(self, args):
-        exec_rates(self.dsim)
-
-    def do_phist(self, args):
-        """Create phase hist plot
-        """
-        exec_phist(self.dsim, args)
-
-    def do_pphase(self, args):
-        """Create phase hist full plot
-        """
-        exec_pphase(self.dsim, args)
-
-    def do_pcompare3(self, args):
-        """Plot compare 3
-        """
-        exec_pcompare3(self.dsim, args)
-
-    def do_plotvars(self, args):
-        """Customizes plots
-        """
-        exec_plotvars(args, self.dsim)
+    #     except (KeyboardInterrupt):
+    #         print "Caught a break"
 
     def do_hist(self, args):
         """Print a list of commands that have been entered"""

@@ -1,8 +1,8 @@
 # dipolefn.py - dipole-based analysis functions
 #
-# v 1.8.11
-# rev 2013-06-21 (MS: updated pdipole() to work with revised Dipole() class. Updated pdipole_with_hist to work with new spikes_from_file() fn)
-# last major: (SL: removed debug output)
+# v 1.8.12
+# rev 2013-06-22 (SL: added write() method)
+# last major: (MS: updated pdipole() for revised Dipole() class. Updated pdipole_with_hist() for new spikes_from_file())
 
 import fileio as fio
 import numpy as np
@@ -175,6 +175,16 @@ class Dipole():
 
         # recalculate the aggregate dipole based on the baseline normalized ones
         self.dpl['agg'] = self.dpl['L2'] + self.dpl['L5']
+
+    # function to write to a file!
+    # f_dpl must be fully specified
+    def write(self, f_dpl):
+        with open(f_dpl, 'w') as f:
+            for t, x_agg, x_L2, x_L5 in it.izip(self.t, self.dpl['agg'], self.dpl['L2'], self.dpl['L5']):
+                f.write("%03.3f\t" % t)
+                f.write("%.4e\t" % x_agg)
+                f.write("%.4e\t" % x_L2)
+                f.write("%.4e\n" % x_L5)
 
 # ddata is a fio.SimulationPaths() object
 def calc_aggregate_dipole(ddata):

@@ -1,8 +1,8 @@
 # praw.py - all of the raw data types on one fig
 #
-# v 1.8.7
-# rev 2013-06-13 (SL: fixed pspec_ax() call)
-# last major: (SL: using convert function for dipole before calculating spec)
+# v 1.8.12
+# rev 2013-06-22 (SL: minor)
+# last major: (SL: fixed pspec_ax() call)
 
 import fileio as fio
 import numpy as np
@@ -40,10 +40,12 @@ def pkernel(dfig_dpl, f_dpl, f_spk, f_spec, f_current, f_spec_current, f_param, 
     dpl.plot(f.ax['dpl_agg_L5'], xlim)
     # f.ax['dpl_agg_L5'].hold(True)
     # dpl.plot(f.ax['dpl_agg_L5'], xlim, 'L5')
+
+    # plot individual dipoles
     dpl.plot(f.ax['dpl'], xlim, 'L2')
+    dpl.plot(f.ax['dpl_L5'], xlim, 'L5')
 
     # f.ysymmetry(f.ax['dpl'])
-    dpl.plot(f.ax['dpl_L5'], xlim, 'L5')
     # print dpl.max('L5', (0., -1)), dpl.max('L5', (50., -1))
     # print f.ax['dpl_L5'].get_ylim()
     # f.ax['dpl_L5'].set_ylim((-1e5, 1e5))
@@ -55,10 +57,10 @@ def pkernel(dfig_dpl, f_dpl, f_spk, f_spec, f_current, f_spec_current, f_param, 
     I_soma.plot_to_axis(f.ax['I_soma_L5'], 'L5')
 
     # plot the dipole-based spec data
-    pc = specfn.pspec_ax(f.ax['spec_dpl'], f_spec, xlim)
+    pc = specfn.pspec_ax(f.ax['spec_dpl'], f_spec, xlim, 'L2')
     f.f.colorbar(pc, ax=f.ax['spec_dpl'])
 
-    pc = specfn.pspec_ax(f.ax['spec_dpl_L5'], f_spec, xlim)
+    pc = specfn.pspec_ax(f.ax['spec_dpl_L5'], f_spec, xlim, 'L5')
     f.f.colorbar(pc, ax=f.ax['spec_dpl_L5'])
 
     # grab the current spec and plot them
