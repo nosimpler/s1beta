@@ -1,8 +1,8 @@
 # class_cell.py - establish class def for general cell features
 #
-# v 1.8.12cells
-# rev 2013-06-21 (MS: create_dends_new() creates dends based on dictionary of dend props)
-# last rev: (SL: minor)
+# v 1.8.14cells
+# rev 2013-06-23 (MS: syn_create() is a general method for creating any Exp2syn type)
+# last rev: (MS: create_dends_new() creates dends based on dictionary of dend props)
 
 import numpy as np
 import itertools as it
@@ -159,6 +159,16 @@ class Cell():
         except:
             print "Warning in Cell(): record_current_soma() was called, but no self.synapses dict was found"
             pass
+
+    # General fn that creates any Exp2syn synapse type
+    # requires dictionary of synapse properties
+    def syn_create(self, secloc, p):
+        syn = nrn.Exp2Syn(secloc)
+        syn.e = p['e']
+        syn.tau1 = p['tau1']
+        syn.tau2 = p['tau2']
+
+        return syn
 
     # For all synapses, section location 'secloc' is being explicitly supplied 
     # for clarity, even though they are (right now) always 0.5. Might change in future

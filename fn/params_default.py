@@ -1,8 +1,8 @@
 # params_default.py - master list of changeable params. most set to default val of inactive
 #
-# v 1.8.10
-# rev 2013-06-20 (MS: merge feedsynapses_new with master)
-# last major: (MS: Differentiate between AMPA and NMDA conductances for external feed synapses on all cell types)
+# v 1.8.14cell
+# rev 2013-06-23 (MS: get_L2Pyr_params_default() returns default params of L2Pyr() class)
+# last major: (MS: merge feedsynapses_new with master)
 
 # Note that nearly all start times are set BEYOND tstop for this file
 # Most values here are set to whatever default value inactivates them, such as 0 for conductance
@@ -10,7 +10,9 @@
 # flat file of default values
 # will most often be overwritten
 def get_params_default():
-    return {
+    # return {
+    # set default params
+    p = {
         'sim_prefix': 'default',
 
         # simulation end time (ms)
@@ -171,4 +173,75 @@ def get_params_default():
         # default end time for pois inputs
         'T_pois': -1,
         'dt': 0.025,
+    }
+
+    # grab cell-specific params and update p accordingly
+    p_L2Pyr = get_L2Pyr_params_default()
+    p.update(p_L2Pyr)
+
+    return p
+
+def get_L2Pyr_params_default():
+    return {
+        # Soma
+        'L2Pyr_soma_L': 22.1,
+        'L2Pyr_soma_diam': 23.4,
+        'L2Pyr_soma_cm': 0.6195,
+        'L2Pyr_soma_Ra': 200.,
+        
+        # Dendrites
+        'L2Pyr_dend_cm': 0.6195,
+        'L2Pyr_dend_Ra': 200.,
+
+        'L2Pyr_apicaltrunk_L': 59.5,
+        'L2Pyr_apicaltrunk_diam': 4.25,
+    
+        'L2Pyr_apical1_L': 306., 
+        'L2Pyr_apical1_diam': 4.08,
+        
+        'L2Pyr_apicaltuft_L': 238., 
+        'L2Pyr_apicaltuft_diam': 3.4,
+    
+        'L2Pyr_apicaloblique_L': 340., 
+        'L2Pyr_apicaloblique_diam': 3.91,
+         
+        'L2Pyr_basal1_L': 85., 
+        'L2Pyr_basal1_diam': 4.25,
+        
+        'L2Pyr_basal2_L': 255., 
+        'L2Pyr_basal2_diam': 2.72,
+        
+        'L2Pyr_basal3_L': 255., 
+        'L2Pyr_basal3_diam': 2.72,
+        
+        # Synapses
+        'L2Pyr_ampa_e': 0.,
+        'L2Pyr_ampa_tau1': 0.5,
+        'L2Pyr_ampa_tau2': 5.,
+
+        'L2Pyr_nmda_e': 0.,
+        'L2Pyr_nmda_tau1': 1.,
+        'L2Pyr_nmda_tau2': 20.,
+
+        'L2Pyr_gabaa_e': -80.,
+        'L2Pyr_gabaa_tau1': 0.5,
+        'L2Pyr_gabaa_tau2': 5.,
+
+        'L2Pyr_gabab_e': -80.,
+        'L2Pyr_gabab_tau1': 1.,
+        'L2Pyr_gabab_tau2': 20.,
+
+        # Biophysics soma
+        'L2Pyr_soma_gkbar_hh': 0.01,
+        'L2Pyr_soma_gnabar_hh': 0.18,
+        'L2Pyr_soma_el_hh': -65.,
+        'L2Pyr_soma_gl_hh': 4.26e-5,
+        'L2Pyr_soma_gbar_km': 250.,
+
+        # Biophysics dends
+        'L2Pyr_dend_gkbar_hh': 0.01,
+        'L2Pyr_dend_gnabar_hh': 0.15,
+        'L2Pyr_dend_el_hh': -65.,
+        'L2Pyr_dend_gl_hh': 4.26e-5,
+        'L2Pyr_dend_gbar_km': 250.,
     }

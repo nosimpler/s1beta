@@ -1,8 +1,8 @@
 # class_net.py - establishes the Network class and related methods
 #
-# v 1.7.52
-# rev 2013-05-07 (SL: added aggregate current for L2Pyr at soma)
-# last major: (SL: Network() new function aggregate_currents())
+# v 1.8.14cell
+# rev 2013-06-23 (MS: self.p now passed to L2Pyr())
+# last major: (SL: added aggregate current for L2Pyr at soma)
 
 import itertools as it
 import numpy as np
@@ -289,7 +289,7 @@ class Network():
                 # create cells based on loc property
                 # creates a NetCon object internally to Neuron
                 if type == 'L2_pyramidal':
-                    self.cells_list.append(L2Pyr(pos))
+                    self.cells_list.append(L2Pyr(pos, self.p))
                     self.pc.cell(gid, self.cells_list[-1].connect_to_target(None))
 
                     # run the IClamp function here
