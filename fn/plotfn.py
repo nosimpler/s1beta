@@ -1,8 +1,8 @@
 # plotfn.py - pall and possibly other plot routines
 #
-# v 1.8.11
-# rev 2013-06-21 (MS: now passing around f_param instead of p_dict)
-# last major: (SL: removed xlim input to pspec.pspec_dpl())
+# v 1.8.14spec
+# rev 2013-07-03 (MS: reorganization of pall() to remove rendundancy)
+# last major: (MS: now passing around f_param instead of p_dict)
 
 from praster import praster
 import axes_create as ac
@@ -66,71 +66,53 @@ def cb(r):
 
 # plot function - this is sort of a stop-gap and shouldn't live here, really
 # reads all data except spec and gid_dict from files
-def pall(ddir, p_exp, spec_results, xlim=[0., 'tstop']):
+def pall(ddir, p_exp, xlim=[0., 'tstop']):
+# def pall(ddir, p_exp, spec_results, xlim=[0., 'tstop']):
     # runtype allows easy (hard coded switching between two modes)
     # either 'parallel' or 'debug'
-    runtype = 'parallel'
-    # runtype = 'debug'
+    # runtype = 'parallel'
+    runtype = 'debug'
+
+    dsim = ddir.dsim
+
+    key_types = p_exp.get_key_types()
+
+    # preallocate lists for use below
+    param_list = []
+    dpl_list = []
+    spec_list = []
+    spk_list = []
+    dfig_list = []
+
+    # aggregate all file types from individual expmts into lists
+    # NB The only reason this works is because the analysis results are returned
+    # IDENTICALLY!
+    for expmt_group in ddir.expmt_groups:
+        # these should be equivalent lengths
+        param_list.extend(ddir.file_match(expmt_group, 'param'))
+        dpl_list.extend(ddir.file_match(expmt_group, 'rawdpl'))
+        spec_list.extend(ddir.file_match(expmt_group, 'rawspec'))
+        spk_list.extend(ddir.file_match(expmt_group, 'rawspk'))
+
+        # append as many copies of expmt dfig dict as there were runs in expmt
+        # this must be done because we're iterating over ALL expmts at the same time
+        for i in range(len(ddir.file_match(expmt_group, 'param'))):
+            dfig_list.append(ddir.dfig[expmt_group])
 
     # create giant list of appropriate files and run them all at the same time
     if runtype is 'parallel':
-        dsim = ddir.dsim
-
-        key_types = p_exp.get_key_types()
-
-        # preallocate lists for use below
-        param_list = []
-        dpl_list = []
-        spk_list = []
-        dfig_list = []
-
-        # aggregate all file types from individual expmts into lists
-        # NB The only reason this works is because the analysis results are returned
-        # IDENTICALLY!
-        for expmt_group in ddir.expmt_groups:
-            # these should be equivalent lengths
-            param_list.extend(ddir.file_match(expmt_group, 'param'))
-            dpl_list.extend(ddir.file_match(expmt_group, 'rawdpl'))
-            spk_list.extend(ddir.file_match(expmt_group, 'rawspk'))
-
-            # append as many copies of expmt dfig dict as there were runs in expmt
-            # this must be done because we're iterating over ALL expmts at the same time
-            for i in range(len(ddir.file_match(expmt_group, 'param'))):
-                dfig_list.append(ddir.dfig[expmt_group])
-
         # apply async to compiled lists
         pl = Pool()
-        for dfig, f_param, f_spk, f_dpl, data_spec in it.izip(dfig_list, param_list, spk_list, dpl_list, spec_results):
-            pl.apply_async(pkernel, (dfig, f_param, f_spk, f_dpl, data_spec, key_types, xlim), callback=cb)
+        for dfig, f_param, f_spk, f_dpl, f_spec in it.izip(dfig_list, param_list, spk_list, dpl_list, spec_list):
+            pl.apply_async(pkernel, (dfig, f_param, f_spk, f_dpl, f_spec, key_types, xlim), callback=cb)
 
         pl.close()
         pl.join()
 
     elif runtype is 'debug':
-        dsim = ddir.dsim
-
-        key_types = p_exp.get_key_types()
-
-        # preallocate lists for use below
-        param_list = []
-        dpl_list = []
-        spk_list = []
-        dfig_list = []
-
-        # agregate all file types from individual expmts into lists 
-        for expmt_group in ddir.expmt_groups:
-            # these should be equivalent lengths
-            param_list.extend(ddir.file_match(expmt_group, 'param'))
-            dpl_list.extend(ddir.file_match(expmt_group, 'rawdpl'))
-            spk_list.extend(ddir.file_match(expmt_group, 'rawspk'))
-
-            # append as many copies of epxt dfig dict as there were runs in expmt 
-            for i in range(len(ddir.file_match(expmt_group, 'param'))):
-                dfig_list.append(ddir.dfig[expmt_group])
-
-        # apply async to compiled lists
-        for dfig, f_param, f_spk, f_dpl, data_spec in it.izip(dfig_list, param_list, spk_list, dpl_list, spec_results):
-           pkernel(dfig, f_param, f_spk, f_dpl, data_spec, key_types, xlim)
+        # run serially
+        for dfig, f_param, f_spk, f_dpl, f_spec in it.izip(dfig_list, param_list, spk_list, dpl_list, spec_list):
+           pkernel(dfig, f_param, f_spk, f_dpl, f_spec, key_types, xlim)
 
 # Plots dipole and spec with alpha feed histograms
 def pdpl_pspec_with_hist(ddir, p_exp, spec_results, xlim=[0., 'tstop']):

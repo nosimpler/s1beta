@@ -1,8 +1,8 @@
 # pspec.py - Very long plotting methods having to do with spec.
 #
-# v 1.8.11
-# rev 2013-06-21 (MS: aggregate_with_hist() now lives here. Updated aggregate_with_hist and pspec_with_hist to work with new spikes_from_file() fn)
-# last major: (SL: pspec_dpl() now plots stationary estimate)
+# v 1.8.14spec
+# rev 2013-07-03 (MS: pspec_dpl() can only take a pathway to saved spec data)
+# last major: (MS: aggregate_with_hist() now lives here. Updated aggregate_with_hist and pspec_with_hist to work with new spikes_from_file() fn)
 
 import os
 import sys
@@ -24,26 +24,29 @@ import axes_create as ac
 
 # this is actually a plot kernel for one sim that does dipole, etc.
 # needs f_param not p_dict
-def pspec_dpl(dspec, f_dpl, dfig, p_dict, key_types, xlim=None):
+def pspec_dpl(f_spec, f_dpl, dfig, p_dict, key_types, xlim=None):
     # if dspec is an instance of MorletSpec, get data from object
-    if isinstance(dspec, specfn.MorletSpec):
-        timevec = dspec.timevec
-        freqvec = dspec.freqvec
-        TFR = dspec.TFR
+    # if isinstance(dspec, specfn.MorletSpec):
+    # if isinstance(dspec, specfn.MorletSpecSingle):
+    #     timevec = dspec.tvec
+    #     freqvec = dspec.f
+    #     TFR = dspec.TFR
+    #     # timevec = dspec.timevec
+    #     # freqvec = dspec.freqvec
 
-        # Generate file prefix
-        fprefix = fio.strip_extprefix(dspec.name) + '-spec'
+    #     # Generate file prefix
+    #     fprefix = fio.strip_extprefix(dspec.name) + '-spec'
 
     # otherwise dspec is path name and data must be loaded from file
-    else:
-        data_spec = np.load(dspec)
+    # else:
+    data_spec = np.load(f_spec)
 
-        timevec = data_spec['time']
-        freqvec = data_spec['freq']
-        TFR = data_spec['TFR']
+    timevec = data_spec['time']
+    freqvec = data_spec['freq']
+    TFR = data_spec['TFR']
 
-        # Generate file prefix 
-        fprefix = dspec.split('/')[-1].split('.')[0]
+    # Generate file prefix 
+    fprefix = f_spec.split('/')[-1].split('.')[0]
 
     # using png for now
     # fig_name = os.path.join(dfig, fprefix+'.eps')

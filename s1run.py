@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # s1run.py - primary run function for s1 project
 #
-# v 1.8.1
-# rev 2013-06-10 (SL: minor)
-# last major: (SL: current outputs)
+# v 1.8.14spec
+# rev 2013-07-03 (MS: specfn.analysis_typespecific() now used as primary analysis fn)
+# last major: (SL: minor)
 
 import os
 import sys
@@ -319,7 +319,16 @@ def exec_runsim(f_psim):
             # }
 
             # run the spectral analysis and temporarily keep data in memory in spec_results
-            spec_results = specfn.analysis(ddir, p_exp)
+            spec_opts = {
+                'type': 'dpl_laminar',
+                'f_max': p['f_max_spec'],
+                'save_date': 0,
+                'runtype': 'parallel',
+            }
+
+            specfn.analysis_typespecific(ddir, p_exp, spec_opts)
+            # spec_results = specfn.analysis(ddir, p_exp)
+            # spec_results = specfn.analysis_typespecific(ddir, p_exp, spec_opts)
 
             print "time: %4.4f s" % (time.time() - t_start_analysis)
             print "Plot ...",
@@ -329,7 +338,7 @@ def exec_runsim(f_psim):
             # run plots and epscompress function
             # spec results is passed as an argument here
             # because it's not necessarily saved
-            plotfn.pall(ddir, p_exp, spec_results)
+            plotfn.pall(ddir, p_exp)
 
             # do the relevant png optimization
             # fio.pngoptimize(ddir.dsim)
