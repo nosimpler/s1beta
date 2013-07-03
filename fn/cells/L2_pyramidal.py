@@ -1,8 +1,8 @@
 # L2_pyramidal.py - est class def for layer 2 pyramidal cells
 #
-# v 1.8.14cell
-# rev 2013-06-23 (MS: L2Pyr() can not take in a param dict and set its properties accordingly)
-# last rev: (MS: all fns involving dendrites now use dendrite dictionary)
+# v 1.8.15cell
+# rev 2013-07-03 (MS: redundancy in synapse_create() introduced in 1.8.14cell fixed)
+# last rev: (MS: L2Pyr() can not take in a param dict and set its properties accordingly)
 
 import sys
 import numpy as np
@@ -293,10 +293,10 @@ class L2Pyr(Pyr):
         self.apicaltuft_ampa = self.syn_create(self.dends['apical_tuft'](0.5), p_syn['ampa'])
         self.apicaltuft_nmda = self.syn_create(self.dends['apical_tuft'](0.5), p_syn['nmda'])
 
-        self.synapses = {
-            'soma_gabaa': self.syn_gabaa_create(self.soma(0.5)),
-            'soma_gabab': self.syn_gabab_create(self.soma(0.5)),
-        }
+        # self.synapses = {
+        #     'soma_gabaa': self.syn_gabaa_create(self.soma(0.5)),
+        #     'soma_gabab': self.syn_gabab_create(self.soma(0.5)),
+        # }
 
         # Dendritic synapses
         # self.apicaloblique_ampa = self.syn_ampa_create(self.dends['apical_oblique'](0.5), p_syn['ampa'])

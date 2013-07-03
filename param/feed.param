@@ -104,3 +104,4 @@ gbar_L2Pyr_L5Basket: 2.5e-4
 
 # L2Pyr cell properties
 L2Pyr_soma_Ra: 200.
+L5Pyr_soma_Ra: 200.

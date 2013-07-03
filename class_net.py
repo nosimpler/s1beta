@@ -1,8 +1,8 @@
 # class_net.py - establishes the Network class and related methods
 #
-# v 1.8.14cell
-# rev 2013-06-23 (MS: self.p now passed to L2Pyr())
-# last major: (SL: added aggregate current for L2Pyr at soma)
+# v 1.8.15cell
+# rev 2013-07-03 (MS: self.p now passed to L5Pyr())
+# last major: (MS: self.p now passed to L2Pyr())
 
 import itertools as it
 import numpy as np
@@ -297,7 +297,7 @@ class Network():
                     self.cells_list[-1].create_all_IClamp(self.p)
 
                 elif type == 'L5_pyramidal':
-                    self.cells_list.append(L5Pyr(pos))
+                    self.cells_list.append(L5Pyr(pos, self.p))
                     self.pc.cell(gid, self.cells_list[-1].connect_to_target(None))
 
                     # run the IClamp function here

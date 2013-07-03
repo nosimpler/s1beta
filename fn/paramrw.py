@@ -1,8 +1,8 @@
 # paramrw.py - routines for reading the param files
 #
-# v 1.8.14cell
-# rev 2013-06-23 (MS: compare_dictionaries() updates keys in one dict with corresponding key values from another)
-# last major: (MS: Merge feedsynapses_new with master)
+# v 1.8.15cell
+# rev 2013-07-03 (MS: minor)
+# last major: (MS: compare_dictionaries() updates keys in one dict with corresponding key values from another)
 
 import re
 import fileio as fio
@@ -622,11 +622,7 @@ def compare_dictionaries(d1, d2):
     # iterate over intersection of key sets (i.e. any common keys)
     for key in d1.viewkeys() & d2.viewkeys():
         # update d1 to have same (key, value) pair as d2
-        print key
-        print d1[key]
         d1[key] = d2[key] 
-        print d2[key]
-        print d1[key]
 
     return d1
 
