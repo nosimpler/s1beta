@@ -1,8 +1,8 @@
 # specfn.py - Average time-frequency energy representation using Morlet wavelet method
 #
-# v 1.8.16speca
-# rev 2013-07-05 (MS: Deleted MorletSpec() and analysis(). Updated generate_missing_spec())
-# last major: (MS: Deprecated MorletSpec() and analysis())
+# v 1.8.17spec
+# rev 2013-07-05 (MS: MorletSpecSingle() renamed MorletSpec())
+# last major: (MS: Deleted MorletSpec() and analysis(). Updated generate_missing_spec())
 
 import os
 import sys
@@ -91,7 +91,7 @@ class Welch():
         # return n, j
 
 # MorletSpec class based on a time vec tvec and a time series vec tsvec
-class MorletSpecSingle():
+class MorletSpec():
     def __init__(self, tvec, tsvec, fparam, f_max=None):
     # def __init__(self, fdata_spec, tvec, tsvec, fparam, f_max=None, save_data=None):
         # Save variable portion of fdata_spec as identifying attribute
@@ -352,8 +352,8 @@ def spec_current_kernel(fparam, fts, fspec, f_max):
     I_syn = currentfn.SynapticCurrent(fts)
 
     # Generate spec results
-    spec_L2 = MorletSpecSingle(I_syn.t, I_syn.I_soma_L2Pyr, fparam, f_max)
-    spec_L5 = MorletSpecSingle(I_syn.t, I_syn.I_soma_L5Pyr, fparam, f_max)
+    spec_L2 = MorletSpec(I_syn.t, I_syn.I_soma_L2Pyr, fparam, f_max)
+    spec_L5 = MorletSpec(I_syn.t, I_syn.I_soma_L5Pyr, fparam, f_max)
 
     # Save spec data
     np.savez_compressed(fspec, t_L2=spec_L2.t, f_L2=spec_L2.f, TFR_L2=spec_L2.TFR, t_L5=spec_L5.t, f_L5=spec_L5.f, TFR_L5=spec_L5.TFR)
@@ -367,9 +367,9 @@ def spec_dpl_kernel(fparam, fts, fspec, f_max):
     dpl.convert_fAm_to_nAm()
 
     # Generate various spec results
-    spec_agg = MorletSpecSingle(dpl.t, dpl.dpl['agg'], fparam, f_max)
-    spec_L2 = MorletSpecSingle(dpl.t, dpl.dpl['L2'], fparam, f_max)
-    spec_L5 = MorletSpecSingle(dpl.t, dpl.dpl['L5'], fparam, f_max)
+    spec_agg = MorletSpec(dpl.t, dpl.dpl['agg'], fparam, f_max)
+    spec_L2 = MorletSpec(dpl.t, dpl.dpl['L2'], fparam, f_max)
+    spec_L5 = MorletSpec(dpl.t, dpl.dpl['L5'], fparam, f_max)
 
     # Save spec results
     np.savez_compressed(fspec, time=spec_agg.t, freq=spec_agg.f, TFR=spec_agg.TFR, t_L2=spec_L2.t, f_L2=spec_L2.f, TFR_L2=spec_L2.TFR, t_L5=spec_L5.t, f_L5=spec_L5.f, TFR_L5=spec_L5.TFR)
@@ -424,8 +424,6 @@ def analysis_typespecific(ddata, opts=None):
     # perform analysis on all runs from all exmpts at same time
     if opts_run['type'] == 'current':
         list_spec.extend([ddata.create_filename(expmt_group, 'rawspeccurrent', exp_prefix) for exp_prefix in exp_prefix_list])
-        # spec_results_L2 = []
-        # spec_results_L5 = []
 
         if opts_run['runtype'] == 'parallel':
             pl = mp.Pool()
@@ -440,29 +438,13 @@ def analysis_typespecific(ddata, opts=None):
             for fparam, fts, fspec in it.izip(list_param, list_ts, list_spec):
                 spec_current_kernel(fparam, fts, fspec, opts_run['f_max'])
 
-            # I_syn = currentfn.SynapticCurrent(fts)
-            # spec_L2 = MorletSpecSingle(I_syn.t, I_syn.I_soma_L2Pyr, fparam, opts_run['f_max'])
-            # spec_L5 = MorletSpecSingle(I_syn.t, I_syn.I_soma_L5Pyr, fparam, opts_run['f_max'])
-
-            # np.savez_compressed(fspec, t_L2=spec_L2.t, f_L2=spec_L2.f, TFR_L2=spec_L2.TFR, t_L5=spec_L5.t, f_L5=spec_L5.f, TFR_L5=spec_L5.TFR)
-            # pl.apply_async(spec_current_par_kernel, (fparam, fts, fspec, 'L2'), callback=append_spec_L2)
-            # pl.apply_async(spec_current_par_kernel, (fparam, fts, fspec, 'L5'), callback=append_spec_L5)
-
-        # spec_single_ are data from MorletSpecSingle
-        # for spec_L2, spec_L5, fspec in it.izip(spec_results_L2, spec_results_L5, list_spec):
-
-        # return spec_results_L2, spec_results_L5
-
     elif opts_run['type'] == 'dpl_laminar':
         # these should be OUTPUT filenames that are being generated
         list_spec.extend([ddata.create_filename(expmt_group, 'rawspec', exp_prefix) for exp_prefix in exp_prefix_list])
+
         # also in this case, the original spec results will be overwritten
         # and replaced by laminar specific ones and aggregate ones
         # in this case, list_ts is a list of dipole
-        # spec_results = []
-        # spec_results_L2 = []
-        # spec_results_L5 = []
-
         if opts_run['runtype'] == 'parallel':
             pl = mp.Pool()
 
@@ -476,27 +458,7 @@ def analysis_typespecific(ddata, opts=None):
             # spec_results_L2 and _L5
             for fparam, fts, fspec in it.izip(list_param, list_ts, list_spec):
                 spec_dpl_kernel(fparam, fts, fspec, opts_run['f_max'])
-                # dpl = dipolefn.Dipole(fts)
 
-                # # do the conversion prior to generating these spec
-                # dpl.convert_fAm_to_nAm()
-
-                # # append various spec results
-                # spec_agg = MorletSpecSingle(dpl.t, dpl.dpl['agg'], fparam, opts_run['f_max'])
-                # spec_L2 = MorletSpecSingle(dpl.t, dpl.dpl['L2'], fparam, opts_run['f_max'])
-                # spec_L5 = MorletSpecSingle(dpl.t, dpl.dpl['L5'], fparam, opts_run['f_max'])
-
-                # np.savez_compressed(fspec, time=spec_agg.t, freq=spec_agg.f, TFR=spec_agg.TFR, t_L2=spec_L2.t, f_L2=spec_L2.f, TFR_L2=spec_L2.TFR, t_L5=spec_L5.t, f_L5=spec_L5.f, TFR_L5=spec_L5.TFR)
-
-        # spec_single_ are data from MorletSpecSingle
-        # for spec_agg, spec_L2, spec_L5, fspec in it.izip(spec_results, spec_results_L2, spec_results_L5, list_spec):
-            # the nomenclature "time" and "freq" are used here for backward compatibility only and
-            # should be deprecated
-
-        # return spec_results
-        # return spec_results_L2, spec_results_L5
-
-    # probably not a real else.
     else:
         print 'Type %s not recognized. Try again later.' %(opts_run['type'])
 
