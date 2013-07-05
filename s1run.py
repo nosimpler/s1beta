@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # s1run.py - primary run function for s1 project
 #
-# v 1.8.14spec
-# rev 2013-07-03 (MS: specfn.analysis_typespecific() now used as primary analysis fn)
-# last major: (SL: minor)
+# v 1.8.15spec
+# rev 2013-07-05 (MS: p_exp no longer passed to specfn.analysis_typespecific())
+# last major: (MS: specfn.analysis_typespecific() now used as primary analysis fn)
 
 import os
 import sys
@@ -326,7 +326,7 @@ def exec_runsim(f_psim):
                 'runtype': 'parallel',
             }
 
-            specfn.analysis_typespecific(ddir, p_exp, spec_opts)
+            specfn.analysis_typespecific(ddir, spec_opts)
             # spec_results = specfn.analysis(ddir, p_exp)
             # spec_results = specfn.analysis_typespecific(ddir, p_exp, spec_opts)
 

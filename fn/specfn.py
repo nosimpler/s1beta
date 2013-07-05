@@ -1,8 +1,8 @@
 # specfn.py - Average time-frequency energy representation using Morlet wavelet method
 #
-# v 1.8.14spec
-# rev 2013-07-03 (MS: parallelized analysis_typespecific())
-# last major: (MS: aggregate_with_hist() moved to pspec.py)
+# v 1.8.15spec
+# rev 2013-07-05 (MS: removed p_exp as input to analysis_typespecific(). Removed all uses of MorletSpec())
+# last major: (MS: parallelized analysis_typespecific())
 
 import os
 import sys
@@ -513,6 +513,8 @@ spec_results_L5 = []
 def append_spec(spec_obj):
     spec_results.append(spec_obj)
 
+# Kernel for spec analysis of current data
+# necessary for parallelization
 def spec_current_kernel(fparam, fts, fspec, f_max):
     I_syn = currentfn.SynapticCurrent(fts)
 
@@ -523,6 +525,8 @@ def spec_current_kernel(fparam, fts, fspec, f_max):
     # Save spec data
     np.savez_compressed(fspec, t_L2=spec_L2.t, f_L2=spec_L2.f, TFR_L2=spec_L2.TFR, t_L5=spec_L5.t, f_L5=spec_L5.f, TFR_L5=spec_L5.TFR)
 
+# Kernel for spec analysis of dipole data
+# necessary for parallelization
 def spec_dpl_kernel(fparam, fts, fspec, f_max): 
     dpl = dipolefn.Dipole(fts)
 
@@ -539,7 +543,8 @@ def spec_dpl_kernel(fparam, fts, fspec, f_max):
 
 # Does spec analysis for all files in simulation directory
 # ddata comes from fileio
-def analysis_typespecific(ddata, p_exp, opts=None):
+def analysis_typespecific(ddata, opts=None):
+# def analysis_typespecific(ddata, p_exp, opts=None):
     # 'opts' input are the options in a dictionary
     # if opts is defined, then make it well formed
     # the valid keys of opts are in list_opts
@@ -730,28 +735,28 @@ def from_expmt(spec_result_list, expmt_group):
     return [spec_result for spec_result in spec_result_list if expmt_group in spec_result.name]
 
 # Averages spec power over time, returning an array of average pwr per frequency 
-def specpwr_stationary_avg(dspec):
+def specpwr_stationary_avg(fspec):
     # dspec may be either raw spec data or pathway to saved spec data
 
     # if dspec is an instance of MorletSpec,  get data from object
-    if isinstance(dspec, MorletSpec):
-        timevec = dspec.timevec
-        freqvec = dspec.freqvec
-        TFR = dspec.TFR
+    # if isinstance(dspec, MorletSpec):
+    #     timevec = dspec.timevec
+    #     freqvec = dspec.freqvec
+    #     TFR = dspec.TFR
 
-        # get experiment name
-        expmt = dspec.name.split('/')[6].split('.')[0]
+    #     # get experiment name
+    #     expmt = dspec.name.split('/')[6].split('.')[0]
 
     # otherwise dspec is path name and data must be loaded from file
-    else:
-        data_spec = np.load(dspec)
+    # else:
+    data_spec = np.load(fspec)
 
-        timevec = data_spec['time']
-        freqvec = data_spec['freq']
-        TFR = data_spec['TFR']
+    timevec = data_spec['time']
+    freqvec = data_spec['freq']
+    TFR = data_spec['TFR']
 
-        # get experiment name
-        expmt = dspec.split('/')[6].split('.')[0]
+    # get experiment name
+    expmt = fspec.split('/')[6].split('.')[0]
 
     # axis = 1 sums over columns
     pwr_avg = TFR.sum(axis=1) / len(timevec)

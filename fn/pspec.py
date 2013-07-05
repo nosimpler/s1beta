@@ -122,27 +122,27 @@ def pspec_dpl(f_spec, f_dpl, dfig, p_dict, key_types, xlim=None):
     f.close()
 
 # Spectral plotting kernel with alpha feed histogram for ONE simulation run
-def pspec_with_hist(dspec, f_dpl, f_spk, dfig, f_param, key_types, xlim=[0., 'tstop']):
-# def pspec_with_hist(dspec, f_dpl, f_spk, dfig, p_dict, gid_dict, key_types, xlim=[0., 'tstop']):
+def pspec_with_hist(f_spec, f_dpl, f_spk, dfig, f_param, key_types, xlim=[0., 'tstop']):
+# def pspec_with_hist(dspec, f_dpl, f_spk, dfig, f_param, key_types, xlim=[0., 'tstop']):
     # if dspec is an instance of MorletSpec,  get data from object
-    if isinstance(dspec, specfn.MorletSpec):
-        timevec = dspec.timevec
-        freqvec = dspec.freqvec
-        TFR = dspec.TFR
+    # if isinstance(dspec, specfn.MorletSpec):
+    #     timevec = dspec.timevec
+    #     freqvec = dspec.freqvec
+    #     TFR = dspec.TFR
 
-        # Generate file prefix
-        fprefix = fio.strip_extprefix(dspec.name) + '-spec'
+    #     # Generate file prefix
+    #     fprefix = fio.strip_extprefix(dspec.name) + '-spec'
 
     # otherwise dspec is path name and data must be loaded from file
-    else:
-        data_spec = np.load(dspec)
+    # else:
+    data_spec = np.load(f_spec)
 
-        timevec = data_spec['time']
-        freqvec = data_spec['freq']
-        TFR = data_spec['TFR']
+    timevec = data_spec['time']
+    freqvec = data_spec['freq']
+    TFR = data_spec['TFR']
 
-        # Generate file prefix 
-        fprefix = dspec.split('/')[-1].split('.')[0]
+    # Generate file prefix 
+    fprefix = f_spec.split('/')[-1].split('.')[0]
 
     # Create the fig name
     fig_name = os.path.join(dfig, fprefix+'.png')
@@ -283,24 +283,24 @@ def pspecpwr_ax(ax_specpwr, specpwr_list, fparam_list, key_types):
 def pyerrorbars_ax(ax, x, y, yerr_vec):
     ax.errorbar(x, y, xerr=None, yerr=yerr_vec, fmt=None, ecolor='blue')
 
-def aggregate_with_hist(f, ax, dspec, f_dpl, f_spk, f_param):
+def aggregate_with_hist(f, ax, f_spec, f_dpl, f_spk, f_param):
 # def aggregate_with_hist(f, ax, dspec, f_dpl, f_spk, p_dict, gid_dict):
     # load param dict
     _, p_dict = paramrw.read(f_param)
 
     # if dspec is an instance of MorletSpec,  get data from object
-    if isinstance(dspec, specfn.MorletSpec):
-        timevec = dspec.timevec
-        freqvec = dspec.freqvec
-        TFR = dspec.TFR
+    # if isinstance(dspec, specfn.MorletSpec):
+    #     timevec = dspec.timevec
+    #     freqvec = dspec.freqvec
+    #     TFR = dspec.TFR
 
     # otherwise dspec is path name and data must be loaded from file
-    else:
-        data_spec = np.load(dspec)
+    #3 else:
+    data_spec = np.load(f_spec)
 
-        timevec = data_spec['time']
-        freqvec = data_spec['freq']
-        TFR = data_spec['TFR']
+    timevec = data_spec['time']
+    freqvec = data_spec['freq']
+    TFR = data_spec['TFR']
 
     xmin = timevec[0]
     xmax = p_dict['tstop']

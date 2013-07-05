@@ -1,8 +1,8 @@
 # clidefs.py - these are all of the function defs for the cli
 #
-# v 1.8.12
-# rev 2013-06-22 (SL: added a throwaway function that will eventually be properly used)
-# last major: (MS: updated exec_avgtrials() to work with revised Dipole() class. Other minor) 
+# v 1.8.15cell
+# rev 2013-07-05 (MS: update to several fns to use new analysis_typespecific() functionality)
+# last major: (SL: added a throwaway function that will eventually be properly used)
 
 # Standard modules
 import fnmatch, os, re, sys
@@ -369,24 +369,34 @@ def exec_spec_current(ddata, opts_in=None):
     p_exp = paramrw.ExpParams(ddata.fparam)
     if opts_in is None:
         opts = {
-            'type': 'dpl_laminar',
+            'type': 'current',
             'f_max': 150.,
             'save_data': 1,
-            'runtype': 'debug',
+            'runtype': 'parallel',
         }
     else:
         opts = opts_in
 
-    spec_results = specfn.analysis_typespecific(ddata, p_exp, opts)
-    return spec_results
+    specfn.analysis_typespecific(ddata, opts)
+    # spec_results = specfn.analysis_typespecific(ddata, p_exp, opts)
+    # return spec_results
 
 # this function can now use specfn.generate_missing_spec(ddata, f_max)
 def exec_spec_regenerate(ddata, f_max=None):
-    # regenerates and saves spec data
-    p_exp = paramrw.ExpParams(ddata.fparam)
-    spec_results = specfn.analysis(ddata, p_exp, f_max, save_data=1)
+    # regenerate and save spec data
+    opts = {
+        'type': 'dpl_laminar',
+        'f_max': 60.,
+        'save_data': 1,
+        'runtype': 'parallel',
+    }
 
-    return spec_results
+    # set f_max if provided
+    if f_max:
+        opts['f_max'] = f_max
+
+    specfn.analysis_typespecific(ddata, opts)
+    # spec_results = specfn.analysis(ddata, p_exp, f_max, save_data=1)
 
 # Time-averaged stationarity analysis - averages spec power over time and plots it
 def exec_spec_stationary_avg(ddata, dsim, maxpwr):
@@ -394,21 +404,25 @@ def exec_spec_stationary_avg(ddata, dsim, maxpwr):
     # Prompt user for type of analysis (per expmt or whole sim)
     analysis_type = raw_input('Would you like analysis per expmt or for whole sim? (expmt or sim): ')
 
-    spec_results = fio.file_match(ddata.dsim, '-spec.npz')
+    fspec_list = fio.file_match(ddata.dsim, '-spec.npz')
     fparam_list = fio.file_match(ddata.dsim, '-param.txt')
+    # fspec_list = fio.file_match(ddata.dsim, '-spec.npz')
+    # fparam_list = fio.file_match(ddata.dsim, '-param.txt')
 
     p_exp = paramrw.ExpParams(ddata.fparam)
     key_types = p_exp.get_key_types()
 
     # If no saved spec results exist, redo spec analysis
-    if not spec_results:
+    if not fspec_list:
         print "No saved spec data found. Performing spec analysis...",
-        spec_results = exec_spec_regenerate(ddata)
+        exec_spec_regenerate(ddata)
+        fspec_list = fio.file_match(ddata.dsim, '-spec.npz')
+        # spec_results = exec_spec_regenerate(ddata)
 
         print "now doing spec freq-pwr analysis"
 
     # perform time-averaged stationary analysis
-    specpwr_results = [specfn.specpwr_stationary_avg(dspec) for dspec in spec_results]
+    specpwr_results = [specfn.specpwr_stationary_avg(fspec) for fspec in fspec_list]
 
     # plot for whole simulation
     if analysis_type == 'sim':
@@ -521,8 +535,9 @@ def exec_spec_avg_stationary_avg(ddata, dsim, opts):
             #     specfn.pmaxpwr(f_name, partial_results_list, partial_fparam_list)
 
 # Averages spec pwr over time and plots it with histogram of alpha feeds per simulation
+# Currently not completed
 def freqpwr_with_hist(ddata, dsim):
-    spec_results = fio.file_match(ddata.dsim, '-spec.npz')
+    fspec_list = fio.file_match(ddata.dsim, '-spec.npz')
     spk_list = fio.file_match(ddata.dsim, '-spk.txt')
     fparam_list = fio.file_match(ddata.dsim, '-param.txt')
 
@@ -530,14 +545,16 @@ def freqpwr_with_hist(ddata, dsim):
     key_types = p_exp.get_key_types()
 
     # If no save spec reslts exist, redo spec analysis
-    if not spec_results:
+    if not fspec_list:
         print "No saved spec data found. Performing spec analysis...",
-        spec_results = exec_spec_regenerate(ddata)
+        exec_spec_regenerate(ddata)
+        fspec_list = fio.file_match(ddata.dsim, '-spec.npz')
+        # spec_results = exec_spec_regenerate(ddata)
 
         print "now doing spec freq-pwr analysis"
 
     # perform freqpwr analysis
-    freqpwr_results_list = [specfn.freqpwr_analysis(dspec) for dspec in spec_results]
+    freqpwr_results_list = [specfn.freqpwr_analysis(fspec) for fspec in fspec_list]
 
     # Plot
     for freqpwr_result, f_spk, fparam in it.izip(freqpwr_results_list, spk_list, fparam_list):
@@ -557,40 +574,42 @@ def regenerate_plots(ddata, xlim=[0, 'tstop']):
 
     # grab the list of spec results that exists
     # there is a method in SimulationPaths/ddata for this specifically, this should be deprecated
-    spec_results = fio.file_match(ddata.dsim, '-spec.npz')
+    # fspec_list = fio.file_match(ddata.dsim, '-spec.npz')
 
     # generate data if no spec exists here
-    if not spec_results:
+    if not fio.file_match(ddata.dsim, '-spec.npz'):
+    # if not fspec_list:
         print "No saved spec data found. Performing spec anaylsis ... "
-        spec_results = exec_spec_regenerate(ddata)
+        exec_spec_regenerate(ddata)
+        # spec_results = exec_spec_regenerate(ddata)
 
     # run our core pall plot
-    plotfn.pall(ddata, p_exp, spec_results, xlim)
+    plotfn.pall(ddata, p_exp, xlim)
 
 # function to add alpha feed hists
 def exec_addalphahist(ddata, xlim=[0, 'tstop']):
     p_exp = paramrw.ExpParams(ddata.fparam)
-
-    spec_results = fio.file_match(ddata.dsim, '-spec.npz')
+    # fspec_list = fio.file_match(ddata.dsim, '-spec.npz')
 
     # generate data if no spec exists here
-    if not spec_results:
+    if not fio.file_match(ddata.dsim, '-spec.npz'):
         print "No saved spec data found. Performing spec anaylsis ... "
-        spec_results = exec_spec_regenerate(ddata)
+        exec_spec_regenerate(ddata)
 
-    plotfn.pdpl_pspec_with_hist(ddata, p_exp, spec_results, xlim)
+    plotfn.pdpl_pspec_with_hist(ddata, p_exp, xlim)
+    # plotfn.pdpl_pspec_with_hist(ddata, p_exp, spec_list, xlim)
 
 def exec_aggregatespec(ddata, labels):
     p_exp = paramrw.ExpParams(ddata.fparam)
 
-    spec_results = fio.file_match(ddata.dsim, '-spec.npz')
+    fspec_list = fio.file_match(ddata.dsim, '-spec.npz')
 
     # generate data if no spec exists here
-    if not spec_results:
+    if not fspec_list:
         print "No saved spec data found. Performing spec anaylsis ... "
-        spec_results = exec_spec_regenerate(ddata)
+        exec_spec_regenerate(ddata)
 
-    plotfn.aggregate_spec_with_hist(ddata, p_exp, spec_results, labels)
+    plotfn.aggregate_spec_with_hist(ddata, p_exp, labels)
 
 # comparison of all layers and aggregate data
 def exec_pgamma_laminar(ddata):
