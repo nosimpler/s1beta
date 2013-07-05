@@ -1,8 +1,8 @@
 # clidefs.py - these are all of the function defs for the cli
 #
-# v 1.8.15cell
-# rev 2013-07-05 (MS: update to several fns to use new analysis_typespecific() functionality)
-# last major: (SL: added a throwaway function that will eventually be properly used)
+# v 1.8.16speca
+# rev 2013-07-05 (MS: removed references to specfn.analysis())
+# last major: (MS: update to several fns to use new analysis_typespecific() functionality)
 
 # Standard modules
 import fnmatch, os, re, sys
@@ -396,7 +396,6 @@ def exec_spec_regenerate(ddata, f_max=None):
         opts['f_max'] = f_max
 
     specfn.analysis_typespecific(ddata, opts)
-    # spec_results = specfn.analysis(ddata, p_exp, f_max, save_data=1)
 
 # Time-averaged stationarity analysis - averages spec power over time and plots it
 def exec_spec_stationary_avg(ddata, dsim, maxpwr):

@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # s1run.py - primary run function for s1 project
 #
-# v 1.8.15spec
-# rev 2013-07-05 (MS: p_exp no longer passed to specfn.analysis_typespecific())
-# last major: (MS: specfn.analysis_typespecific() now used as primary analysis fn)
+# v 1.8.16speca
+# rev 2013-07-05 (MS: removed reference to specfn.analysis())
+# last major: (MS: p_exp no longer passed to specfn.analysis_typespecific())
 
 import os
 import sys
@@ -309,16 +309,7 @@ def exec_runsim(f_psim):
 
             t_start_analysis = time.time()
 
-            # new spec analysis opts
-            # not currently active but for future - see specfn.analysis_typespecific()
-            # opts_spec = {
-            #     'type': 'dpl',
-            #     'f_max': '50',
-            #     'save_data': 1,
-            #     'runtype': 'parallel',
-            # }
-
-            # run the spectral analysis and temporarily keep data in memory in spec_results
+            # run the spectral analysis
             spec_opts = {
                 'type': 'dpl_laminar',
                 'f_max': p['f_max_spec'],
@@ -327,8 +318,6 @@ def exec_runsim(f_psim):
             }
 
             specfn.analysis_typespecific(ddir, spec_opts)
-            # spec_results = specfn.analysis(ddir, p_exp)
-            # spec_results = specfn.analysis_typespecific(ddir, p_exp, spec_opts)
 
             print "time: %4.4f s" % (time.time() - t_start_analysis)
             print "Plot ...",

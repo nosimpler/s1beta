@@ -1,8 +1,8 @@
 # pspec.py - Very long plotting methods having to do with spec.
 #
-# v 1.8.14spec
-# rev 2013-07-03 (MS: pspec_dpl() can only take a pathway to saved spec data)
-# last major: (MS: aggregate_with_hist() now lives here. Updated aggregate_with_hist and pspec_with_hist to work with new spikes_from_file() fn)
+# v 1.8.16speca
+# rev 2013-07-05 (MS: removed all references to specfn.MorletSpec())
+# last major: (MS: pspec_dpl() can only take a pathway to saved spec data)
 
 import os
 import sys
@@ -25,20 +25,7 @@ import axes_create as ac
 # this is actually a plot kernel for one sim that does dipole, etc.
 # needs f_param not p_dict
 def pspec_dpl(f_spec, f_dpl, dfig, p_dict, key_types, xlim=None):
-    # if dspec is an instance of MorletSpec, get data from object
-    # if isinstance(dspec, specfn.MorletSpec):
-    # if isinstance(dspec, specfn.MorletSpecSingle):
-    #     timevec = dspec.tvec
-    #     freqvec = dspec.f
-    #     TFR = dspec.TFR
-    #     # timevec = dspec.timevec
-    #     # freqvec = dspec.freqvec
-
-    #     # Generate file prefix
-    #     fprefix = fio.strip_extprefix(dspec.name) + '-spec'
-
-    # otherwise dspec is path name and data must be loaded from file
-    # else:
+    # Load data from file
     data_spec = np.load(f_spec)
 
     timevec = data_spec['time']
@@ -123,18 +110,7 @@ def pspec_dpl(f_spec, f_dpl, dfig, p_dict, key_types, xlim=None):
 
 # Spectral plotting kernel with alpha feed histogram for ONE simulation run
 def pspec_with_hist(f_spec, f_dpl, f_spk, dfig, f_param, key_types, xlim=[0., 'tstop']):
-# def pspec_with_hist(dspec, f_dpl, f_spk, dfig, f_param, key_types, xlim=[0., 'tstop']):
-    # if dspec is an instance of MorletSpec,  get data from object
-    # if isinstance(dspec, specfn.MorletSpec):
-    #     timevec = dspec.timevec
-    #     freqvec = dspec.freqvec
-    #     TFR = dspec.TFR
-
-    #     # Generate file prefix
-    #     fprefix = fio.strip_extprefix(dspec.name) + '-spec'
-
-    # otherwise dspec is path name and data must be loaded from file
-    # else:
+    # Load data from file
     data_spec = np.load(f_spec)
 
     timevec = data_spec['time']
@@ -288,14 +264,7 @@ def aggregate_with_hist(f, ax, f_spec, f_dpl, f_spk, f_param):
     # load param dict
     _, p_dict = paramrw.read(f_param)
 
-    # if dspec is an instance of MorletSpec,  get data from object
-    # if isinstance(dspec, specfn.MorletSpec):
-    #     timevec = dspec.timevec
-    #     freqvec = dspec.freqvec
-    #     TFR = dspec.TFR
-
-    # otherwise dspec is path name and data must be loaded from file
-    #3 else:
+    # load spec data from file
     data_spec = np.load(f_spec)
 
     timevec = data_spec['time']
