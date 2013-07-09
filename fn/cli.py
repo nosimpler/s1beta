@@ -1,8 +1,8 @@
 # cli.py - routines for the command line interface console s1sh.py
 #
-# v 1.8.12
-# rev 2013-06-22 (SL: cleaned out several remaining old functions, added/modified gamma plots)
-# last major: (MS: minor)
+# v 1.8.14
+# rev 2013-07-09 (SL: added throwaway data function and a ref to exec_debug())
+# last major: (SL: cleaned out several remaining old functions, added/modified gamma plots)
 
 from cmd import Cmd
 from datetime import datetime
@@ -39,6 +39,7 @@ class Console(Cmd):
         # check to see if file_input is legit
         if os.path.isfile(file_input):
             self.file_input = file_input
+
         else:
             # use a default
             self.file_input = 'param/debug.param'
@@ -79,6 +80,7 @@ class Console(Cmd):
         # assumes list_opts comes from __split_args()
         if len(list_opts):
             # iterate through possible key vals in list_opts
+            keys_missing = []
             for key, val in list_opts:
                 # check to see if the possible keys are in dict_opts
                 if key in dict_opts.keys():
@@ -86,6 +88,13 @@ class Console(Cmd):
                     # this operation acts IN PLACE on the supplied dict_opts!!
                     # therefore, no return value necessary
                     dict_opts[key] = ast.literal_eval(val)
+                else:
+                    keys_missing.append(key)
+
+            # if there are any keys missing
+            if keys_missing:
+                print "Options were not recognized: "
+                fio.prettyprint(keys_missing)
 
     # checks to see if a default server file is found, if not, ask for one
     def __check_server(self):
@@ -108,10 +117,13 @@ class Console(Cmd):
     def do_debug(self, args):
         """Qnd function to test other functions
         """
-        # self.do_setdate('pub')
-        self.do_load('gamma_sub_test_L5-012')
-        self.do_throwaway('')
-        # self.do_pgamma_distal_phase('--spec0=5 --spec1=13 --spec2=25')
+        self.do_setdate('2013-07-02')
+        self.do_load('gamma_sub_50Hz_prox-005')
+
+        # fdpl and fparam are not specified in the version saved to repo
+        clidefs.exec_debug(fdpl, fparam)
+        # self.do_throwaway('--n_sim=13')
+        # self.do_pgamma_distal_phase('--spec0=5 --spec1=9 --spec2=15')
         # self.do_pgamma_laminar('')
         # self.do_pgamma_compare_ping('')
         # self.do_pgamma_stdev('')
@@ -136,7 +148,18 @@ class Console(Cmd):
         # self.do_psthgrid()
 
     def do_throwaway(self, args):
-        clidefs.exec_throwaway(self.ddata)
+        ''' This is a throwaway dipole saving function. Usage:
+            [s1] throwaway {--n_sim=12} {--n_trial=3}
+        '''
+        opts = {
+            'n_sim': 0,
+            'n_trial': 0,
+        }
+        l_opts = self.__split_args(args)
+        self.__check_args(opts, l_opts)
+
+        # run the throwaway save function!
+        clidefs.exec_throwaway(self.ddata, opts['n_sim'], opts['n_trial'])
 
     def do_calc_dpl_mean(self, args):
         '''Returns the mean dipole to screen. Usage:

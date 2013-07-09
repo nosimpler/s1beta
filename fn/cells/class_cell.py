@@ -1,7 +1,7 @@
 # class_cell.py - establish class def for general cell features
 #
-# v 1.8.7
-# rev 2013-06-13 (SL: minor)
+# v 1.8.14
+# rev 2013-07-09 (SL: minor)
 # last rev: (SL: minor)
 
 import numpy as np
@@ -30,7 +30,8 @@ class Cell():
         self.soma.Ra = soma_props['Ra']
         self.soma.cm = soma_props['cm']
 
-        # par: create arbitrary lists of connections FROM other cells TO this cell instantiation
+        # par: create arbitrary lists of connections FROM other cells
+        # TO this cell instantiation
         # these lists are allowed to be empty
         self.ncfrom_L2Pyr = []
         self.ncfrom_L2Basket = []

@@ -1,8 +1,8 @@
 # paramrw.py - routines for reading the param files
 #
-# v 1.8.10
-# rev 2013-06-20 (MS: Merge feedsynapses_new with master)
-# last major: (MS: Added ampa synapse properties for all cell types to external feed dicts)
+# v 1.8.14
+# rev 2013-07-09 (SL: minor)
+# last major: (MS: Merge feedsynapses_new with master)
 
 import re
 import fileio as fio
@@ -80,6 +80,7 @@ def find_param(fparam, param_key):
 
     try:
         return p[param_key]
+
     except KeyError:
         return "There is no key by the name %s" % param_key
 

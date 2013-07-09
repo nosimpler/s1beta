@@ -1,8 +1,8 @@
 # axes_create.py - simple axis creation
 #
-# v 1.8.12
-# rev 2013-06-22 (SL: Added several functions to base class)
-# last major: (MS: fixed error in row labeling in FigAggregateWithHist())
+# v 1.8.14
+# rev 2013-07-06 (SL: added twinx creation)
+# last major: (SL: Added several functions to base class)
 
 # usage:
 # testfig = FigStd()
@@ -12,6 +12,7 @@
 
 import paramrw
 import matplotlib as mpl
+# from matplotlib import rc
 from matplotlib import ticker
 # mpl.use('Agg')
 import matplotlib.pyplot as plt
@@ -25,6 +26,24 @@ class FigBase():
     def __init__(self):
         # self.f is typically set by the super class
         self.f = None
+        mpl.rc('text', usetex=True)
+
+        # axis dicts are guaranteed to exist at least, sheesh
+        self.ax = {}
+        self.ax_twinx = {}
+
+    # creates a twinx axis for the specified axis
+    def create_axis_twinx(self, ax_name):
+        if ax_name in self.ax.keys():
+            self.ax_twinx[ax_name] = self.ax[ax_name].twinx()
+
+            # returns the index of most recently added element (now the length)
+            return ax_name
+
+        else:
+            # returns valid axis name ONLY if it existed
+            # otherwise, None will break other code
+            return None
 
     # function to set the scientific notation limits
     def set_notation_scientific(self, list_ax_handles):
@@ -126,6 +145,15 @@ class FigBase():
         title = create_title(p_dict, key_types)
         self.f.suptitle(title)
 
+    # generic function to remove xticklabels from a bunch of axes based on handle
+    def remove_tick_labels(self, list_ax_handles, ax_xy='x'):
+        for ax_handle in list_ax_handles:
+            if ax_handle in self.ax.keys():
+                if ax_xy == 'x':
+                    self.ax[ax_handle].set_xticklabels('')
+                elif ax_xy == 'y':
+                    self.ax[ax_handle].set_yticklabels('')
+
     # generic save png function to file_name at dpi=dpi_set
     def savepng(self, file_name, dpi_set=300):
         self.f.savefig(file_name, dpi=dpi_set)
@@ -148,14 +176,22 @@ class FigBase():
 # Simple one axis window
 class FigStd(FigBase):
     def __init__(self):
+        FigBase.__init__(self)
+
         self.f = plt.figure(figsize=(12, 6))
         self.set_fontsize(8)
 
         gs0 = gridspec.GridSpec(1, 1)
-        self.ax0 = self.f.add_subplot(gs0[:])
+        self.ax = {
+            'ax0': self.f.add_subplot(gs0[:]),
+        }
 
-    def save(self, file_name):
-        self.f.savefig(file_name)
+        # this is a bad way of ensuring backward compatibility
+        self.ax0 = self.ax['ax0']
+
+    # use the FigBase method in the future
+    # def save(self, file_name):
+    #     self.f.savefig(file_name)
 
 class FigDplWithHist(FigBase):
     def __init__(self):
@@ -543,6 +579,7 @@ class FigAggregateSpecWithHist(FigBase):
 # aggregate figures for the experiments
 class FigDipoleExp(FigBase):
     def __init__(self, ax_handles):
+        ac.FigBase.__init__(self)
         # ax_handles is a list of axis handles in order
         # previously called N_expmt_groups for legacy reasons (original intention)
         # now generally repurposed for arbitrary numbers of axes with these handle names
@@ -617,23 +654,6 @@ class FigDipoleExp(FigBase):
             # set the ylims for all, the same
             for ax_name in self.ax.keys():
                 self.ax[ax_name].set_ylim((ymin, ymax))
-
-    # creates a twinx axis for the specified axis
-    def create_axis_twinx(self, ax_name):
-    # def create_axis_twinx(self, n):
-        # if n < len(self.ax):
-        # self.ax_twinx.append(self.ax[n].twinx())
-        if ax_name in self.ax.keys():
-            self.ax_twinx[ax_name] = self.ax[ax_name].twinx()
-
-            # returns the index of most recently added element (now the length)
-            return ax_name
-
-        else:
-
-            # returns valid axis name ONLY if it existed
-            # otherwise, None will break other code
-            return None
 
     def __set_ax_props(self):
         # remove xtick labels for everyone but the last axis

@@ -1,8 +1,8 @@
 # spikefn.py - dealing with spikes
 #
-# v 1.8.13
-# rev 2013-06-22 (SL: fixed a bug in spikes_from_file())
-# last major: (SL: plotting in spike_png() now has ordered keys)
+# v 1.8.14
+# rev 2013-07-09 (SL: added more hist functions)
+# last major: (SL: fixed a bug in spikes_from_file())
 
 import fileio as fio
 import numpy as np
@@ -86,7 +86,9 @@ def split_extrand(s, gid_dict, celltype, exttype):
 # histogram bin optimization
 # Shimazaki and Shinomoto, Neural Comput, 2007
 def hist_bin_opt(x, N_trials):
-    bin_checks = np.linspace(150, 300, 16)
+    bin_checks = np.arange(80, 300, 10)
+    # bin_checks = np.linspace(150, 300, 16)
+
     costs = np.zeros(len(bin_checks))
 
     i = 0
@@ -304,10 +306,29 @@ def alpha_feed_verify(s_dict, p_dict):
     return s_dict
 
 # input histogram on 2 axes
-def pinput_hist(a0, a1, s_list0, s_list1, n_bins):
+def pinput_hist(a0, a1, s_list0, s_list1, n_bins, xlim):
     hists = {
         'prox': a0.hist(s_list0, n_bins, color='red', label='Proximal input', alpha=0.75),
-        'dist': a1.hist(s_list1, n_bins, color='green', label='Proximal input', alpha=0.75),
+        'dist': a1.hist(s_list1, n_bins, color='green', label='Distal input', alpha=0.75),
+    }
+
+    # assumes these axes are inverted and figure it out
+    ylim_max = 2*np.max([a0.get_ylim()[1], a1.get_ylim()[1]]) + 1
+
+    # set the ylims here
+    a0.set_ylim((0, ylim_max))
+    a1.set_ylim((0, ylim_max))
+
+    a0.set_xlim(xlim)
+    a1.set_xlim(xlim)
+
+    a1.invert_yaxis()
+
+    return hists
+
+def pinput_hist_onesided(a0, s_list, n_bins):
+    hists = {
+        'prox': a0.hist(s_list, n_bins, color='red', label='Proximal input', alpha=0.75),
     }
 
     return hists

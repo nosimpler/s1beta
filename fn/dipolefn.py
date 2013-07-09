@@ -1,8 +1,8 @@
 # dipolefn.py - dipole-based analysis functions
 #
-# v 1.8.12
-# rev 2013-06-22 (SL: added write() method)
-# last major: (MS: updated pdipole() for revised Dipole() class. Updated pdipole_with_hist() for new spikes_from_file())
+# v 1.8.14
+# rev 2013-07-09 (SL: added truncate function to truncate to arbitrary time bounds)
+# last major: (SL: added write() method)
 
 import fileio as fio
 import numpy as np
@@ -35,6 +35,18 @@ class Dipole():
 
         # string that holds the units
         self.units = 'fAm'
+
+    # truncate to a length and save here
+    # this is independent of the other stuff
+    def truncate(self, t0, T):
+        # only do this if the limits make sense
+        if (t0 >= self.t[0]) & (T < self.t[-1]):
+            # do this for each dpl
+            for key in self.dpl.keys():
+                self.dpl[key] = self.dpl[key][(self.t > t0) & (self.t < T)]
+
+            # this must come after the dpl truncation
+            self.t = self.t[(self.t > t0) & (self.t < T)]
 
     # conversion from fAm to nAm
     def convert_fAm_to_nAm(self):
@@ -451,7 +463,6 @@ def pdipole_evoked(dfig, f_dpl, f_spk, f_param, ylim=[]):
 # Plots dipole with histogram of alpha feed inputs
 # this function has not been converted to use the Dipole() class yet
 def pdipole_with_hist(f_dpl, f_spk, dfig, f_param, key_types, xlim=[0., 'tstop']):
-# def pdipole_with_hist(f_dpl, f_spk, dfig, p_dict, gid_dict, key_types, xlim=[0., 'tstop']):
     # ddipole is dipole data
     ddipole = np.loadtxt(f_dpl)
 
@@ -510,10 +521,8 @@ def pdipole_with_hist(f_dpl, f_spk, dfig, f_param, key_types, xlim=[0., 'tstop']
 
     title_str = ac.create_title(p_dict, key_types)
     f.f.suptitle(title_str)
-    # title = [key + ': %2.1f' % p_dict[key] for key in key_types['dynamic_keys']]
 
     fig_name = os.path.join(dfig, file_prefix+'.png')
-    # fig_name = 'hist_test.png'
 
     plt.savefig(fig_name)
     f.close()
@@ -686,8 +695,7 @@ def pdipole_exp2(ddata):
 
     # input hist information: predicated on the fact that the input histograms
     # should be identical for *all* of the inputs represented in this figure
-    spikefn.pinput_hist(f_exp.ax['input'], f_exp.ax_twinx['input'], s['alpha_feed_prox'].spike_list, s['alpha_feed_dist'].spike_list, n_bins)
-    # spikefn.pinput_hist(f_exp.ax[1], f_exp.ax_twinx[n_dist], s['alpha_feed_prox'].spike_list, s['alpha_feed_dist'].spike_list, n_bins)
+    spikefn.pinput_hist(f_exp.ax['input'], f_exp.ax_twinx['input'], s['alpha_feed_prox'][0].spike_list, s['alpha_feed_dist'][0].spike_list, n_bins)
 
     # grab the max counts for both hists
     # the [0] item of hist are the counts
@@ -701,8 +709,6 @@ def pdipole_exp2(ddata):
     # deal with the axes here
     f_exp.ax_twinx['input'].set_ylim((ymax, 0))
     f_exp.ax['input'].set_ylim((0, ymax))
-    # f_exp.ax_twinx[n_dist].set_ylim((ymax, 0))
-    # f_exp.ax[1].set_ylim((0, ymax))
 
     f_exp.ax['input'].set_xlim((50., tstop))
     f_exp.ax_twinx['input'].set_xlim((50., tstop))
@@ -912,13 +918,6 @@ def pdipole_evoked_aligned(ddata):
 
     for ax_name in f_exp.ax_handles[2:]:
         ax.set_xlim((t0, T))
-    # for ax in f_exp.ax[2:]:
-    #     ax.set_xlim((t0, T))
-
-    # for ax in f_exp.ax_twinx:
-    #     ax.set_xlim(500., tstop)
-
-    # f_exp.ax[2].set_ylim(-2000., 6000)
 
     f_exp.savepng(fname_exp_fig)
     f_exp.close()

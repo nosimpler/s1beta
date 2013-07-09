@@ -1,8 +1,8 @@
 # pspec.py - Very long plotting methods having to do with spec.
 #
-# v 1.8.11
-# rev 2013-06-21 (MS: aggregate_with_hist() now lives here. Updated aggregate_with_hist and pspec_with_hist to work with new spikes_from_file() fn)
-# last major: (SL: pspec_dpl() now plots stationary estimate)
+# v 1.8.14
+# rev 2013-07-09 (SL: minor)
+# last major: (MS: aggregate_with_hist() now lives here. Updated aggregate_with_hist and pspec_with_hist to work with new spikes_from_file() fn)
 
 import os
 import sys
@@ -89,7 +89,7 @@ def pspec_dpl(dspec, f_dpl, dfig, p_dict, key_types, xlim=None):
 
     # this should not really be here ...
     pgram = specfn.Welch(dpl.t, dpl.dpl['agg'], p_dict['dt'])
-    pgram.plot_to_ax(f.ax['pgram'])
+    pgram.plot_to_ax(f.ax['pgram'], freqvec[-1])
 
     # assign vectors
     # t_dpl = data_dipole[xmin_ind:xmax_ind+1, 0]
@@ -120,7 +120,7 @@ def pspec_dpl(dspec, f_dpl, dfig, p_dict, key_types, xlim=None):
 
 # Spectral plotting kernel with alpha feed histogram for ONE simulation run
 def pspec_with_hist(dspec, f_dpl, f_spk, dfig, f_param, key_types, xlim=[0., 'tstop']):
-# def pspec_with_hist(dspec, f_dpl, f_spk, dfig, p_dict, gid_dict, key_types, xlim=[0., 'tstop']):
+    # def pspec_with_hist(dspec, f_dpl, f_spk, dfig, p_dict, gid_dict, key_types, xlim=[0., 'tstop']):
     # if dspec is an instance of MorletSpec,  get data from object
     if isinstance(dspec, specfn.MorletSpec):
         timevec = dspec.timevec
@@ -280,8 +280,8 @@ def pspecpwr_ax(ax_specpwr, specpwr_list, fparam_list, key_types):
 def pyerrorbars_ax(ax, x, y, yerr_vec):
     ax.errorbar(x, y, xerr=None, yerr=yerr_vec, fmt=None, ecolor='blue')
 
-def aggregate_with_hist(f, ax, dspec, f_dpl, f_spk, f_param):
 # def aggregate_with_hist(f, ax, dspec, f_dpl, f_spk, p_dict, gid_dict):
+def aggregate_with_hist(f, ax, dspec, f_dpl, f_spk, f_param):
     # load param dict
     _, p_dict = paramrw.read(f_param)
 

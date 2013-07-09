@@ -1,8 +1,8 @@
 # specfn.py - Average time-frequency energy representation using Morlet wavelet method
 #
-# v 1.8.11
-# rev 2013-06-21 (MS: aggregate_with_hist() moved to pspec.py)
-# last major: (SL: Added simple Welch() class)
+# v 1.8.14
+# rev 2013-07-09 (SL: minor, switched back to //)
+# last major: (MS: aggregate_with_hist() moved to pspec.py)
 
 import os
 import sys
@@ -61,6 +61,7 @@ class Welch():
         # only assign length if same
         if len(self.t_vec) == len(self.ts_vec):
             self.N = len(ts_vec)
+
         else:
             # raise an exception for real sometime in the future, for now just say something
             print "in specfn.Welch(), your lengths don't match! Something will fail!"
@@ -75,9 +76,9 @@ class Welch():
         self.f, self.P = sps.welch(self.ts_vec, self.fs, window='hanning', nperseg=self.N, noverlap=0, nfft=self.N_fft, return_onesided=True, scaling='spectrum')
 
     # simple plot to an axis
-    def plot_to_ax(self, ax):
+    def plot_to_ax(self, ax, f_max=80.):
         ax.plot(self.f, self.P)
-        ax.set_xlim((0., 100.))
+        ax.set_xlim((0., f_max))
 
     # return the next power of 2 generally for a given L
     def __nextpow2(self, L):
@@ -640,7 +641,8 @@ def analysis_typespecific(ddata, p_exp, opts=None):
 # Does spec analysis for all files in simulation directory
 # ddata is a SimulationPaths() object from fileio
 def analysis(ddata, p_exp, f_max=None, save_data=None):
-    runtype = 'debug'
+    # runtype = 'debug'
+    runtype = 'parallel'
 
     # preallocate lists for use below
     param_list = []

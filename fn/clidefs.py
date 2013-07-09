@@ -1,8 +1,8 @@
 # clidefs.py - these are all of the function defs for the cli
 #
-# v 1.8.12
-# rev 2013-06-22 (SL: added a throwaway function that will eventually be properly used)
-# last major: (MS: updated exec_avgtrials() to work with revised Dipole() class. Other minor) 
+# v 1.8.14
+# rev 2013-07-09 (SL: added a debug function here that is really specific)
+# last major: (SL: added a throwaway function that will eventually be properly used)
 
 # Standard modules
 import fnmatch, os, re, sys
@@ -21,7 +21,7 @@ import paramrw
 import specfn
 import pspec
 import dipolefn
-import axes_create
+import axes_create as ac
 import pmanu_gamma as pgamma
 
 # Returns length of any list
@@ -41,21 +41,55 @@ def get_subdir_list(dcheck):
     else:
         return []
 
-def exec_throwaway(ddata):
-    # take the 14th dipole, do some stuff to it, resave it
+# random debug command
+def exec_debug(fdpl, fparam):
+    dpl = dipolefn.Dipole(fdpl)
+    # fparam =
+
+    dfig = '/Users/shane'
+    fprefix = 'testing'
+
+    # limits
+    t0 = 100
+    T = 500
+    dt = paramrw.find_param(fparam, 'dt')
+
+    fmax = 150.
+
+    # use the truncate function
+    dpl.truncate(t0, T)
+    dpl.convert_fAm_to_nAm()
+
+    # create a spec
+    spec = specfn.MorletSpecSingle('/Users/shane/testing.npz', dpl.t, dpl.dpl['L5'], fparam, fmax, save_data=0)
+
+    f = ac.FigStd()
+    spec.plot_to_ax(f.ax['ax0'], dt)
+    f.savepng_new(dfig, fprefix)
+    f.close()
+
+# throwaway save method for now
+# trial is currently undefined
+# function is broken for N_trials > 1
+def exec_throwaway(ddata, i=0, j=0):
+    # take the ith sim, jth trial, do some stuff to it, resave it
+    # only uses first expmt_group
     expmt_group = ddata.expmt_groups[0]
-    i = 14
     f_dpl = ddata.file_match(expmt_group, 'rawdpl')[i]
     f_param = ddata.file_match(expmt_group, 'param')[i]
 
     # print ddata.sim_prefix, ddata.dsim
-    f_name_short = '%s-dpltest.txt' % ddata.sim_prefix
+    f_name_short = '%s-%03d-T%02d-dpltest.txt' % (ddata.sim_prefix, i, j)
     f_name = os.path.join(ddata.dsim, expmt_group, f_name_short)
     print f_name
 
     dpl = dipolefn.Dipole(f_dpl)
     dpl.baseline_renormalize(f_param)
+    print "baseline renormalized"
+
     dpl.convert_fAm_to_nAm()
+    print "converted to nAm"
+
     dpl.write(f_name)
 
 # calculates the mean dipole over a specified range
