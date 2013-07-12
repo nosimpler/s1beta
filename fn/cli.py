@@ -1,8 +1,8 @@
 # cli.py - routines for the command line interface console s1sh.py
 #
-# v 1.8.14
-# rev 2013-07-09 (SL: added throwaway data function and a ref to exec_debug())
-# last major: (SL: cleaned out several remaining old functions, added/modified gamma plots)
+# v 1.8.15a
+# rev 2013-07-12 (SL: removed exec_debug)
+# last major: (SL: added throwaway data function and a ref to exec_debug())
 
 from cmd import Cmd
 from datetime import datetime
@@ -120,8 +120,6 @@ class Console(Cmd):
         self.do_setdate('2013-07-02')
         self.do_load('gamma_sub_50Hz_prox-005')
 
-        # fdpl and fparam are not specified in the version saved to repo
-        clidefs.exec_debug(fdpl, fparam)
         # self.do_throwaway('--n_sim=13')
         # self.do_pgamma_distal_phase('--spec0=5 --spec1=9 --spec2=15')
         # self.do_pgamma_laminar('')

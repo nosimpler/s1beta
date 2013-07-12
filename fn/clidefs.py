@@ -1,8 +1,8 @@
 # clidefs.py - these are all of the function defs for the cli
 #
-# v 1.8.14
-# rev 2013-07-09 (SL: added a debug function here that is really specific)
-# last major: (SL: added a throwaway function that will eventually be properly used)
+# v 1.8.15a
+# rev 2013-07-12 (SL: removed exec_debug)
+# last major: (SL: added a debug function here that is really specific)
 
 # Standard modules
 import fnmatch, os, re, sys
@@ -40,33 +40,6 @@ def get_subdir_list(dcheck):
 
     else:
         return []
-
-# random debug command
-def exec_debug(fdpl, fparam):
-    dpl = dipolefn.Dipole(fdpl)
-    # fparam =
-
-    dfig = '/Users/shane'
-    fprefix = 'testing'
-
-    # limits
-    t0 = 100
-    T = 500
-    dt = paramrw.find_param(fparam, 'dt')
-
-    fmax = 150.
-
-    # use the truncate function
-    dpl.truncate(t0, T)
-    dpl.convert_fAm_to_nAm()
-
-    # create a spec
-    spec = specfn.MorletSpecSingle('/Users/shane/testing.npz', dpl.t, dpl.dpl['L5'], fparam, fmax, save_data=0)
-
-    f = ac.FigStd()
-    spec.plot_to_ax(f.ax['ax0'], dt)
-    f.savepng_new(dfig, fprefix)
-    f.close()
 
 # throwaway save method for now
 # trial is currently undefined
