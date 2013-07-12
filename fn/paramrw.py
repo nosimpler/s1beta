@@ -1,8 +1,8 @@
 # paramrw.py - routines for reading the param files
 #
-# v 1.8.14
-# rev 2013-07-09 (SL: minor)
-# last major: (MS: Merge feedsynapses_new with master)
+# v 1.8.15cell
+# rev 2013-07-03 (MS: minor)
+# last major: (MS: compare_dictionaries() updates keys in one dict with corresponding key values from another)
 
 import re
 import fileio as fio
@@ -615,6 +615,17 @@ def changed_vars(fparam):
 
     # return the list of "changed" or "default" vars
     return var_list
+
+# Takes two dictionaries (d1 and d2) and compares the keys in d1 to those in d2
+# if any match, updates the (key, value) pair of d1 to match that of d2 
+# not real happy with variable names, but will have to do for now
+def compare_dictionaries(d1, d2):
+    # iterate over intersection of key sets (i.e. any common keys)
+    for key in d1.viewkeys() & d2.viewkeys():
+        # update d1 to have same (key, value) pair as d2
+        d1[key] = d2[key] 
+
+    return d1
 
 # debug test function
 if __name__ == '__main__':

@@ -1,7 +1,7 @@
 # pspec.py - Very long plotting methods having to do with spec.
 #
-# v 1.8.14
-# rev 2013-07-09 (SL: minor)
+# v 1.8.15cell
+# rev 2013-07-03 (MS: font size change in pspecpwr())
 # last major: (MS: aggregate_with_hist() now lives here. Updated aggregate_with_hist and pspec_with_hist to work with new spikes_from_file() fn)
 
 import os
@@ -232,6 +232,7 @@ def pspec_with_hist(dspec, f_dpl, f_spk, dfig, f_param, key_types, xlim=[0., 'ts
 def pspecpwr(file_name, results_list, fparam_list, key_types, error_vec=[]):
     # instantiate fig
     f = ac.FigStd()
+    f.set_fontsize(18)
 
     # pspecpwr_ax is a plot kernel for specpwr plotting
     legend_list = pspecpwr_ax(f.ax0, results_list, fparam_list, key_types)
@@ -242,7 +243,7 @@ def pspecpwr(file_name, results_list, fparam_list, key_types, error_vec=[]):
         pyerrorbars_ax(f.ax0, results_list[0]['freq'], results_list[0]['p_avg'], error_vec)
 
     # insert legend
-    f.ax0.legend(legend_list, loc='upper right')
+    f.ax0.legend(legend_list, loc='upper right', prop={'size': 8})
 
     # axes labels
     f.ax0.set_xlabel('Freq (Hz)')

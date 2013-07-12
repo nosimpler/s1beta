@@ -1,33 +1,47 @@
 # L5_pyramidal.py - establish class def for layer 5 pyramidal cells
 #
-# v 1.8.10
-# rev 2013-06-20 (MS: Merge feedsynapses_new with master)
-# last rev: (MS: added NMDA synapses for alpha feeds)
+# v 1.8.15cell
+# rev 2013-07-03 (MS: L5Pyr() can now take an external param dict and set properties accordingly)
+# last rev: (MS: Dend fns now use dictionary of dends instead of list of dends) 
 
-from neuron import h as nrn
-from class_cell import Pyr
 import sys 
 import numpy as np
 import itertools as it
+
+from neuron import h as nrn
+from class_cell import Pyr
+from .. import paramrw
+from .. import params_default as p_default
 
 # Units for e: mV
 # Units for gbar: S/cm^2 unless otherwise noted
 # units for taur: ms
 
 class L5Pyr(Pyr):
-    def __init__(self, pos):
+    def __init__(self, pos, p={}):
+        # Get default L5Pyr params and update them with corresponding params in p
+        p_all_default = p_default.get_L5Pyr_params_default()
+        self.p_all = paramrw.compare_dictionaries(p_all_default, p)
+
+        # Get somatic, dendirtic, and synapse properties
+        p_soma = self.__get_soma_props(pos)
+        p_dend = self.__get_dend_props()
+        p_syn = self.__get_syn_props()
+
         # Set morphology properties
-        soma_props = self.__set_soma_props(pos)
-        dend_props, dend_names = self.__set_dend_props()
+        # p_soma_props = self.__get_soma_props(pos)
+        # p_dend_props = self.__get_dend_props()
+        # dend_props, dend_names = self.__set_dend_props()
 
         # Pyr.__init__(self, soma_props)
-        Pyr.__init__(self, soma_props)
+        Pyr.__init__(self, p_soma)
         self.celltype = 'L5_pyramidal'
 
         # Geometry
         # dend Cm and dend Ra set using soma Cm and soma Ra
-        self.create_dends(dend_names, dend_props, soma_props)
+        self.create_dends_new(p_dend)
         self.__connect_sections()
+        # self.create_dends(dend_names, dend_props, soma_props)
         # self.__set_3Dshape()
 
         # biophysics
@@ -35,12 +49,12 @@ class L5Pyr(Pyr):
         self.__biophys_dends()
 
         # Dictionary of length scales to calculate dipole without 3d shape. Comes from Pyr().
-        self.yscale = self.get_sectnames()
         # dipole_insert() comes from Cell()
+        self.yscale = self.get_sectnames()
         self.dipole_insert(self.yscale)
 
         # create synapses
-        self.__synapse_create()
+        self.__synapse_create(p_syn)
 
         # insert iclamp
         self.list_IClamp = []
@@ -85,62 +99,80 @@ class L5Pyr(Pyr):
         self.list_IClamp = [self.insert_IClamp(sect_name, props_IClamp) for sect_name in sect_list_IClamp]
 
     # Sets somatic properties. Returns dictionary.
-    def __set_soma_props(self, pos):
+    def __get_soma_props(self, pos):
          return {
             'pos': pos,
-            'L': 39.,
-            'diam': 28.9,
-            'cm': 0.85,
-            'Ra': 200.,
+            'L': self.p_all['L5Pyr_soma_L'],
+            'diam': self.p_all['L5Pyr_soma_diam'],
+            'cm': self.p_all['L5Pyr_soma_cm'],
+            'Ra': self.p_all['L5Pyr_soma_Ra'],
             'name': 'L5Pyr',
         }
 
     # Returns dictionary of dendritic properties and list of dendrite names
-    def __set_dend_props(self):
+    def __get_dend_props(self):
+    # def __set_dend_props(self):
         # Hard coded dend properties
-        dend_props =  {
+        # dend_props =  {
+        return {
             'apical_trunk': {
-                'L': 102.,
-                'diam': 10.2,
+                'L': self.p_all['L5Pyr_apicaltrunk_L'] ,
+                'diam': self.p_all['L5Pyr_apicaltrunk_diam'],
+                'cm': self.p_all['L5Pyr_dend_cm'],
+                'Ra': self.p_all['L5Pyr_dend_Ra'],
             },
             'apical_1': {
-                'L': 680.,
-                'diam': 7.48,
+                'L': self.p_all['L5Pyr_apical1_L'],
+                'diam': self.p_all['L5Pyr_apical1_diam'],
+                'cm': self.p_all['L5Pyr_dend_cm'],
+                'Ra': self.p_all['L5Pyr_dend_Ra'],
             },
             'apical_2': {
-                'L': 680.,
-                'diam': 4.93,
+                'L': self.p_all['L5Pyr_apicaL5_L'],
+                'diam': self.p_all['L5Pyr_apicaL5_diam'],
+                'cm': self.p_all['L5Pyr_dend_cm'],
+                'Ra': self.p_all['L5Pyr_dend_Ra'],
             },
             'apical_tuft': {
-                'L': 425.,
-                'diam': 3.4,
+                'L': self.p_all['L5Pyr_apicaltuft_L'],
+                'diam': self.p_all['L5Pyr_apicaltuft_diam'],
+                'cm': self.p_all['L5Pyr_dend_cm'],
+                'Ra': self.p_all['L5Pyr_dend_Ra'],
             },
             'apical_oblique': {
-                'L': 255.,
-                'diam': 5.1,
+                'L': self.p_all['L5Pyr_apicaloblique_L'],
+                'diam': self.p_all['L5Pyr_apicaloblique_diam'],
+                'cm': self.p_all['L5Pyr_dend_cm'],
+                'Ra': self.p_all['L5Pyr_dend_Ra'],
             },
             'basal_1': {
-                'L': 85.,
-                'diam': 6.8,
+                'L': self.p_all['L5Pyr_basal1_L'],
+                'diam': self.p_all['L5Pyr_basal1_diam'],
+                'cm': self.p_all['L5Pyr_dend_cm'],
+                'Ra': self.p_all['L5Pyr_dend_Ra'],
             },
             'basal_2': {
-                'L': 255.,
-                'diam': 8.5,
+                'L': self.p_all['L5Pyr_basaL5_L'],
+                'diam': self.p_all['L5Pyr_basaL5_diam'],
+                'cm': self.p_all['L5Pyr_dend_cm'],
+                'Ra': self.p_all['L5Pyr_dend_Ra'],
             },
             'basal_3': {
-                'L': 255.,
-                'diam': 8.5,
+                'L': self.p_all['L5Pyr_basal3_L'],
+                'diam': self.p_all['L5Pyr_basal3_diam'],
+                'cm': self.p_all['L5Pyr_dend_cm'],
+                'Ra': self.p_all['L5Pyr_dend_Ra'],
             },
         }
 
         # These MUST match order the above keys in exact order!
-        dend_names = [
-            'apical_trunk', 'apical_1', 'apical_2',
-            'apical_tuft', 'apical_oblique', 'basal_1',
-            'basal_2', 'basal_3'
-        ]
+        # dend_names = [
+        #     'apical_trunk', 'apical_1', 'apical_2',
+        #     'apical_tuft', 'apical_oblique', 'basal_1',
+        #     'basal_2', 'basal_3'
+        # ]
 
-        return dend_props, dend_names
+        # return dend_props, dend_names
 
         # self.dend_L = [102, 680, 680, 425, 255, 85, 255, 255]
         # self.dend_diam = [10.2, 7.48, 4.93, 3.4, 5.1, 6.8, 8.5, 8.5]
@@ -154,23 +186,61 @@ class L5Pyr(Pyr):
         #     print "please fix in L5_pyramidal.py"
         #     sys.exit()
 
+    def __get_syn_props(self):
+        return {
+            'ampa': {
+                'e': self.p_all['L5Pyr_ampa_e'],
+                'tau1': self.p_all['L5Pyr_ampa_tau1'],
+                'tau2': self.p_all['L5Pyr_ampa_tau2'],
+            },
+            'nmda': {
+                'e': self.p_all['L5Pyr_nmda_e'],
+                'tau1': self.p_all['L5Pyr_nmda_tau1'],
+                'tau2': self.p_all['L5Pyr_nmda_tau2'],
+            },
+            'gabaa': {
+                'e': self.p_all['L5Pyr_gabaa_e'],
+                'tau1': self.p_all['L5Pyr_gabaa_tau1'],
+                'tau2': self.p_all['L5Pyr_gabaa_tau2'],
+            },
+            'gabab': {
+                'e': self.p_all['L5Pyr_gabab_e'],
+                'tau1': self.p_all['L5Pyr_gabab_tau1'],
+                'tau2': self.p_all['L5Pyr_gabab_tau2'],
+            }
+        }
+
     # connects sections of this cell together
     def __connect_sections(self):
         # child.connect(parent, parent_end, {child_start=0})
-        # Distal
-        self.list_dend[0].connect(self.soma, 1, 0)
-        self.list_dend[1].connect(self.list_dend[0], 1, 0)
+        # Distal (apical)
+        self.dends['apical_trunk'].connect(self.soma, 1, 0)
+        self.dends['apical_1'].connect(self.dends['apical_trunk'], 1, 0)
+        self.dends['apical_2'].connect(self.dends['apical_1'], 1, 0)
+        self.dends['apical_tuft'].connect(self.dends['apical_2'], 1, 0)
 
-        self.list_dend[2].connect(self.list_dend[1], 1, 0)
-        self.list_dend[3].connect(self.list_dend[2], 1, 0)
+        # apical_oblique comes off distal end of apical_trunk
+        self.dends['apical_oblique'].connect(self.dends['apical_trunk'], 1, 0)
 
-        # dend[4] comes off of dend[0](1)
-        self.list_dend[4].connect(self.list_dend[0], 1, 0)
+        # Proximal (basal)
+        self.dends['basal_1'].connect(self.soma, 0, 0)
+        self.dends['basal_2'].connect(self.dends['basal_1'], 1, 0)
+        self.dends['basal_3'].connect(self.dends['basal_1'], 1, 0)
 
-        # Proximal
-        self.list_dend[5].connect(self.soma, 0, 0)
-        self.list_dend[6].connect(self.list_dend[5], 1, 0)
-        self.list_dend[7].connect(self.list_dend[5], 1, 0)
+        # # Distal
+        # self.list_dend[0].connect(self.soma, 1, 0)
+        # self.list_dend[1].connect(self.list_dend[0], 1, 0)
+
+        # self.list_dend[2].connect(self.list_dend[1], 1, 0)
+        # self.list_dend[3].connect(self.list_dend[2], 1, 0)
+
+        # # dend[4] comes off of dend[0](1)
+        # self.list_dend[4].connect(self.list_dend[0], 1, 0)
+
+        # # Proximal
+        # self.list_dend[5].connect(self.soma, 0, 0)
+        # self.list_dend[6].connect(self.list_dend[5], 1, 0)
+        # self.list_dend[7].connect(self.list_dend[5], 1, 0)
             
     # adds biophysics to soma
     def __biophys_soma(self):
@@ -179,74 +249,87 @@ class L5Pyr(Pyr):
 
         # Insert 'hh' mechanism
         self.soma.insert('hh')
-        self.soma.gkbar_hh = 0.01
-        self.soma.gl_hh = 4.26e-5
-        self.soma.el_hh = -65.
-
-        self.soma.gnabar_hh = 0.16
+        self.soma.gkbar_hh = self.p_all['L5Pyr_soma_gkbar_hh']
+        self.soma.gnabar_hh = self.p_all['L5Pyr_soma_gnabar_hh']
+        self.soma.gl_hh = self.p_all['L5Pyr_soma_gl_hh']
+        self.soma.el_hh = self.p_all['L5Pyr_soma_el_hh']
 
         # insert 'ca' mechanism
         # Units: pS/um^2
         self.soma.insert('ca')
-        self.soma.gbar_ca = 60.
+        self.soma.gbar_ca = self.p_all['L5Pyr_soma_gbar_ca']
 
         # insert 'cad' mechanism
         # units of tau are ms
         self.soma.insert('cad')
-        self.soma.taur_cad = 20.
+        self.soma.taur_cad = self.p_all['L5Pyr_soma_taur_cad']
 
         # insert 'kca' mechanism
         # units are S/cm^2?
         self.soma.insert('kca')
-        self.soma.gbar_kca = 2e-4
+        self.soma.gbar_kca = self.p_all['L5Pyr_soma_gbar_kca']
 
         # Insert 'km' mechanism
         # Units: pS/um^2
         self.soma.insert('km')
-        self.soma.gbar_km = 200.
+        self.soma.gbar_km = self.p_all['L5Pyr_soma_gbar_km']
 
         # insert 'cat' mechanism
         self.soma.insert('cat')
-        self.soma.gbar_cat = 2e-4
+        self.soma.gbar_cat = self.p_all['L5Pyr_soma_gbar_cat']
 
         # insert 'ar' mechanism
         self.soma.insert('ar')
-        self.soma.gbar_ar = 1e-6
+        self.soma.gbar_ar = self.p_all['L5Pyr_soma_gbar_ar']
+
+        # self.soma.gkbar_hh = 0.01
+        # self.soma.gnabar_hh = 0.16
+        # self.soma.gl_hh = 4.26e-5
+        # self.soma.el_hh = -65.
+        # self.soma.gbar_ca = 60.
+        # self.soma.taur_cad = 20.
+        # self.soma.gbar_kca = 2e-4
+        # self.soma.gbar_km = 200.
+        # self.soma.gbar_cat = 2e-4
+        # self.soma.gbar_ar = 1e-6
         
     def __biophys_dends(self):
         # set dend biophysics specified in Pyr()
         # self.pyr_biophys_dends()
 
         # set dend biophysics not specified in Pyr()
-        for sec in self.list_dend:
+        for key in self.dends.iterkeys():
             # Insert 'hh' mechanism
-            sec.insert('hh')
-            sec.gkbar_hh = 0.01
-            sec.gl_hh = 4.26e-5
-            sec.gnabar_hh = 0.14
-            sec.el_hh = -71
+            self.dends[key].insert('hh')
+            self.dends[key].gkbar_hh = self.p_all['L5Pyr_dend_gkbar_hh']
+            self.dends[key].gl_hh = self.p_all['L5Pyr_dend_gl_hh']
+            self.dends[key].gnabar_hh = self.p_all['L5Pyr_dend_gnabar_hh']
+            self.dends[key].el_hh = self.p_all['L5Pyr_dend_el_hh']
 
             # Insert 'ca' mechanims
             # Units: pS/um^2
-            sec.insert('ca')
-            sec.gbar_ca = 60.
+            self.dends[key].insert('ca')
+            self.dends[key].gbar_ca = self.p_all['L5Pyr_dend_gbar_ca']
 
             # Insert 'cad' mechanism
-            sec.insert('cad')
-            sec.taur_cad = 20.
+            self.dends[key].insert('cad')
+            self.dends[key].taur_cad = self.p_all['L5Pyr_dend_taur_cad']
 
             # Insert 'kca' mechanism
-            sec.insert('kca')
-            sec.gbar_kca = 2e-4
+            self.dends[key].insert('kca')
+            self.dends[key].gbar_kca = self.p_all['L5Pyr_dend_gbar_kca']
 
             # Insert 'km' mechansim
             # Units: pS/um^2
-            sec.insert('km')
-            sec.gbar_km = 200.
+            self.dends[key].insert('km')
+            self.dends[key].gbar_km = self.p_all['L5Pyr_dend_gbar_km']
 
-            # insert 'cat' and 'ar' mechanisms
-            sec.insert('cat')
-            sec.insert('ar')
+            # insert 'cat' mechanism
+            self.dends[key].insert('cat')
+            self.dends[key].gbar_cat = self.p_all['L5Pyr_dend_gbar_cat']
+
+            # insert 'ar' mechanism
+            self.dends[key].insert('ar')
 
         # set gbar_ar
         # Value depends on distance from the soma. Soma is set as 
@@ -257,37 +340,110 @@ class L5Pyr(Pyr):
         # SECTION!!!
         nrn.distance(sec=self.soma)
 
-        for sec in self.list_dend:
-            sec.push()
-            for seg in sec:
+        for key in self.dends.iterkeys():
+            self.dends[key].push()
+            for seg in self.dends[key]:
                 seg.gbar_ar = 1e-6 * np.exp(3e-3 * nrn.distance(seg.x))
-
-                # this should always evaluate to 2e-4
-                sec.gbar_cat = 2e-4 * np.exp(0 * nrn.distance(seg.x))
 
             nrn.pop_section()
 
-    def __synapse_create(self):
+            # self.dends[key].gkbar_hh = 0.01
+            # self.dends[key].gl_hh = 4.26e-5
+            # self.dends[key].gnabar_hh = 0.14
+            # self.dends[key].el_hh = -71
+            # self.dends[key].gbar_ca = 60.
+            # self.dends[key].taur_cad = 20.
+            # self.dends[key].gbar_kca = 2e-4
+            # self.dends[key].gbar_km = 200.
+            #     seg.gbar_ar = 1e-6 * np.exp(3e-3 * nrn.distance(seg.x))
+            #     seg.gbar_cat = 2e-4 * np.exp(0 * nrn.distance(seg.x))
+
+        # for sec in self.list_dend:
+        #     # Insert 'hh' mechanism
+        #     sec.insert('hh')
+        #     sec.gkbar_hh = 0.01
+        #     sec.gl_hh = 4.26e-5
+        #     sec.gnabar_hh = 0.14
+        #     sec.el_hh = -71
+
+        #     # Insert 'ca' mechanims
+        #     # Units: pS/um^2
+        #     sec.insert('ca')
+        #     sec.gbar_ca = 60.
+
+        #     # Insert 'cad' mechanism
+        #     sec.insert('cad')
+        #     sec.taur_cad = 20.
+
+        #     # Insert 'kca' mechanism
+        #     sec.insert('kca')
+        #     sec.gbar_kca = 2e-4
+
+        #     # Insert 'km' mechansim
+        #     # Units: pS/um^2
+        #     sec.insert('km')
+        #     sec.gbar_km = 200.
+
+        #     # insert 'cat' and 'ar' mechanisms
+        #     sec.insert('cat')
+        #     sec.insert('ar')
+
+        # nrn.distance(sec=self.soma)
+
+        # for sec in self.list_dend:
+        #     sec.push()
+        #     for seg in sec:
+        #         seg.gbar_ar = 1e-6 * np.exp(3e-3 * nrn.distance(seg.x))
+
+        #         # this should always evaluate to 2e-4
+        #         sec.gbar_cat = 2e-4 * np.exp(0 * nrn.distance(seg.x))
+
+        #     nrn.pop_section()
+
+    def __synapse_create(self, p_syn):
         # creates synapses onto this cell 
         # Somatic synapses
         self.synapses = {
-            'soma_gabaa': self.syn_gabaa_create(self.soma(0.5)),
-            'soma_gabab': self.syn_gabab_create(self.soma(0.5)),
+            'soma_gabaa': self.syn_create(self.soma(0.5), p_syn['gabaa']),
+            'soma_gabab': self.syn_create(self.soma(0.5), p_syn['gabab']),
         }
 
         # Dendritic synapses
-        self.apicaltuft_gabaa = self.syn_gabaa_create(self.list_dend[3](0.5))
-        self.apicaltuft_ampa = self.syn_ampa_create(self.list_dend[3](0.5))
-        self.apicaltuft_nmda = self.syn_nmda_create(self.list_dend[3](0.5))
+        self.apicaltuft_gabaa = self.syn_create(self.dends['apical_tuft'](0.5), p_syn['gabaa'])
+        self.apicaltuft_ampa = self.syn_create(self.dends['apical_tuft'](0.5), p_syn['ampa'])
+        self.apicaltuft_nmda = self.syn_create(self.dends['apical_tuft'](0.5), p_syn['nmda'])
 
-        self.apicaloblique_ampa = self.syn_ampa_create(self.list_dend[4](0.5))
-        self.apicaloblique_nmda = self.syn_nmda_create(self.list_dend[4](0.5))
+        self.apicaloblique_ampa = self.syn_create(self.dends['apical_oblique'](0.5), p_syn['ampa'])
+        self.apicaloblique_nmda = self.syn_create(self.dends['apical_oblique'](0.5), p_syn['nmda'])
 
-        self.basal2_ampa = self.syn_ampa_create(self.list_dend[6](0.5))
-        self.basal2_nmda = self.syn_nmda_create(self.list_dend[6](0.5))
+        self.basal2_ampa = self.syn_create(self.dends['basal_2'](0.5), p_syn['ampa'])
+        self.basal2_nmda = self.syn_create(self.dends['basal_2'](0.5), p_syn['nmda'])
 
-        self.basal3_ampa = self.syn_ampa_create(self.list_dend[7](0.5))
-        self.basal3_nmda = self.syn_nmda_create(self.list_dend[7](0.5))
+        self.basal3_ampa = self.syn_create(self.dends['basal_3'](0.5), p_syn['ampa'])
+        self.basal3_nmda = self.syn_create(self.dends['basal_3'](0.5), p_syn['nmda'])
+
+        # self.synapses = {
+        #     'soma_gabaa': self.syn_gabaa_create(self.soma(0.5)),
+        #     'soma_gabab': self.syn_gabab_create(self.soma(0.5)),
+        # }
+        # self.apicaltuft_ampa = self.syn_ampa_create(self.dends['apical_tuft'](0.5))
+        # self.apicaltuft_nmda = self.syn_nmda_create(self.dends['apical_tuft'](0.5))
+        # self.apicaloblique_ampa = self.syn_ampa_create(self.dends['apical_oblique'](0.5))
+        # self.apicaloblique_nmda = self.syn_nmda_create(self.dends['apical_oblique'](0.5))
+        # self.basal2_ampa = self.syn_ampa_create(self.dends['basal_2'](0.5))
+        # self.basal2_nmda = self.syn_nmda_create(self.dends['basal_2'](0.5))
+        # self.basal3_ampa = self.syn_ampa_create(self.dends['basal_3'](0.5))
+        # self.basal3_nmda = self.syn_nmda_create(self.dends['basal_3'](0.5))
+
+        # self.apicaltuft_gabaa = self.syn_gabaa_create(self.list_dend[3](0.5))
+        # self.apicaltuft_ampa = self.syn_ampa_create(self.list_dend[3](0.5))
+        # self.apicaltuft_nmda = self.syn_nmda_create(self.list_dend[3](0.5))
+        # self.apicaloblique_ampa = self.syn_ampa_create(self.list_dend[4](0.5))
+        # self.apicaloblique_nmda = self.syn_nmda_create(self.list_dend[4](0.5))
+        # self.basal2_ampa = self.syn_ampa_create(self.list_dend[6](0.5))
+        # self.basal2_nmda = self.syn_nmda_create(self.list_dend[6](0.5))
+        # self.basal3_ampa = self.syn_ampa_create(self.list_dend[7](0.5))
+        # self.basal3_nmda = self.syn_nmda_create(self.list_dend[7](0.5))
 
     # parallel connection function FROM all cell types TO here
     def parconnect(self, gid, gid_dict, pos_dict, p):

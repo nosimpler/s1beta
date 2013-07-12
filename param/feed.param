@@ -4,7 +4,7 @@
 # np.arrays for everything else?
 # turns out some whitespace is valid for dicts!
 
-sim_prefix: AMPA-freq-30Hz
+sim_prefix: test
 expmt_groups: {testing0}
 # expmt_groups: {freq-05, freq-10, freq-20, freq-30}
 # expmt_groups: {stdev-00, stdev-05, stdev-10, stdev-20, stdev-30}
@@ -34,12 +34,12 @@ f_stdev_dist: 20.
 events_per_cycle_dist: 2
 
 # thalamic input amplitudes and delays
-input_prox_A_weight_L2Pyr_ampa: 1e-5
-input_prox_A_weight_L5Pyr_ampa: 1e-5
-input_prox_A_weight_inh_ampa: 1e-5
-input_prox_A_weight_L2Pyr_nmda: 0.
-input_prox_A_weight_L5Pyr_nmda: 0.
-input_prox_A_weight_inh_nmda: 0.
+input_prox_A_weight_L2Pyr_ampa: 0.
+input_prox_A_weight_L5Pyr_ampa: 0.
+input_prox_A_weight_inh_ampa: 0.
+input_prox_A_weight_L2Pyr_nmda: 4e-5
+input_prox_A_weight_L5Pyr_nmda: 4e-5
+input_prox_A_weight_inh_nmda: 4e-5
 input_prox_A_delay_L2: 0.1
 input_prox_A_delay_L5: 1.0
 
@@ -62,7 +62,7 @@ save_spec_data: 1
 f_max_spec: 60.
 
 # n trials
-N_trials: 10
+N_trials: 0
 
 # these values will only be used with N_trials = 0
 # and when these values are not -1
@@ -102,4 +102,6 @@ gbar_L5Basket_L5Basket: 2e-2
 gbar_L5Pyr_L5Basket: 5e-4
 gbar_L2Pyr_L5Basket: 2.5e-4
 
-Run_Date: 2013-06-18
+# L2Pyr cell properties
+L2Pyr_soma_Ra: 200.
+L5Pyr_soma_Ra: 200.

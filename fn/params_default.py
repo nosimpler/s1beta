@@ -1,8 +1,8 @@
 # params_default.py - master list of changeable params. most set to default val of inactive
 #
-# v 1.8.10
-# rev 2013-06-20 (MS: merge feedsynapses_new with master)
-# last major: (MS: Differentiate between AMPA and NMDA conductances for external feed synapses on all cell types)
+# v 1.8.15cell
+# rev 2013-07-03 (MS: get_L5Pyr()_params_defaults returns default params of L5Pyr() class)
+# last major: (MS: get_L2Pyr_params_default() returns default params of L2Pyr() class)
 
 # Note that nearly all start times are set BEYOND tstop for this file
 # Most values here are set to whatever default value inactivates them, such as 0 for conductance
@@ -10,7 +10,9 @@
 # flat file of default values
 # will most often be overwritten
 def get_params_default():
-    return {
+    # return {
+    # set default params
+    p = {
         'sim_prefix': 'default',
 
         # simulation end time (ms)
@@ -171,4 +173,155 @@ def get_params_default():
         # default end time for pois inputs
         'T_pois': -1,
         'dt': 0.025,
+    }
+
+    # grab cell-specific params and update p accordingly
+    p_L2Pyr = get_L2Pyr_params_default()
+    p_L5Pyr = get_L5Pyr_params_default()
+    p.update(p_L2Pyr)
+    p.update(p_L5Pyr)
+
+    return p
+
+def get_L2Pyr_params_default():
+    return {
+        # Soma
+        'L2Pyr_soma_L': 22.1,
+        'L2Pyr_soma_diam': 23.4,
+        'L2Pyr_soma_cm': 0.6195,
+        'L2Pyr_soma_Ra': 200.,
+        
+        # Dendrites
+        'L2Pyr_dend_cm': 0.6195,
+        'L2Pyr_dend_Ra': 200.,
+
+        'L2Pyr_apicaltrunk_L': 59.5,
+        'L2Pyr_apicaltrunk_diam': 4.25,
+    
+        'L2Pyr_apical1_L': 306., 
+        'L2Pyr_apical1_diam': 4.08,
+        
+        'L2Pyr_apicaltuft_L': 238., 
+        'L2Pyr_apicaltuft_diam': 3.4,
+    
+        'L2Pyr_apicaloblique_L': 340., 
+        'L2Pyr_apicaloblique_diam': 3.91,
+         
+        'L2Pyr_basal1_L': 85., 
+        'L2Pyr_basal1_diam': 4.25,
+        
+        'L2Pyr_basal2_L': 255., 
+        'L2Pyr_basal2_diam': 2.72,
+        
+        'L2Pyr_basal3_L': 255., 
+        'L2Pyr_basal3_diam': 2.72,
+        
+        # Synapses
+        'L2Pyr_ampa_e': 0.,
+        'L2Pyr_ampa_tau1': 0.5,
+        'L2Pyr_ampa_tau2': 5.,
+
+        'L2Pyr_nmda_e': 0.,
+        'L2Pyr_nmda_tau1': 1.,
+        'L2Pyr_nmda_tau2': 20.,
+
+        'L2Pyr_gabaa_e': -80.,
+        'L2Pyr_gabaa_tau1': 0.5,
+        'L2Pyr_gabaa_tau2': 5.,
+
+        'L2Pyr_gabab_e': -80.,
+        'L2Pyr_gabab_tau1': 1.,
+        'L2Pyr_gabab_tau2': 20.,
+
+        # Biophysics soma
+        'L2Pyr_soma_gkbar_hh': 0.01,
+        'L2Pyr_soma_gnabar_hh': 0.18,
+        'L2Pyr_soma_el_hh': -65.,
+        'L2Pyr_soma_gl_hh': 4.26e-5,
+        'L2Pyr_soma_gbar_km': 250.,
+
+        # Biophysics dends
+        'L2Pyr_dend_gkbar_hh': 0.01,
+        'L2Pyr_dend_gnabar_hh': 0.15,
+        'L2Pyr_dend_el_hh': -65.,
+        'L2Pyr_dend_gl_hh': 4.26e-5,
+        'L2Pyr_dend_gbar_km': 250.,
+    }
+
+def get_L5Pyr_params_default():
+    return {
+        # Soma
+        'L5Pyr_soma_L': 39.,
+        'L5Pyr_soma_diam': 28.9,
+        'L5Pyr_soma_cm': 0.85,
+        'L5Pyr_soma_Ra': 200.,
+        
+        # Dendrites
+        'L5Pyr_dend_cm': 0.85,
+        'L5Pyr_dend_Ra': 200.,
+
+        'L5Pyr_apicaltrunk_L': 102.,
+        'L5Pyr_apicaltrunk_diam': 10.2,
+    
+        'L5Pyr_apical1_L': 680.,
+        'L5Pyr_apical1_diam': 7.48,
+
+        'L5Pyr_apicaL5_L': 680.,
+        'L5Pyr_apicaL5_diam': 4.93,
+        
+        'L5Pyr_apicaltuft_L': 425.,
+        'L5Pyr_apicaltuft_diam': 3.4,
+    
+        'L5Pyr_apicaloblique_L': 255.,
+        'L5Pyr_apicaloblique_diam': 5.1,
+         
+        'L5Pyr_basal1_L': 85., 
+        'L5Pyr_basal1_diam': 6.8,
+        
+        'L5Pyr_basaL5_L': 255., 
+        'L5Pyr_basaL5_diam': 8.5,
+        
+        'L5Pyr_basal3_L': 255., 
+        'L5Pyr_basal3_diam': 8.5,
+        
+        # Synapses
+        'L5Pyr_ampa_e': 0.,
+        'L5Pyr_ampa_tau1': 0.5,
+        'L5Pyr_ampa_tau2': 5.,
+
+        'L5Pyr_nmda_e': 0.,
+        'L5Pyr_nmda_tau1': 1.,
+        'L5Pyr_nmda_tau2': 20.,
+
+        'L5Pyr_gabaa_e': -80.,
+        'L5Pyr_gabaa_tau1': 0.5,
+        'L5Pyr_gabaa_tau2': 5.,
+
+        'L5Pyr_gabab_e': -80.,
+        'L5Pyr_gabab_tau1': 1.,
+        'L5Pyr_gabab_tau2': 20.,
+
+        # Biophysics soma
+        'L5Pyr_soma_gkbar_hh': 0.01,
+        'L5Pyr_soma_gnabar_hh': 0.16,
+        'L5Pyr_soma_el_hh': -65.,
+        'L5Pyr_soma_gl_hh': 4.26e-5,
+        'L5Pyr_soma_gbar_ca': 60.,
+        'L5Pyr_soma_taur_cad': 20.,
+        'L5Pyr_soma_gbar_kca': 2e-4,
+        'L5Pyr_soma_gbar_km': 200.,
+        'L5Pyr_soma_gbar_cat': 2e-4,
+        'L5Pyr_soma_gbar_ar': 1e-6,
+
+        # Biophysics dends
+        'L5Pyr_dend_gkbar_hh': 0.01,
+        'L5Pyr_dend_gnabar_hh': 0.14,
+        'L5Pyr_dend_el_hh': -71.,
+        'L5Pyr_dend_gl_hh': 4.26e-5,
+        'L5Pyr_dend_gbar_ca': 60.,
+        'L5Pyr_dend_taur_cad': 20.,
+        'L5Pyr_dend_gbar_kca': 2e-4,
+        'L5Pyr_dend_gbar_km': 200.,
+        'L5Pyr_dend_gbar_cat': 2e-4,
+        'L5Pyr_dend_gbar_ar': 1e-6,
     }
