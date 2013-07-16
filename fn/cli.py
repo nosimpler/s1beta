@@ -222,10 +222,10 @@ class Console(Cmd):
 
         # "default" opts
         opts = {
-            'type': 'dpl_laminar',
+            'type': 'current',
             'f_max': 150.,
             'save_data': 1,
-            'runtype': 'debug',
+            'runtype': 'parallel',
         }
 
         # check l_opts for valid keys in opts and attempt to assign
@@ -568,8 +568,9 @@ class Console(Cmd):
         # parse the opts
         self.__check_args(opts, l_opts)
 
-        # use exec_spec_regenerate to run
-        self.spec_results = clidefs.exec_spec_regenerate(self.ddata, opts['f_max'])
+        # use exec_spec_regenerate to regenerate spec data
+        clidefs.exec_spec_regenerate(self.ddata, opts['f_max'])
+        # self.spec_results = clidefs.exec_spec_regenerate(self.ddata, opts['f_max'])
 
     def do_spec_stationary_avg(self, args):
         """Averages spec power over time and plots freq vs power. Fn can act per expmt or over entire simulation. If maxpwr supplied as arg, also plots freq at which max avg pwr occurs v.s input freq

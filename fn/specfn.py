@@ -92,11 +92,11 @@ class Welch():
         # return n, j
 
 # MorletSpec class based on a time vec tvec and a time series vec tsvec
-class MorletSpecSingle():
-    # fdata_spec will be created based on fparam and fdata, a general time series
-    def __init__(self, fdata_spec, tvec, tsvec, fparam, f_max=None, save_data=None):
+class MorletSpec():
+    def __init__(self, tvec, tsvec, fparam, f_max=None):
+    # def __init__(self, fdata_spec, tvec, tsvec, fparam, f_max=None, save_data=None):
         # Save variable portion of fdata_spec as identifying attribute
-        self.name = fdata_spec
+        # self.name = fdata_spec
 
         # Import dipole data and remove extra dimensions from signal array.
         self.tvec = tvec
@@ -118,8 +118,8 @@ class MorletSpecSingle():
         # truncate these vectors appropriately based on tmin
         if self.p_dict['tstop'] > self.tmin:
             # must be done in this order! timeseries first!
-            self.tsvec = self.tsvec[self.tvec > self.tmin]
-            self.tvec = self.tvec[self.tvec > self.tmin]
+            self.tsvec = self.tsvec[self.tvec >= self.tmin]
+            self.tvec = self.tvec[self.tvec >= self.tmin]
 
         # Check that tstop is greater than tmin
         if self.p_dict['tstop'] > self.tmin:
@@ -141,16 +141,16 @@ class MorletSpecSingle():
             # Write data to file ONLY if save_data is ALSO true
             # eg. save_data is an overwriting mechanism
             # if self.p_dict['save_spec_data'] and save_data:
-            if save_data == None:
-                # if save_data is unspecified, check the p_dict
-                if self.p_dict['save_spec_data']:
-                    # write(fdata_spec, self.timevec, self.freqvec, self.TFR)
-                    self.save(fdata_spec)
+            # if save_data == None:
+            #     # if save_data is unspecified, check the p_dict
+            #     if self.p_dict['save_spec_data']:
+            #         # write(fdata_spec, self.timevec, self.freqvec, self.TFR)
+            #         self.save(fdata_spec)
 
-            elif save_data:
-                # if save_data IS specified, and IF the value evaluates True, THEN write also
-                self.save(fdata_spec)
-                # write(fdata_spec, self.timevec, self.freqvec, self.TFR)
+            # elif save_data:
+            #     # if save_data IS specified, and IF the value evaluates True, THEN write also
+            #     self.save(fdata_spec)
+            #     # write(fdata_spec, self.timevec, self.freqvec, self.TFR)
 
         else:
             print "tstop not greater than %4.2f ms. Skipping wavelet analysis." % self.tmin
@@ -255,167 +255,6 @@ class MorletSpecSingle():
 
         return S
 
-# MorletSpec class
-class MorletSpec():
-    # fdata_spec will be created based on fparam and fdata, a general time series
-    def __init__(self, fparam, fdata, fdata_spec, f_max=None, save_data=None):
-        # Save variable portion of fdata_spec as identifying attribute
-        self.name = fdata_spec
-
-        # function is called this way because paramrw.read() returns 2 outputs
-        _, self.p_dict = paramrw.read(fparam)
-        # self.p_dict = paramrw.read(fparam)[1]
-
-        # Import dipole data and remove extra dimensions from signal array.
-        # data_raw = np.loadtxt(open(fdata, 'rb'))
-        dpl = dipolefn.Dipole(fdata)
-
-        # use the Dipole() function convert_fAm_to_nAm() to convert ... from fAm to nAm
-        dpl.convert_fAm_to_nAm()
-
-        # using dpl.units to do spectral units, possibly units/Hz
-        self.units = "(%s)^2" % dpl.units
-
-        # time vec from the Dipole() object
-        self.timevec = dpl.t
-
-        self.S = dpl.dpl['agg']
-
-        # maximum frequency of analysis
-        if not f_max:
-            f_max = self.p_dict['f_max_spec'] + 1
-
-        # cutoff time in ms
-        self.tmin = 50.
-
-        # Check that tstop is greater than tmin
-        if self.p_dict['tstop'] > self.tmin:
-            # Remove first self.tmin ms of simulation
-            self.S = self.S[self.timevec >= self.tmin]
-            self.timevec = self.timevec[self.timevec >= self.tmin]
-            # self.S = self.S[self.tmin / self.p_dict['dt']:, 1]
-
-            # Array of frequencies over which to sort
-            self.freqvec = np.arange(1., f_max)
-
-            # Number of cycles in wavelet (>5 advisable)
-            self.width = 7.
-
-            # Calculate sampling frequency
-            self.fs = 1000. / self.p_dict['dt']
-
-            # Generate Spec data
-            self.TFR = self.__traces2TFR()
-
-            # Write data to file ONLY if save_data is ALSO true
-            # eg. save_data is an overwriting mechanism
-            # if self.p_dict['save_spec_data'] and save_data:
-            if save_data == None:
-                # if save_data is unspecified, check the p_dict
-                if self.p_dict['save_spec_data']:
-                    write(fdata_spec, self.timevec, self.freqvec, self.TFR)
-
-            elif save_data:
-                # if save_data IS specified, and IF the value evaluates True, THEN write also
-                write(fdata_spec, self.timevec, self.freqvec, self.TFR)
-
-        else:
-            print "tstop not greater than %4.2f ms. Skipping wavelet analysis." % self.tmin
-
-    def plot_to_ax(self, ax_spec, dt):
-        # pc = ax.imshow(self.TFR, extent=[xmin, xmax, self.freqvec[-1], self.freqvec[0]], aspect='auto', origin='upper')
-        pc = ax_spec.imshow(self.TFR, aspect='auto', origin='upper')
-
-        return pc
-
-    # also creates self.timevec
-    def __traces2TFR(self):
-        self.S_trans = self.S.transpose()
-
-        # range should probably be 0 to len(self.S_trans)
-        # shift tvec to reflect change
-        # self.timevec = 1000. * np.arange(1, len(self.S_trans)+1)/self.fs + self.tmin - self.p_dict['dt']
-
-        B = np.zeros((len(self.freqvec), len(self.S_trans)))
-
-        if self.S_trans.ndim == 1:
-            for j in range(0, len(self.freqvec)):
-                s = sps.detrend(self.S_trans[:])
-                B[j,:] += self.__energyvec(self.freqvec[j], s)
-                # B[j,:] = B[j,:] + self.__energyvec(self.freqvec[j], self.__lnr50(s))
-
-            return B
-
-        else:
-            for i in range(0, self.S_trans.shape[0]):
-                for j in range(0, len(self.freqvec)):
-                    s = sps.detrend(self.S_trans[i,:])
-                    B[j,:] += self.__energyvec(self.freqvec[j], s)
-                    # B[j,:] = B[j,:] + self.__energyvec(self.freqvec[j], self.__lnr50(s))
-
-    def __energyvec(self, f, s):
-        # Return an array containing the energy as function of time for freq f
-        # The energy is calculated using Morlet's wavelets
-        # f: frequency 
-        # s: signal
-        dt = 1. / self.fs
-        sf = f / self.width
-        st = 1. / (2.*np.pi*sf)
-
-        t = np.arange(-3.5*st, 3.5*st, dt)
-        m = self.__morlet(f, t)
-        y = sps.fftconvolve(s, m)
-        y = (2. * abs(y) / self.fs)**2
-        y = y[np.ceil(len(m)/2.):len(y)-np.floor(len(m)/2.)+1]
-
-        return y
-
-    def __morlet(self, f, t):
-        # Morlet's wavelet for frequency f and time t
-        # Wavelet normalized so total energy is 1
-        # f: specific frequency
-        # t: not entirely sure...
-
-        sf = f / self.width
-        st = 1. / (2. * np.pi * sf)
-        A = 1. / (st * np.sqrt(2.*np.pi))
-
-        y = A * np.exp(-t**2. / (2. * st**2.)) * np.exp(1.j * 2. * np.pi * f * t)
-
-        return y
-
-    def __lnr50(self, s):
-        # Line noise reduction (50 Hz) the amplitude and phase of the line notch is estimate.
-        # A sinusoid with these characterisitics is then subtracted from the signal.
-        # s: signal 
-
-        fNoise = 50.
-        tv = np.arange(0,len(s))/self.fs
-
-        if np.ndim(s) == 1:
-            Sc = np.zeros(s.shape)
-            Sft = self.__ft(s[:], fNoise)
-            Sc[:] = s[:] - abs(Sft) * np.cos(2. * np.pi * fNoise * tv - np.angle(Sft))
-
-            return Sc
-
-        else:
-            s = s.transpose()
-            Sc = np.zeros(s.shape)
-
-            for k in range(0, len(s)):
-                Sft = ft(s[k,:], fNoise)
-                Sc[k,:] = s[k,:] - abs(Sft) * np.cos(2. * np.pi * fNoise * tv - np.angle(Sft))
-                
-            return Sc.tranpose()
-
-    def __ft(self, s, f):
-        tv = np.arange(0,len(s)) / self.fs
-        tmp = np.exp(1.j*2. * np.pi * f * tv)
-        S = 2 * sum(s * tmp) / len(s)
-
-        return S
-
 # spectral plotting kernel should be simpler and take just a file name and an axis handle
 # Spectral plotting kernel for ONE simulation run
 # ax_spec is the axis handle. fspec is the file name
@@ -480,7 +319,13 @@ def generate_missing_spec(ddata, f_max=40):
 
     # if this list is empty, assume it is everywhere and run the analysis function
     if not l_spec:
-        spec = analysis(ddata, [], f_max, 1)
+        opts = {
+            'type': 'dpl_laminar',
+            'f_max': f_max,
+            'save_data': 1,
+            'runtype': 'parallel',
+        }
+        analysis_typespecific(ddata, opts)
     else:
         # this is currently incorrect, it should actually return the data that has been referred to
         # as spec_results. such a function to properly get this without analysis (eg. reader to this data)
@@ -496,36 +341,44 @@ def generate_missing_spec(ddata, f_max=40):
             'type': 'current',
             'f_max': 90.,
             'save_data': 1,
-            'runtype': 'debug',
+            'runtype': 'parallel',
         }
-        spec_current = analysis_typespecific(ddata, p_exp, opts)
+        analysis_typespecific(ddata, opts)
     else:
         spec_current = []
 
-    return spec
+# Kernel for spec analysis of current data
+# necessary for parallelization
+def spec_current_kernel(fparam, fts, fspec, f_max):
+    I_syn = currentfn.SynapticCurrent(fts)
 
-# this must be globally available for callback function append_spec
-spec_results = []
+    # Generate spec results
+    spec_L2 = MorletSpec(I_syn.t, I_syn.I_soma_L2Pyr, fparam, f_max)
+    spec_L5 = MorletSpec(I_syn.t, I_syn.I_soma_L5Pyr, fparam, f_max)
 
-# callback function to aggregate spec results
-def append_spec(spec_obj):
-    spec_results.append(spec_obj)
+    # Save spec data
+    np.savez_compressed(fspec, t_L2=spec_L2.t, f_L2=spec_L2.f, TFR_L2=spec_L2.TFR, t_L5=spec_L5.t, f_L5=spec_L5.f, TFR_L5=spec_L5.TFR)
 
-# parallel kernel for returning the proper spec from the SynapticCurrent() object
-# used in analysis_typespecific()
-# def spec_current_par_kernel(fparam, fts, fspec, layer='L2'):
-#     I_syn = currentfn.SynapticCurrent(fts)
-#
-#     if layer == 'L2':
-#         return 'testing'
-#         # return MorletSpecSingle(fspec, I_syn.t, I_syn.I_soma_L2Pyr, fparam, save_data=0)
-#
-#     elif layer == 'L5':
-#         return MorletSpecSingle(fspec, I_syn.t, I_syn.I_soma_L5Pyr, fparam, save_data=0)
+# Kernel for spec analysis of dipole data
+# necessary for parallelization
+def spec_dpl_kernel(fparam, fts, fspec, f_max): 
+    dpl = dipolefn.Dipole(fts)
+
+    # Do the conversion prior to generating these spec
+    dpl.convert_fAm_to_nAm()
+
+    # Generate various spec results
+    spec_agg = MorletSpec(dpl.t, dpl.dpl['agg'], fparam, f_max)
+    spec_L2 = MorletSpec(dpl.t, dpl.dpl['L2'], fparam, f_max)
+    spec_L5 = MorletSpec(dpl.t, dpl.dpl['L5'], fparam, f_max)
+
+    # Save spec results
+    np.savez_compressed(fspec, time=spec_agg.t, freq=spec_agg.f, TFR=spec_agg.TFR, t_L2=spec_L2.t, f_L2=spec_L2.f, TFR_L2=spec_L2.TFR, t_L5=spec_L5.t, f_L5=spec_L5.f, TFR_L5=spec_L5.TFR)
 
 # Does spec analysis for all files in simulation directory
 # ddata comes from fileio
-def analysis_typespecific(ddata, p_exp, opts=None):
+def analysis_typespecific(ddata, opts=None):
+# def analysis_typespecific(ddata, p_exp, opts=None):
     # 'opts' input are the options in a dictionary
     # if opts is defined, then make it well formed
     # the valid keys of opts are in list_opts
@@ -572,146 +425,59 @@ def analysis_typespecific(ddata, p_exp, opts=None):
     # perform analysis on all runs from all exmpts at same time
     if opts_run['type'] == 'current':
         list_spec.extend([ddata.create_filename(expmt_group, 'rawspeccurrent', exp_prefix) for exp_prefix in exp_prefix_list])
-        spec_results_L2 = []
-        spec_results_L5 = []
 
-        # spec_results_L2 and _L5 now defined locally
-        for fparam, fts, fspec in it.izip(list_param, list_ts, list_spec):
-            I_syn = currentfn.SynapticCurrent(fts)
-            spec_results_L2.append(MorletSpecSingle(fspec, I_syn.t, I_syn.I_soma_L2Pyr, fparam, opts_run['f_max'], save_data=0))
-            spec_results_L5.append(MorletSpecSingle(fspec, I_syn.t, I_syn.I_soma_L5Pyr, fparam, opts_run['f_max'], save_data=0))
-            # pl.apply_async(spec_current_par_kernel, (fparam, fts, fspec, 'L2'), callback=append_spec_L2)
-            # pl.apply_async(spec_current_par_kernel, (fparam, fts, fspec, 'L5'), callback=append_spec_L5)
-
-        # spec_single_ are data from MorletSpecSingle
-        for spec_L2, spec_L5, fspec in it.izip(spec_results_L2, spec_results_L5, list_spec):
-            np.savez_compressed(fspec, t_L2=spec_L2.t, f_L2=spec_L2.f, TFR_L2=spec_L2.TFR, t_L5=spec_L5.t, f_L5=spec_L5.f, TFR_L5=spec_L5.TFR)
-
-        return spec_results_L2, spec_results_L5
-
-    elif opts_run['type'] == 'dpl_laminar':
-        # these should be OUTPUT filenames that are being generated
-        list_spec.extend([ddata.create_filename(expmt_group, 'rawspec', exp_prefix) for exp_prefix in exp_prefix_list])
-        # also in this case, the original spec results will be overwritten
-        # and replaced by laminar specific ones and aggregate ones
-        # in this case, list_ts is a list of dipole
-        spec_results = []
-        spec_results_L2 = []
-        spec_results_L5 = []
-
-        # spec_results_L2 and _L5
-        for fparam, fts, fspec in it.izip(list_param, list_ts, list_spec):
-            dpl = dipolefn.Dipole(fts)
-
-            # do the conversion prior to generating these spec
-            dpl.convert_fAm_to_nAm()
-
-            # append various spec results
-            spec_results.append(MorletSpecSingle(fspec, dpl.t, dpl.dpl['agg'], fparam, opts_run['f_max'], save_data=0))
-            spec_results_L2.append(MorletSpecSingle(fspec, dpl.t, dpl.dpl['L2'], fparam, opts_run['f_max'], save_data=0))
-            spec_results_L5.append(MorletSpecSingle(fspec, dpl.t, dpl.dpl['L5'], fparam, opts_run['f_max'], save_data=0))
-
-        # spec_single_ are data from MorletSpecSingle
-        for spec_agg, spec_L2, spec_L5, fspec in it.izip(spec_results, spec_results_L2, spec_results_L5, list_spec):
-            # the nomenclature "time" and "freq" are used here for backward compatibility only and
-            # should be deprecated
-            np.savez_compressed(fspec, time=spec_agg.t, freq=spec_agg.f, TFR=spec_agg.TFR, t_L2=spec_L2.t, f_L2=spec_L2.f, TFR_L2=spec_L2.TFR, t_L5=spec_L5.t, f_L5=spec_L5.f, TFR_L5=spec_L5.TFR)
-
-        return spec_results_L2, spec_results_L5
-
-    # probably not a real else.
-    else:
         if opts_run['runtype'] == 'parallel':
             pl = mp.Pool()
+
             for fparam, fts, fspec in it.izip(list_param, list_ts, list_spec):
-                pl.apply_async(MorletSpec, (fparam, fts, fspec, opts_run['f_max'], opts_run['save_data']), callback=append_spec)
+                pl.apply_async(spec_current_kernel, (fparam, fts, fspec, opts_run['f_max']))
 
             pl.close()
             pl.join()
 
-            # sort the spec results by the spec object's name and return
-            return sorted(spec_results, key=lambda spec_obj: spec_obj.name)
-
-        elif opts_run['runtype'] == 'debug':
+        if opts_run['runtype'] == 'debug':
             for fparam, fts, fspec in it.izip(list_param, list_ts, list_spec):
-                spec_results.append(MorletSpec(fparam, fts, fspec, opts_run['f_max'], opts_run['save_data']))
+                spec_current_kernel(fparam, fts, fspec, opts_run['f_max'])
 
-            return spec_results
+    elif opts_run['type'] == 'dpl_laminar':
+        # these should be OUTPUT filenames that are being generated
+        list_spec.extend([ddata.create_filename(expmt_group, 'rawspec', exp_prefix) for exp_prefix in exp_prefix_list])
 
-# Does spec analysis for all files in simulation directory
-# ddata is a SimulationPaths() object from fileio
-def analysis(ddata, p_exp, f_max=None, save_data=None):
-    # runtype = 'debug'
-    runtype = 'parallel'
+        # also in this case, the original spec results will be overwritten
+        # and replaced by laminar specific ones and aggregate ones
+        # in this case, list_ts is a list of dipole
+        if opts_run['runtype'] == 'parallel':
+            pl = mp.Pool()
 
-    # preallocate lists for use below
-    param_list = []
-    dpl_list = []
-    spec_list = []
+            for fparam, fts, fspec in it.izip(list_param, list_ts, list_spec):
+                pl.apply_async(spec_dpl_kernel, (fparam, fts, fspec, opts_run['f_max']))
 
-    # aggregrate all file from individual expmts into lists
-    for expmt_group in ddata.expmt_groups:
-        # get the list of params
-        # returns an alpha SORTED list
-        # store expmt param list temporarily for use below
-        param_tmp = ddata.file_match(expmt_group, 'param')
+            pl.close()
+            pl.join()
 
-        # add param_tmp to list of all param files
-        param_list.extend(param_tmp)
+        if opts_run['runtype'] == 'debug':
+            # spec_results_L2 and _L5
+            for fparam, fts, fspec in it.izip(list_param, list_ts, list_spec):
+                spec_dpl_kernel(fparam, fts, fspec, opts_run['f_max'])
 
-        # get the list of dipoles
-        dpl_list.extend(ddata.file_match(expmt_group, 'rawdpl'))
-
-        # create list of spec output names
-        # this is sorted because of file_match
-        exp_prefix_list = [fio.strip_extprefix(fparam) for fparam in param_tmp]
-        spec_list.extend([ddata.create_filename(expmt_group, 'rawspec', exp_prefix) for exp_prefix in exp_prefix_list])
-
-    # perform analysis on all runs from all exmpts at same time
-    if runtype == 'parallel':
-        pl = mp.Pool()
-        for fparam, fdpl, fspec in it.izip(param_list, dpl_list, spec_list):
-            pl.apply_async(MorletSpec, (fparam, fdpl, fspec, f_max, save_data), callback=append_spec)
-
-        pl.close()
-        pl.join()
-
-        # sort the spec results by the spec object's name and return
-        return sorted(spec_results, key=lambda spec_obj: spec_obj.name)
-
-    if runtype == 'debug':
-        for fparam, fdpl, fspec in it.izip(param_list, dpl_list, spec_list):
-            spec_results.append(MorletSpec(fparam, fdpl, fspec, f_max, save_data))
-
-        return spec_results
+    else:
+        print 'Type %s not recognized. Try again later.' %(opts_run['type'])
 
 # returns spec results *only* for a given experimental group
 def from_expmt(spec_result_list, expmt_group):
     return [spec_result for spec_result in spec_result_list if expmt_group in spec_result.name]
 
 # Averages spec power over time, returning an array of average pwr per frequency 
-def specpwr_stationary_avg(dspec):
-    # dspec may be either raw spec data or pathway to saved spec data
+def specpwr_stationary_avg(fspec):
+    # Load data from file
+    data_spec = np.load(fspec)
 
-    # if dspec is an instance of MorletSpec,  get data from object
-    if isinstance(dspec, MorletSpec):
-        timevec = dspec.timevec
-        freqvec = dspec.freqvec
-        TFR = dspec.TFR
+    timevec = data_spec['time']
+    freqvec = data_spec['freq']
+    TFR = data_spec['TFR']
 
-        # get experiment name
-        expmt = dspec.name.split('/')[6].split('.')[0]
-
-    # otherwise dspec is path name and data must be loaded from file
-    else:
-        data_spec = np.load(dspec)
-
-        timevec = data_spec['time']
-        freqvec = data_spec['freq']
-        TFR = data_spec['TFR']
-
-        # get experiment name
-        expmt = dspec.split('/')[6].split('.')[0]
+    # get experiment name
+    expmt = fspec.split('/')[6].split('.')[0]
 
     # axis = 1 sums over columns
     pwr_avg = TFR.sum(axis=1) / len(timevec)
