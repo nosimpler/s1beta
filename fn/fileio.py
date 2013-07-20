@@ -1,8 +1,8 @@
 # fileio.py - general file input/output functions
 #
-# v 1.8.8
-# rev 2013-06-17 (SL: added prettyprint() here, but it might be now in multiple places)
-# last rev: (SL: dir_copy() function)
+# v 1.8.17
+# rev 2013-07-19 (SL: return_specific_filename() added)
+# last rev: (SL: added prettyprint() here, but it might be now in multiple places)
 
 import datetime, fnmatch, os, shutil, sys
 import itertools as it
@@ -150,6 +150,9 @@ class SimulationPaths():
         self.fparam = file_match(dsim, '.param')[0]
         self.expmt_groups = paramrw.read_expmt_groups(self.fparam)
         self.sim_prefix = paramrw.read_sim_prefix(self.fparam)
+
+        # this should somehow be supplied by the ExpParams() class, but doing it here
+        self.trial_prefix_str = self.sim_prefix + "-%03d-T%02d"
         self.dexpmt_dict = self.__create_dexpmt(self.expmt_groups)
 
         # create dfig
@@ -260,6 +263,15 @@ class SimulationPaths():
             fileinfo[key] = (self.__datatypes[key], dtype)
 
         return fileinfo
+
+    def return_specific_filename(self, expmt_group, datatype, n_sim, n_trial):
+        f_list = self.file_match(expmt_group, datatype)
+        trial_prefix = self.trial_prefix_str % (n_sim, n_trial)
+
+        # assume there is only one match (this should be true)
+        f_datatype = [f for f in f_list if trial_prefix in f][0]
+
+        return f_datatype
 
     # requires dict lookup
     def create_filename(self, expmt_group, key, name_prefix):

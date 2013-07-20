@@ -1,7 +1,7 @@
 # pmanu_gamma.py - plot functions for gamma manuscript
 #
-# v 1.8.14
-# rev 2013-07-09 (SL: updated)
+# v 1.8.17
+# rev 2013-07-19 (SL: added hf_epochs() plot)
 # last major: (SL: updated)
 
 import itertools as it
@@ -16,33 +16,36 @@ import paramrw
 import ac_manu_gamma as acg
 
 # all the data comes from one sim
-def high_f():
-    dproj = '/repo/data/s1'
-
-    # data directories (made up for now)
-    # the resultant figure is saved in d0
-    d = os.path.join(dproj, 'pub', '2013-06-28_gamma_weak_L5-000')
-
-    # for now grab the first experiment
-    expmt = ddata.expmt_groups[0]
-    ddata = fio.SimulationPaths()
-    ddata.read_sim(dproj, d)
-
+def hf_epochs(ddata):
     runtype = 'debug'
-    # runtype = 'pub'
 
-    # for now hard code the simulation run
-    n_run = 0
+    f = acg.FigHFEpochs(runtype)
 
-    # prints the fig in ddata0
-    f = acg.FigHF(runtype)
+    # hard coded for now
+    n_sim = 0
+    n_trial = 0
 
-    # grab the relevant files
-    f_spec = ddata.file_match(expmt, 'rawspec')[n_run]
-    f_dpl = ddata.file_match(expmt, 'rawdpl')[n_run]
-    f_spk = ddata.file_match(expmt, 'rawspk')[n_run]
-    f_param = ddata.file_match(expmt, 'param')[n_run]
-    f_current = ddata.file_match(expmt, 'rawcurrent')[n_run]
+    # and assume just the first expmt for now
+    expmt = ddata.expmt_groups[0]
+
+    # hard code the 50 ms epochs that will be used here.
+    # centers for the data in tuples (t, f)
+    tf_specmax = [
+        (79.525, 115.),
+        (136.925, 114.),
+        (324.350, 109.),
+        (418.400, 106.),
+    ]
+
+    # these all come from one filename
+    f_spec = ddata.return_specific_filename(expmt, 'rawspec', n_sim, n_trial)
+    f_dpl = ddata.return_specific_filename(expmt, 'rawdpl', n_sim, n_trial)
+    f_spk = ddata.return_specific_filename(expmt, 'rawspk', n_sim, n_trial)
+    f_param = ddata.return_specific_filename(expmt, 'param', n_sim, n_trial)
+    f_current = ddata.return_specific_filename(expmt, 'rawcurrent', n_sim, n_trial)
+
+    # p_dict is needed for the spike thing.
+    _, p_dict = paramrw.read(f_param)
 
     # figure out the tstop and xlim
     tstop = paramrw.find_param(f_param, 'tstop')
@@ -54,83 +57,200 @@ def high_f():
     dpl.baseline_renormalize(f_param)
     dpl.convert_fAm_to_nAm()
 
-    # calculate the Welch periodogram
-    pgram = {
-        'agg': specfn.Welch(dpl.t, dpl.dpl['agg'], dt),
-        'L2': specfn.Welch(dpl.t, dpl.dpl['L2'], dt),
-        'L5': specfn.Welch(dpl.t, dpl.dpl['L5'], dt),
+    # current data
+    I_soma = currentfn.SynapticCurrent(f_current)
+
+    # grab the spike data for histogram
+    s = spikefn.spikes_from_file(f_param, f_spk)
+    n_bins = 500
+    s_list = np.concatenate(s['L5_pyramidal'].spike_list)
+
+    # spikes
+    spikes = {
+        'L5': spikefn.filter_spike_dict(s, 'L5_'),
     }
 
-    # plot periodograms
-    pgram['agg'].plot_to_ax(f.ax['pgram_L'])
-    pgram['L2'].plot_to_ax(f.ax['pgram_M'])
-    pgram['L5'].plot_to_ax(f.ax['pgram_R'])
+    # xrange is just the length of the window, dx is the distance from the center
+    xrange = 50.
+    dx = xrange/2.
+
+    # pc will be a list of the colorbar props for each spec (length len(f.gspec))
+    pc = []
+
+    # plot the aggregate data too
+    specfn.pspec_ax(f.ax['L_spec'], f_spec, xlim, layer='L5')
+    dpl.plot(f.ax['L_dpl'], xlim, layer='L5')
+    spikefn.spike_png(f.ax['L_spk'], spikes['L5'])
+
+    # grab a list of the ax handles for the leftmost plot
+    ax_L_keys = [ax for ax in f.ax.keys() if ax.startswith('L_')]
+
+    # set all these xlim correctly
+    for ax_h in ax_L_keys:
+        f.ax[ax_h].set_xlim(xlim)
+
+    # now plot the individual epochs
+    for i in range(len(f.gspec_ex)):
+        # for each (t, f) pair, find the xlim_window
+        t_center = tf_specmax[i][0]
+        f_center = tf_specmax[i][1]
+        xlim_window = (t_center - dx, t_center + dx)
+
+        # crude setting of vertical lines to denote roi
+        for ax_h in ax_L_keys:
+            f.ax[ax_h].axvline(x=xlim_window[0], color='b')
+            f.ax[ax_h].axvline(x=xlim_window[1], color='k')
+
+        # this is the highlight portion, one fixed 
+        dx_hl = 0.5 * (1000. / f_center)
+        dx_hl_fixed = 10.
+
+        xlim_hl = (t_center - dx_hl, t_center + dx_hl)
+        xlim_fixed = (t_center - dx_hl_fixed, t_center + dx_hl_fixed)
+
+        # fix xlim_window in case
+        if xlim_window[0] < xlim[0]:
+            xlim_window[0] = xlim[0]
+
+        if xlim_window[1] == -1:
+            xlim_window[1] = tstop
+
+        # truncate and then plot the dpl
+        # dpl_short must be a dict of all the different dipoles
+        # so only need here the L5 key
+        t_short, dpl_short = dpl.truncate_ext(xlim_hl[0], xlim_hl[1])
+        t_fixed, dpl_fixed = dpl.truncate_ext(xlim_fixed[0], xlim_fixed[1])
+
+        # create a sine waveform for this interval
+        # t_sin = np.arange(xlim_window[0], xlim_window[1], 0.1)
+        # x_sin = 0.03 * np.sin(2 * np.pi * f_center * t_sin / 1000)
+        # f.ax['dpl'][i].plot(t_sin, x_sin)
+
+        # plot the dipole and the current, either over the appropriate range or the whole window for now
+        I_soma.plot_to_axis(f.ax_twinx['dpl'][i], 'L5')
+
+        dpl.plot(f.ax['dpl'][i], xlim_window, layer='L5')
+        f.ax['dpl'][i].hold(True)
+        f.ax['dpl'][i].plot(t_fixed, dpl_fixed['L5'], 'g')
+        f.ax['dpl'][i].plot(t_short, dpl_short['L5'], 'r')
+
+        # spec - i think must be plotted as xlim first and then truncated?
+        pc.append(specfn.pspec_ax(f.ax['spec'][i], f_spec, xlim, layer='L5'))
+
+        # plot the data
+        spikefn.pinput_hist_onesided(f.ax['hist'][i], s_list, n_bins)
+        spikefn.spike_png(f.ax['spk'][i], spikes['L5'])
+
+        # set xlim_windows accordingly
+        f.ax['hist'][i].set_xlim(xlim_window)
+        f.ax['spk'][i].set_xlim(xlim_window)
+        f.ax_twinx['dpl'][i].set_xlim(xlim_window)
+        f.ax['spec'][i].set_xlim(xlim_window)
+
+        # set the color of the I_soma line
+        f.ax['dpl'][i].lines[0].set_color('k')
+        f.ax_twinx['dpl'][i].lines[0].set_color('b')
+        f.ysymmetry(f.ax_twinx['dpl'][i])
+
+        # no need for outputs
+        if runtype == 'debug':
+            f.f.colorbar(pc[i], ax=f.ax['spec'][i], format='%.3e')
+
+    # some fig naming stuff
+    dfig = os.path.join(ddata.dsim, expmt)
+    trial_prefix = ddata.trial_prefix_str % (n_sim, n_trial)
+    fprefix_short = trial_prefix + '-hf_epochs'
+
+    # use methods to save figs
+    f.savepng_new(dfig, fprefix_short)
+    f.saveeps(dfig, fprefix_short)
+    f.close()
+
+def hf(ddata, xlim_window, n_sim, n_trial):
+    # data directories (made up for now)
+    # the resultant figure is saved in d0
+    # d = os.path.join(dproj, 'pub', '2013-06-28_gamma_weak_L5-000')
+
+    # for now grab the first experiment
+    # ddata = fio.SimulationPaths()
+    # ddata.read_sim(dproj, d)
+    expmt = ddata.expmt_groups[0]
+
+    runtype = 'debug'
+    # runtype = 'pub'
+
+    # prints the fig in ddata0
+    f = acg.FigHF(runtype)
+
+    # grab the relevant files
+    f_spec = ddata.return_specific_filename(expmt, 'rawspec', n_sim, n_trial)
+    f_dpl = ddata.return_specific_filename(expmt, 'rawdpl', n_sim, n_trial)
+    f_spk = ddata.return_specific_filename(expmt, 'rawspk', n_sim, n_trial)
+    f_param = ddata.return_specific_filename(expmt, 'param', n_sim, n_trial)
+    f_current = ddata.return_specific_filename(expmt, 'rawcurrent', n_sim, n_trial)
+
+    # p_dict is needed for the spike thing.
+    _, p_dict = paramrw.read(f_param)
+
+    # figure out the tstop and xlim
+    tstop = paramrw.find_param(f_param, 'tstop')
+    dt = paramrw.find_param(f_param, 'dt')
+    xlim = (50., tstop)
+
+    # fix xlim_window
+    if xlim_window[0] < xlim[0]:
+        xlim_window[0] = xlim[0]
+
+    if xlim_window[1] == -1:
+        xlim_window[1] = tstop
+
+    # grab the dipole data
+    dpl = dipolefn.Dipole(f_dpl)
+    dpl.baseline_renormalize(f_param)
+    dpl.convert_fAm_to_nAm()
+    dpl.plot(f.ax['dpl_L'], xlim, layer='agg')
 
     # plot currents
     I_soma = currentfn.SynapticCurrent(f_current)
-    I_soma.plot_to_axis(f.ax['current_M'], 'L2')
-    I_soma.plot_to_axis(f.ax['current_R'], 'L5')
-    f.set_axes_pingping()
-
-    # cols have same suffix
-    list_cols = ['L', 'M', 'R']
-
-    # create handles list
-    list_h_pgram = ['pgram_'+col for col in list_cols]
-    list_h_dpl = ['dpl_'+col for col in list_cols]
+    I_soma.plot_to_axis(f.ax_twinx['dpl_L'], 'L5')
 
     # spec
     pc = {
-        'L': specfn.pspec_ax(f.ax['spec_L'], f_spec, xlim, layer='agg'),
-        'M': specfn.pspec_ax(f.ax['spec_M'], f_spec, xlim, layer='L2'),
-        'R': specfn.pspec_ax(f.ax['spec_R'], f_spec, xlim, layer='L5'),
+        'L': specfn.pspec_ax(f.ax['spec_L'], f_spec, xlim, layer='L5'),
     }
-
-    # create a list of spec color handles
-    # list_h_spec_cb = ['pc_'+col for col in list_cols]
-
-    # get the vmin, vmax and add them to the master list
-    # f.equalize_speclim(pc)
-    # list_lim_spec = []
 
     # no need for outputs
     if runtype == 'debug':
         f.f.colorbar(pc['L'], ax=f.ax['spec_L'], format='%.3e')
-        f.f.colorbar(pc['M'], ax=f.ax['spec_M'], format='%.3e')
-        f.f.colorbar(pc['R'], ax=f.ax['spec_R'], format='%.3e')
-        # list_spec_handles = [ax for ax in f.ax.keys() if ax.startswith('spec')]
-        list_spec_handles = ['spec_M', 'spec_R']
-        f.remove_tick_labels(list_spec_handles, ax_xy='y')
 
-    elif runtype == 'pub':
-        f.f.colorbar(pc['R'], ax=f.ax['spec_R'], format='%.2e')
-
-    # grab the spike data
+    # grab the spike data for histogram
     s = spikefn.spikes_from_file(f_param, f_spk)
-
-    # dipoles
-    dpl.plot(f.ax['dpl_L'], xlim, layer='agg')
-    dpl.plot(f.ax['dpl_M'], xlim, layer='L2')
-    dpl.plot(f.ax['dpl_R'], xlim, layer='L5')
-
-    # equalize the ylim
-    # f.equalize_ylim(list_h_pgram)
-    # f.equalize_ylim(list_h_dpl)
+    n_bins = 500
+    s_list = np.concatenate(s['L5_pyramidal'].spike_list)
+    spikefn.pinput_hist_onesided(f.ax['hist_L'], s_list, n_bins)
 
     # spikes
     spikes = {
-        'L2': spikefn.filter_spike_dict(s, 'L2_'),
         'L5': spikefn.filter_spike_dict(s, 'L5_'),
     }
 
     # plot the data
-    spikefn.spike_png(f.ax['spk_M'], spikes['L2'])
-    spikefn.spike_png(f.ax['spk_R'], spikes['L5'])
-    f.ax['spk_M'].set_xlim(xlim)
-    f.ax['spk_R'].set_xlim(xlim)
+    spikefn.spike_png(f.ax['spk'], spikes['L5'])
+
+    # xlim_window
+    # xlim_window = (400., 450.)
+    f.ax['hist_L'].set_xlim(xlim_window)
+    f.ax['dpl_L'].set_xlim(xlim_window)
+    f.ax['spec_L'].set_xlim(xlim_window)
+    f.ax_twinx['dpl_L'].set_xlim(xlim_window)
+
+    f.ax_twinx['dpl_L'].lines[0].set_color('k')
+    f.ysymmetry(f.ax_twinx['dpl_L'])
+    f.ax['spk'].set_xlim(xlim_window)
 
     # # save the fig in ddata0 (arbitrary)
-    f_prefix = '%s_laminar' % ddata.sim_prefix
+    trial_prefix = ddata.trial_prefix_str % (n_sim, n_trial)
+    f_prefix = '%s_hf' % trial_prefix
     dfig = os.path.join(ddata.dsim, expmt)
 
     f.savepng_new(dfig, f_prefix)
@@ -646,3 +766,6 @@ def ylim_hack(f, list_handles, ylim_centers, ylim_limit):
         labels_text[0] = ''
         f.ax[h].set_yticklabels(labels_text)
         # print labels_text
+
+if __name__ == '__main__':
+    hf_epochs()

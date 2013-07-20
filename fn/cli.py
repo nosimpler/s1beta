@@ -1,8 +1,8 @@
 # cli.py - routines for the command line interface console s1sh.py
 #
-# v 1.8.15a
-# rev 2013-07-12 (SL: removed exec_debug)
-# last major: (SL: added throwaway data function and a ref to exec_debug())
+# v 1.8.17
+# rev 2013-07-19 (SL: added __create_dict_from_args() to replace previous methods)
+# last major: (SL: removed exec_debug)
 
 from cmd import Cmd
 from datetime import datetime
@@ -75,6 +75,28 @@ class Console(Cmd):
 
         return arg_list
 
+    def __create_dict_from_args(self, args):
+        # split based on leading --
+        args_tmp = args.split(' --')
+
+        # only take the args that start with -- and include a =
+        # drop the leading --
+        # args_opt = [arg[2:] for arg in args_tmp if arg.startswith('--')]
+        args_opt = [arg for arg in args_tmp if '=' in arg]
+        arg_dict = {}
+        for arg in args_opt:
+            # getting rid of first case, ugh, hack!
+            if arg.startswith('--'):
+                args_tmp = arg[2:].split('=')
+                print args_tmp
+                arg_dict[args_tmp[0]] = args_tmp[1]
+
+            else:
+                args_tmp = arg.split('=')
+                arg_dict[args_tmp[0]] = args_tmp[1]
+
+        return arg_dict
+
     # generalized function for checking and assigning args
     def __check_args(self, dict_opts, list_opts):
         # assumes list_opts comes from __split_args()
@@ -117,9 +139,11 @@ class Console(Cmd):
     def do_debug(self, args):
         """Qnd function to test other functions
         """
-        self.do_setdate('2013-07-02')
-        self.do_load('gamma_sub_50Hz_prox-005')
-
+        self.do_setdate('pub')
+        self.do_load('2013-06-28_gamma_weak_L5-000')
+        # self.do_specmax('--expmt_group="weak" --f_interval=[50., 75] --t_interval=[50., 550.]')
+        # self.do_spike_rates('')
+        self.do_pgamma_hf_epochs('')
         # self.do_throwaway('--n_sim=13')
         # self.do_pgamma_distal_phase('--spec0=5 --spec1=9 --spec2=15')
         # self.do_pgamma_laminar('')
@@ -135,7 +159,6 @@ class Console(Cmd):
         # self.do_show('testing in (0, 0)')
         # self.do_calc_dipole_avg('')
         # self.do_pdipole('evaligned')
-        # self.do_specmax('in (spike, 0, 0) on [0, 1000.]')
         # self.do_avgtrials('dpl')
         # self.do_replot('')
         # self.do_spec_regenerate('--f_max=50.')
@@ -159,6 +182,16 @@ class Console(Cmd):
         # run the throwaway save function!
         clidefs.exec_throwaway(self.ddata, opts['n_sim'], opts['n_trial'])
 
+    def do_spike_rates(self, args):
+        opts = {
+            'expmt_group': 'weak',
+            'celltype': 'L5_pyramidal',
+        }
+        l_opts = self.__split_args(args)
+        self.__check_args(opts, l_opts)
+
+        clidefs.exec_spike_rates(self.ddata, opts)
+
     def do_calc_dpl_mean(self, args):
         '''Returns the mean dipole to screen. Usage:
            [s1] calc_dpl_mean
@@ -177,6 +210,14 @@ class Console(Cmd):
 
     def do_calc_dpl_regression(self, args):
         clidefs.exec_calc_dpl_regression(self.ddata)
+
+    def do_pgamma_hf(self, args):
+        dict_opts = self.__create_dict_from_args(args)
+        clidefs.exec_pgamma_hf(self.ddata, dict_opts)
+
+    def do_pgamma_hf_epochs(self, args):
+        dict_opts = self.__create_dict_from_args(args)
+        clidefs.exec_pgamma_hf_epochs(self.ddata, dict_opts)
 
     def do_pgamma_distal_phase(self, args):
         '''Generates gamma fig for distal phase. Requires spec data for layers to exist. Usage:
@@ -378,28 +419,10 @@ class Console(Cmd):
 
     def do_specmax(self, args):
         """Find the max spectral power, report value and time.
-           Usage: specmax in (<expmt>, <simrun>, <trial>) on [interval]
+           Usage: specmax {--expmt_group=0 --simrun=0 --trial=0 --t_interval=[0, 1000] --f_interval=[0, 100.]}
         """
-        # look for first keyword
-        if args.startswith("in"):
-            try:
-                # split by 'in' to get the interval
-                s = args.split(" on ")
-
-                # values are then in first part of s
-                # yeah, this is gross, sorry. just parsing between parens for params
-                expmt_group, n_sim_str, n_trial_str = s[0][s[0].find("(")+1:s[0].find(")")].split(", ")
-                n_sim = int(n_sim_str)
-                n_trial = int(n_trial_str)
-
-                t_interval = ast.literal_eval(s[-1])
-                clidefs.exec_specmax(self.ddata, expmt_group, n_sim, n_trial, t_interval)
-
-            except ValueError:
-                self.do_help('specmax')
-
-        else:
-            self.do_help('specmax')
+        dict_opts = self.__create_dict_from_args(args)
+        clidefs.exec_specmax(self.ddata, dict_opts)
 
     def do_dipolemin(self, args):
         """Find the minimum of a particular dipole

@@ -1,8 +1,8 @@
 # dipolefn.py - dipole-based analysis functions
 #
-# v 1.8.14
-# rev 2013-07-09 (SL: added truncate function to truncate to arbitrary time bounds)
-# last major: (SL: added write() method)
+# v 1.8.17
+# rev 2013-07-19 (SL: externalized truncate function, made internal function based on that)
+# last major: (SL: added truncate function to truncate to arbitrary time bounds)
 
 import fileio as fio
 import numpy as np
@@ -38,15 +38,23 @@ class Dipole():
 
     # truncate to a length and save here
     # this is independent of the other stuff
+    # moved to an external function so as to not disturb the delicate genius of this object
     def truncate(self, t0, T):
+        self.t, self.dpl = self.truncate_ext(t0, T)
+
+    # just return the values, do not modify the class internally
+    def truncate_ext(self, t0, T):
         # only do this if the limits make sense
         if (t0 >= self.t[0]) & (T < self.t[-1]):
+            dpl_truncated = dict.fromkeys(self.dpl)
+
             # do this for each dpl
             for key in self.dpl.keys():
-                self.dpl[key] = self.dpl[key][(self.t > t0) & (self.t < T)]
+                dpl_truncated[key] = self.dpl[key][(self.t > t0) & (self.t < T)]
 
-            # this must come after the dpl truncation
-            self.t = self.t[(self.t > t0) & (self.t < T)]
+            t_truncated = self.t[(self.t > t0) & (self.t < T)]
+
+        return t_truncated, dpl_truncated
 
     # conversion from fAm to nAm
     def convert_fAm_to_nAm(self):

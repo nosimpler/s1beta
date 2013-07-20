@@ -1,8 +1,8 @@
 # clidefs.py - these are all of the function defs for the cli
 #
-# v 1.8.15a
-# rev 2013-07-12 (SL: removed exec_debug)
-# last major: (SL: added a debug function here that is really specific)
+# v 1.8.17
+# rev 2013-07-19 (SL: added args_check HERE)
+# last major: (SL: removed exec_debug)
 
 # Standard modules
 import fnmatch, os, re, sys
@@ -12,6 +12,7 @@ from multiprocessing import Pool
 from subprocess import call
 from glob import iglob
 from time import time
+import ast
 
 # local modules
 import spikefn
@@ -40,6 +41,67 @@ def get_subdir_list(dcheck):
 
     else:
         return []
+
+# generalized function for checking and assigning args
+def args_check(dict_default, dict_check):
+    if len(dict_check):
+        keys_missing = []
+
+        # iterate through possible key vals in dict_check
+        for key, val in dict_check.iteritems():
+            # check to see if the possible keys are in dict_default
+            if key in dict_default.keys():
+                # assign the key/val pair in place
+                # this operation acts IN PLACE on the supplied dict_default!!
+                # therefore, no return value necessary
+                dict_default[key] = ast.literal_eval(val)
+
+            else:
+                keys_missing.append(key)
+
+        # if there are any keys missing
+        if keys_missing:
+            print "Options were not recognized: "
+            fio.prettyprint(keys_missing)
+
+# returns average spike data
+def exec_spike_rates(ddata, opts):
+    # opts should be:
+    # opts_default = {
+    #     expmt_group: 'something',
+    #     celltype: 'L5_pyramidal',
+    # }
+    expmt_group = opts['expmt_group']
+    celltype = opts['celltype']
+
+    list_f_spk = ddata.file_match(expmt_group, 'rawspk')
+    list_f_param = ddata.file_match(expmt_group, 'param')
+
+    # note! this is NOT ignoring first 50 ms
+    for fspk, fparam in it.izip(list_f_spk, list_f_param):
+        s_all = spikefn.spikes_from_file(fparam, fspk)
+        _, p_dict = paramrw.read(fparam)
+        T = p_dict['tstop']
+
+        # check if the celltype is in s_all
+        if celltype in s_all.keys():
+            s = s_all[celltype].spike_list
+            n_cells = len(s)
+
+            # grab all the sp_counts
+            sp_counts = [len(spikes_cell) for spikes_cell in s]
+
+            # calc mean and stdev
+            sp_count_mean = np.mean(sp_counts)
+            sp_count_stdev = np.std(sp_counts)
+
+            # calc rate in Hz, assume T in ms
+            sp_rate = sp_count_mean * 1000. / T
+
+            print "Sim No. %i, Trial %i, celltype is %s:" % (p_dict['Sim_No'], p_dict['Trial'], celltype)
+            print "  spike count mean is: %4.3f" % sp_count_mean
+            print "  spike count stdev is: %4.3f" % sp_count_stdev
+            print "  spike rate over %4.3f ms is %4.3f Hz" % (T, sp_rate)
 
 # throwaway save method for now
 # trial is currently undefined
@@ -195,53 +257,91 @@ def exec_phist(ddata, args):
     psum.pphase_hist(ddata, N_sim, N_bins)
 
 # find the spectral max over an interval, for a particular sim
-def exec_specmax(ddata, expmt_group, n_sim, n_trial, t_interval):
+def exec_specmax(ddata, opts):
+    p = {
+        'expmt_group': '',
+        'n_sim': 0,
+        'n_trial': 0,
+        't_interval': [0., -1],
+        'f_interval': [0., -1],
+    }
+
+    args_check(p, opts)
+
     p_exp = paramrw.ExpParams(ddata.fparam)
-    trial_prefix = p_exp.trial_prefix_str % (n_sim, n_trial)
+    # trial_prefix = p_exp.trial_prefix_str % (p['n_sim'], p['n_trial'])
+
+    if not p['expmt_group']:
+        p['expmt_group'] = ddata.expmt_groups[0]
 
     # list of all the dipoles
-    dpl_list = ddata.file_match(expmt_group, 'rawdpl')
-    spec_list = ddata.file_match(expmt_group, 'rawspec')
+    dpl_list = ddata.file_match(p['expmt_group'], 'rawdpl')
+    spec_list = ddata.file_match(p['expmt_group'], 'rawspec')
 
-    # load the associated dipole file
-    # find the specific file
-    # assume just the first file
-    try:
-        fdpl = [file for file in dpl_list if trial_prefix in file][0]
-        fspec = [file for file in spec_list if trial_prefix in file][0]
-    except IndexError:
-        print "List index out of range."
-        print trial_prefix
+    # load the associated dipole and spec file
+    fdpl = ddata.return_specific_filename(p['expmt_group'], 'rawdpl', p['n_sim'], p['n_trial'])
+    fspec = ddata.return_specific_filename(p['expmt_group'], 'rawspec', p['n_sim'], p['n_trial'])
+
+    print fdpl, fspec
 
     data = specfn.read(fspec)
-    # print data['freq']
-    # print data['TFR'].shape
-    pwr_max = data['TFR'].max()
-    max_mask = data['TFR']==pwr_max
+    print data.keys()
+    print data['TFR'].shape
 
-    # this is a shift of 50 ms because the spec analysis incorrectly shifts its zero
-    t_at_max = data['time'][max_mask.sum(axis=0)==1]
-    f_at_max = data['freq'][max_mask.sum(axis=1)==1]
+    # grab the min and max f
+    f_min, f_max = p['f_interval']
+
+    # set f_max
+    if f_max < 0:
+        f_max = data['freq'][-1]
+
+    # create an f_mask for the bounds of f, inclusive
+    f_mask = (data['freq']>=f_min) & (data['freq']<=f_max)
+
+    # do the same for t
+    t_min, t_max = p['t_interval']
+    if t_max < 0:
+        t_max = data['time'][-1]
+
+    t_mask = (data['time']>=t_min) & (data['time']<=t_max)
+
+    # use the masks truncate these appropriately
+    TFR_fcut = data['TFR'][f_mask, :]
+    TFR_tfcut = TFR_fcut[:, t_mask]
+
+    f_fcut = data['freq'][f_mask]
+    t_tcut = data['time'][t_mask]
+
+    # find the max power over this new range
+    # the max_mask is for the entire TFR
+    pwr_max = TFR_tfcut.max()
+    max_mask = (TFR_tfcut==pwr_max)
+
+    # find the t and f at max
+    # these are slightly crude and do not allow for the possibility of multiple maxes (rare?)
+    t_at_max = t_tcut[max_mask.sum(axis=0)==1]
+    f_at_max = f_fcut[max_mask.sum(axis=1)==1]
 
     # friendly printout
     # fmt_t = '%4.3f'
     # fmt_f = '%4.2f'
+    # print "On the time interval of [%4.3f %4.3f] (ms), on the f interval of [%4.2f %4.2f]" % (
     print "Max power of %4.2e at f of %4.2f Hz at %4.3f ms" % (pwr_max, f_at_max, t_at_max)
 
-    pd_at_max = 1000./f_at_max
-    t_start = t_at_max - pd_at_max/2.
-    t_end = t_at_max + pd_at_max/2.
+    # pd_at_max = 1000./f_at_max
+    # t_start = t_at_max - pd_at_max/2.
+    # t_end = t_at_max + pd_at_max/2.
 
-    print "Symmetric interval at %4.2f Hz (T=%4.3f ms) about %4.3f ms is (%4.3f, %4.3f)" % (f_at_max, pd_at_max, t_at_max, t_start, t_end)
+    # print "Symmetric interval at %4.2f Hz (T=%4.3f ms) about %4.3f ms is (%4.3f, %4.3f)" % (f_at_max, pd_at_max, t_at_max, t_start, t_end)
 
-    # output structure
-    data_max = {
-        'pwr': pwr_max,
-        't': t_at_max,
-        'f': f_at_max,
-    }
+    # # output structure
+    # data_max = {
+    #     'pwr': pwr_max,
+    #     't': t_at_max,
+    #     'f': f_at_max,
+    # }
 
-    return data_max
+    # return data_max
 
 # search for the min in a dipole over specified interval
 def exec_dipolemin(ddata, expmt_group, n_sim, n_trial, t_interval):
@@ -616,6 +716,21 @@ def exec_aggregatespec(ddata, labels):
         exec_spec_regenerate(ddata)
 
     plotfn.aggregate_spec_with_hist(ddata, p_exp, labels)
+
+# runs the gamma plot for a comparison of the high frequency
+def exec_pgamma_hf(ddata, opts):
+    p = {
+        'xlim_window': [0., -1],
+        'n_sim': 0,
+        'n_trial': 0,
+    }
+    args_check(p, opts)
+    pgamma.hf(ddata, p['xlim_window'], p['n_sim'], p['n_trial'])
+
+def exec_pgamma_hf_epochs(ddata, opts):
+    p = {}
+    args_check(p, opts)
+    pgamma.hf_epochs(ddata)
 
 # comparison of all layers and aggregate data
 def exec_pgamma_laminar(ddata):
