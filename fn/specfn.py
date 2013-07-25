@@ -1,8 +1,8 @@
 # specfn.py - Average time-frequency energy representation using Morlet wavelet method
 #
-# v 1.8.19
-# rev 2013-07-25 (MS: now saving max spectral power, time, and freq, and welch analysis as part of analysis_typespecific())
-# last major: (MS: moved specmax() from clidefs.py to here with some updates)
+# v 1.8.20sc
+# rev 2013-07-25 (MS: Created class Spec() for handling spec data from file. Currently lacks backwards compatibility for sims run before commit 1.8.19)
+# last major: (MS: now saving max spectral power, time, and freq, and welch analysis as part of analysis_typespecific())
 
 import os
 import sys
@@ -49,6 +49,133 @@ def read(fdata_spec, type='dpl'):
         }
 
         return spec_L2, spec_L5
+
+class Spec():
+    def __init__(self, fspec, dtype='dpl'):
+        # save dtype and file name
+        self.dtype = dtype
+        self.fname = fspec.split('/')[-1].split('-spec')[0]
+
+        # parse data
+        self.__parse_f(fspec)
+
+    def __parse_f(self, fspec):
+        data_spec = np.load(fspec)
+
+        if self.dtype == 'dpl':
+            self.spec = {
+                'agg': {
+                    't': data_spec['time'],
+                    'f': data_spec['freq'],
+                    'TFR': data_spec['TFR'],
+                },
+
+                'L2': {
+                    't': data_spec['t_L2'],
+                    'f': data_spec['f_L2'],
+                    'TFR': data_spec['TFR_L2'],
+                },
+
+                'L5': {
+                    't': data_spec['t_L5'],
+                    'f': data_spec['f_L5'],
+                    'TFR': data_spec['TFR_L5'],
+                },
+
+                'max_agg': {
+                    'p_at_max': data_spec['max_agg'][0],
+                    't_at_max': data_spec['max_agg'][1],
+                    'f_at_max': data_spec['max_agg'][2],
+                },
+
+                'pgram': data_spec['pgram']
+            }
+
+        elif self.dtype == 'current':
+            self.spec = {
+                'L2': {
+                    't': data_spec['t_L2'],
+                    'f': data_spec['f_L2'],
+                    'TFR': data_spec['TFR_L2'],
+                },
+
+                'L5': {
+                    't': data_spec['t_L5'],
+                    'f': data_spec['f_L5'],
+                    'TFR': data_spec['TFR_L5'],
+                }
+            }
+
+    # Truncate t, f, and TFR for a specific layer over specified t and f intervals
+    # Be warned: MODIFIES THE CLASS INTERNALLY
+    def truncate(self, layer, t_interval, f_interval):
+        self.spec[layer] = self.truncate_ext(layer, t_interval, f_interval)
+
+    # Truncate t, f, and TFR for a specific layer over specified t and f intervals
+    # Only returns truncated values. DOES NOT MODIFY THE CLASS INTERNALLY
+    def truncate_ext(self, layer, t_interval, f_interval):
+        # set f_max and f_min
+        if f_interval is None:
+            f_min = self.spec[layer]['f'][0]
+            f_max = self.spec[layer]['f'][-1]
+
+        else:
+            f_min, f_max = f_interval
+
+        # create an f_mask for the bounds of f, inclusive
+        f_mask = (self.spec[layer]['f']>=f_min) & (self.spec[layer]['f']<=f_max)
+
+        # do the same for t
+        if t_interval is None:
+            t_min = self.spec[layer]['t'][0]
+            t_max = self.spec[layer]['t'][-1]
+
+        else:
+            t_min, t_max = t_interval
+
+        t_mask = (self.spec[layer]['t']>=t_min) & (self.spec[layer]['t']<=t_max)
+
+        # use the masks truncate these appropriately
+        TFR_fcut = self.spec[layer]['TFR'][f_mask, :]
+        TFR_tfcut = TFR_fcut[:, t_mask]
+
+        f_fcut = self.spec[layer]['f'][f_mask]
+        t_tcut = self.spec[layer]['t'][t_mask]
+         
+        return {
+            't': t_tcut, 
+            'f': f_fcut, 
+            'TFR': TFR_tfcut,
+        }
+
+    # find the max spectral power over specified time and frequency intervals
+    def max(self, layer, t_interval=None, f_interval=None):
+        # truncate data based on specified intervals 
+        dcut = self.truncate_ext(layer, t_interval, f_interval)
+
+        # find the max power over this new range
+        pwr_max = dcut['TFR'].max()
+        max_mask = (dcut['TFR']==pwr_max)
+
+        # find the t and f at max
+        # these are slightly crude and do not allow for the possibility of multiple maxes (rare?)
+        t_at_max = dcut['t'][max_mask.sum(axis=0)==1]
+        f_at_max = dcut['f'][max_mask.sum(axis=1)==1]
+
+        pd_at_max = 1000./f_at_max
+        t_start = t_at_max - pd_at_max
+        t_end = t_at_max + pd_at_max
+
+        # output structure
+        data_max = {
+            'fname': self.fname,
+            'pwr': pwr_max,
+            't_int': [t_start, t_end],
+            't_at_max': t_at_max,
+            'f_at_max': f_at_max,
+        }
+
+        return data_max
 
 # core class for frequency analysis assuming stationary time series
 class Welch():

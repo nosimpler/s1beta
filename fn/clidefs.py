@@ -1,8 +1,8 @@
 # clidefs.py - these are all of the function defs for the cli
 #
-# v 1.8.18
-# rev 2013-07-25 (MS: Bulk of exec_specmax() moved to specfn.py)
-# last major: (SL: added args_check HERE)
+# v 1.8.20sc
+# rev 2013-07-25 (MS: exec_specmax() now uses new class specfn.Spec())
+# last major: (MS: Bulk of exec_specmax() moved to specfn.py)
 
 # Standard modules
 import fnmatch, os, re, sys
@@ -262,8 +262,10 @@ def exec_specmax(ddata, opts):
         'expmt_group': '',
         'n_sim': 0,
         'n_trial': 0,
-        't_interval': [0., -1],
-        'f_interval': [0., -1],
+        't_interval': None,
+        'f_interval': None,
+        # 't_interval': [0., -1],
+        # 'f_interval': [0., -1],
     }
 
     args_check(p, opts)
@@ -274,11 +276,14 @@ def exec_specmax(ddata, opts):
     if not p['expmt_group']:
         p['expmt_group'] = ddata.expmt_groups[0]
 
-    # load the associated dipole and spec file
+    # Get the associated dipole and spec file
     fspec = ddata.return_specific_filename(p['expmt_group'], 'rawspec', p['n_sim'], p['n_trial'])
 
+    # Load the spec data
+    spec = specfn.Spec(fspec)
+
     # get max data
-    data_max = specfn.specmax(fspec, p)
+    data_max = spec.max('agg', p['t_interval'], p['f_interval'])
 
     print "Max power of %4.2e at f of %4.2f Hz at %4.3f ms" % (data_max['pwr'], data_max['f_at_max'], data_max['t_at_max'])
 

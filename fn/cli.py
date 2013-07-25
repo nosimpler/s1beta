@@ -1,8 +1,8 @@
 # cli.py - routines for the command line interface console s1sh.py
 #
-# v 1.8.17
-# rev 2013-07-19 (SL: added __create_dict_from_args() to replace previous methods)
-# last major: (SL: removed exec_debug)
+# v 1.8.20sc
+# rev 2013-07-25 (MS: minor)
+# last major: (SL: added __create_dict_from_args() to replace previous methods)
 
 from cmd import Cmd
 from datetime import datetime
@@ -88,7 +88,6 @@ class Console(Cmd):
             # getting rid of first case, ugh, hack!
             if arg.startswith('--'):
                 args_tmp = arg[2:].split('=')
-                print args_tmp
                 arg_dict[args_tmp[0]] = args_tmp[1]
 
             else:
