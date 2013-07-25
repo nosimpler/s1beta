@@ -1,8 +1,8 @@
 # specfn.py - Average time-frequency energy representation using Morlet wavelet method
 #
-# v 1.8.18
-# rev 2013-07-25 (MS: moved specmax() from clidefs.py to here with some updates)
-# last major: (SL: minor, switched back to //)
+# v 1.8.19
+# rev 2013-07-25 (MS: now saving max spectral power, time, and freq, and welch analysis as part of analysis_typespecific())
+# last major: (MS: moved specmax() from clidefs.py to here with some updates)
 
 import os
 import sys
@@ -164,6 +164,18 @@ class MorletSpec():
         pc = ax_spec.imshow(self.TFR, aspect='auto', origin='upper')
 
         return pc
+
+    # get time and freq of max spectral power
+    def max(self):
+        max_spec = self.TFR.max()
+
+        t_mask = (self.TFR==max_spec).sum(axis=0)
+        t_at_max = self.tvec[t_mask == 1]
+
+        f_mask = (self.TFR==max_spec).sum(axis=1)
+        f_at_max = self.f[f_mask == 1]
+
+        return np.array((max_spec, t_at_max, f_at_max))
 
     # also creates self.timevec
     def __traces2TFR(self):
@@ -436,8 +448,16 @@ def spec_dpl_kernel(fparam, fts, fspec, f_max):
     spec_L2 = MorletSpec(dpl.t, dpl.dpl['L2'], fparam, f_max)
     spec_L5 = MorletSpec(dpl.t, dpl.dpl['L5'], fparam, f_max)
 
+    # Get max spectral power data
+    # for now, only doing this for agg
+    max_agg = spec_agg.max()
+
+    # Generate periodogram resutls
+    p_dict = paramrw.read(fparam)[1]
+    pgram = Welch(dpl.t, dpl.dpl['agg'], p_dict['dt'])
+
     # Save spec results
-    np.savez_compressed(fspec, time=spec_agg.t, freq=spec_agg.f, TFR=spec_agg.TFR, t_L2=spec_L2.t, f_L2=spec_L2.f, TFR_L2=spec_L2.TFR, t_L5=spec_L5.t, f_L5=spec_L5.f, TFR_L5=spec_L5.TFR)
+    np.savez_compressed(fspec, time=spec_agg.t, freq=spec_agg.f, TFR=spec_agg.TFR, max_agg=max_agg, t_L2=spec_L2.t, f_L2=spec_L2.f, TFR_L2=spec_L2.TFR, t_L5=spec_L5.t, f_L5=spec_L5.f, TFR_L5=spec_L5.TFR, pgram=pgram.P)
 
 # Does spec analysis for all files in simulation directory
 # ddata comes from fileio
