@@ -1,8 +1,8 @@
 # specfn.py - Average time-frequency energy representation using Morlet wavelet method
 #
-# v 1.8.14
-# rev 2013-07-09 (SL: minor, switched back to //)
-# last major: (MS: aggregate_with_hist() moved to pspec.py)
+# v 1.8.18
+# rev 2013-07-25 (MS: moved specmax() from clidefs.py to here with some updates)
+# last major: (SL: minor, switched back to //)
 
 import os
 import sys
@@ -287,6 +287,70 @@ def pspec_ax(ax_spec, fspec, xlim, layer=None):
 
     # return (vmin, vmax)
     return pc
+
+# find max spectral power and associated time/freq for individual file
+def specmax(fspec, opts):
+    # opts is a dict that includes t_interval and f_interval
+    # grab name of file
+    fname = fspec.split('/')[-1].split('-spec')[0]
+
+    # load spec data
+    data = read(fspec)
+
+    # grab the min and max f
+    f_min, f_max = opts['f_interval']
+
+    # set f_max and f_min
+    if f_max < 0:
+        f_max = data['freq'][-1]
+
+    if f_min < 0:
+        f_min = data['freq'][0]
+
+    # create an f_mask for the bounds of f, inclusive
+    f_mask = (data['freq']>=f_min) & (data['freq']<=f_max)
+
+    # do the same for t
+    t_min, t_max = opts['t_interval']
+    if t_max < 0:
+        t_max = data['time'][-1]
+
+    if t_min < 0:
+        t_min = data['time'][0]
+
+    t_mask = (data['time']>=t_min) & (data['time']<=t_max)
+
+    # use the masks truncate these appropriately
+    TFR_fcut = data['TFR'][f_mask, :]
+    TFR_tfcut = TFR_fcut[:, t_mask]
+
+    f_fcut = data['freq'][f_mask]
+    t_tcut = data['time'][t_mask]
+
+    # find the max power over this new range
+    # the max_mask is for the entire TFR
+    pwr_max = TFR_tfcut.max()
+    max_mask = (TFR_tfcut==pwr_max)
+
+    # find the t and f at max
+    # these are slightly crude and do not allow for the possibility of multiple maxes (rare?)
+    t_at_max = t_tcut[max_mask.sum(axis=0)==1]
+    f_at_max = f_fcut[max_mask.sum(axis=1)==1]
+
+    pd_at_max = 1000./f_at_max
+    t_start = t_at_max - pd_at_max
+    t_end = t_at_max + pd_at_max
+
+    # output structure
+    data_max = {
+        'fname': fname,
+        'pwr': pwr_max,
+        't_int': [t_start, t_end],
+        't_at_max': t_at_max,
+        'f_at_max': f_at_max,
+    }
+
+    return data_max
 
 # return the max spectral power (simple) for a series of files
 def spec_max(ddata, expmt_group, layer='agg'):

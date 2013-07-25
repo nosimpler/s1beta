@@ -1,8 +1,8 @@
 # plotfn.py - pall and possibly other plot routines
 #
-# v 1.8.15spec
-# rev 2013-07-05 (MS: plot routines now get spec data exclusively from files)
-# last major: (MS: reorganization of pall() to remove rendundancy)
+# v 1.8.18
+# rev 2013-07-25 (MS: xlim now being passed to pspec.pspec_dpl())
+# last major: (MS: plot routines now get spec data exclusively from files)
 
 from praster import praster
 import axes_create as ac
@@ -38,7 +38,8 @@ def pkernel(dfig, f_param, f_spk, f_dpl, f_spec, key_types, xlim=[0, 'tstop']):
     dipolefn.pdipole(f_dpl, f_param, dfig_dpl, key_types, pdipole_dict)
 
     # usage of xlim to pspec is temporarily disabled. pspec_dpl() will use internal states for plotting
-    pspec.pspec_dpl(f_spec, f_dpl, dfig_spec, p_dict, key_types)
+    pspec.pspec_dpl(f_spec, f_dpl, dfig_spec, p_dict, key_types, xlim)
+    # pspec.pspec_dpl(f_spec, f_dpl, dfig_spec, p_dict, key_types)
     # pspec.pspec_dpl(data_spec, f_dpl, dfig_spec, p_dict, key_types, xlim)
 
     return 0

@@ -1,8 +1,8 @@
 # clidefs.py - these are all of the function defs for the cli
 #
-# v 1.8.17
-# rev 2013-07-19 (SL: added args_check HERE)
-# last major: (SL: removed exec_debug)
+# v 1.8.18
+# rev 2013-07-25 (MS: Bulk of exec_specmax() moved to specfn.py)
+# last major: (SL: added args_check HERE)
 
 # Standard modules
 import fnmatch, os, re, sys
@@ -274,74 +274,13 @@ def exec_specmax(ddata, opts):
     if not p['expmt_group']:
         p['expmt_group'] = ddata.expmt_groups[0]
 
-    # list of all the dipoles
-    dpl_list = ddata.file_match(p['expmt_group'], 'rawdpl')
-    spec_list = ddata.file_match(p['expmt_group'], 'rawspec')
-
     # load the associated dipole and spec file
-    fdpl = ddata.return_specific_filename(p['expmt_group'], 'rawdpl', p['n_sim'], p['n_trial'])
     fspec = ddata.return_specific_filename(p['expmt_group'], 'rawspec', p['n_sim'], p['n_trial'])
 
-    print fdpl, fspec
+    # get max data
+    data_max = specfn.specmax(fspec, p)
 
-    data = specfn.read(fspec)
-    print data.keys()
-    print data['TFR'].shape
-
-    # grab the min and max f
-    f_min, f_max = p['f_interval']
-
-    # set f_max
-    if f_max < 0:
-        f_max = data['freq'][-1]
-
-    # create an f_mask for the bounds of f, inclusive
-    f_mask = (data['freq']>=f_min) & (data['freq']<=f_max)
-
-    # do the same for t
-    t_min, t_max = p['t_interval']
-    if t_max < 0:
-        t_max = data['time'][-1]
-
-    t_mask = (data['time']>=t_min) & (data['time']<=t_max)
-
-    # use the masks truncate these appropriately
-    TFR_fcut = data['TFR'][f_mask, :]
-    TFR_tfcut = TFR_fcut[:, t_mask]
-
-    f_fcut = data['freq'][f_mask]
-    t_tcut = data['time'][t_mask]
-
-    # find the max power over this new range
-    # the max_mask is for the entire TFR
-    pwr_max = TFR_tfcut.max()
-    max_mask = (TFR_tfcut==pwr_max)
-
-    # find the t and f at max
-    # these are slightly crude and do not allow for the possibility of multiple maxes (rare?)
-    t_at_max = t_tcut[max_mask.sum(axis=0)==1]
-    f_at_max = f_fcut[max_mask.sum(axis=1)==1]
-
-    # friendly printout
-    # fmt_t = '%4.3f'
-    # fmt_f = '%4.2f'
-    # print "On the time interval of [%4.3f %4.3f] (ms), on the f interval of [%4.2f %4.2f]" % (
-    print "Max power of %4.2e at f of %4.2f Hz at %4.3f ms" % (pwr_max, f_at_max, t_at_max)
-
-    # pd_at_max = 1000./f_at_max
-    # t_start = t_at_max - pd_at_max/2.
-    # t_end = t_at_max + pd_at_max/2.
-
-    # print "Symmetric interval at %4.2f Hz (T=%4.3f ms) about %4.3f ms is (%4.3f, %4.3f)" % (f_at_max, pd_at_max, t_at_max, t_start, t_end)
-
-    # # output structure
-    # data_max = {
-    #     'pwr': pwr_max,
-    #     't': t_at_max,
-    #     'f': f_at_max,
-    # }
-
-    # return data_max
+    print "Max power of %4.2e at f of %4.2f Hz at %4.3f ms" % (data_max['pwr'], data_max['f_at_max'], data_max['t_at_max'])
 
 # search for the min in a dipole over specified interval
 def exec_dipolemin(ddata, expmt_group, n_sim, n_trial, t_interval):

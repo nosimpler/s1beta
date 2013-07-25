@@ -1,8 +1,8 @@
 # pspec.py - Very long plotting methods having to do with spec.
 #
-# v 1.8.15cell
-# rev 2013-07-03 (MS: font size change in pspecpwr())
-# last major: (MS: aggregate_with_hist() now lives here. Updated aggregate_with_hist and pspec_with_hist to work with new spikes_from_file() fn)
+# v 1.8.18
+# rev 2013-07-25 (MS: Reinstituted use of xlim using logical indexing in pspec_dpl() and pspec_dpl_with_hist())
+# last major: (MS: font size change in pspecpwr())
 
 import os
 import sys
@@ -39,27 +39,18 @@ def pspec_dpl(f_spec, f_dpl, dfig, p_dict, key_types, xlim=None):
     # fig_name = os.path.join(dfig, fprefix+'.eps')
     fig_name = os.path.join(dfig, fprefix+'.png')
 
-    if xlim is not None:
-        print "WARNING: xlim input is temporarily disabled. Needs to be fixed in pspec.pspec_dpl()"
+    # if xlim is not None:
+    #     print "WARNING: xlim input is temporarily disabled. Needs to be fixed in pspec.pspec_dpl()"
 
+    # Truncate timevec and TFR based on xlim values
+    if xlim:
+        tvec = timevec[(timevec >= xlim[0]) & (timevec <= xlim[1])]
+        TFR = TFR[:, ((timevec >= xlim[0]) & (timevec <= xlim[1]))]
+
+    # Now set update xlim to have values guaranteed to exist
+    xlim_new = (tvec[0], tvec[-1])
     # for now, a temporary variable for xlim
-    xlim_new = (timevec[0], timevec[-1])
-
-    # # set xmin value
-    # if xlim[0] > timevec[0]:
-    #     xmin = xlim[0]
-    # else:
-    #     xmin = timevec[0]
-
-    # # set xmax value
-    # if xlim[1] == 'tstop':
-    #     xmax = p_dict['tstop']
-    # else:
-    #     xmax = xlim[1]
-
-    # vector indices corresponding to xmin and xmax
-    # xmin_ind = xmin / p_dict['dt']
-    # xmax_ind = xmax / p_dict['dt']
+    # xlim_new = (timevec[0], timevec[-1])
 
     # f.f is the figure handle!
     f = ac.FigSpec()
@@ -67,7 +58,6 @@ def pspec_dpl(f_spec, f_dpl, dfig, p_dict, key_types, xlim=None):
     # make the extent the entire extent for now
     extent_xy = [xlim_new[0], xlim_new[-1], freqvec[-1], freqvec[0]]
     pc = f.ax['spec'].imshow(TFR, extent=extent_xy, aspect='auto', origin='upper')
-    # pc = f.ax['spec'].imshow(TFR[:, xmin_ind:xmax_ind+1], extent=[xmin, xmax, freqvec[-1], freqvec[0]], aspect='auto', origin='upper')
     f.f.colorbar(pc, ax=f.ax['spec'])
 
     # grab the dipole data
@@ -81,13 +71,7 @@ def pspec_dpl(f_spec, f_dpl, dfig, p_dict, key_types, xlim=None):
     pgram = specfn.Welch(dpl.t, dpl.dpl['agg'], p_dict['dt'])
     pgram.plot_to_ax(f.ax['pgram'], freqvec[-1])
 
-    # assign vectors
-    # t_dpl = data_dipole[xmin_ind:xmax_ind+1, 0]
-    # dp_total = data_dipole[xmin_ind:xmax_ind+1, 1]
-
     # plot and create an xlim
-    # f.ax['dipole'].plot(t_dpl, dp_total)
-    # x = (xmin, xmax)
     xticks = f.ax['spec'].get_xticks()
     xticks[0] = xlim_new[0]
 
@@ -109,7 +93,7 @@ def pspec_dpl(f_spec, f_dpl, dfig, p_dict, key_types, xlim=None):
     f.close()
 
 # Spectral plotting kernel with alpha feed histogram for ONE simulation run
-def pspec_with_hist(f_spec, f_dpl, f_spk, dfig, f_param, key_types, xlim=[0., 'tstop']):
+def pspec_with_hist(f_spec, f_dpl, f_spk, dfig, f_param, key_types, xlim=None):
     # Load data from file
     data_spec = np.load(f_spec)
 
@@ -126,36 +110,53 @@ def pspec_with_hist(f_spec, f_dpl, f_spk, dfig, f_param, key_types, xlim=[0., 't
     # load param dict
     _, p_dict = paramrw.read(f_param)
 
-    # set xmin value
-    if xlim[0] > timevec[0]:
-        xmin = xlim[0]
-    else:
-        xmin = timevec[0]
+    # Truncate timevec and TFR based on xlim values
+    if xlim:
+        tvec = timevec[(timevec >= xlim[0]) & (timevec <= xlim[1])]
+        TFR = TFR[:, (timevec >= xlim[0]) & (timevec <= xlim[1])]
 
-    # set xmax value
-    if xlim[1] == 'tstop':
-        xmax = p_dict['tstop']
-    else:
-        xmax = xlim[1]
+    # Now set update xlim to have values guaranteed to exist
+    xlim_new = (tvec[0], tvec[-1])
 
-    # vector indeces corresponding to xmin and xmax
-    xmin_ind = xmin / p_dict['dt']
-    xmax_ind = xmax / p_dict['dt']
+    # # set xmin value
+    # if xlim[0] > timevec[0]:
+    #     xmin = xlim[0]
+    # else:
+    #     xmin = timevec[0]
+
+    # # set xmax value
+    # if xlim[1] == 'tstop':
+    #     xmax = p_dict['tstop']
+    # else:
+    #     xmax = xlim[1]
+
+    # # vector indeces corresponding to xmin and xmax
+    # xmin_ind = xmin / p_dict['dt']
+    # xmax_ind = xmax / p_dict['dt']
 
     # f.f is the figure handle!
     f = ac.FigSpecWithHist()
 
-    pc = f.ax['spec'].imshow(TFR[:,xmin_ind:xmax_ind], extent=[xmin, xmax+1, freqvec[-1], freqvec[0]], aspect='auto', origin='upper')
+    extent_xy = [xlim_new[0], xlim_new[-1], freqvec[-1], freqvec[0]]
+    pc = f.ax['spec'].imshow(TFR, extent=extent_xy, aspect='auto', origin='upper')
+    # pc = f.ax['spec'].imshow(TFR[:,xmin_ind:xmax_ind], extent=[xmin, xmax+1, freqvec[-1], freqvec[0]], aspect='auto', origin='upper')
     f.f.colorbar(pc, ax=f.ax['spec'])
 
     # grab the dipole data
-    data_dipole = np.loadtxt(open(f_dpl, 'r'))
+    dpl = dipolefn.Dipole(f_dpl)
+    dpl.baseline_renormalize(f_param)
+    dpl.convert_fAm_to_nAm()
 
-    t_dpl = data_dipole[xmin_ind:xmax_ind+1, 0]
-    dp_total = data_dipole[xmin_ind:xmax_ind+1, 1]
+    # plot routine
+    dpl.plot(f.ax['dipole'], xlim_new, 'agg')
 
-    f.ax['dipole'].plot(t_dpl, dp_total)
-    x = (xmin, xmax)
+    # data_dipole = np.loadtxt(open(f_dpl, 'r'))
+
+    # t_dpl = data_dipole[xmin_ind:xmax_ind+1, 0]
+    # dp_total = data_dipole[xmin_ind:xmax_ind+1, 1]
+
+    # f.ax['dipole'].plot(t_dpl, dp_total)
+    # x = (xmin, xmax)
 
     # grab alpha feed data. spikes_from_file() from spikefn.py
     s_dict = spikefn.spikes_from_file(f_param, f_spk)
@@ -167,27 +168,27 @@ def pspec_with_hist(f_spec, f_dpl, f_spk, dfig, f_param, key_types, xlim=[0., 't
     s_dict = spikefn.add_delay_times(s_dict, p_dict)
 
     # set number of bins (150 bins per 1000ms)
-    bins = 150. * (xmax - xmin) / 1000.
+    bins = 150. * (xlim_new[1] - xlim_new[0]) / 1000.
 
     hist = {}
 
     # Proximal feed
-    hist['feed_prox'] = f.ax['feed_prox'].hist(s_dict['alpha_feed_prox'].spike_list, bins, range=[xmin, xmax], color='red', label='Proximal feed', alpha=0.5)
+    hist['feed_prox'] = f.ax['feed_prox'].hist(s_dict['alpha_feed_prox'].spike_list, bins, range=[xlim_new[0], xlim_new[1]], color='red', label='Proximal feed', alpha=0.5)
 
     # f.ax['testing'] = f.ax['feed_prox'].twinx()
     # hist['feed_dist'] = f.ax['testing'].hist(s_dict['alpha_feed_dist'].spike_list, bins, range=[xmin, xmax], color='green', label='Distal feed', alpha=0.5)
 
     # Distal feed
-    hist['feed_dist'] = f.ax['feed_dist'].hist(s_dict['alpha_feed_dist'].spike_list, bins, range=[xmin, xmax], color='green', label='Distal feed')
+    hist['feed_dist'] = f.ax['feed_dist'].hist(s_dict['alpha_feed_dist'].spike_list, bins, range=[xlim_new[0], xlim_new[1]], color='green', label='Distal feed')
 
     # f.ax['testing'].invert_yaxis()
     f.ax['feed_dist'].invert_yaxis()
 
     # for now, set the xlim for the other one, force it!
-    f.ax['dipole'].set_xlim(x)
-    f.ax['spec'].set_xlim(x)
-    f.ax['feed_prox'].set_xlim(x)
-    f.ax['feed_dist'].set_xlim(x)
+    f.ax['dipole'].set_xlim(xlim_new)
+    f.ax['spec'].set_xlim(xlim_new)
+    f.ax['feed_prox'].set_xlim(xlim_new)
+    f.ax['feed_dist'].set_xlim(xlim_new)
 
     # set hist axis props
     f.set_hist_props(hist)

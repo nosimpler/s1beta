@@ -1,8 +1,8 @@
 # dipolefn.py - dipole-based analysis functions
 #
-# v 1.8.17
-# rev 2013-07-19 (SL: externalized truncate function, made internal function based on that)
-# last major: (SL: added truncate function to truncate to arbitrary time bounds)
+# v 1.8.18
+# rev 2013-07-25 (MS: Dipole.plot() now forces ymax to be something sane)
+# last major: (SL: externalized truncate function, made internal function based on that)
 
 import fileio as fio
 import numpy as np
@@ -139,9 +139,11 @@ class Dipole():
             ax.plot(self.t, self.dpl[layer])
             ymax = self.max(layer, xlim)
             # ylim = (-ymax, ymax)
-            # ax.set_ylim(ylim)
 
-            ax.set_xlim(xlim)
+            # force ymax to be something sane
+            ax.set_ylim(top=ymax*1.2)
+
+            # ax.set_xlim(xlim)
 
         else:
             print "raise some error"

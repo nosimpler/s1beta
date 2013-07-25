@@ -1,8 +1,8 @@
 # axes_create.py - simple axis creation
 #
-# v 1.8.14
-# rev 2013-07-06 (SL: added twinx creation)
-# last major: (SL: Added several functions to base class)
+# v 1.8.18
+# rev 2013-07-25 (MS: Semi-kludgy fix to MS not having LateX on his linux machine)
+# last major: (SL: added twinx creation)
 
 # usage:
 # testfig = FigStd()
@@ -19,14 +19,20 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import itertools as it
 import numpy as np
-import os
+import os, sys
 
 # Base figure class
 class FigBase():
     def __init__(self):
         # self.f is typically set by the super class
         self.f = None
-        mpl.rc('text', usetex=True)
+
+        # only use latex if on Mac
+        # kind of kludgy temporary fix for now.
+        if sys.platform.startswith('darwin'):
+            mpl.rc('text', usetex=True)
+        elif sys.platform.startswith('linux'):
+            pass
 
         # axis dicts are guaranteed to exist at least, sheesh
         self.ax = {}
