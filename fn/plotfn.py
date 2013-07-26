@@ -1,8 +1,8 @@
 # plotfn.py - pall and possibly other plot routines
 #
-# v 1.8.21sc
-# rev 2013-07-26 (MS: ylim arg now passed around to spec plotting routines to set freq bounds) 
-# last major: (MS: xlim now being passed to pspec.pspec_dpl())
+# v 1.8.22sc
+# rev 2013-07-26 (MS: Minor)
+# last major: (MS: ylim arg now passed around to spec plotting routines to set freq bounds) 
 
 from praster import praster
 import axes_create as ac
@@ -73,8 +73,8 @@ def pall(ddir, p_exp, xlim=None, ylim=None):
 # def pall(ddir, p_exp, spec_results, xlim=[0., 'tstop']):
     # runtype allows easy (hard coded switching between two modes)
     # either 'parallel' or 'debug'
-    # runtype = 'parallel'
-    runtype = 'debug'
+    runtype = 'parallel'
+    # runtype = 'debug'
 
     dsim = ddir.dsim
 
@@ -120,8 +120,8 @@ def pall(ddir, p_exp, xlim=None, ylim=None):
 # Plots dipole and spec with alpha feed histograms
 def pdpl_pspec_with_hist(ddir, p_exp, xlim=None, ylim=None):
 # def pdpl_pspec_with_hist(ddir, p_exp, spec_results, xlim=[0., 'tstop']):
-    runtype = 'debug'
-    # runtype = 'parallel'
+    # runtype = 'debug'
+    runtype = 'parallel'
 
     # preallocate lists for use below
     param_list = []

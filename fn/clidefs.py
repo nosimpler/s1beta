@@ -1,8 +1,8 @@
 # clidefs.py - these are all of the function defs for the cli
 #
-# v 1.8.21sc
-# rev 2013-07-26 (MS: updated exec_replot() and exec_addalphahist() to use new args system)
-# last major: (MS: exec_specmax() now uses new class specfn.Spec())
+# v 1.8.22sc
+# rev 2013-07-26 (MS: Moved spectral averaging and stationarity analyis to specfn.py. Updated stationarity routines to use specfn.Spec()) 
+# last major: (MS: updated exec_replot() and exec_addalphahist() to use new args system)
 
 # Standard modules
 import fnmatch, os, re, sys
@@ -404,16 +404,17 @@ def exec_avgtrials(ddata, datatype):
 
             # average spec data
             elif datakey == 'rawspec':
-                # load TFR data into np array and avg by summing and dividing by n_trials 
-                data_for_avg = np.array([np.load(file)['TFR'] for file in unique_list])
-                spec_avg = data_for_avg.sum(axis=0)/data_for_avg.shape[0]
+                specfn.average(fname_unique, unique_list)
+                # # load TFR data into np array and avg by summing and dividing by n_trials 
+                # data_for_avg = np.array([np.load(file)['TFR'] for file in unique_list])
+                # spec_avg = data_for_avg.sum(axis=0)/data_for_avg.shape[0]
 
-                # load time and freq vectors from the first item on the list, assume all same
-                timevec = np.load(unique_list[0])['time']
-                freqvec = np.load(unique_list[0])['freq']
+                # # load time and freq vectors from the first item on the list, assume all same
+                # timevec = np.load(unique_list[0])['time']
+                # freqvec = np.load(unique_list[0])['freq']
 
-                # save the aggregate info
-                np.savez_compressed(fname_unique, time=timevec, freq=freqvec, TFR=spec_avg)
+                # # save the aggregate info
+                # np.savez_compressed(fname_unique, time=timevec, freq=freqvec, TFR=spec_avg)
 
 # run the spectral analyses on the somatic current time series
 def exec_spec_current(ddata, opts_in=None):
@@ -472,7 +473,12 @@ def exec_spec_stationary_avg(ddata, dsim, maxpwr):
         print "now doing spec freq-pwr analysis"
 
     # perform time-averaged stationary analysis
-    specpwr_results = [specfn.specpwr_stationary_avg(fspec) for fspec in fspec_list]
+    # specpwr_results = [specfn.specpwr_stationary_avg(fspec) for fspec in fspec_list]
+    specpwr_results = []
+
+    for fspec in fspec_list:
+        spec = specfn.Spec(fspec)
+        specpwr_results.append(spec.stationary_avg())
 
     # plot for whole simulation
     if analysis_type == 'sim':
@@ -518,9 +524,15 @@ def exec_spec_avg_stationary_avg(ddata, dsim, opts):
     # If no avg spec data found, generate it.
     if not spec_results_avged:
         exec_avgtrials(ddata, 'spec')  
+        spec_results_avged = fio.file_match(ddata.dsim, '-specavg.npz')
 
     # perform time-averaged stationarity analysis
-    specpwr_results = [specfn.specpwr_stationary_avg(dspec) for dspec in spec_results_avged]
+    # specpwr_results = [specfn.specpwr_stationary_avg(dspec) for dspec in spec_results_avged]
+    specpwr_results = []
+
+    for fspec in spec_results_avged:
+        spec = specfn.Spec(fspec)
+        specpwr_results.append(spec.stationary_avg())
 
     # create fparam list to match avg'ed data
     N_trials = p_exp.N_trials
@@ -536,7 +548,12 @@ def exec_spec_avg_stationary_avg(ddata, dsim, opts):
             raw_spec_data = fio.file_match(ddata.dsim, '-spec.npz')
 
             # perform freqpwr analysis on raw data
-            raw_specpwr = [specfn.specpwr_stationary_avg(dspec)['p_avg'] for dspec in raw_spec_data]
+            # raw_specpwr = [specfn.specpwr_stationary_avg(dspec)['p_avg'] for dspec in raw_spec_data]
+            raw_specpwr = []
+
+            for fspec in raw_spec_data:
+                spec = specfn.Spec(fspec)
+                raw_specpwr.append(spec.stationary_avg()['p_avg'])
 
             # calculate standard error
             error_vec = specfn.calc_stderror(raw_specpwr)

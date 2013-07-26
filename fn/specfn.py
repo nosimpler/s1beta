@@ -1,8 +1,8 @@
 # specfn.py - Average time-frequency energy representation using Morlet wavelet method
 #
-# v 1.8.21sc
-# rev 2013-07-26 (MS: added plot to axis methods for TFR and periodogram plotting in Spec())
-# last major: (MS: Created class Spec() for handling spec data from file. Currently lacks backwards compatibility for sims run before commit 1.8.19)
+# v 1.8.22sc
+# rev 2013-07-26 (MS: Added stationarity analysis to Spec(). Added fn to average spectral data acrross files)
+# last major: (MS: added plot to axis methods for TFR and periodogram plotting in Spec())
 
 import os
 import sys
@@ -52,8 +52,13 @@ def read(fdata_spec, type='dpl'):
 
 class Spec():
     def __init__(self, fspec, dtype='dpl'):
-        # save dtype and file name
+        # save dtype
         self.dtype = dtype
+
+        # save details of file
+        # may be better ways of doing this...
+        self.fspec = fspec
+        self.expmt = fspec.split('/')[6].split('.')[0]
         self.fname = fspec.split('/')[-1].split('-spec')[0]
 
         # parse data
@@ -179,6 +184,27 @@ class Spec():
         }
 
         return data_max
+
+    # Averages spectral power over specified time interval for specified frequencies 
+    def stationary_avg(self, layer='agg', t_interval=None, f_interval=None):
+        # truncate data based on specified intervals
+        dcut = self.truncate_ext(layer, t_interval, f_interval)  
+
+        # avg TFR pwr over time
+        # axis = 1 sums over columns
+        pwr_avg = dcut['TFR'].sum(axis=1) / len(dcut['t'])
+
+        # Get max pwr and freq at which max pwr occurs
+        pwr_max = pwr_avg.max()
+        f_at_max = dcut['f'][pwr_avg==pwr_max]
+
+        return {
+            'p_avg': pwr_avg,
+            'p_max': pwr_max,
+            'f_max': f_at_max,
+            'freq': dcut['f'],
+            'expmt': self.expmt,
+        }
 
     def plot_TFR(self, ax, layer='agg', xlim=None, ylim=None):
         # truncate data based on specifed xlim and ylim
@@ -428,6 +454,33 @@ class MorletSpec():
         S = 2 * sum(s * tmp) / len(s)
 
         return S
+
+# average spec data for a given set of files
+def average(fname, fspec_list):
+    for fspec in fspec_list:
+        # load spec data
+        spec = Spec(fspec)
+
+        # if this is first file, copy spec data structure wholesale to x
+        if fspec is fspec_list[0]:
+            x = spec.spec
+
+        # else, iterate through spec data and add to x_agg
+        # there might be a more 'pythonic' way of doing this...
+        else:
+            for subdict in x.iterkeys():
+                for key in x[subdict].iterkeys(): 
+                    x[subdict][key] += spec.spec[subdict][key]
+
+    # poor man's mean
+    for subdict in x.iterkeys():
+        for key in x[subdict].iterkeys(): 
+            x[subdict][key] /= len(fspec_list)
+
+    # save data
+    print x['agg']['f']
+    max_agg = (x['max_agg']['p_at_max'], x['max_agg']['t_at_max'], x['max_agg']['f_at_max'])
+    np.savez_compressed(fname, time=x['agg']['t'], freq=x['agg']['f'], TFR=x['agg']['TFR'], t_L2=x['L2']['t'], f_L2=x['L2']['f'], TFR_L2=x['L2']['TFR'], t_L5=x['L5']['t'], f_L5=x['L5']['f'], TFR_L5=x['L5']['TFR'], max_agg=max_agg, pgram_p=x['pgram']['p'], pgram_f=x['pgram']['f'])
 
 # spectral plotting kernel should be simpler and take just a file name and an axis handle
 # Spectral plotting kernel for ONE simulation run

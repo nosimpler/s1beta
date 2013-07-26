@@ -1,8 +1,8 @@
 # pspec.py - Very long plotting methods having to do with spec.
 #
-# v 1.8.21sc
-# rev 2013-07-26 (MS: Plotting routines now use plotting methods in specfn.Spec())
-# last major: (MS: Reinstituted use of xlim using logical indexing in pspec_dpl() and pspec_dpl_with_hist())
+# v 1.8.22sc
+# rev 2013-07-26 (MS: Minor)
+# last major: (MS: Plotting routines now use plotting methods in specfn.Spec())
 
 import os
 import sys
@@ -255,9 +255,9 @@ def pspecpwr(file_name, results_list, fparam_list, key_types, error_vec=[]):
     # add title
     # f.set_title(fparam_list[0], key_types)
 
-    f.save(file_name)
+    f.savepng(file_name)
+    # f.save(file_name)
     # f.saveeps(file_name)
-    # f.savepng(file_name)
     f.close()
 
 # frequency-power analysis plotting kernel
