@@ -1,7 +1,7 @@
 # cli.py - routines for the command line interface console s1sh.py
 #
-# v 1.8.20sc
-# rev 2013-07-25 (MS: minor)
+# v 1.8.21sc
+# rev 2013-07-26 (MS: Updated do_replot() and do_addalphahist() to use new args system)
 # last major: (SL: added __create_dict_from_args() to replace previous methods)
 
 from cmd import Cmd
@@ -705,70 +705,77 @@ class Console(Cmd):
 
     def do_replot(self, args):
         """Regenerates plots in given directory. Usage:
-           Can pass arguments to set xmin and xmax of plots
-           Args must be passed in form --xmin=val --xmax=val
-           Can pass none, one, or both args in any order
+           Usage: replot --xlim=[0, 1000] --ylim=[0, 100]
+           xlim is a time interval
+           ylim is a frequency interval
         """
         # preallocate variables so they always exist
-        xmin = 0.
-        xmax = 'tstop'
+        # xmin = 0.
+        # xmax = 'tstop'
 
-        # Parse args if they exist
-        if args:
-            arg_list = [arg for arg in args.split('--') if arg is not '']
+        # # Parse args if they exist
+        # if args:
+        #     arg_list = [arg for arg in args.split('--') if arg is not '']
 
-            # Assign value to above variables if the value exists as input
-            for arg in arg_list:
-                if arg.startswith('xmin'):
-                    xmin = float(arg.split('=')[-1])
+        #     # Assign value to above variables if the value exists as input
+        #     for arg in arg_list:
+        #         if arg.startswith('xmin'):
+        #             xmin = float(arg.split('=')[-1])
  
-                elif arg.startswith('xmax'):
-                    xmax = float(arg.split('=')[-1])
+        #         elif arg.startswith('xmax'):
+        #             xmax = float(arg.split('=')[-1])
 
-                else:
-                    print "Did not recognize argument %s. Not doing anything with it" % arg
+        #         else:
+        #             print "Did not recognize argument %s. Not doing anything with it" % arg
 
-            # Check to ensure xmin less than xmax
-            if xmin and xmax:
-                if xmin > xmax:
-                    print "xmin greater than xmax. Defaulting to sim parameters"
-                    xmin = 0.
-                    xmax = 'tstop'
+        #     # Check to ensure xmin less than xmax
+        #     if xmin and xmax:
+        #         if xmin > xmax:
+        #             print "xmin greater than xmax. Defaulting to sim parameters"
+        #             xmin = 0.
+        #             xmax = 'tstop'
+
+        dict_opts = self.__create_dict_from_args(args)
 
         # check for spec data, create it if didn't exist, and then run the plots
-        clidefs.regenerate_plots(self.ddata, [xmin, xmax])
+        clidefs.exec_replot(self.ddata, dict_opts)
+        # clidefs.regenerate_plots(self.ddata, [xmin, xmax])
 
     def do_addalphahist(self, args):
         """Adds histogram of alpha feed input times to dpl and spec plots. Usage:
-           [s1] addalphahist {--xmin=0 --xmax=100}
+           [s1] addalphahist {--xlim=[0, 1000] --ylim=[0, 100]}
+           xlim is a time interval
+           ylim is a frequency interval
         """
-        # preallocate variables so they always exist
-        xmin = 0.
-        xmax = 'tstop'
+        # # preallocate variables so they always exist
+        # xmin = 0.
+        # xmax = 'tstop'
 
-        # Parse args if they exist
-        if args:
-            arg_list = [arg for arg in args.split('--') if arg is not '']
+        # # Parse args if they exist
+        # if args:
+        #     arg_list = [arg for arg in args.split('--') if arg is not '']
 
-            # Assign value to above variables if the value exists as input
-            for arg in arg_list:
-                if arg.startswith('xmin'):
-                    xmin = float(arg.split('=')[-1])
+        #     # Assign value to above variables if the value exists as input
+        #     for arg in arg_list:
+        #         if arg.startswith('xmin'):
+        #             xmin = float(arg.split('=')[-1])
  
-                elif arg.startswith('xmax'):
-                    xmax = float(arg.split('=')[-1])
+        #         elif arg.startswith('xmax'):
+        #             xmax = float(arg.split('=')[-1])
 
-                else:
-                    print "Did not recognize argument %s. Not doing anything with it" %arg
+        #         else:
+        #             print "Did not recognize argument %s. Not doing anything with it" %arg
 
-            # Check to ensure xmin less than xmax
-            if xmin and xmax:
-                if xmin > xmax:
-                    print "xmin greater than xmax. Defaulting to sim parameters"
-                    xmin = 0.
-                    xmax = 'tstop'
+        #     # Check to ensure xmin less than xmax
+        #     if xmin and xmax:
+        #         if xmin > xmax:
+        #             print "xmin greater than xmax. Defaulting to sim parameters"
+        #             xmin = 0.
+        #             xmax = 'tstop'
 
-        clidefs.exec_addalphahist(self.ddata, [xmin, xmax])
+        dict_opts = self.__create_dict_from_args(args)
+        clidefs.exec_addalphahist(self.ddata, dict_opts)
+        # clidefs.exec_addalphahist(self.ddata, [xmin, xmax])
 
     def do_aggregatespec(self, args):
         """Creates aggregates all spec data with histograms into one massive fig.

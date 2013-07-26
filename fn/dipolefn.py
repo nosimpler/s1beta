@@ -1,8 +1,8 @@
 # dipolefn.py - dipole-based analysis functions
 #
-# v 1.8.18
-# rev 2013-07-25 (MS: Dipole.plot() now forces ymax to be something sane)
-# last major: (SL: externalized truncate function, made internal function based on that)
+# v 1.8.21sc
+# rev 2013-07-26 (MS: Changed xlim args now default to None) 
+# last major: (MS: Dipole.plot() now forces ymax to be something sane)
 
 import fileio as fio
 import numpy as np
@@ -105,21 +105,34 @@ class Dipole():
         elif layer in self.dpl.keys():
             dpl_tmp = self.dpl[layer]
 
-        # setting xmin
-        if xlim[0] < 0.:
-            xmin = 0.
-        else:
-            xmin = xlim[0]
-
-        # set xmax
-        if xlim[1] > self.t[-1]:
-            xmax = self.t[-1]
-
-        elif xlim[1] == -1:
+        # set xmin and xmax
+        if xlim is None:
+            xmin = self.t[0]
             xmax = self.t[-1]
 
         else:
-            xmax = xlim[1]
+            xmin, xmax = xlim
+
+            if xmin < 0.:
+                xmin = 0.
+
+            if xmax < 0.:
+                xmax = self.f[-1]
+
+        # if xlim[0] < 0.:
+        #     xmin = 0.
+        # else:
+        #     xmin = xlim[0]
+
+        # # set xmax
+        # if xlim[1] > self.t[-1]:
+        #     xmax = self.t[-1]
+
+        # elif xlim[1] == -1:
+        #     xmax = self.t[-1]
+
+        # else:
+        #     xmax = xlim[1]
 
         # output t_tmp
         # t_tmp = self.t[(self.t > xmin) & (self.t < xmax)]
@@ -143,7 +156,8 @@ class Dipole():
             # force ymax to be something sane
             ax.set_ylim(top=ymax*1.2)
 
-            # ax.set_xlim(xlim)
+            # set xlim
+            ax.set_xlim(xlim)
 
         else:
             print "raise some error"
@@ -368,16 +382,30 @@ def pdipole(f_dpl, f_param, dfig, key_types, plot_dict):
     # grabbing the p_dict from the f_param
     _, p_dict = paramrw.read(f_param)
 
-    # get xmin and xmax from the plot_dict
-    if plot_dict['xmin'] is None:
-        xmin = 0.
-    else:
-        xmin = plot_dict['xmin']
+    # parse xlim from plot_dict
+    if plot_dict['xlim'] is None:
+        xmin = dpl.t[0]
+        xmax = dpl.t[-1]
 
-    if plot_dict['xmax'] is None:
-        xmax = p_dict['tstop']
     else:
-        xmax = plot_dict['xmax']
+        xmin, xmax = plot_dict['xlim']
+
+        if xmin < 0.:
+            xmin = 0.
+
+        if xmax < 0.:
+            xmax = self.f[-1]
+
+    # # get xmin and xmax from the plot_dict
+    # if plot_dict['xmin'] is None:
+    #     xmin = 0.
+    # else:
+    #     xmin = plot_dict['xmin']
+
+    # if plot_dict['xmax'] is None:
+    #     xmax = p_dict['tstop']
+    # else:
+    #     xmax = plot_dict['xmax']
 
     # truncate them using logical indexing
     t_range = dpl.t[(dpl.t >= xmin) & (dpl.t <= xmax)]
@@ -387,10 +415,12 @@ def pdipole(f_dpl, f_param, dfig, key_types, plot_dict):
     f.ax0.plot(t_range, dpl_range)
 
     # sorry about the parity between vars here and above with xmin/xmax
-    if plot_dict['ymin'] is None or plot_dict['ymax'] is None:
+    if plot_dict['ylim'] is None:
+    # if plot_dict['ymin'] is None or plot_dict['ymax'] is None:
         pass
     else:
-        f.ax0.set_ylim(plot_dict['ymin'], plot_dict['ymax'])
+        f.ax0.set_ylim(plot_dict['ylim'][0], plot_dict['ylim'][1])
+        # f.ax0.set_ylim(plot_dict['ymin'], plot_dict['ymax'])
 
     # useful for title strings
     title_str = ac.create_title(p_dict, key_types)
@@ -472,9 +502,10 @@ def pdipole_evoked(dfig, f_dpl, f_spk, f_param, ylim=[]):
 
 # Plots dipole with histogram of alpha feed inputs
 # this function has not been converted to use the Dipole() class yet
-def pdipole_with_hist(f_dpl, f_spk, dfig, f_param, key_types, xlim=[0., 'tstop']):
+def pdipole_with_hist(f_dpl, f_spk, dfig, f_param, key_types, xlim=None):
     # ddipole is dipole data
-    ddipole = np.loadtxt(f_dpl)
+    # ddipole = np.loadtxt(f_dpl)
+    dpl = Dipole(f_dpl)
 
     # split to find file prefix
     file_prefix = f_dpl.split('/')[-1].split('.')[0]
@@ -482,19 +513,41 @@ def pdipole_with_hist(f_dpl, f_spk, dfig, f_param, key_types, xlim=[0., 'tstop']
     # load param file
     _, p_dict = paramrw.read(f_param)
 
-    # set xmin value
-    xmin = xlim[0] / p_dict['dt']
+    # # set xmin value
+    # xmin = xlim[0] / p_dict['dt']
 
-    # set xmax value
-    if xlim[1] == 'tstop':
-        xmax = p_dict['tstop'] / p_dict['dt']
+    # # set xmax value
+    # if xlim[1] == 'tstop':
+    #     xmax = p_dict['tstop'] / p_dict['dt']
+    # else:
+    #     xmax = xlim[1] / p_dict['dt']
+
+    # # these are the vectors for now, but this is going to change
+    # t_vec = ddipole[xmin:xmax+1, 0]
+    # dp_total = ddipole[xmin:xmax+1, 1]
+
+    # parse xlim values
+    if xlim is None:
+        xmin = dpl.t[0]
+        xmax = dpl.t[-1]
+
     else:
-        xmax = xlim[1] / p_dict['dt']
+        xmin, xmax = xlim
 
-    # these are the vectors for now, but this is going to change
-    t_vec = ddipole[xmin:xmax+1, 0]
-    dp_total = ddipole[xmin:xmax+1, 1]
+        if xmin < 0.:
+            xmin = 0.
 
+        if xmax < 0.:
+            xmax = self.f[-1]
+
+    # Plotting
+    f = ac.FigDplWithHist()
+
+    # dipole
+    dpl.plot(f.ax['dipole'], (xmin, xmax))
+    # f.ax['dipole'].plot(t_vec, dp_total)
+
+    # Histograms
     # get feed input times.
     s_dict = spikefn.spikes_from_file(f_param, f_spk)
 
@@ -505,21 +558,15 @@ def pdipole_with_hist(f_dpl, f_spk, dfig, f_param, key_types, xlim=[0., 'tstop']
     s_dict = spikefn.add_delay_times(s_dict, p_dict)
 
     # set number of bins for hist (150 bins/1000ms)
-    bins = 150. * (t_vec[-1] - t_vec[0]) / 1000.
-
-    # Plotting
-    f = ac.FigDplWithHist()
-
-    # dipole
-    f.ax['dipole'].plot(t_vec, dp_total)
+    bins = 150. * (xmax - xmin) / 1000.
 
     hist = {}
 
     # Proximal feed
-    hist['feed_prox'] = f.ax['feed_prox'].hist(s_dict['alpha_feed_prox'].spike_list, bins, range=[t_vec[0], t_vec[-1]], color='red', label='Proximal feed')
+    hist['feed_prox'] = f.ax['feed_prox'].hist(s_dict['alpha_feed_prox'].spike_list, bins, range=[xmin, xmax], color='red', label='Proximal feed')
 
     # Distal feed
-    hist['feed_dist'] = f.ax['feed_dist'].hist(s_dict['alpha_feed_dist'].spike_list, bins, range=[t_vec[0], t_vec[-1]], color='green', label='Distal feed')
+    hist['feed_dist'] = f.ax['feed_dist'].hist(s_dict['alpha_feed_dist'].spike_list, bins, range=[xmin, xmax], color='green', label='Distal feed')
 
     # set hist axis properties
     f.set_hist_props(hist)
@@ -528,6 +575,10 @@ def pdipole_with_hist(f_dpl, f_spk, dfig, f_param, key_types, xlim=[0., 'tstop']
     for key in f.ax.keys():
         if 'feed' in key:
             f.ax[key].legend()
+
+    # force xlim on histograms
+    f.ax['feed_prox'].set_xlim((xmin, xmax))
+    f.ax['feed_dist'].set_xlim((xmin, xmax))
 
     title_str = ac.create_title(p_dict, key_types)
     f.f.suptitle(title_str)

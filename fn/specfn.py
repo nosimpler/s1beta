@@ -1,8 +1,8 @@
 # specfn.py - Average time-frequency energy representation using Morlet wavelet method
 #
-# v 1.8.20sc
-# rev 2013-07-25 (MS: Created class Spec() for handling spec data from file. Currently lacks backwards compatibility for sims run before commit 1.8.19)
-# last major: (MS: now saving max spectral power, time, and freq, and welch analysis as part of analysis_typespecific())
+# v 1.8.21sc
+# rev 2013-07-26 (MS: added plot to axis methods for TFR and periodogram plotting in Spec())
+# last major: (MS: Created class Spec() for handling spec data from file. Currently lacks backwards compatibility for sims run before commit 1.8.19)
 
 import os
 import sys
@@ -88,7 +88,10 @@ class Spec():
                     'f_at_max': data_spec['max_agg'][2],
                 },
 
-                'pgram': data_spec['pgram']
+                'pgram': {
+                    'p': data_spec['pgram_p'],
+                    'f': data_spec['pgram_f'],
+                }
             }
 
         elif self.dtype == 'current':
@@ -176,6 +179,38 @@ class Spec():
         }
 
         return data_max
+
+    def plot_TFR(self, ax, layer='agg', xlim=None, ylim=None):
+        # truncate data based on specifed xlim and ylim
+        # xlim is a time interval
+        # ylim is a frequency interval
+        dcut = self.truncate_ext(layer, xlim, ylim)
+
+        # Update xlim to have values guaranteed to exist
+        xlim_new = (dcut['t'][0], dcut['t'][-1])
+        xmin, xmax = xlim_new
+
+        # Update ylim to have values guaranteed to exist
+        ylim_new = (dcut['f'][0], dcut['f'][-1])
+        ymin, ymax = ylim_new
+
+        # set extent of plot
+        # order is ymax, ymin so y-axis is inverted
+        extent_xy = [xmin, xmax, ymax, ymin]
+
+        # plot
+        im = ax.imshow(dcut['TFR'], extent=extent_xy, aspect='auto', origin='upper')
+
+        return im
+
+    def plot_pgram(self, ax, f_max=None):
+        # If f_max is not supplied, set it to highest freq of aggregate analysis
+        if f_max is None:
+            f_max = self.spec['agg']['f'][-1] 
+
+        # plot
+        ax.plot(self.spec['pgram']['f'], self.spec['pgram']['p'])
+        ax.set_xlim((0., f_max))
 
 # core class for frequency analysis assuming stationary time series
 class Welch():
@@ -584,7 +619,7 @@ def spec_dpl_kernel(fparam, fts, fspec, f_max):
     pgram = Welch(dpl.t, dpl.dpl['agg'], p_dict['dt'])
 
     # Save spec results
-    np.savez_compressed(fspec, time=spec_agg.t, freq=spec_agg.f, TFR=spec_agg.TFR, max_agg=max_agg, t_L2=spec_L2.t, f_L2=spec_L2.f, TFR_L2=spec_L2.TFR, t_L5=spec_L5.t, f_L5=spec_L5.f, TFR_L5=spec_L5.TFR, pgram=pgram.P)
+    np.savez_compressed(fspec, time=spec_agg.t, freq=spec_agg.f, TFR=spec_agg.TFR, max_agg=max_agg, t_L2=spec_L2.t, f_L2=spec_L2.f, TFR_L2=spec_L2.TFR, t_L5=spec_L5.t, f_L5=spec_L5.f, TFR_L5=spec_L5.TFR, pgram_p=pgram.P, pgram_f=pgram.f)
 
 # Does spec analysis for all files in simulation directory
 # ddata comes from fileio

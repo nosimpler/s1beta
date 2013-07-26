@@ -1,8 +1,8 @@
 # clidefs.py - these are all of the function defs for the cli
 #
-# v 1.8.20sc
-# rev 2013-07-25 (MS: exec_specmax() now uses new class specfn.Spec())
-# last major: (MS: Bulk of exec_specmax() moved to specfn.py)
+# v 1.8.21sc
+# rev 2013-07-26 (MS: updated exec_replot() and exec_addalphahist() to use new args system)
+# last major: (MS: exec_specmax() now uses new class specfn.Spec())
 
 # Standard modules
 import fnmatch, os, re, sys
@@ -614,9 +614,14 @@ def freqpwr_with_hist(ddata, dsim):
         specfn.pfreqpwr_with_hist(file_name, freqpwr_result, f_spk, gid_dict, p_dict, key_types)
 
 # runs plotfn.pall *but* checks to make sure there are spec data
-def regenerate_plots(ddata, xlim=[0, 'tstop']):
-    # need p_exp, spec_results, gid_dict, and tstop.
-    # fparam = fio.file_match(ddata.dsim, '.param')[0]
+def exec_replot(ddata, opts):
+# def regenerate_plots(ddata, xlim=[0, 'tstop']):
+    p = {
+        'xlim': None,
+        'ylim': None,
+    }
+
+    args_check(p, opts)
 
     # recreate p_exp ... don't like this
     # ** should be guaranteed to be identical **
@@ -634,19 +639,26 @@ def regenerate_plots(ddata, xlim=[0, 'tstop']):
         # spec_results = exec_spec_regenerate(ddata)
 
     # run our core pall plot
-    plotfn.pall(ddata, p_exp, xlim)
+    plotfn.pall(ddata, p_exp, p['xlim'], p['ylim'])
 
 # function to add alpha feed hists
-def exec_addalphahist(ddata, xlim=[0, 'tstop']):
+def exec_addalphahist(ddata, opts):
+# def exec_addalphahist(ddata, xlim=[0, 'tstop']):
+    p = {
+        'xlim': None,
+        'ylim': None,
+    }
+
+    args_check(p, opts)
+
     p_exp = paramrw.ExpParams(ddata.fparam)
-    # fspec_list = fio.file_match(ddata.dsim, '-spec.npz')
 
     # generate data if no spec exists here
     if not fio.file_match(ddata.dsim, '-spec.npz'):
         print "No saved spec data found. Performing spec anaylsis ... "
         exec_spec_regenerate(ddata)
 
-    plotfn.pdpl_pspec_with_hist(ddata, p_exp, xlim)
+    plotfn.pdpl_pspec_with_hist(ddata, p_exp, p['xlim'], p['ylim'])
     # plotfn.pdpl_pspec_with_hist(ddata, p_exp, spec_list, xlim)
 
 def exec_aggregatespec(ddata, labels):

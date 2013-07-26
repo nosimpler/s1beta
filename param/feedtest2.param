@@ -63,7 +63,7 @@ save_spec_data: 1
 f_max_spec: 60.
 
 # n trials
-N_trials: 30
+N_trials: 0
 
 # these values will only be used with N_trials = 0
 # and when these values are not -1
