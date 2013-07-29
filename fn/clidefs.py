@@ -1,8 +1,8 @@
 # clidefs.py - these are all of the function defs for the cli
 #
-# v 1.8.22sc
-# rev 2013-07-26 (MS: Moved spectral averaging and stationarity analyis to specfn.py. Updated stationarity routines to use specfn.Spec()) 
-# last major: (MS: updated exec_replot() and exec_addalphahist() to use new args system)
+# v 1.8.23sc
+# rev 2013-07-29 (MS: Minor update to exec_plotaverages())
+# last major: (MS: Moved spectral averaging and stationarity analyis to specfn.py. Updated stationarity routines to use specfn.Spec()) 
 
 # Standard modules
 import fnmatch, os, re, sys
@@ -778,10 +778,12 @@ def exec_plotaverages(ddata, ylim=[]):
     if dpl_list:
         # new input to dipolefn
         pdipole_dict = {
-            'xmin': 0.,
-            'xmax': None,
-            'ymin': None,
-            'ymax': None,
+            'xlim': None,
+            'ylim': None,
+            # 'xmin': 0.,
+            # 'xmax': None,
+            # 'ymin': None,
+            # 'ymax': None,
         }
 
         # if there is a length, assume it's 2 (it should be!)

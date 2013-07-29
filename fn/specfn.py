@@ -1,8 +1,8 @@
 # specfn.py - Average time-frequency energy representation using Morlet wavelet method
 #
-# v 1.8.22sc
-# rev 2013-07-26 (MS: Added stationarity analysis to Spec(). Added fn to average spectral data acrross files)
-# last major: (MS: added plot to axis methods for TFR and periodogram plotting in Spec())
+# v 1.8.23sc
+# rev 2013-07-29 (MS: Added backwards compatibility to Spec() file parsing. Updated saving routine in average())
+# last major: (MS: Added stationarity analysis to Spec(). Added fn to average spectral data acrross files)
 
 import os
 import sys
@@ -68,36 +68,70 @@ class Spec():
         data_spec = np.load(fspec)
 
         if self.dtype == 'dpl':
-            self.spec = {
-                'agg': {
-                    't': data_spec['time'],
-                    'f': data_spec['freq'],
-                    'TFR': data_spec['TFR'],
-                },
+            self.spec = {}
 
-                'L2': {
+            # Try to load aggregate spec data
+            try:
+                self.spec['agg'] = {
+                    't': data_spec['t_agg'],
+                    'f': data_spec['f_agg'],
+                    'TFR': data_spec['TFR_agg'],
+                }
+
+            except KeyError:
+                # Try loading aggregate spec data using old keys
+                try:
+                    self.spec['agg'] = {
+                        't': data_spec['time'],
+                        'f': data_spec['freq'],
+                        'TFR': data_spec['TFR'],
+                    }
+                except KeyError:
+                    print "No aggregate spec data found. Don't use fns that require it..."
+
+            # Try loading Layer specific data
+            try:
+                self.spec['L2'] = {
                     't': data_spec['t_L2'],
                     'f': data_spec['f_L2'],
                     'TFR': data_spec['TFR_L2'],
-                },
+                }
 
-                'L5': {
+                self.spec['L5'] = {
                     't': data_spec['t_L5'],
                     'f': data_spec['f_L5'],
                     'TFR': data_spec['TFR_L5'],
-                },
+                }
 
-                'max_agg': {
+            except KeyError:
+                print "All or some layer data is missing. Don't use fns that require it..."
+
+            # Try loading periodigram data
+            try:
+                self.spec['pgram'] = {
+                    'p': data_spec['p_pgram'],
+                    'f': data_spec['f_pgram'],
+                }
+
+            except KeyError:
+                try:
+                    self.spec['pgram'] = {
+                        'p': data_spec['pgram_p'],
+                        'f': data_spec['pgram_f'],
+                    }
+                except KeyError:
+                    print "No periodigram data found. Don't use fns that require it..."
+
+            # Try loading aggregate max spectral data
+            try:
+                self.spec['max_agg'] = {
                     'p_at_max': data_spec['max_agg'][0],
                     't_at_max': data_spec['max_agg'][1],
                     'f_at_max': data_spec['max_agg'][2],
-                },
-
-                'pgram': {
-                    'p': data_spec['pgram_p'],
-                    'f': data_spec['pgram_f'],
                 }
-            }
+
+            except KeyError:
+                print "No aggregate max spectral data found. Don't use fns that require it..."
 
         elif self.dtype == 'current':
             self.spec = {
@@ -478,9 +512,16 @@ def average(fname, fspec_list):
             x[subdict][key] /= len(fspec_list)
 
     # save data
-    print x['agg']['f']
-    max_agg = (x['max_agg']['p_at_max'], x['max_agg']['t_at_max'], x['max_agg']['f_at_max'])
-    np.savez_compressed(fname, time=x['agg']['t'], freq=x['agg']['f'], TFR=x['agg']['TFR'], t_L2=x['L2']['t'], f_L2=x['L2']['f'], TFR_L2=x['L2']['TFR'], t_L5=x['L5']['t'], f_L5=x['L5']['f'], TFR_L5=x['L5']['TFR'], max_agg=max_agg, pgram_p=x['pgram']['p'], pgram_f=x['pgram']['f'])
+    # if max_agg is a key in x, assume all keys are present
+    # else, assume only aggregate data is present
+    # Terrible way to save due to how np.savez_compressed works (i.e. must specify key=value) 
+    if 'max_agg' in x.keys():
+        max_agg = (x['max_agg']['p_at_max'], x['max_agg']['t_at_max'], x['max_agg']['f_at_max'])
+
+        np.savez_compressed(fname, t_agg=x['agg']['t'], f_agg=x['agg']['f'], TFR_agg=x['agg']['TFR'], t_L2=x['L2']['t'], f_L2=x['L2']['f'], TFR_L2=x['L2']['TFR'], t_L5=x['L5']['t'], f_L5=x['L5']['f'], TFR_L5=x['L5']['TFR'], max_agg=max_agg, pgram_p=x['pgram']['p'], pgram_f=x['pgram']['f'])
+
+    else:
+        np.savez_compressed(fname, t_agg=x['agg']['t'], f_agg=x['agg']['f'], TFR_agg=x['agg']['TFR'])
 
 # spectral plotting kernel should be simpler and take just a file name and an axis handle
 # Spectral plotting kernel for ONE simulation run

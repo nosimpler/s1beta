@@ -1,7 +1,7 @@
 # pspec.py - Very long plotting methods having to do with spec.
 #
-# v 1.8.22sc
-# rev 2013-07-26 (MS: Minor)
+# v 1.8.23sc
+# rev 2013-07-29 (MS: added backwards compatibility to pgram plotting in pspec_dpl())
 # last major: (MS: Plotting routines now use plotting methods in specfn.Spec())
 
 import os
@@ -69,9 +69,6 @@ def pspec_dpl(f_spec, f_dpl, dfig, p_dict, key_types, xlim=None, ylim=None):
     pc = spec.plot_TFR(f.ax['spec'], 'agg', xlim, ylim) 
     f.f.colorbar(pc, ax=f.ax['spec'])
 
-    # Plot Welch data
-    spec.plot_pgram(f.ax['pgram'])
-
     # grab the dipole data
     # data_dipole = np.loadtxt(open(f_dpl, 'r'))
     dpl = dipolefn.Dipole(f_dpl)
@@ -80,9 +77,14 @@ def pspec_dpl(f_spec, f_dpl, dfig, p_dict, key_types, xlim=None, ylim=None):
     dpl.plot(f.ax['dipole'], xlim, 'agg')
     # dpl.plot(f.ax['dipole'], xlim_new, 'agg')
 
-    # # this should not really be here ...
-    # pgram = specfn.Welch(dpl.t, dpl.dpl['agg'], p_dict['dt'])
-    # pgram.plot_to_ax(f.ax['pgram'], freqvec[-1])
+    # Plot Welch data
+    # Use try/except for backwards compatibility
+    try:
+        spec.plot_pgram(f.ax['pgram'])
+
+    except KeyError:
+        pgram = specfn.Welch(dpl.t, dpl.dpl['agg'], p_dict['dt'])
+        pgram.plot_to_ax(f.ax['pgram'], spec.spec['agg']['f'][-1])
 
     # plot and create an xlim
     xlim_new = f.ax['spec'].get_xlim()
