@@ -1,8 +1,8 @@
 # dipolefn.py - dipole-based analysis functions
 #
-# v 1.8.21sc
-# rev 2013-07-26 (MS: Changed xlim args now default to None) 
-# last major: (MS: Dipole.plot() now forces ymax to be something sane)
+# v 1.8.24sc
+# rev 2013-07-30 (MS: plot_specmax_interval() to plot dpl around max spec pwr)
+# last major: (MS: Changed xlim args now default to None) 
 
 import fileio as fio
 import numpy as np
@@ -1029,3 +1029,53 @@ def pdipole_grid(ddata):
 
         f.savepng(fname)
         f.close()
+
+def plot_specmax_interval(fname, dpl_list, param_list, specmax_list):
+    N_trials = len([d for d in specmax_list if d is not None])
+
+    # instantiate figure
+    f = ac.FigInterval(N_trials+1)
+
+    # set spacing between plots
+    spacers = np.arange(0.5e-4, N_trials*1e-4, 1e-4) 
+
+    # invert order of spacers so first trial is at top of plot
+    spacers =  spacers[::-1]
+
+    # iterate over various lists and plot to axis
+    i = 0
+
+    for fdpl, fparam, dmax in it.izip(dpl_list, param_list, specmax_list):
+    # for fdpl, dmax, space in it.izip(dpl_list, specmax_list, spacers):
+        if dmax is not None:
+            # load ts data
+            dpl = Dipole(fdpl)
+            dpl.baseline_renormalize(fparam)
+            dpl.convert_fAm_to_nAm()
+
+            # truncate data based on time ranges specified in dmax
+            t_cut, dpl_tcut = dpl.truncate_ext(dmax['t_int'][0], dmax['t_int'][1])
+
+            # create a tvec that is symmetric about zero and of proper length
+            t_range = dmax['t_int'][1] - dmax['t_int'][0]
+            t_start = 0 - t_range / 2.
+            t_end = 0 + t_range / 2. 
+            tvec = np.linspace(t_start, t_end, dpl_tcut['agg'].shape[0])
+
+            # plot to proper height
+            f.ax['ts'].plot(tvec, dpl_tcut['agg']+spacers[i])
+
+            # add text with pertinent information
+            x_offset = f.ax['ts'].get_xlim()[1] + 25
+            f.ax['ts'].text(x_offset, spacers[i], 'freq: %s Hz\ntime: %s ms\n%s' %(dmax['f_at_max'],dmax['t_at_max'], dmax['fname']), fontsize=12, verticalalignment='center')
+
+            i += 1
+
+    # force xlim for now
+    # f.ax['ts'].set_xlim(-100, 100)
+
+    # save fig
+    f.savepng(fname+'.png')
+
+    # close fig
+    f.close()

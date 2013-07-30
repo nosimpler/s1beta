@@ -1,8 +1,8 @@
 # axes_create.py - simple axis creation
 #
-# v 1.8.18
-# rev 2013-07-25 (MS: Semi-kludgy fix to MS not having LateX on his linux machine)
-# last major: (SL: added twinx creation)
+# v 1.8.24sc
+# rev 2013-07-30 (MS: Added FigInterval() and set_fram_off() to FigBase())
+# last major: (MS: Semi-kludgy fix to MS not having LateX on his linux machine)
 
 # usage:
 # testfig = FigStd()
@@ -151,6 +151,14 @@ class FigBase():
         title = create_title(p_dict, key_types)
         self.f.suptitle(title)
 
+    # turns off top and right frame of an axis
+    def set_frame_off(self, ax_handle):
+        self.ax[ax_handle].spines['right'].set_visible(False)
+        self.ax[ax_handle].spines['top'].set_visible(False)
+
+        self.ax[ax_handle].xaxis.set_ticks_position('bottom')
+        self.ax[ax_handle].yaxis.set_ticks_position('left')
+
     # generic function to remove xticklabels from a bunch of axes based on handle
     def remove_tick_labels(self, list_ax_handles, ax_xy='x'):
         for ax_handle in list_ax_handles:
@@ -280,6 +288,19 @@ class FigSpec(FigBase):
         self.ax['dipole'] = self.f.add_subplot(self.gspec['dpl'][:, :])
         self.ax['spec'] = self.f.add_subplot(self.gspec['spec'][:, :])
         self.ax['pgram'] = self.f.add_subplot(self.gspec['pgram'][:, :])
+
+class FigInterval(FigBase):
+    def __init__(self, N_trials):
+        self.f = plt.figure(figsize=(4, N_trials))
+        self.set_fontsize(12)
+
+        self.gspec = gridspec.GridSpec(1, 1, right=0.5)
+
+        self.ax = {}
+        self.ax['ts'] = self.f.add_subplot(self.gspec[:, :])
+        self.ax['ts'].hold(True)
+        self.ax['ts'].set_yticklabels([])
+        self.set_frame_off('ts')
 
 class FigFreqpwrWithHist(FigBase):
     def __init__(self):

@@ -1,8 +1,8 @@
 # cli.py - routines for the command line interface console s1sh.py
 #
-# v 1.8.21sc
-# rev 2013-07-26 (MS: Updated do_replot() and do_addalphahist() to use new args system)
-# last major: (SL: added __create_dict_from_args() to replace previous methods)
+# v 1.8.24sc
+# rev 2013-07-30 (MS: do_specmax_dpl_match() to plot dpl around max spect pwr)
+# last major: (MS: Updated do_replot() and do_addalphahist() to use new args system)
 
 from cmd import Cmd
 from datetime import datetime
@@ -422,6 +422,13 @@ class Console(Cmd):
         """
         dict_opts = self.__create_dict_from_args(args)
         clidefs.exec_specmax(self.ddata, dict_opts)
+
+    def do_specmax_dpl_match(self, args):
+        """Plots dpl around max spectral power over specified time and frequency intervals
+        usage: specmax_dpl_match --t_interval=[0, 1000] --f_interval=[0, 100] --f_sorted=[0, 100]
+        """
+        dict_opts = self.__create_dict_from_args(args)
+        clidefs.exec_specmax_dpl_match(self.ddata, dict_opts)
 
     def do_dipolemin(self, args):
         """Find the minimum of a particular dipole

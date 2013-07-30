@@ -1,8 +1,8 @@
 # specfn.py - Average time-frequency energy representation using Morlet wavelet method
 #
-# v 1.8.23sc
-# rev 2013-07-29 (MS: Added backwards compatibility to Spec() file parsing. Updated saving routine in average())
-# last major: (MS: Added stationarity analysis to Spec(). Added fn to average spectral data acrross files)
+# v 1.8.24sc
+# rev 2013-07-29 (MS: updated Spec().max() to allow for sorting over frequencies)
+# last major: (MS: Added backwards compatibility to Spec() file parsing. Updated saving routine in average())
 
 import os
 import sys
@@ -125,9 +125,9 @@ class Spec():
             # Try loading aggregate max spectral data
             try:
                 self.spec['max_agg'] = {
-                    'p_at_max': data_spec['max_agg'][0],
-                    't_at_max': data_spec['max_agg'][1],
-                    'f_at_max': data_spec['max_agg'][2],
+                    'p': data_spec['max_agg'][0],
+                    't': data_spec['max_agg'][1],
+                    'f': data_spec['max_agg'][2],
                 }
 
             except KeyError:
@@ -191,33 +191,53 @@ class Spec():
         }
 
     # find the max spectral power over specified time and frequency intervals
-    def max(self, layer, t_interval=None, f_interval=None):
-        # truncate data based on specified intervals 
-        dcut = self.truncate_ext(layer, t_interval, f_interval)
+    def max(self, layer, t_interval=None, f_interval=None, f_sort=None):
+        # If f_sort not provided, sort over all frequencies
+        if not f_sort:
+            f_sort = (self.spec['agg']['f'][0], self.spec['agg']['f'][-1])
 
-        # find the max power over this new range
-        pwr_max = dcut['TFR'].max()
-        max_mask = (dcut['TFR']==pwr_max)
+        # If f_sort is -1, assume upper abound is highest frequency
+        elif f_sort[1] < 0:
+            f_sort[1] = self.spec['agg']['f'][-1]
 
-        # find the t and f at max
-        # these are slightly crude and do not allow for the possibility of multiple maxes (rare?)
-        t_at_max = dcut['t'][max_mask.sum(axis=0)==1]
-        f_at_max = dcut['f'][max_mask.sum(axis=1)==1]
+        # Only continue if absolute max of spectral power occurs at f in range of f_sorted
+        # Add +1 to f_sort[0] so range is inclusive
+        if self.spec['max_agg']['f'] not in np.arange(f_sort[0], f_sort[1]+1):
+            print "%s's absolute max spectral pwr does not occur between %i-%i Hz." %(self.fname, f_sort[0], f_sort[1])
 
-        pd_at_max = 1000./f_at_max
-        t_start = t_at_max - pd_at_max
-        t_end = t_at_max + pd_at_max
+        else:
+            # truncate data based on specified intervals
+            dcut = self.truncate_ext(layer, t_interval, f_interval)
 
-        # output structure
-        data_max = {
-            'fname': self.fname,
-            'pwr': pwr_max,
-            't_int': [t_start, t_end],
-            't_at_max': t_at_max,
-            'f_at_max': f_at_max,
-        }
+            # find the max power over this new range
+            pwr_max = dcut['TFR'].max()
+            max_mask = (dcut['TFR']==pwr_max)
 
-        return data_max
+            # find the t and f at max
+            # these are slightly crude and do not allow for the possibility of multiple maxes (rare?)
+            t_at_max = dcut['t'][max_mask.sum(axis=0)==1][0]
+            f_at_max = dcut['f'][max_mask.sum(axis=1)==1][0]
+
+            # if f_interval provided and lower bound is not zero, set pd_at_max with lower bound:
+            # otherwise set it based on f_at_max
+            if f_interval and f_interval[0] > 0:
+                pd_at_max = 1000./f_interval[0]
+            else:
+                pd_at_max = 1000./f_at_max
+
+            t_start = t_at_max - pd_at_max
+            t_end = t_at_max + pd_at_max
+
+            # output structure
+            data_max = {
+                'fname': self.fname,
+                'pwr': pwr_max,
+                't_int': [t_start, t_end],
+                't_at_max': t_at_max,
+                'f_at_max': f_at_max,
+            }
+
+            return data_max
 
     # Averages spectral power over specified time interval for specified frequencies 
     def stationary_avg(self, layer='agg', t_interval=None, f_interval=None):

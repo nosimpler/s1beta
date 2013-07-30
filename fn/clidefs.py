@@ -1,8 +1,8 @@
 # clidefs.py - these are all of the function defs for the cli
 #
-# v 1.8.23sc
-# rev 2013-07-29 (MS: Minor update to exec_plotaverages())
-# last major: (MS: Moved spectral averaging and stationarity analyis to specfn.py. Updated stationarity routines to use specfn.Spec()) 
+# v 1.8.24sc
+# rev 2013-07-30 (MS: exec_specmax_dpl_match()
+# last major: (MS: Minor update to exec_plotaverages())
 
 # Standard modules
 import fnmatch, os, re, sys
@@ -264,6 +264,7 @@ def exec_specmax(ddata, opts):
         'n_trial': 0,
         't_interval': None,
         'f_interval': None,
+        'f_sort': None,
         # 't_interval': [0., -1],
         # 'f_interval': [0., -1],
     }
@@ -283,10 +284,62 @@ def exec_specmax(ddata, opts):
     spec = specfn.Spec(fspec)
 
     # get max data
-    data_max = spec.max('agg', p['t_interval'], p['f_interval'])
+    data_max = spec.max('agg', p['t_interval'], p['f_interval'], p['f_sort'])
 
-    print "Max power of %4.2e at f of %4.2f Hz at %4.3f ms" % (data_max['pwr'], data_max['f_at_max'], data_max['t_at_max'])
+    if data_max:
+        print "Max power of %4.2e at f of %4.2f Hz at %4.3f ms" % (data_max['pwr'], data_max['f_at_max'], data_max['t_at_max'])
 
+def exec_specmax_dpl_match(ddata, opts):
+    p = {
+        'expmt_group': '',
+        'n_sim': 0,
+        'trials': [0, -1],
+        't_interval': None,
+        'f_interval': None,
+        'f_sort': None,
+    }
+
+    args_check(p, opts)
+
+    # set expmt group
+    if not p['expmt_group']:
+        p['expmt_group'] = ddata.expmt_groups[0]
+
+    # set directory to save fig in and check that it exists
+    dir_fig = os.path.join(ddata.dsim, p['expmt_group'], 'figint')
+    fio.dir_create(dir_fig)
+
+    # if p['trials'][1] is -1, assume all trials are wanted
+    # 1 is subtracted from N_trials to be consistent with manual entry of trial range
+    if p['trials'][1] == -1:
+        p_exp = paramrw.ExpParams(ddata.fparam)
+        p['trials'][1] = p_exp.N_trials - 1
+
+    # Get spec, dpl, and param files
+    # Sorry for lack of readability
+    spec_list = [ddata.return_specific_filename(p['expmt_group'], 'rawspec', p['n_sim'], i) for i in range(p['trials'][0], p['trials'][1]+1)]
+    dpl_list = [ddata.return_specific_filename(p['expmt_group'], 'rawdpl', p['n_sim'], i) for i in range(p['trials'][0], p['trials'][1]+1)]
+    param_list = [ddata.return_specific_filename(p['expmt_group'], 'param', p['n_sim'], i) for i in range(p['trials'][0], p['trials'][1]+1)]
+
+    # Get max spectral data
+    data_max_list = []
+
+    for fspec in spec_list:
+        spec = specfn.Spec(fspec) 
+        data_max_list.append(spec.max('agg', p['t_interval'], p['f_interval'], p['f_sort']))
+
+    # create fig name
+    if p['f_sort']:
+        fname_short = "sim-%03i-T%03i-T%03d-sort-%i-%i" %(p['n_sim'], p['trials'][0], p['trials'][1], p['f_sort'][0], p['f_sort'][1])
+
+    else:
+        fname_short = "sim-%03i-T%03i-T%03i" %(p['n_sim'], p['trials'][0], p['trials'][1])
+
+    fname = os.path.join(dir_fig, fname_short)
+
+    # plot time-series over proper intervals
+    dipolefn.plot_specmax_interval(fname, dpl_list, param_list, data_max_list)
+        
 # search for the min in a dipole over specified interval
 def exec_dipolemin(ddata, expmt_group, n_sim, n_trial, t_interval):
     p_exp = paramrw.ExpParams(ddata.fparam)
