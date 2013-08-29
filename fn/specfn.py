@@ -1,8 +1,8 @@
 # specfn.py - Average time-frequency energy representation using Morlet wavelet method
 #
-# v 1.8.19
-# rev 2013-07-25 (MS: now saving max spectral power, time, and freq, and welch analysis as part of analysis_typespecific())
-# last major: (MS: moved specmax() from clidefs.py to here with some updates)
+# v 1.8.20
+# rev 2013-08-29 (MS: Fixed bug in analysis_typespecific for sims with multiple expmt groups)
+# last major: (MS: now saving max spectral power, time, and freq, and welch analysis as part of analysis_typespecific())
 
 import os
 import sys
@@ -486,8 +486,9 @@ def analysis_typespecific(ddata, opts=None):
     list_param = []
     list_ts = []
     list_spec = []
+    # list_exp_prefix = []
 
-    # aggregrate all file from individual expmts into lists
+    # aggregrate all files from individual expmts into lists
     for expmt_group in ddata.expmt_groups:
         # get the list of params
         # returns an alpha SORTED list
@@ -495,20 +496,25 @@ def analysis_typespecific(ddata, opts=None):
         param_tmp = ddata.file_match(expmt_group, 'param')
         list_param.extend(param_tmp)
 
-        # get the list of dipoles
+        # get exp prefix for each trial in this expmt group
+        list_exp_prefix = [fio.strip_extprefix(fparam) for fparam in param_tmp]
+
+        # get the list of dipoles and create spec output filenames
         if opts_run['type'] in ('dpl', 'dpl_laminar'):
             list_ts.extend(ddata.file_match(expmt_group, 'rawdpl'))
+            list_spec.extend([ddata.create_filename(expmt_group, 'rawspec', exp_prefix) for exp_prefix in list_exp_prefix])
 
         elif opts_run['type'] == 'current':
             list_ts.extend(ddata.file_match(expmt_group, 'rawcurrent'))
+            list_spec.extend(ddata.create_filename(expmt_group, 'rawspeccurrent', list_exp_prefix[-1]))
 
         # create list of spec output names
         # this is sorted because of file_match
-        exp_prefix_list = [fio.strip_extprefix(fparam) for fparam in param_tmp]
+        # exp_prefix_list = [fio.strip_extprefix(fparam) for fparam in list_param]
 
     # perform analysis on all runs from all exmpts at same time
     if opts_run['type'] == 'current':
-        list_spec.extend([ddata.create_filename(expmt_group, 'rawspeccurrent', exp_prefix) for exp_prefix in exp_prefix_list])
+        # list_spec.extend([ddata.create_filename(expmt_group, 'rawspeccurrent', exp_prefix) for exp_prefix in exp_prefix_list])
 
         if opts_run['runtype'] == 'parallel':
             pl = mp.Pool()
@@ -525,7 +531,7 @@ def analysis_typespecific(ddata, opts=None):
 
     elif opts_run['type'] == 'dpl_laminar':
         # these should be OUTPUT filenames that are being generated
-        list_spec.extend([ddata.create_filename(expmt_group, 'rawspec', exp_prefix) for exp_prefix in exp_prefix_list])
+        # list_spec.extend([ddata.create_filename(expmt_group, 'rawspec', exp_prefix) for exp_prefix in exp_prefix_list])
 
         # also in this case, the original spec results will be overwritten
         # and replaced by laminar specific ones and aggregate ones
