@@ -1,8 +1,8 @@
 # cli.py - routines for the command line interface console s1sh.py
 #
-# v 1.8.24sc
-# rev 2013-07-30 (MS: do_specmax_dpl_match() to plot dpl around max spect pwr)
-# last major: (MS: Updated do_replot() and do_addalphahist() to use new args system)
+# v 1.8.25sc
+# rev 2013-08-29 (MS: Routines to create and plot stereotypical dpl waveforms producing certain spectral frequencies)
+# last major: (MS: do_specmax_dpl_match() to plot dpl around max spect pwr)
 
 from cmd import Cmd
 from datetime import datetime
@@ -429,6 +429,22 @@ class Console(Cmd):
         """
         dict_opts = self.__create_dict_from_args(args)
         clidefs.exec_specmax_dpl_match(self.ddata, dict_opts)
+
+    def do_specmax_dpl_tmpl(self, args):
+        """Isolates dpl waveforms producing specified spectral frequencies
+           across trails and averages them to produce a stereotypical waveform
+           Usage: specmax_dpl_tmpl --expmt_group --n_sim --trials --t_interval
+                  --f_interval --f_sort
+        """
+        dict_opts = self.__create_dict_from_args(args)
+        clidefs.exec_specmax_dpl_tmpl(self.ddata, dict_opts)
+
+    def do_plot_dpl_tmpl(self, args):
+        """Plots stereotypical waveforms produced by do_specmax_dpl_tmpl
+           usage: plot_dpl_tmpl --expmt_group
+        """
+        dict_opts = self.__create_dict_from_args(args)
+        clidefs.exec_plot_dpl_tmpl(self.ddata, dict_opts)
 
     def do_dipolemin(self, args):
         """Find the minimum of a particular dipole

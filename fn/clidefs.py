@@ -1,8 +1,8 @@
 # clidefs.py - these are all of the function defs for the cli
 #
-# v 1.8.24sc
-# rev 2013-07-30 (MS: exec_specmax_dpl_match()
-# last major: (MS: Minor update to exec_plotaverages())
+# v 1.8.25sc
+# rev 2013-08-29 (MS: exec_specmax_dpl_tmpl(), exec_plot_dpl_tmpl(). Updated calls to dipolefn.pdipole())
+# last major: (MS: exec_specmax_dpl_match()
 
 # Standard modules
 import fnmatch, os, re, sys
@@ -339,7 +339,96 @@ def exec_specmax_dpl_match(ddata, opts):
 
     # plot time-series over proper intervals
     dipolefn.plot_specmax_interval(fname, dpl_list, param_list, data_max_list)
-        
+
+def exec_specmax_dpl_tmpl(ddata, opts):
+    p = {
+        'expmt_group': '',
+        'n_sim': 0,
+        'trials': [0, -1],
+        't_interval': None,
+        'f_interval': None,
+        'f_sort': None,
+    }
+
+    args_check(p, opts)
+
+    # set expmt group
+    if not p['expmt_group']:
+        p['expmt_group'] = ddata.expmt_groups[0]
+
+    # set directory to save template in and check that it exists
+    dir_out = os.path.join(ddata.dsim, p['expmt_group'], 'tmpldpl')
+    fio.dir_create(dir_out)
+
+    # if p['trials'][1] is -1, assume all trials are wanted
+    # 1 is subtracted from N_trials to be consistent with manual entry of trial range
+    if p['trials'][1] == -1:
+        p_exp = paramrw.ExpParams(ddata.fparam)
+        p['trials'][1] = p_exp.N_trials - 1
+
+    # Get spec, dpl, and param files
+    # Sorry for lack of readability
+    spec_list = [ddata.return_specific_filename(p['expmt_group'], 'rawspec', p['n_sim'], i) for i in range(p['trials'][0], p['trials'][1]+1)]
+    dpl_list = [ddata.return_specific_filename(p['expmt_group'], 'rawdpl', p['n_sim'], i) for i in range(p['trials'][0], p['trials'][1]+1)]
+    param_list = [ddata.return_specific_filename(p['expmt_group'], 'param', p['n_sim'], i) for i in range(p['trials'][0], p['trials'][1]+1)]
+
+    # Get max spectral data
+    data_max_list = []
+
+    for fspec in spec_list:
+        spec = specfn.Spec(fspec) 
+        data_max_list.append(spec.max('agg', p['t_interval'], p['f_interval'], p['f_sort']))
+
+    # Get time intervals of max spectral pwr
+    t_interval_list = [dmax['t_int'] for dmax in data_max_list if dmax is not None]
+
+    # truncate dpl_list to include only sorted trials
+    # kind of crazy that this works. Just sayin'...
+    dpl_list = [fdpl for fdpl, dmax in it.izip(dpl_list, data_max_list) if dmax is not None]
+
+    # create file name
+    if p['f_sort']:
+        fname_short = "sim-%03i-T%03i-T%03d-sort-%i-%i-tmpldpl.txt" %(p['n_sim'], p['trials'][0], p['trials'][1], p['f_sort'][0], p['f_sort'][1])
+
+    else:
+        fname_short = "sim-%03i-T%03i-T%03i-tmpldpl.txt" %(p['n_sim'], p['trials'][0], p['trials'][1])
+
+    fname = os.path.join(dir_out, fname_short)
+
+    # Create dpl template
+    dipolefn.create_template(fname, dpl_list, param_list, t_interval_list)
+
+def exec_plot_dpl_tmpl(ddata, opts):
+    p = {
+        'expmt_group': '',
+    }
+
+    args_check(p, opts)
+
+    # set expmt group
+    if not p['expmt_group']:
+        p['expmt_group'] = ddata.expmt_groups[0]
+
+    # set directory to save template in and check that it exists
+    dir_out = os.path.join(ddata.dsim, p['expmt_group'], 'figtmpldpl')
+    fio.dir_create(dir_out)
+
+    # get template dpl data
+    dpl_list = fio.file_match(os.path.join(ddata.dsim, p['expmt_group']), '-tmpldpl.txt')
+
+    # create file name list
+    # prefix_list = [fdpl.split('/')[-1].split('-tmpldpl')[0] for fdpl in dpl_list] 
+    # fname_list = [os.path.join(dir_out, prefix+'-tmpldpl.png') for prefix in prefix_list]
+
+    plot_dict = {
+        'xlim': None,
+        'ylim': None,
+    }
+
+    for fdpl in dpl_list:
+        print fdpl
+        dipolefn.pdipole(fdpl, dir_out, plot_dict)
+
 # search for the min in a dipole over specified interval
 def exec_dipolemin(ddata, expmt_group, n_sim, n_trial, t_interval):
     p_exp = paramrw.ExpParams(ddata.fparam)
@@ -846,7 +935,7 @@ def exec_plotaverages(ddata, ylim=[]):
 
         if runtype == 'debug':
             for f_dpl, f_param, dfig_dpl in it.izip(dpl_list, fparam_list, dfig_dpl_list):
-                dipolefn.pdipole(f_dpl, f_param, dfig_dpl, key_types, pdipole_dict)
+                dipolefn.pdipole(f_dpl, dfig_dpl, pdipole_dict, f_param, key_types)
 
         elif runtype == 'parallel':
             pl = Pool()

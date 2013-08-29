@@ -1,8 +1,8 @@
 # dipolefn.py - dipole-based analysis functions
 #
-# v 1.8.24sc
-# rev 2013-07-30 (MS: plot_specmax_interval() to plot dpl around max spec pwr)
-# last major: (MS: Changed xlim args now default to None) 
+# v 1.8.25sc
+# rev 2013-08-29 (MS: updated pdipole() to be slightly more general)
+# last major: (MS: plot_specmax_interval() to plot dpl around max spec pwr)
 
 import fileio as fio
 import numpy as np
@@ -320,6 +320,47 @@ def calc_avgdpl_stimevoked(ddata):
             for t, x in it.izip(t_dpl, dpl_mean):
                 f.write("%03.3f\t%5.4f\n" % (t, x))
 
+# Creates a template of dpl activity by averaging dpl data over specified time intervals
+# Assumes t_intervals are all the same length
+def create_template(fname, dpl_list, param_list, t_interval_list):
+    # iterate over lists, load dpl data and average
+    for fdpl, fparam, t_int in it.izip(dpl_list, param_list, t_interval_list):
+        # load ts data
+        dpl = Dipole(fdpl)
+        dpl.baseline_renormalize(fparam)
+        # dpl.convert_fAm_to_nAm()
+
+        # truncate data based on time ranges specified in dmax
+        t_cut, dpl_tcut = dpl.truncate_ext(t_int[0], t_int[1])
+
+        if fdpl is dpl_list[0]:
+            x_dpl_agg = dpl_tcut['agg']
+            x_dpl_L2 = dpl_tcut['L2']
+            x_dpl_L5 = dpl_tcut['L5']
+
+        else:
+            x_dpl_agg += dpl_tcut['agg']
+            x_dpl_L2 += dpl_tcut['L2']
+            x_dpl_L5 += dpl_tcut['L5']
+
+    # poor man's mean
+    x_dpl_agg /= len(dpl_list)
+    x_dpl_L2 /= len(dpl_list)
+    x_dpl_L5 /= len(dpl_list)
+    
+    # create a tvec that is symmetric about zero and of proper length
+    # assume time intervals are identical length for all data
+    t_range = t_interval_list[0][1] - t_interval_list[0][0]
+    t_start = - t_range/2.
+    t_end = t_range / 2.
+    tvec = np.linspace(t_start, t_end, x_dpl_agg.shape[0])
+    # tvec = np.linspace(0, t_range, x_dpl_agg.shape[0])
+
+    # save to file
+    with open(fname, 'w') as f:
+        for t, x_agg, x_L2, x_L5 in it.izip(tvec, x_dpl_agg, x_dpl_L2, x_dpl_L5):
+            f.write("%03.3f\t%5.4f\t%5.4f\t%5.4f\n" % (t, x_agg, x_L2, x_L5))
+
 # one off function to plot linear regression
 def plinear_regression(ffig_dpl, fdpl):
     dpl = Dipole(fdpl)
@@ -371,16 +412,19 @@ def pdipole_ax(a, f_dpl, f_param):
 # single dipole file combination (incl. param file)
 # this should be done with an axis input too
 # two separate functions, a pdipole kernel function and a specific function for this simple plot
-def pdipole(f_dpl, f_param, dfig, key_types, plot_dict):
+def pdipole(f_dpl, dfig, plot_dict, f_param=None, key_types={}):
+# def pdipole(f_dpl, f_param, dfig, key_types, plot_dict):
     # dpl is an obj of Dipole() class
     dpl = Dipole(f_dpl)
-    dpl.baseline_renormalize(f_param)
+
+    if f_param:
+        dpl.baseline_renormalize(f_param)
+
+    dpl.convert_fAm_to_nAm()
 
     # split to find file prefix
     file_prefix = f_dpl.split('/')[-1].split('.')[0]
 
-    # grabbing the p_dict from the f_param
-    _, p_dict = paramrw.read(f_param)
 
     # parse xlim from plot_dict
     if plot_dict['xlim'] is None:
@@ -422,9 +466,14 @@ def pdipole(f_dpl, f_param, dfig, key_types, plot_dict):
         f.ax0.set_ylim(plot_dict['ylim'][0], plot_dict['ylim'][1])
         # f.ax0.set_ylim(plot_dict['ymin'], plot_dict['ymax'])
 
-    # useful for title strings
-    title_str = ac.create_title(p_dict, key_types)
-    f.f.suptitle(title_str)
+    # Title creation
+    if f_param and key_types:
+        # grabbing the p_dict from the f_param
+        _, p_dict = paramrw.read(f_param)
+
+        # useful for title strings
+        title_str = ac.create_title(p_dict, key_types)
+        f.f.suptitle(title_str)
 
     # create new fig name
     fig_name = os.path.join(dfig, file_prefix+'.png')

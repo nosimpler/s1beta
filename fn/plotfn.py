@@ -1,7 +1,7 @@
 # plotfn.py - pall and possibly other plot routines
 #
-# v 1.8.22sc
-# rev 2013-07-26 (MS: Minor)
+# v 1.8.25sc
+# rev 2013-08-29 (MS: updated calls to dipolefn.pdipole())
 # last major: (MS: ylim arg now passed around to spec plotting routines to set freq bounds) 
 
 from praster import praster
@@ -37,7 +37,8 @@ def pkernel(dfig, f_param, f_spk, f_dpl, f_spec, key_types, xlim=None, ylim=None
 
     # plot kernels
     praster(f_param, tstop, f_spk, dfig_spk)
-    dipolefn.pdipole(f_dpl, f_param, dfig_dpl, key_types, pdipole_dict)
+    dipolefn.pdipole(f_dpl, dfig_dpl, pdipole_dict, f_param, key_types)
+    # dipolefn.pdipole(f_dpl, f_param, dfig_dpl, key_types, pdipole_dict)
 
     # usage of xlim to pspec is temporarily disabled. pspec_dpl() will use internal states for plotting
     pspec.pspec_dpl(f_spec, f_dpl, dfig_spec, p_dict, key_types, xlim, ylim)
