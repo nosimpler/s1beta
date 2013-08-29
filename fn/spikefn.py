@@ -1,8 +1,8 @@
 # spikefn.py - dealing with spikes
 #
-# v 1.8.14
-# rev 2013-07-09 (SL: added more hist functions)
-# last major: (SL: fixed a bug in spikes_from_file())
+# v 1.8.21
+# rev 2013-08-29 (MS: Created class ExtInputs() for easy post-hoc analysis of extinput event times)
+# last major: (SL: added more hist functions)
 
 import fileio as fio
 import numpy as np
@@ -60,6 +60,78 @@ class Spikes():
         # plot histogram to axis 'a'
         bins = hist_bin_opt(s_agg, 1)
         a.hist(s_agg, bins, normed=True, facecolor='g', alpha=0.75)
+
+# Class to handle extinput event times
+class ExtInputs(Spikes):
+    def __init__(self, fspk, fparam):
+        # load gid and param dicts
+        self.gid_dict, self.p_dict = paramrw.read(fparam)
+
+        # parse prox and dist input gids from gid_dict
+        self.gid_prox, self.gid_dist = self.__get_extinput_gids()
+
+        # self.inputs is dict of input times with keys 'prox' and 'dist'
+        self.inputs = self.__get_extinput_times(fspk)
+
+    def __get_extinput_gids(self):
+        # Determine if both feeds exist in this sim
+        # If they do, self.gid_dict['extinput'] has length 2
+        # If so, first gid is guaraneteed to be prox feed, second to be dist feed 
+        if len(self.gid_dict['extinput']) == 2:
+            return self.gid_dict['extinput']
+
+        # Otherwise, only one feed exists in this sim
+        # Must use param file to figure out which one...
+        elif self.p_dict['t0_input_prox'] <= self.p_dict['tstop']:
+            return self.gid_dict['extinput'][0], None
+
+        elif self.p_dict['t0_input_dist'] <= self.p_dict['tstop']:
+            return None, self.gid_dict['extinput'][0]
+
+        else:
+            return None, None
+
+    def __get_extinput_times(self, fspk):
+        # load all spike times from file
+        s_all = np.loadtxt(open(fspk, 'rb'))
+
+        inputs = {}
+
+        # If prox input exists, get spike times
+        # self.filter() inherited from Spikes()
+        # self.r weirdness is necessary to use self.filter() 
+        # i.e. self.r must exist and be a list to execute self.filter()
+        if self.gid_prox:
+            self.r = [self.gid_prox]
+            inputs['prox'] = self.filter(s_all)[0]
+
+        else:
+            inputs['prox'] = np.array([])
+
+        # If dist input exists, get spike times
+        if self.gid_dist:
+            self.r = [self.gid_dist]
+            inputs['dist'] = self.filter(s_all)[0]
+
+        else:
+            inputs['dist'] = np.array([])
+
+        return inputs
+
+    def add_delay_times(self):
+        # if prox delay to both layers is the same, add it to the prox input times
+        if self.p_dict['input_prox_A_delay_L2'] == self.p_dict['input_prox_A_delay_L5']:
+            self.inputs['prox'] += self.p_dict['input_prox_A_delay_L2']
+
+        # if dist delay to both layers is the same, add it to the dist input times
+        if self.p_dict['input_dist_A_delay_L2'] == self.p_dict['input_dist_A_delay_L5']:
+            self.inputs['dist'] += self.p_dict['input_dist_A_delay_L2']
+
+    def plot_hist(self, ax, extinput, bins=150, xlim=None, color='green'):
+        if not xlim:
+            xlim = (0., p_dict['tstop'])
+
+        return ax.hist(self.inputs[extinput], bins, range=xlim, color=color, label=extinput)
 
 # filters spike dict s_dict for keys that start with str_startswith
 # easy enough to modify for future conditions
@@ -334,4 +406,4 @@ def pinput_hist_onesided(a0, s_list, n_bins):
     return hists
 
 if __name__ == '__main__':
-    print bin_count(150., 500.)
+    print 'main statement'

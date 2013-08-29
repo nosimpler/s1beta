@@ -1,8 +1,8 @@
 # pspec.py - Very long plotting methods having to do with spec.
 #
-# v 1.8.18
-# rev 2013-07-25 (MS: Reinstituted use of xlim using logical indexing in pspec_dpl() and pspec_dpl_with_hist())
-# last major: (MS: font size change in pspecpwr())
+# v 1.8.21
+# rev 2013-08-29 (MS: Updated pspec_with_hist() to use new class spikefn.Extinputs())
+# last major: (MS: Reinstituted use of xlim using logical indexing in pspec_dpl() and pspec_dpl_with_hist())
 
 import os
 import sys
@@ -158,28 +158,34 @@ def pspec_with_hist(f_spec, f_dpl, f_spk, dfig, f_param, key_types, xlim=None):
     # f.ax['dipole'].plot(t_dpl, dp_total)
     # x = (xmin, xmax)
 
-    # grab alpha feed data. spikes_from_file() from spikefn.py
-    s_dict = spikefn.spikes_from_file(f_param, f_spk)
+    # # grab alpha feed data. spikes_from_file() from spikefn.py
+    # s_dict = spikefn.spikes_from_file(f_param, f_spk)
 
-    # check for existance of alpha feed keys in s_dict.
-    s_dict = spikefn.alpha_feed_verify(s_dict, p_dict)
+    # # check for existance of alpha feed keys in s_dict.
+    # s_dict = spikefn.alpha_feed_verify(s_dict, p_dict)
 
-    # Account for possible delays
-    s_dict = spikefn.add_delay_times(s_dict, p_dict)
+    # # Account for possible delays
+    # s_dict = spikefn.add_delay_times(s_dict, p_dict)
+
+    # Get extinput data and account for delays
+    extinputs = spikefn.ExtInputs(f_spk, f_param)
+    extinputs.add_delay_times()
 
     # set number of bins (150 bins per 1000ms)
     bins = 150. * (xlim_new[1] - xlim_new[0]) / 1000.
 
+    # plot histograms
     hist = {}
 
-    # Proximal feed
-    hist['feed_prox'] = f.ax['feed_prox'].hist(s_dict['alpha_feed_prox'].spike_list, bins, range=[xlim_new[0], xlim_new[1]], color='red', label='Proximal feed', alpha=0.5)
+    hist['feed_prox'] = extinputs.plot_hist(f.ax['feed_prox'], 'prox', bins, xlim_new, color='red')
 
-    # f.ax['testing'] = f.ax['feed_prox'].twinx()
-    # hist['feed_dist'] = f.ax['testing'].hist(s_dict['alpha_feed_dist'].spike_list, bins, range=[xmin, xmax], color='green', label='Distal feed', alpha=0.5)
+    hist['feed_dist'] = extinputs.plot_hist(f.ax['feed_dist'], 'dist', bins, xlim_new, color='green')
 
-    # Distal feed
-    hist['feed_dist'] = f.ax['feed_dist'].hist(s_dict['alpha_feed_dist'].spike_list, bins, range=[xlim_new[0], xlim_new[1]], color='green', label='Distal feed')
+    # # Proximal feed
+    # hist['feed_prox'] = f.ax['feed_prox'].hist(s_dict['alpha_feed_prox'].spike_list, bins, range=[xlim_new[0], xlim_new[1]], color='red', label='Proximal feed', alpha=0.5)
+
+    # # Distal feed
+    # hist['feed_dist'] = f.ax['feed_dist'].hist(s_dict['alpha_feed_dist'].spike_list, bins, range=[xlim_new[0], xlim_new[1]], color='green', label='Distal feed')
 
     # f.ax['testing'].invert_yaxis()
     f.ax['feed_dist'].invert_yaxis()

@@ -1,8 +1,8 @@
 # plotfn.py - pall and possibly other plot routines
 #
-# v 1.8.18
-# rev 2013-07-25 (MS: xlim now being passed to pspec.pspec_dpl())
-# last major: (MS: plot routines now get spec data exclusively from files)
+# v 1.8.21
+# rev 2013-08-29 (MS: updated pkernel_with_hist() to mirror pkernel())
+# last major: (MS: xlim now being passed to pspec.pspec_dpl())
 
 from praster import praster
 import axes_create as ac
@@ -45,7 +45,7 @@ def pkernel(dfig, f_param, f_spk, f_dpl, f_spec, key_types, xlim=[0, 'tstop']):
     return 0
 
 # Kernel for plotting dipole and spec with alpha feed histograms
-def pkernel_with_hist(dfig, f_param, f_spk, f_dpl, f_spec, key_types, xlim=[0., 'tstop']):
+def pkernel_with_hist(dfig, f_param, f_spk, f_dpl, f_spec, key_types, xlim=[0., 1000.]):
     # gid_dict, p_dict = paramrw.read(f_param)
     # tstop = p_dict['tstop']
 
@@ -54,8 +54,15 @@ def pkernel_with_hist(dfig, f_param, f_spk, f_dpl, f_spec, key_types, xlim=[0., 
     dfig_spec = dfig['figspec']
     dfig_spk = dfig['figspk']
 
+    pdipole_dict = {
+        'xmin': xlim[0],
+        'xmax': xlim[1],
+        'ymin': None,
+        'ymax': None,
+    }
+
     # plot kernels
-    dipolefn.pdipole_with_hist(f_dpl, f_spk, dfig_dpl, f_param, key_types, xlim)
+    dipolefn.pdipole_with_hist(f_dpl, f_spk, dfig_dpl, f_param, key_types, pdipole_dict)
     pspec.pspec_with_hist(f_spec, f_dpl, f_spk, dfig_spec, f_param, key_types, xlim)
 
     return 0
