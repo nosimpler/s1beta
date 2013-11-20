@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # s1run.py - primary run function for s1 project
 #
-# v 1.8.16speca
-# rev 2013-07-05 (MS: removed reference to specfn.analysis())
-# last major: (MS: p_exp no longer passed to specfn.analysis_typespecific())
+# v 1.8.22
+# rev 2013-11-19 (SL: updated pall)
+# last major: (MS: removed reference to specfn.analysis())
 
 import os
 import sys
@@ -327,7 +327,8 @@ def exec_runsim(f_psim):
             # run plots and epscompress function
             # spec results is passed as an argument here
             # because it's not necessarily saved
-            plotfn.pall(ddir, p_exp)
+            xlim_plot = (0., p['tstop'])
+            plotfn.pall(ddir, p_exp, xlim_plot)
 
             # do the relevant png optimization
             # fio.pngoptimize(ddir.dsim)

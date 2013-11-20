@@ -1,8 +1,8 @@
 # spikefn.py - dealing with spikes
 #
-# v 1.8.21
-# rev 2013-08-29 (MS: Created class ExtInputs() for easy post-hoc analysis of extinput event times)
-# last major: (SL: added more hist functions)
+# v 1.8.22
+# rev 2013-11-19 (SL: minor)
+# last major: (MS: Created class ExtInputs() for easy post-hoc analysis of extinput event times)
 
 import fileio as fio
 import numpy as np
@@ -400,7 +400,7 @@ def pinput_hist(a0, a1, s_list0, s_list1, n_bins, xlim):
 
 def pinput_hist_onesided(a0, s_list, n_bins):
     hists = {
-        'prox': a0.hist(s_list, n_bins, color='red', label='Proximal input', alpha=0.75),
+        'prox': a0.hist(s_list, n_bins, color='k', label='Proximal input', alpha=0.75),
     }
 
     return hists

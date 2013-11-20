@@ -1,8 +1,8 @@
 # cli.py - routines for the command line interface console s1sh.py
 #
-# v 1.8.17
-# rev 2013-07-19 (SL: added __create_dict_from_args() to replace previous methods)
-# last major: (SL: removed exec_debug)
+# v 1.8.22
+# rev 2013-11-19 (SL: added some functions related to gamma project)
+# last major: (SL: added __create_dict_from_args() to replace previous methods)
 
 from cmd import Cmd
 from datetime import datetime
@@ -139,20 +139,31 @@ class Console(Cmd):
     def do_debug(self, args):
         """Qnd function to test other functions
         """
+        # self.do_pgamma_sub_example2('')
         self.do_setdate('pub')
-        self.do_load('2013-06-28_gamma_weak_L5-000')
-        # self.do_specmax('--expmt_group="weak" --f_interval=[50., 75] --t_interval=[50., 550.]')
-        # self.do_spike_rates('')
-        self.do_pgamma_hf_epochs('')
-        # self.do_throwaway('--n_sim=13')
-        # self.do_pgamma_distal_phase('--spec0=5 --spec1=9 --spec2=15')
+        # self.do_spec_current("--runtype='debug' --f_max=250.")
+        # self.do_load('2013-06-28_gamma_weak_L5-000')
+        # self.do_pgamma_hf_epochs('')
+        self.do_load('2013-08-12_gamma_sub_50Hz-001')
+        self.do_pgamma_prox_dist_new('')
+        # self.do_throwaway('--n_trial=-1')
+        # self.do_load('2013-08-07_gamma_sub_50Hz_stdev-000')
+        # self.do_pgamma_stdev_new('--f_max_welch=150.')
+        # self.do_load('2013-06-28_gamma_sub_f-000')
+        # self.do_pgamma_stdev_new('--f_max_welch=150.')
+        # self.do_load('2013-07-15_gamma_L5weak_L2weak-000')
         # self.do_pgamma_laminar('')
         # self.do_pgamma_compare_ping('')
-        # self.do_pgamma_stdev('')
+        # self.do_show_dpl_max('')
+        # self.do_pgamma_peaks('')
+        # self.do_welch_max('')
+        # self.do_pgamma_sub_examples('')
+        # self.do_pgamma_distal_phase('--spec0=5 --spec1=9 --spec2=15')
+        # self.do_specmax('--expmt_group="weak" --f_interval=[50., 75] --t_interval=[50., 550.]')
+        # self.do_spike_rates('')
         # self.do_save('')
         # self.do_calc_dpl_regression('')
         # self.do_calc_dpl_mean("--t0=100. --tstop=1000. --layer='L2'")
-        # self.do_spec_current('--f_max=80.')
         # self.do_praw('')
         # self.do_pdipole('grid')
         # self.do_pngv('')
@@ -172,15 +183,11 @@ class Console(Cmd):
         ''' This is a throwaway dipole saving function. Usage:
             [s1] throwaway {--n_sim=12} {--n_trial=3}
         '''
-        opts = {
-            'n_sim': 0,
-            'n_trial': 0,
-        }
-        l_opts = self.__split_args(args)
-        self.__check_args(opts, l_opts)
+        dict_opts = self.__create_dict_from_args(args)
 
         # run the throwaway save function!
-        clidefs.exec_throwaway(self.ddata, opts['n_sim'], opts['n_trial'])
+        clidefs.exec_throwaway(self.ddata, dict_opts)
+        # clidefs.exec_throwaway(self.ddata, opts['n_sim'], opts['n_trial'])
 
     def do_spike_rates(self, args):
         opts = {
@@ -210,6 +217,19 @@ class Console(Cmd):
 
     def do_calc_dpl_regression(self, args):
         clidefs.exec_calc_dpl_regression(self.ddata)
+
+    def do_show_dpl_max(self, args):
+        dict_opts = self.__create_dict_from_args(args)
+        clidefs.exec_show_dpl_max(self.ddata, dict_opts)
+
+    def do_pgamma_peaks(self, args):
+        clidefs.exec_pgamma_peaks()
+
+    def do_pgamma_sub_examples(self, args):
+        clidefs.exec_pgamma_sub_examples()
+
+    def do_pgamma_sub_example2(self, args):
+        clidefs.exec_pgamma_sub_example2()
 
     def do_pgamma_hf(self, args):
         dict_opts = self.__create_dict_from_args(args)
@@ -243,6 +263,18 @@ class Console(Cmd):
         '''
         clidefs.exec_pgamma_stdev(self.ddata)
 
+    def do_pgamma_stdev_new(self, args):
+        '''Generates gamma fig for standard deviation. Requires spec data for layers to exist. Usage:
+           [s1] spec_current
+           [s1] pgamma_stdev_new
+        '''
+        dict_opts = self.__create_dict_from_args(args)
+        clidefs.exec_pgamma_stdev_new(self.ddata, dict_opts)
+
+    def do_pgamma_prox_dist_new(self, args):
+        dict_opts = self.__create_dict_from_args(args)
+        clidefs.exec_pgamma_prox_dist_new(self.ddata, dict_opts)
+
     def do_pgamma_laminar(self, args):
         '''Generates a comparison figure of aggregate, L2 and L5 data. Taken from 1 data set. Usage:
            [s1] pgamma_laminar
@@ -253,30 +285,14 @@ class Console(Cmd):
         '''Generates gamma fig for comparison of PING and weak PING. Will need 2 data sets! Usage:
             [s1] pgamma_compare_ping
         '''
-        # l_opts = self.__split_args(args)
-        # self.__check_args(opts, l_opts)
         clidefs.exec_pgamma_compare_ping()
 
     def do_spec_current(self, args):
         # parse list of opts
-        l_opts = self.__split_args(args)
-
-        # "default" opts
-        opts = {
-            'type': 'current',
-            'f_max': 150.,
-            'save_data': 1,
-            'runtype': 'parallel',
-        }
-
-        # check l_opts for valid keys in opts and attempt to assign
-        if len(l_opts):
-            for key, val in l_opts:
-                if key in opts.keys():
-                    opts[key] = ast.literal_eval(val)
+        dict_opts = self.__create_dict_from_args(args)
 
         # actually run the analysis
-        self.spec_current_tmp = clidefs.exec_spec_current(self.ddata, opts)
+        self.spec_current_tmp = clidefs.exec_spec_current(self.ddata, dict_opts)
 
     def do_praw(self, args):
         '''praw is a fully automated function to replace the dipole plots with aggregate dipole/spec/spikes plots. Usage:
@@ -416,6 +432,10 @@ class Console(Cmd):
 
     def do_giddict(self, args):
         pass
+
+    def do_welch_max(self, args):
+        dict_opts = self.__create_dict_from_args(args)
+        clidefs.exec_welch_max(self.ddata, dict_opts)
 
     def do_specmax(self, args):
         """Find the max spectral power, report value and time.
@@ -737,7 +757,7 @@ class Console(Cmd):
                     xmax = 'tstop'
 
         # check for spec data, create it if didn't exist, and then run the plots
-        clidefs.regenerate_plots(self.ddata, [xmin, xmax])
+        clidefs.exec_replot(self.ddata, [xmin, xmax])
 
     def do_addalphahist(self, args):
         """Adds histogram of alpha feed input times to dpl and spec plots. Usage:

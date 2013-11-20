@@ -422,29 +422,6 @@ class L5Pyr(Pyr):
         self.basal3_ampa = self.syn_create(self.dends['basal_3'](0.5), p_syn['ampa'])
         self.basal3_nmda = self.syn_create(self.dends['basal_3'](0.5), p_syn['nmda'])
 
-        # self.synapses = {
-        #     'soma_gabaa': self.syn_gabaa_create(self.soma(0.5)),
-        #     'soma_gabab': self.syn_gabab_create(self.soma(0.5)),
-        # }
-        # self.apicaltuft_ampa = self.syn_ampa_create(self.dends['apical_tuft'](0.5))
-        # self.apicaltuft_nmda = self.syn_nmda_create(self.dends['apical_tuft'](0.5))
-        # self.apicaloblique_ampa = self.syn_ampa_create(self.dends['apical_oblique'](0.5))
-        # self.apicaloblique_nmda = self.syn_nmda_create(self.dends['apical_oblique'](0.5))
-        # self.basal2_ampa = self.syn_ampa_create(self.dends['basal_2'](0.5))
-        # self.basal2_nmda = self.syn_nmda_create(self.dends['basal_2'](0.5))
-        # self.basal3_ampa = self.syn_ampa_create(self.dends['basal_3'](0.5))
-        # self.basal3_nmda = self.syn_nmda_create(self.dends['basal_3'](0.5))
-
-        # self.apicaltuft_gabaa = self.syn_gabaa_create(self.list_dend[3](0.5))
-        # self.apicaltuft_ampa = self.syn_ampa_create(self.list_dend[3](0.5))
-        # self.apicaltuft_nmda = self.syn_nmda_create(self.list_dend[3](0.5))
-        # self.apicaloblique_ampa = self.syn_ampa_create(self.list_dend[4](0.5))
-        # self.apicaloblique_nmda = self.syn_nmda_create(self.list_dend[4](0.5))
-        # self.basal2_ampa = self.syn_ampa_create(self.list_dend[6](0.5))
-        # self.basal2_nmda = self.syn_nmda_create(self.list_dend[6](0.5))
-        # self.basal3_ampa = self.syn_ampa_create(self.list_dend[7](0.5))
-        # self.basal3_nmda = self.syn_nmda_create(self.list_dend[7](0.5))
-
     # parallel connection function FROM all cell types TO here
     def parconnect(self, gid, gid_dict, pos_dict, p):
         # init dict of dicts

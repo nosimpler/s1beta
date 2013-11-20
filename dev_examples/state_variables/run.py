@@ -23,7 +23,6 @@ from L5_pyramidal import L5Pyr
 h.load_file("stdrun.hoc")
 
 def stimulus(seg, file_prefix):
-# def stimulus(seg, filename, figname):
     stim = h.IClamp(seg)
     stim.delay = 50
     stim.dur = 100

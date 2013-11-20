@@ -1,13 +1,14 @@
 # clidefs.py - these are all of the function defs for the cli
 #
-# v 1.8.18
-# rev 2013-07-25 (MS: Bulk of exec_specmax() moved to specfn.py)
-# last major: (SL: added args_check HERE)
+# v 1.8.22
+# rev 2013-11-19 (SL: my concurrent changes may have broken MS's. We have to figure this one out.)
+# last major: (MS: Bulk of exec_specmax() moved to specfn.py)
 
 # Standard modules
 import fnmatch, os, re, sys
 import itertools as it
 import numpy as np
+from scipy import stats
 from multiprocessing import Pool
 from subprocess import call
 from glob import iglob
@@ -54,7 +55,11 @@ def args_check(dict_default, dict_check):
                 # assign the key/val pair in place
                 # this operation acts IN PLACE on the supplied dict_default!!
                 # therefore, no return value necessary
-                dict_default[key] = ast.literal_eval(val)
+                try:
+                    dict_default[key] = ast.literal_eval(val)
+
+                except ValueError:
+                    dict_default[key] = val
 
             else:
                 keys_missing.append(key)
@@ -89,43 +94,164 @@ def exec_spike_rates(ddata, opts):
             n_cells = len(s)
 
             # grab all the sp_counts
-            sp_counts = [len(spikes_cell) for spikes_cell in s]
+            sp_counts = np.array([len(spikes_cell) for spikes_cell in s])
 
             # calc mean and stdev
             sp_count_mean = np.mean(sp_counts)
             sp_count_stdev = np.std(sp_counts)
 
             # calc rate in Hz, assume T in ms
+            sp_rates = sp_counts * 1000. / T
+            sp_rate_mean = np.mean(sp_rates)
+            sp_rate_stdev = np.std(sp_rates)
+
+            # direct
             sp_rate = sp_count_mean * 1000. / T
 
             print "Sim No. %i, Trial %i, celltype is %s:" % (p_dict['Sim_No'], p_dict['Trial'], celltype)
             print "  spike count mean is: %4.3f" % sp_count_mean
             print "  spike count stdev is: %4.3f" % sp_count_stdev
+            print "  spike rate over %4.3f ms is %4.3f Hz +/- %4.3f" % (T, sp_rate_mean, sp_rate_stdev)
             print "  spike rate over %4.3f ms is %4.3f Hz" % (T, sp_rate)
+
+def exec_welch_max(ddata, opts):
+    p = {
+        'f_min': 0.,
+    }
+
+    args_check(p, opts)
+
+    # assume first expmt_group for now
+    expmt_group = ddata.expmt_groups[0]
+
+    # grab list of dipoles
+    list_dpl = ddata.file_match(expmt_group, 'rawdpl')
+    list_param = ddata.file_match(expmt_group, 'param')
+
+    # iterate through dipoles
+    for fdpl, fparam in it.izip(list_dpl, list_param):
+        # grab the dt (needed for the Welch)
+        dt = paramrw.find_param(fparam, 'dt')
+
+        # grab the dipole
+        dpl = dipolefn.Dipole(fdpl)
+        dpl.baseline_renormalize(fparam)
+        dpl.convert_fAm_to_nAm()
+
+        # create empty pgram
+        pgram = dict.fromkeys(dpl.dpl)
+        pgram_max = dict.fromkeys(dpl.dpl)
+
+        # perform stationary Welch, since we're not saving this data yet
+        for key in pgram.keys():
+            pgram[key] = specfn.Welch(dpl.t, dpl.dpl[key], dt)
+
+            # create a mask based on f min
+            fmask = (pgram[key].f > p['f_min'])
+            P_cut = pgram[key].P[fmask]
+            f_cut = pgram[key].f[fmask]
+
+            p_max = np.max(P_cut)
+            f_max = f_cut[P_cut == p_max]
+            # p_max = np.max(pgram[key].P)
+            # f_max = pgram[key].f[pgram[key].P == p_max]
+
+            # not clear why saving for now
+            pgram_max[key] = (f_max, p_max)
+            print "Max power for %s was %.3e at %4.2f Hz, with f min set to %4.2f" % (key, p_max, f_max, p['f_min'])
 
 # throwaway save method for now
 # trial is currently undefined
 # function is broken for N_trials > 1
-def exec_throwaway(ddata, i=0, j=0):
-    # take the ith sim, jth trial, do some stuff to it, resave it
-    # only uses first expmt_group
+def exec_throwaway(ddata, opts):
+    p = {
+        'n_sim': 0,
+        'n_trial': 0,
+    }
+    args_check(p, opts)
+
+    p_exp = paramrw.ExpParams(ddata.fparam)
+    N_trials = p_exp.N_trials
+    print opts, p
+
+    if p['n_sim'] == -1:
+        for i in range(p_exp.N_sims):
+            if p['n_trial'] == -1:
+                for j in range(N_trials):
+                    dipolefn.dpl_convert_and_save(ddata, i, j)
+            else:
+                j = p['n_trial']
+                dipolefn.dpl_convert_and_save(ddata, i, j)
+
+    else:
+        i = p['n_sim']
+        if p['n_trial'] == -1:
+            for j in range(N_trials):
+                dipolefn.dpl_convert_and_save(ddata, i, j)
+        else:
+            j = p['n_trial']
+            dipolefn.dpl_convert_and_save(ddata, i, j)
+
+    # # take the ith sim, jth trial, do some stuff to it, resave it
+    # # only uses first expmt_group
+    # expmt_group = ddata.expmt_groups[0]
+
+    # # need n_trials
+    # p_exp = paramrw.ExpParams(ddata.fparam)
+    # if not p_exp.N_trials:
+    #     N_trials = 1
+    # else:
+    #     N_trials = p_exp.N_trials
+
+    # # absolute number
+    # n = i*N_trials + j
+
+    # # grab the correct files
+    # f_dpl = ddata.file_match(expmt_group, 'rawdpl')[n]
+    # f_param = ddata.file_match(expmt_group, 'param')[n]
+
+    # # print ddata.sim_prefix, ddata.dsim
+    # f_name_short = '%s-%03d-T%02d-dpltest.txt' % (ddata.sim_prefix, i, j)
+    # f_name = os.path.join(ddata.dsim, expmt_group, f_name_short)
+    # print f_name
+
+    # dpl = dipolefn.Dipole(f_dpl)
+    # dpl.baseline_renormalize(f_param)
+    # print "baseline renormalized"
+
+    # dpl.convert_fAm_to_nAm()
+    # print "converted to nAm"
+
+    # dpl.write(f_name)
+
+def exec_show_dpl_max(ddata, opts={}):
+    p = {
+        'layer': 'L5',
+        'n_sim': 0,
+        'n_trial': 0,
+    }
+    args_check(p, opts)
+
     expmt_group = ddata.expmt_groups[0]
-    f_dpl = ddata.file_match(expmt_group, 'rawdpl')[i]
-    f_param = ddata.file_match(expmt_group, 'param')[i]
 
-    # print ddata.sim_prefix, ddata.dsim
-    f_name_short = '%s-%03d-T%02d-dpltest.txt' % (ddata.sim_prefix, i, j)
-    f_name = os.path.join(ddata.dsim, expmt_group, f_name_short)
-    print f_name
+    n = p['n_sim'] + p['n_sim']*p['n_trial']
 
-    dpl = dipolefn.Dipole(f_dpl)
-    dpl.baseline_renormalize(f_param)
-    print "baseline renormalized"
+    fdpl = ddata.file_match(expmt_group, 'rawdpl')[n]
+    fparam = ddata.file_match(expmt_group, 'param')[n]
 
+    T = paramrw.find_param(fparam, 'tstop')
+    xlim = (50., T)
+
+    dpl = dipolefn.Dipole(fdpl)
+    dpl.baseline_renormalize(fparam)
     dpl.convert_fAm_to_nAm()
-    print "converted to nAm"
 
-    dpl.write(f_name)
+    # add this data to the dict for the string output mapping
+    p['dpl_max'] = dpl.lim(p['layer'], xlim)[1]
+    p['units'] = dpl.units
+
+    print "The maximal value for the dipole is %(dpl_max)4.3f %(units)s for sim=%(n_sim)i, trial=%(n_trial)i in layer %(layer)s" % (p)
+    # print "The maximal value for the dipole is %4.3f %s for sim=%i, trial=%i" % (dpl_max, dpl.units, n_sim, n_trial)
 
 # calculates the mean dipole over a specified range
 def exec_calc_dpl_mean(ddata, opts={}):
@@ -264,6 +390,7 @@ def exec_specmax(ddata, opts):
         'n_trial': 0,
         't_interval': [0., -1],
         'f_interval': [0., -1],
+        'layer': 'agg',
     }
 
     args_check(p, opts)
@@ -278,7 +405,65 @@ def exec_specmax(ddata, opts):
     fspec = ddata.return_specific_filename(p['expmt_group'], 'rawspec', p['n_sim'], p['n_trial'])
 
     # get max data
-    data_max = specfn.specmax(fspec, p)
+    # data_max = specfn.specmax(fspec, p)
+    data = specfn.read(fspec)
+    print data.keys()
+
+    # grab the min and max f
+    f_min, f_max = p['f_interval']
+
+    # set f_max
+    if f_max < 0:
+        f_max = data['freq'][-1]
+
+    # create an f_mask for the bounds of f, inclusive
+    f_mask = (data['freq']>=f_min) & (data['freq']<=f_max)
+
+    # do the same for t
+    t_min, t_max = p['t_interval']
+    if t_max < 0:
+        t_max = data['time'][-1]
+
+    t_mask = (data['time']>=t_min) & (data['time']<=t_max)
+
+    # use the masks truncate these appropriately
+    TFR_key = 'TFR'
+
+    if p['layer'] in ('L2', 'L5'):
+        TFR_key += '_%s' % p['layer']
+
+    TFR_fcut = data[TFR_key][f_mask, :]
+    # TFR_fcut = data['TFR'][f_mask, :]
+    TFR_tfcut = TFR_fcut[:, t_mask]
+
+    f_fcut = data['freq'][f_mask]
+    t_tcut = data['time'][t_mask]
+
+    # find the max power over this new range
+    # the max_mask is for the entire TFR
+    pwr_max = TFR_tfcut.max()
+    max_mask = (TFR_tfcut==pwr_max)
+
+    # find the t and f at max
+    # these are slightly crude and do not allow for the possibility of multiple maxes (rare?)
+    t_at_max = t_tcut[max_mask.sum(axis=0)==1]
+    f_at_max = f_fcut[max_mask.sum(axis=1)==1]
+
+    # friendly printout
+    print "Max power of %4.2e at f of %4.2f Hz at %4.3f ms" % (pwr_max, f_at_max, t_at_max)
+
+    # pd_at_max = 1000./f_at_max
+    # t_start = t_at_max - pd_at_max/2.
+    # t_end = t_at_max + pd_at_max/2.
+
+    # print "Symmetric interval at %4.2f Hz (T=%4.3f ms) about %4.3f ms is (%4.3f, %4.3f)" % (f_at_max, pd_at_max, t_at_max, t_start, t_end)
+
+    # # output structure
+    # data_max = {
+    #     'pwr': pwr_max,
+    #     't': t_at_max,
+    #     'f': f_at_max,
+    # }
 
     print "Max power of %4.2e at f of %4.2f Hz at %4.3f ms" % (data_max['pwr'], data_max['f_at_max'], data_max['t_at_max'])
 
@@ -412,20 +597,19 @@ def exec_avgtrials(ddata, datatype):
 
 # run the spectral analyses on the somatic current time series
 def exec_spec_current(ddata, opts_in=None):
-    p_exp = paramrw.ExpParams(ddata.fparam)
-    if opts_in is None:
-        opts = {
-            'type': 'current',
-            'f_max': 150.,
-            'save_data': 1,
-            'runtype': 'parallel',
-        }
-    else:
-        opts = opts_in
+    # p_exp = paramrw.ExpParams(ddata.fparam)
+
+    opts = {
+        'type': 'dpl_laminar',
+        'f_max': 150.,
+        'save_data': 1,
+        'runtype': 'parallel',
+    }
+
+    if opts_in:
+        args_check(opts, opts_in)
 
     specfn.analysis_typespecific(ddata, opts)
-    # spec_results = specfn.analysis_typespecific(ddata, p_exp, opts)
-    # return spec_results
 
 # this function can now use specfn.generate_missing_spec(ddata, f_max)
 def exec_spec_regenerate(ddata, f_max=None):
@@ -609,7 +793,7 @@ def freqpwr_with_hist(ddata, dsim):
         specfn.pfreqpwr_with_hist(file_name, freqpwr_result, f_spk, gid_dict, p_dict, key_types)
 
 # runs plotfn.pall *but* checks to make sure there are spec data
-def regenerate_plots(ddata, xlim=[0, 'tstop']):
+def exec_replot(ddata, xlim=[0, 'tstop']):
     # need p_exp, spec_results, gid_dict, and tstop.
     # fparam = fio.file_match(ddata.dsim, '.param')[0]
 
@@ -656,6 +840,15 @@ def exec_aggregatespec(ddata, labels):
 
     plotfn.aggregate_spec_with_hist(ddata, p_exp, labels)
 
+def exec_pgamma_peaks():
+    pgamma.peaks()
+
+def exec_pgamma_sub_examples():
+    pgamma.sub_dist_examples()
+
+def exec_pgamma_sub_example2():
+    pgamma.sub_dist_example2()
+
 # runs the gamma plot for a comparison of the high frequency
 def exec_pgamma_hf(ddata, opts):
     p = {
@@ -677,12 +870,28 @@ def exec_pgamma_laminar(ddata):
 
 # comparison between a PING (ddata0) and a weak PING (ddata1) data set
 def exec_pgamma_compare_ping():
-# def exec_pgamma_compare_ping(ddata0, ddata1, opts):
+    # def exec_pgamma_compare_ping(ddata0, ddata1, opts):
     pgamma.compare_ping()
 
 # plot for gamma stdev on a given ddata
 def exec_pgamma_stdev(ddata):
     pgamma.pgamma_stdev(ddata)
+
+def exec_pgamma_prox_dist_new(ddata, opts):
+    p = {
+        'f_max_welch': 80.,
+    }
+
+    args_check(p, opts)
+    pgamma.prox_dist_new(ddata, p)
+
+def exec_pgamma_stdev_new(ddata, opts):
+    p = {
+        'f_max_welch': 80.,
+    }
+
+    args_check(p, opts)
+    pgamma.pgamma_stdev_new(ddata, p)
 
 # plot for gamma distal phase on a given ddata
 def exec_pgamma_distal_phase(ddata, opts):

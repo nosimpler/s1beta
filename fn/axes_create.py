@@ -1,8 +1,8 @@
 # axes_create.py - simple axis creation
 #
-# v 1.8.18
-# rev 2013-07-25 (MS: Semi-kludgy fix to MS not having LateX on his linux machine)
-# last major: (SL: added twinx creation)
+# v 1.8.22
+# rev 2013-11-19 (SL: gamma project related axes)
+# last major: (MS: Semi-kludgy fix to MS not having LateX on his linux machine)
 
 # usage:
 # testfig = FigStd()
@@ -51,11 +51,72 @@ class FigBase():
             # otherwise, None will break other code
             return None
 
+    # returns axis bounds for an arbitrary axis handle
+    # ax_h must be defined as a key in self.ax
+    def return_axis_bounds(self, ax_h):
+        if ax_h in self.ax.keys():
+            # check to see if this axis handle is actually a list
+            if isinstance(self.ax[ax_h], list):
+                # create a list of coords
+                list_coords_bbox = []
+
+                # iterate through axes in the list
+                for ax_item in self.ax[ax_h]:
+                    # get the coords for the axis
+                    coords = ax_item.get_position().get_points()
+
+                    # append the cleaned up version
+                    list_coords_bbox.append(np.reshape(coords, (1, 4))[0])
+
+                return list_coords_bbox
+
+            else:
+                # these are *not* beatbox coordinates
+                coords_bbox = self.ax[ax_h].get_position().get_points()
+
+                # reshape the coords
+                return np.reshape(coords_bbox, (1, 4))[0]
+
+        else:
+            print "Axis not found by return_axis_bounds()"
+            return 0
+
+    # needs to be run externally, after self.ax is established
+    def create_ax_bounds_dict(self):
+        # make a dict
+        self.ax_bounds = dict.fromkeys(self.ax)
+
+        # iterate through keys and use return_axis_bounds() to get the axis
+        # this is now working for lists
+        for ax_h in self.ax_bounds.keys():
+            self.ax_bounds[ax_h] = self.return_axis_bounds(ax_h)
+
+    # creates a dict of axes that gives the center y pos
+    # needs to be run externally, after self.ax is established
+    # can utilize create_ax_bounds_dict() in the future
+    def create_y_centers_dict(self):
+        self.y_centers = dict.fromkeys(self.ax)
+
+        for ax_h in self.y_centers.keys():
+            if isinstance(self.ax[ax_h], list):
+                list_ax_bounds = self.return_axis_bounds(ax_h)
+                list_y_top = [ax_bounds[-1] for ax_bounds in list_ax_bounds]
+                list_y_bot = [ax_bounds[1] for ax_bounds in list_ax_bounds]
+                self.y_centers[ax_h] = [y_bot + (y_top - y_bot) / 2 for y_top, y_bot in zip(list_y_top, list_y_bot)]
+
+            else:
+                # get the axis bounds
+                ax_bounds = self.return_axis_bounds(ax_h)
+                y_top = ax_bounds[-1]
+                y_bot = ax_bounds[1]
+
+                self.y_centers[ax_h] = y_bot + (y_top - y_bot) / 2
+
     # function to set the scientific notation limits
-    def set_notation_scientific(self, list_ax_handles):
+    def set_notation_scientific(self, list_ax_handles, n=3):
         # set the formatter
         fmt = ticker.ScalarFormatter()
-        fmt.set_powerlimits((-3, 3))
+        fmt.set_powerlimits((-n, n))
         for h in list_ax_handles:
             self.ax[h].yaxis.set_major_formatter(fmt)
 
@@ -70,7 +131,8 @@ class FigBase():
 
         return ylim_new
 
-    # equalizes SIZE of the ylim but keeps the center of the axis whatever makes sense for the data
+    # equalizes SIZE of the ylim but keeps the center of the axis
+    # whatever makes sense for the data
     def equalize_ylim_size(self, list_handles):
         list_ylim_size = []
 
@@ -92,9 +154,6 @@ class FigBase():
 
     # checks on all yaxes and then sets them
     def equalize_ylim(self, list_handles):
-        # list_cols = ['L', 'M', 'R']
-        # list_handles = [type+col for col in list_cols]
-
         list_ylim = []
 
         # assumes axes are in a self.ax dictionary, and the keys of the dict
@@ -139,6 +198,15 @@ class FigBase():
         }
 
         mpl.rc('font', **font_prop)
+
+    # sets the FIRST line found to black for a given axis or list of axes
+    def set_linecolor(self, ax_key, str_color):
+        if ax_key in self.ax.keys():
+            if isinstance(self.ax[ax_key], list):
+                for item in self.ax[ax_key]:
+                    item.lines[0].set_color(str_color)
+            else:
+                self.ax[ax_key].lines[0].set_color(str_color)
 
     # creates title string based on params that change during simulation
     # title_str = ac.create_title(blah)
@@ -585,7 +653,7 @@ class FigAggregateSpecWithHist(FigBase):
 # aggregate figures for the experiments
 class FigDipoleExp(FigBase):
     def __init__(self, ax_handles):
-        ac.FigBase.__init__(self)
+        FigBase.__init__(self)
         # ax_handles is a list of axis handles in order
         # previously called N_expmt_groups for legacy reasons (original intention)
         # now generally repurposed for arbitrary numbers of axes with these handle names

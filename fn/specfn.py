@@ -1,8 +1,8 @@
 # specfn.py - Average time-frequency energy representation using Morlet wavelet method
 #
-# v 1.8.20
-# rev 2013-08-29 (MS: Fixed bug in analysis_typespecific for sims with multiple expmt groups)
-# last major: (MS: now saving max spectral power, time, and freq, and welch analysis as part of analysis_typespecific())
+# v 1.8.22
+# rev 2013-11-19 (SL: some minor reorganization?)
+# last major: (MS: Fixed bug in analysis_typespecific for sims with multiple expmt groups)
 
 import os
 import sys
@@ -57,6 +57,7 @@ class Welch():
         self.t_vec = t_vec
         self.ts_vec = ts_vec
         self.dt = dt
+        self.units = 'tsunits^2'
 
         # only assign length if same
         if len(self.t_vec) == len(self.ts_vec):
@@ -80,6 +81,10 @@ class Welch():
         ax.plot(self.f, self.P)
         ax.set_xlim((0., f_max))
 
+    def scale(self, scalefactor):
+        self.P *= scalefactor
+        self.units += ' x%3.4e' % scalefactor
+
     # return the next power of 2 generally for a given L
     def __nextpow2(self, L):
         n = 2
@@ -94,7 +99,6 @@ class Welch():
 # MorletSpec class based on a time vec tvec and a time series vec tsvec
 class MorletSpec():
     def __init__(self, tvec, tsvec, fparam, f_max=None):
-    # def __init__(self, fdata_spec, tvec, tsvec, fparam, f_max=None, save_data=None):
         # Save variable portion of fdata_spec as identifying attribute
         # self.name = fdata_spec
 
@@ -137,20 +141,6 @@ class MorletSpec():
 
             # Add time vector as first row of TFR data
             # self.TFR = np.vstack([self.timevec, self.TFR])
-
-            # Write data to file ONLY if save_data is ALSO true
-            # eg. save_data is an overwriting mechanism
-            # if self.p_dict['save_spec_data'] and save_data:
-            # if save_data == None:
-            #     # if save_data is unspecified, check the p_dict
-            #     if self.p_dict['save_spec_data']:
-            #         # write(fdata_spec, self.timevec, self.freqvec, self.TFR)
-            #         self.save(fdata_spec)
-
-            # elif save_data:
-            #     # if save_data IS specified, and IF the value evaluates True, THEN write also
-            #     self.save(fdata_spec)
-            #     # write(fdata_spec, self.timevec, self.freqvec, self.TFR)
 
         else:
             print "tstop not greater than %4.2f ms. Skipping wavelet analysis." % self.tmin
@@ -290,6 +280,9 @@ def pspec_ax(ax_spec, fspec, xlim, layer=None):
             TFR = data_spec[TFR_layer]
             f = data_spec[f_layer]
 
+        else:
+            print data_spec.keys()
+
     extent_xy = [xlim[0], xlim[1], f[-1], 0.]
     pc = ax_spec.imshow(TFR, extent=extent_xy, aspect='auto', origin='upper')
     [vmin, vmax] = pc.get_clim()
@@ -402,6 +395,7 @@ def generate_missing_spec(ddata, f_max=40):
             'runtype': 'parallel',
         }
         analysis_typespecific(ddata, opts)
+
     else:
         # this is currently incorrect, it should actually return the data that has been referred to
         # as spec_results. such a function to properly get this without analysis (eg. reader to this data)
@@ -462,12 +456,12 @@ def spec_dpl_kernel(fparam, fts, fspec, f_max):
 # Does spec analysis for all files in simulation directory
 # ddata comes from fileio
 def analysis_typespecific(ddata, opts=None):
-# def analysis_typespecific(ddata, p_exp, opts=None):
+    # def analysis_typespecific(ddata, p_exp, opts=None):
     # 'opts' input are the options in a dictionary
     # if opts is defined, then make it well formed
     # the valid keys of opts are in list_opts
     opts_run = {
-        'type': 'dpl',
+        'type': 'dpl_laminar',
         'f_max': 100.,
         'save_data': 0,
         'runtype': 'parallel',
@@ -525,7 +519,7 @@ def analysis_typespecific(ddata, opts=None):
             pl.close()
             pl.join()
 
-        if opts_run['runtype'] == 'debug':
+        elif opts_run['runtype'] == 'debug':
             for fparam, fts, fspec in it.izip(list_param, list_ts, list_spec):
                 spec_current_kernel(fparam, fts, fspec, opts_run['f_max'])
 
@@ -545,7 +539,7 @@ def analysis_typespecific(ddata, opts=None):
             pl.close()
             pl.join()
 
-        if opts_run['runtype'] == 'debug':
+        elif opts_run['runtype'] == 'debug':
             # spec_results_L2 and _L5
             for fparam, fts, fspec in it.izip(list_param, list_ts, list_spec):
                 spec_dpl_kernel(fparam, fts, fspec, opts_run['f_max'])

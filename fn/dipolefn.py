@@ -1,8 +1,8 @@
 # dipolefn.py - dipole-based analysis functions
 #
-# v 1.8.21
-# rev 2013-08-29 (MS: Updated pdipole_with_hist() to use new class spikefn.Extinputs())
-# last major: (MS: Dipole.plot() now forces ymax to be something sane)
+# v 1.8.22
+# rev 2013-11-19 (SL: minor change to getting lims)
+# last major: (MS: Updated pdipole_with_hist() to use new class spikefn.Extinputs())
 
 import fileio as fio
 import numpy as np
@@ -97,7 +97,8 @@ class Dipole():
             print "Layer not found. Try one of %s" % self.dpl.keys()
 
     # finds the max value within a specified xlim
-    def max(self, layer, xlim):
+    # def max(self, layer, xlim):
+    def lim(self, layer, xlim):
         # better implemented as a dict
         if layer is None:
             dpl_tmp = self.dpl['agg']
@@ -125,7 +126,7 @@ class Dipole():
         # t_tmp = self.t[(self.t > xmin) & (self.t < xmax)]
         dpl_tmp = dpl_tmp[(self.t > xmin) & (self.t < xmax)]
 
-        return np.max(dpl_tmp)
+        return (np.min(dpl_tmp), np.max(dpl_tmp))
 
     # simple layer-specific plot function
     def plot(self, ax, xlim, layer='agg'):
@@ -137,13 +138,16 @@ class Dipole():
         #     ax.set_ylim(ylim)
         if layer in self.dpl.keys():
             ax.plot(self.t, self.dpl[layer])
-            ymax = self.max(layer, xlim)
-            # ylim = (-ymax, ymax)
+            ylim = self.lim(layer, xlim)
 
             # force ymax to be something sane
-            ax.set_ylim(top=ymax*1.2)
+            # commenting this out for now, but 
+            # we can change if absolutely necessary.
+            # ax.set_ylim(top=ymax*1.2)
 
-            # ax.set_xlim(xlim)
+            # set the lims here, as a default
+            ax.set_ylim(ylim)
+            ax.set_xlim(xlim)
 
         else:
             print "raise some error"
@@ -207,6 +211,42 @@ class Dipole():
                 f.write("%.4e\t" % x_agg)
                 f.write("%.4e\t" % x_L2)
                 f.write("%.4e\n" % x_L5)
+
+# throwaway save method for now
+# trial is currently undefined
+# function is broken for N_trials > 1
+def dpl_convert_and_save(ddata, i=0, j=0):
+    # take the ith sim, jth trial, do some stuff to it, resave it
+    # only uses first expmt_group
+    expmt_group = ddata.expmt_groups[0]
+
+    # need n_trials
+    p_exp = paramrw.ExpParams(ddata.fparam)
+    if not p_exp.N_trials:
+        N_trials = 1
+    else:
+        N_trials = p_exp.N_trials
+
+    # absolute number
+    n = i*N_trials + j
+
+    # grab the correct files
+    f_dpl = ddata.file_match(expmt_group, 'rawdpl')[n]
+    f_param = ddata.file_match(expmt_group, 'param')[n]
+
+    # print ddata.sim_prefix, ddata.dsim
+    f_name_short = '%s-%03d-T%02d-dpltest.txt' % (ddata.sim_prefix, i, j)
+    f_name = os.path.join(ddata.dsim, expmt_group, f_name_short)
+    print f_name
+
+    dpl = Dipole(f_dpl)
+    dpl.baseline_renormalize(f_param)
+    print "baseline renormalized"
+
+    dpl.convert_fAm_to_nAm()
+    print "converted to nAm"
+
+    dpl.write(f_name)
 
 # ddata is a fio.SimulationPaths() object
 def calc_aggregate_dipole(ddata):
