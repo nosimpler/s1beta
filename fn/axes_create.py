@@ -1,8 +1,8 @@
 # axes_create.py - simple axis creation
 #
-# v 1.8.22
-# rev 2013-11-19 (SL: gamma project related axes)
-# last major: (MS: Semi-kludgy fix to MS not having LateX on his linux machine)
+# v 1.8.23
+# rev 2013-12-11 (SL: changes related to platform-specific rendering)
+# last major: (SL: gamma project related axes)
 
 # usage:
 # testfig = FigStd()
@@ -14,7 +14,7 @@ import paramrw
 import matplotlib as mpl
 # from matplotlib import rc
 from matplotlib import ticker
-# mpl.use('Agg')
+mpl.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import itertools as it
@@ -27,12 +27,12 @@ class FigBase():
         # self.f is typically set by the super class
         self.f = None
 
-        # only use latex if on Mac
+        # only use LaTeX (latex) if on Mac
         # kind of kludgy temporary fix for now.
-        if sys.platform.startswith('darwin'):
-            mpl.rc('text', usetex=True)
-        elif sys.platform.startswith('linux'):
-            pass
+        # if sys.platform.startswith('darwin'):
+        #     mpl.rc('text', usetex=True)
+        # elif sys.platform.startswith('linux'):
+        #     pass
 
         # axis dicts are guaranteed to exist at least, sheesh
         self.ax = {}
@@ -262,10 +262,6 @@ class FigStd(FigBase):
 
         # this is a bad way of ensuring backward compatibility
         self.ax0 = self.ax['ax0']
-
-    # use the FigBase method in the future
-    # def save(self, file_name):
-    #     self.f.savefig(file_name)
 
 class FigDplWithHist(FigBase):
     def __init__(self):

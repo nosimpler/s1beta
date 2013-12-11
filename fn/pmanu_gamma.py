@@ -1,8 +1,8 @@
 # pmanu_gamma.py - plot functions for gamma manuscript
 #
-# v 1.8.22
-# rev 2013-11-19 (SL: Many of the final figure scripts)
-# last major: (SL: added hf_epochs() plot)
+# v 1.8.23
+# rev 2013-12-11 (SL: plot updates)
+# last major: (SL: Many of the final figure scripts)
 
 import itertools as it
 import numpy as np
@@ -14,6 +14,42 @@ import specfn
 import spikefn
 import paramrw
 import ac_manu_gamma as acg
+import axes_create as ac
+
+def spec_fig():
+    f = acg.FigSimpleSpec()
+    d = '/Users/shane/repo/data/s1/2013-12-04/ftremor-003'
+    dproj = '/repo/data/s1'
+    ddata = fio.SimulationPaths()
+    ddata.read_sim(dproj, d)
+
+    expmt_group = ddata.expmt_groups[0]
+    f_dpl = ddata.file_match(expmt_group, 'rawdpl')[0]
+    fspec = ddata.file_match(expmt_group, 'rawspec')[0]
+    fparam = ddata.file_match(expmt_group, 'param')[0]
+
+    dpl = dipolefn.Dipole(f_dpl)
+    dpl.baseline_renormalize(fparam)
+    dpl.convert_fAm_to_nAm()
+
+    xlim = (200., 700.)
+
+    dpl.plot(f.ax['dipole'], xlim, layer='L5')
+    pc = {
+        'spec': specfn.pspec_ax(f.ax['spec'], fspec, (50, 1050), layer='L5'),
+    }
+    cb = f.f.colorbar(pc['spec'], ax=f.ax['spec'], format='%.1e')
+
+    f.ax['spec'].set_xlim(xlim)
+    f.ax['spec'].set_ylabel('Frequency (Hz)')
+    f.ax['spec'].set_xlabel('Time (ms)')
+
+    f.set_fontsize(14)
+
+    # fname = os.path.join(d, 'testing.eps')
+
+    f.saveeps(d, 'testing')
+    f.close()
 
 # all the data comes from one sim
 def hf_epochs(ddata):
@@ -526,6 +562,40 @@ def compare_ping():
     s0 = spikefn.spikes_from_file(f_param0, f_spk0)
     s0_L5 = spikefn.filter_spike_dict(s0, 'L5_')
 
+    # plot the spike histogram data
+    icell0_spikes = np.concatenate(s0_L5['L5_basket'].spike_list)
+    ecell0_spikes = np.concatenate(s0_L5['L5_pyramidal'].spike_list)
+
+    # 1 ms bins
+    n_bins = int(tstop0)
+
+    f.ax['hist_L'].hist(icell0_spikes, n_bins, facecolor='r', histtype='stepfilled', alpha=0.75, edgecolor='none')
+    f.ax_twinx['hist_L'].hist(ecell0_spikes, n_bins, facecolor='k')
+
+    # based on number of cells
+    f.ax['hist_L'].set_ylim((0, 20))
+    f.ax_twinx['hist_L'].set_ylim((0, 100))
+
+    f.ax_twinx['hist_L'].set_xlim(xlim0)
+    f.ax['hist_L'].set_xlim(xlim0)
+
+    # hack
+    labels = f.ax['hist_L'].yaxis.get_ticklocs()
+    labels_text = [str(label) for label in labels[:-1]]
+    for i in range(len(labels_text)):
+        labels_text[i] = ''
+
+    labels_text.append('20')
+    f.ax['hist_L'].set_yticklabels(labels_text)
+
+    labels_twinx = f.ax_twinx['hist_L'].yaxis.get_ticklocs()
+    labels_text = [str(label) for label in labels_twinx[:-1]]
+    for i in range(len(labels_text)):
+        labels_text[i] = ''
+
+    labels_text.append('100')
+    f.ax_twinx['hist_L'].set_yticklabels(labels_text)
+
     # grab the current data
     I_soma0 = currentfn.SynapticCurrent(f_current0)
     I_soma0.convert_nA_to_uA()
@@ -558,7 +628,41 @@ def compare_ping():
     # grab the spike data
     s1 = spikefn.spikes_from_file(f_param1, f_spk1)
     s1_L5 = spikefn.filter_spike_dict(s1, 'L5_')
-    s1_L2 = spikefn.filter_spike_dict(s1, 'L2_')
+    # s1_L2 = spikefn.filter_spike_dict(s1, 'L2_')
+
+    # plot the spike histogram data
+    icell1_spikes = np.concatenate(s1_L5['L5_basket'].spike_list)
+    ecell1_spikes = np.concatenate(s1_L5['L5_pyramidal'].spike_list)
+
+    # 1 ms bins
+    n_bins = int(tstop1)
+
+    f.ax['hist_R'].hist(icell1_spikes, n_bins, facecolor='r', histtype='stepfilled', alpha=0.75, edgecolor='none')
+    f.ax_twinx['hist_R'].hist(ecell1_spikes, n_bins, facecolor='k')
+
+    # based on number of cells
+    f.ax['hist_R'].set_ylim((0, 12))
+    f.ax_twinx['hist_R'].set_ylim((0, 12))
+
+    f.ax_twinx['hist_R'].set_xlim(xlim0)
+    f.ax['hist_R'].set_xlim(xlim0)
+
+    # hack
+    labels = f.ax['hist_R'].yaxis.get_ticklocs()
+    labels_text = [str(label) for label in labels[:-1]]
+    for i in range(len(labels_text)):
+        labels_text[i] = ''
+
+    labels_text.append('12')
+    f.ax['hist_R'].set_yticklabels(labels_text)
+
+    labels_twinx = f.ax_twinx['hist_R'].yaxis.get_ticklocs()
+    labels_text = [str(label) for label in labels_twinx[:-1]]
+    for i in range(len(labels_text)):
+        labels_text[i] = ''
+
+    labels_text.append('12')
+    f.ax_twinx['hist_R'].set_yticklabels(labels_text)
 
     # grab the current data
     I_soma1 = currentfn.SynapticCurrent(f_current1)
@@ -924,6 +1028,83 @@ def sub_dist_example2():
     f.savepng_new(dfig, f_prefix)
     f.saveeps(dfig, f_prefix)
     f.close()
+
+# plots a histogram of e cell spikes relative to I cell spikes
+def spikephase():
+    dproj = '/repo/data/s1'
+    # runtype = 'pub2'
+    runtype = 'debug'
+
+    # data directories (made up for now)
+    # the resultant figure is saved in d0
+    d0 = os.path.join(dproj, 'pub', '2013-06-28_gamma_weak_L5-000')
+
+    # hard code the data for now
+    ddata0 = fio.SimulationPaths()
+
+    # use read_sim() to read the simulations
+    ddata0.read_sim(dproj, d0)
+
+    # for now grab the first experiment in each
+    expmt0 = ddata0.expmt_groups[0]
+
+    # for now hard code the simulation run
+    run0 = 0
+
+    # prints the fig in ddata0
+    f = ac.FigStd()
+
+    # create a twin axis
+    f.create_axis_twinx('ax0')
+
+    # first panel data
+    f_spec0 = ddata0.file_match(expmt0, 'rawspec')[run0]
+    f_dpl0 = ddata0.file_match(expmt0, 'rawdpl')[run0]
+    f_spk0 = ddata0.file_match(expmt0, 'rawspk')[run0]
+    f_param0 = ddata0.file_match(expmt0, 'param')[run0]
+    # f_current0 = ddata0.file_match(expmt0, 'rawcurrent')[run0]
+
+    # figure out the tstop and xlim
+    tstop0 = paramrw.find_param(f_param0, 'tstop')
+    dt = paramrw.find_param(f_param0, 'dt')
+    xlim0 = (0., tstop0)
+
+    # grab the spike data
+    _, p_dict0 = paramrw.read(f_param0)
+    s0 = spikefn.spikes_from_file(f_param0, f_spk0)
+    icell_spikes = s0['L5_basket'].spike_list
+    ecell_spikes = s0['L5_pyramidal'].spike_list
+    
+    ispike_counts = [len(slist) for slist in icell_spikes]
+    espike_counts = [len(slist) for slist in ecell_spikes]
+
+    # let's try a sort ... 
+    icell_spikes_agg = np.concatenate(icell_spikes)
+    ecell_spikes_agg = np.concatenate(ecell_spikes)
+
+    # lop off the first 50 ms
+    icell_spikes_agg = icell_spikes_agg[icell_spikes_agg >= 50]
+    icell_spikes_agg_sorted = np.sort(icell_spikes_agg)
+
+    n_bins = int(tstop0 - 50)
+
+    f.ax['ax0'].hist(icell_spikes_agg, n_bins, facecolor='r', histtype='stepfilled', alpha=0.75, edgecolor='none')
+    f.ax_twinx['ax0'].hist(ecell_spikes_agg, n_bins, facecolor='k')
+    # f.ax_twinx['ax0'].hist(ecell_spikes_agg, n_bins, facecolor='k', alpha=0.75)
+
+    # sets these lims to the MAX number of possible events per bin (n_celltype limited)
+    f.ax['ax0'].set_ylim((0, 35))
+    f.ax_twinx['ax0'].set_ylim((0, 100))
+
+    f.ax_twinx['ax0'].set_xlim((50, tstop0))
+    f.ax['ax0'].set_xlim((50, tstop0))
+
+    f.savepng_new(d0, 'testing')
+    f.close()
+
+    # save the fig in ddata0 (arbitrary)
+    f_prefix = 'gamma_spikephase'
+    dfig = os.path.join(ddata0.dsim, expmt0)
 
 def peaks():
     dproj = '/repo/data/s1'

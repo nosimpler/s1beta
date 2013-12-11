@@ -1,8 +1,8 @@
 # pspec.py - Very long plotting methods having to do with spec.
 #
-# v 1.8.21
-# rev 2013-08-29 (MS: Updated pspec_with_hist() to use new class spikefn.Extinputs())
-# last major: (MS: Reinstituted use of xlim using logical indexing in pspec_dpl() and pspec_dpl_with_hist())
+# v 1.8.23
+# rev 2013-12-11 (SL: added saveeps, commented out)
+# last major: (MS: Updated pspec_with_hist() to use new class spikefn.Extinputs())
 
 import os
 import sys
@@ -90,6 +90,7 @@ def pspec_dpl(f_spec, f_dpl, dfig, p_dict, key_types, xlim=None):
 
     # use our fig classes to save and close
     f.savepng(fig_name)
+    # f.saveeps(dfig, fprefix)
     f.close()
 
 # Spectral plotting kernel with alpha feed histogram for ONE simulation run

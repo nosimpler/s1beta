@@ -1,8 +1,8 @@
 # clidefs.py - these are all of the function defs for the cli
 #
-# v 1.8.22
-# rev 2013-11-19 (SL: my concurrent changes may have broken MS's. We have to figure this one out.)
-# last major: (MS: Bulk of exec_specmax() moved to specfn.py)
+# v 1.8.23
+# rev 2013-12-11 (SL: Added some pgamma plots)
+# last major: (SL: my concurrent changes may have broken MS's. We have to figure this one out.)
 
 # Standard modules
 import fnmatch, os, re, sys
@@ -839,6 +839,13 @@ def exec_aggregatespec(ddata, labels):
         exec_spec_regenerate(ddata)
 
     plotfn.aggregate_spec_with_hist(ddata, p_exp, labels)
+
+def exec_pgamma_spec_fig():
+    pgamma.spec_fig()
+
+def exec_pgamma_spikephase():
+    # the directory here is hardcoded for now, inside the function
+    pgamma.spikephase()
 
 def exec_pgamma_peaks():
     pgamma.peaks()

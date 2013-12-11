@@ -1,8 +1,8 @@
 # cli.py - routines for the command line interface console s1sh.py
 #
-# v 1.8.22
-# rev 2013-11-19 (SL: added some functions related to gamma project)
-# last major: (SL: added __create_dict_from_args() to replace previous methods)
+# v 1.8.23
+# rev 2013-12-11 (SL: added spec_fig from pgamma)
+# last major: (SL: added some functions related to gamma project)
 
 from cmd import Cmd
 from datetime import datetime
@@ -139,13 +139,17 @@ class Console(Cmd):
     def do_debug(self, args):
         """Qnd function to test other functions
         """
+        self.do_setdate('2013-12-04')
+        self.do_load('ftremor-003')
+        clidefs.exec_pgamma_spec_fig()
         # self.do_pgamma_sub_example2('')
-        self.do_setdate('pub')
+        # self.do_setdate('pub')
         # self.do_spec_current("--runtype='debug' --f_max=250.")
         # self.do_load('2013-06-28_gamma_weak_L5-000')
         # self.do_pgamma_hf_epochs('')
-        self.do_load('2013-08-12_gamma_sub_50Hz-001')
-        self.do_pgamma_prox_dist_new('')
+        # self.do_load('2013-08-12_gamma_sub_50Hz-001')
+        # self.do_pgamma_spikephase('')
+        # self.do_pgamma_prox_dist_new('')
         # self.do_throwaway('--n_trial=-1')
         # self.do_load('2013-08-07_gamma_sub_50Hz_stdev-000')
         # self.do_pgamma_stdev_new('--f_max_welch=150.')
@@ -286,6 +290,9 @@ class Console(Cmd):
             [s1] pgamma_compare_ping
         '''
         clidefs.exec_pgamma_compare_ping()
+
+    def do_pgamma_spikephase(self, args):
+        clidefs.exec_pgamma_spikephase()
 
     def do_spec_current(self, args):
         # parse list of opts

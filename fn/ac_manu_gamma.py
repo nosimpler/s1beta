@@ -1,15 +1,34 @@
 # ac_manu_gamma.py - axes for gamma manuscript paper figs
 #
-# v 1.8.22
-# rev 2013-11-19 (SL: fig changes)
-# last major: (SL: added HF figs)
+# v 1.8.23
+# rev 2013-12-11 (SL: added FigSimpleSpec)
+# last major: (SL: fig changes)
 
 import matplotlib as mpl
+mpl.use('agg')
 import axes_create as ac
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import itertools as it
 import numpy as np
+
+class FigSimpleSpec(ac.FigBase):
+    def __init__(self):
+        self.f = plt.figure(figsize=(8, 6))
+        font_prop = {'size': 8}
+        mpl.rc('font', **font_prop)
+
+        # the right margin is a hack and NOT guaranteed!
+        # it's making space for the stupid colorbar that creates a new grid to replace gs1
+        # when called, and it doesn't update the params of gs1
+        self.gspec = {
+            'dpl': gridspec.GridSpec(2, 1, height_ratios=[1, 3], bottom=0.85, top=0.95, left=0.1, right=0.82),
+            'spec': gridspec.GridSpec(1, 4, wspace=0.05, hspace=0., bottom=0.10, top=0.80, left=0.1, right=1.),
+        }
+
+        self.ax = {}
+        self.ax['dipole'] = self.f.add_subplot(self.gspec['dpl'][:, :])
+        self.ax['spec'] = self.f.add_subplot(self.gspec['spec'][:, :])
 
 class FigLaminarComparison(ac.FigBase):
     def __init__(self, runtype='debug'):
@@ -132,6 +151,7 @@ class FigLaminarComparison(ac.FigBase):
 # strong ping and weak ping examples in Layer 5: Fig 2
 class FigL5PingExample(ac.FigBase):
     def __init__(self, runtype='debug'):
+        ac.FigBase.__init__(self)
         self.f = plt.figure(figsize=(7, 8))
 
         # set_fontsize() is part of FigBase()
@@ -139,8 +159,8 @@ class FigL5PingExample(ac.FigBase):
 
         # various gridspecs
         self.gspec = {
-            'left': gridspec.GridSpec(6, 50),
-            'right': gridspec.GridSpec(6, 50),
+            'left': gridspec.GridSpec(7, 50),
+            'right': gridspec.GridSpec(7, 50),
             'left_welch': gridspec.GridSpec(1, 50),
             'right_welch': gridspec.GridSpec(1, 50),
         }
@@ -165,28 +185,36 @@ class FigL5PingExample(ac.FigBase):
         # spec_L will be conditional on debug or production
         self.ax = {
             'raster_L': self.f.add_subplot(self.gspec['left'][:2, :40]),
-            'current_L': self.f.add_subplot(self.gspec['left'][2:3, :40]),
-            'dpl_L': self.f.add_subplot(self.gspec['left'][3:4, :40]),
+            'hist_L': self.f.add_subplot(self.gspec['left'][2:3, :40]),
+            'current_L': self.f.add_subplot(self.gspec['left'][3:4, :40]),
+            'dpl_L': self.f.add_subplot(self.gspec['left'][4:5, :40]),
             'spec_L': None,
             'pgram_L': self.f.add_subplot(self.gspec['left_welch'][:, :]),
 
             'raster_R': self.f.add_subplot(self.gspec['right'][:2, :40]),
-            'current_R': self.f.add_subplot(self.gspec['right'][2:3, :40]),
-            'dpl_R': self.f.add_subplot(self.gspec['right'][3:4, :40]),
-            'spec_R': self.f.add_subplot(self.gspec['right'][4:6, :]),
+            'hist_R': self.f.add_subplot(self.gspec['right'][2:3, :40]),
+            'current_R': self.f.add_subplot(self.gspec['right'][3:4, :40]),
+            'dpl_R': self.f.add_subplot(self.gspec['right'][4:5, :40]),
+            'spec_R': self.f.add_subplot(self.gspec['right'][5:7, :]),
             'pgram_R': self.f.add_subplot(self.gspec['right_welch'][:, :]),
         }
 
         # different spec_L depending on mode
         if runtype in ('debug', 'pub2'):
-            self.ax['spec_L'] = self.f.add_subplot(self.gspec['left'][4:6, :])
+            self.ax['spec_L'] = self.f.add_subplot(self.gspec['left'][5:7, :])
 
         elif runtype == 'pub':
-            self.ax['spec_L'] = self.f.add_subplot(self.gspec['left'][4:6, :40])
+            self.ax['spec_L'] = self.f.add_subplot(self.gspec['left'][5:7, :40])
 
         # print dir(self.ax['pgram_L'].get_position())
         # print self.ax['pgram_L'].get_position().get_points()
         # print self.ax['pgram_L'].get_position().y0
+
+        # create twinx for the hist
+        for key in self.ax.keys():
+            if key.startswith('hist_'):
+                # this creates an f.ax_twinx dict with the appropriate key names
+                self.create_axis_twinx(key)
 
         # pgram_axes
         list_handles_pgram = [h for h in self.ax.keys() if h.startswith('pgram_')]
@@ -198,7 +226,7 @@ class FigL5PingExample(ac.FigBase):
             self.ax[h].set_yticklabels('')
 
         if runtype.startswith('pub'):
-            self.no_xaxis = ['raster', 'dpl', 'current']
+            self.no_xaxis = ['raster', 'hist', 'dpl', 'current']
             self.no_yaxis = ['raster', 'spec', 'current']
             self.__remove_labels()
 
@@ -228,6 +256,7 @@ class FigL5PingExample(ac.FigBase):
         # ylabel x pos
         x_pos = 0.025
         label_props = {
+            'fontsize': 7,
             'rotation': 90,
             'va': 'center',
             'ma': 'center',
@@ -235,6 +264,7 @@ class FigL5PingExample(ac.FigBase):
 
         # cool, this uses a dict to fill in props. cool, cool, cool.
         self.f.text(x_pos, self.y_centers['raster_L'], 'Cell no.', **label_props)
+        self.f.text(x_pos, self.y_centers['hist_L'], 'Spike\nhistogram\n(Left: I, Right: E)', **label_props)
         self.f.text(x_pos, self.y_centers['spec_L'], 'Frequency (Hz)', **label_props)
         self.f.text(x_pos, self.y_centers['dpl_L'], 'Current dipole \n (nAm)', **label_props)
         self.f.text(x_pos, self.y_centers['pgram_L'], 'Welch Spectral \n Power ((nAm)$^2$)', **label_props)
@@ -1119,17 +1149,20 @@ if __name__ == '__main__':
 
     f_test = 'testing.png'
 
+    print mpl.get_backend()
+
     # testfig for FigDipoleExp()
     # testfig = ac.FigDipoleExp(ax_handles)
     # testfig.create_colorbar_axis('spec')
     # testfig.ax['spec'].plot(x)
 
     # testfig = FigTest()
-    testfig = FigStDev()
+    # testfig = FigStDev()
     # testfig = FigL5PingExample()
     # testfig = FigSubDistExample()
     # testfig = FigLaminarComparison()
     # testfig = FigDistalPhase()
     # testfig = FigPeaks()
+    testfig = FigSimpleSpec()
     testfig.savepng(f_test)
     testfig.close()

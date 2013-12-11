@@ -1,8 +1,8 @@
 # plotfn.py - pall and possibly other plot routines
 #
-# v 1.8.21
-# rev 2013-08-29 (MS: updated pkernel_with_hist() to mirror pkernel())
-# last major: (MS: xlim now being passed to pspec.pspec_dpl())
+# v 1.8.23
+# rev 2013-12-11 (SL: minor)
+# last major: (MS: updated pkernel_with_hist() to mirror pkernel())
 
 from praster import praster
 import axes_create as ac
@@ -78,7 +78,7 @@ def pall(ddir, p_exp, xlim=[0., 'tstop']):
 # def pall(ddir, p_exp, spec_results, xlim=[0., 'tstop']):
     # runtype allows easy (hard coded switching between two modes)
     # either 'parallel' or 'debug'
-    # runtype = 'parallel'
+    # runtype = 'debug'
     runtype = 'parallel'
 
     dsim = ddir.dsim
