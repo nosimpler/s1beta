@@ -1,8 +1,8 @@
 # clidefs.py - these are all of the function defs for the cli
 #
-# v 1.8.25sc
-# rev 2013-08-29 (MS: exec_specmax_dpl_tmpl(), exec_plot_dpl_tmpl(). Updated calls to dipolefn.pdipole())
-# last major: (MS: exec_specmax_dpl_match()
+# v 1.8.26sc
+# rev 2014-01-30 (MS: Updated exec_plotaverages())
+# last major: (MS: exec_specmax_dpl_tmpl(), exec_plot_dpl_tmpl(). Updated calls to dipolefn.pdipole())
 
 # Standard modules
 import fnmatch, os, re, sys
@@ -952,8 +952,8 @@ def exec_plotaverages(ddata, ylim=[]):
     # if avg spec data exists
     if spec_list:
         if runtype == 'debug':
-            for f_spec, f_dpl, dfig_spec, pdict in it.izip(spec_list, dpl_list, dfig_spec_list, pdict_list):
-                pspec.pspec_dpl(f_spec, f_dpl, dfig_spec, pdict, key_types)
+            for f_spec, f_dpl, f_param, dfig_spec, pdict in it.izip(spec_list, dpl_list, fparam_list, dfig_spec_list, pdict_list):
+                pspec.pspec_dpl(f_spec, f_dpl, dfig_spec, pdict, key_types, f_param=f_param)
 
         elif runtype == 'parallel':
             pl = Pool()

@@ -1,8 +1,8 @@
 # class_feed.py - establishes FeedExt(), ParFeedAll()
 #
-# v 1.7.24
-# rev 2013-02-19 (SL: changed debug, some more minor)
-# last major: (SL: Fixed the evoked input timings)
+# v 1.8.26sc
+# rev 2014-01-30 (MS: start time of extinput is randomized if t0 is -1)
+# last major: (SL: changed debug, some more minor)
 
 import numpy as np
 import itertools as it
@@ -136,6 +136,11 @@ class ParFeedAll():
         # store f_input as self variable for later use if it exists in p
         # t0 is always defined
         t0 = self.p_ext['t0']
+
+        # If t0 is -1, randomize start time of inputs
+        if t0 == -1:
+            t0 = self.prng.uniform(25., 125.)
+
         f_input = self.p_ext['f_input']
         stdev = self.p_ext['stdev']
         events_per_cycle = self.p_ext['events_per_cycle']

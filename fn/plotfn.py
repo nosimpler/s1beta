@@ -1,8 +1,8 @@
 # plotfn.py - pall and possibly other plot routines
 #
-# v 1.8.25sc
-# rev 2013-08-29 (MS: updated calls to dipolefn.pdipole())
-# last major: (MS: ylim arg now passed around to spec plotting routines to set freq bounds) 
+# v 1.8.26sc
+# rev 2014-01-30 (MS: updated pkernel to pass f_param to pspec_dpl())
+# last major: (MS: updated calls to dipolefn.pdipole())
 
 from praster import praster
 import axes_create as ac
@@ -41,7 +41,7 @@ def pkernel(dfig, f_param, f_spk, f_dpl, f_spec, key_types, xlim=None, ylim=None
     # dipolefn.pdipole(f_dpl, f_param, dfig_dpl, key_types, pdipole_dict)
 
     # usage of xlim to pspec is temporarily disabled. pspec_dpl() will use internal states for plotting
-    pspec.pspec_dpl(f_spec, f_dpl, dfig_spec, p_dict, key_types, xlim, ylim)
+    pspec.pspec_dpl(f_spec, f_dpl, dfig_spec, p_dict, key_types, xlim, ylim, f_param)
     # pspec.pspec_dpl(f_spec, f_dpl, dfig_spec, p_dict, key_types)
     # pspec.pspec_dpl(data_spec, f_dpl, dfig_spec, p_dict, key_types, xlim)
 
@@ -145,6 +145,8 @@ def pdpl_pspec_with_hist(ddir, p_exp, xlim=None, ylim=None):
 
     # grab the key types
     key_types = p_exp.get_key_types()
+
+    print spec_list
 
     if runtype is 'parallel':
         # apply async to compiled lists

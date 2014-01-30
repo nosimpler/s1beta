@@ -1,8 +1,8 @@
 # pspec.py - Very long plotting methods having to do with spec.
 #
-# v 1.8.23sc
-# rev 2013-07-29 (MS: added backwards compatibility to pgram plotting in pspec_dpl())
-# last major: (MS: Plotting routines now use plotting methods in specfn.Spec())
+# v 1.8.26sc
+# rev 2014-01-30 (MS: Updated pspec_dpl() to take f_param file as optional input)
+# last major: (MS: added backwards compatibility to pgram plotting in pspec_dpl())
 
 import os
 import sys
@@ -24,17 +24,7 @@ import axes_create as ac
 
 # this is actually a plot kernel for one sim that does dipole, etc.
 # needs f_param not p_dict
-def pspec_dpl(f_spec, f_dpl, dfig, p_dict, key_types, xlim=None, ylim=None):
-    # xlim is a time interval
-    # ylim is a frequency interval
-
-    # # Load data from file
-    # data_spec = np.load(f_spec)
-
-    # timevec = data_spec['time']
-    # freqvec = data_spec['freq']
-    # TFR = data_spec['TFR']
-
+def pspec_dpl(f_spec, f_dpl, dfig, p_dict, key_types, xlim=None, ylim=None, f_param=None):
     # Generate file prefix 
     fprefix = f_spec.split('/')[-1].split('.')[0]
 
@@ -42,25 +32,8 @@ def pspec_dpl(f_spec, f_dpl, dfig, p_dict, key_types, xlim=None, ylim=None):
     # fig_name = os.path.join(dfig, fprefix+'.eps')
     fig_name = os.path.join(dfig, fprefix+'.png')
 
-    # if xlim is not None:
-    #     print "WARNING: xlim input is temporarily disabled. Needs to be fixed in pspec.pspec_dpl()"
-
-    # # Truncate timevec and TFR based on xlim values
-    # if xlim:
-    #     tvec = timevec[(timevec >= xlim[0]) & (timevec <= xlim[1])]
-    #     TFR = TFR[:, ((timevec >= xlim[0]) & (timevec <= xlim[1]))]
-
-    # # Now set update xlim to have values guaranteed to exist
-    # xlim_new = (tvec[0], tvec[-1])
-    # # for now, a temporary variable for xlim
-    # # xlim_new = (timevec[0], timevec[-1])
-
     # f.f is the figure handle!
     f = ac.FigSpec()
-
-    # # make the extent the entire extent for now
-    # extent_xy = [xlim_new[0], xlim_new[-1], freqvec[-1], freqvec[0]]
-    # pc = f.ax['spec'].imshow(TFR, extent=extent_xy, aspect='auto', origin='upper')
 
     # load spec data
     spec = specfn.Spec(f_spec)
@@ -73,9 +46,13 @@ def pspec_dpl(f_spec, f_dpl, dfig, p_dict, key_types, xlim=None, ylim=None):
     # data_dipole = np.loadtxt(open(f_dpl, 'r'))
     dpl = dipolefn.Dipole(f_dpl)
 
+    # If f_param supplied, renormalize dipole data
+    if f_param:
+        dpl.baseline_renormalize(f_param)
+        dpl.convert_fAm_to_nAm()
+
     # plot routine
     dpl.plot(f.ax['dipole'], xlim, 'agg')
-    # dpl.plot(f.ax['dipole'], xlim_new, 'agg')
 
     # Plot Welch data
     # Use try/except for backwards compatibility
@@ -110,13 +87,6 @@ def pspec_dpl(f_spec, f_dpl, dfig, p_dict, key_types, xlim=None, ylim=None):
 
 # Spectral plotting kernel with alpha feed histogram for ONE simulation run
 def pspec_with_hist(f_spec, f_dpl, f_spk, dfig, f_param, key_types, xlim=None, ylim=None):
-    # Load data from file
-    # data_spec = np.load(f_spec)
-
-    # timevec = data_spec['time']
-    # freqvec = data_spec['freq']
-    # TFR = data_spec['TFR']
-
     # Generate file prefix 
     fprefix = f_spec.split('/')[-1].split('.')[0]
 
@@ -126,36 +96,7 @@ def pspec_with_hist(f_spec, f_dpl, f_spk, dfig, f_param, key_types, xlim=None, y
     # load param dict
     _, p_dict = paramrw.read(f_param)
 
-    # Truncate timevec and TFR based on xlim values
-    # if xlim:
-    #     tvec = timevec[(timevec >= xlim[0]) & (timevec <= xlim[1])]
-    #     TFR = TFR[:, (timevec >= xlim[0]) & (timevec <= xlim[1])]
-
-    # # Now set update xlim to have values guaranteed to exist
-    # xlim_new = (tvec[0], tvec[-1])
-
-    # # set xmin value
-    # if xlim[0] > timevec[0]:
-    #     xmin = xlim[0]
-    # else:
-    #     xmin = timevec[0]
-
-    # # set xmax value
-    # if xlim[1] == 'tstop':
-    #     xmax = p_dict['tstop']
-    # else:
-    #     xmax = xlim[1]
-
-    # # vector indeces corresponding to xmin and xmax
-    # xmin_ind = xmin / p_dict['dt']
-    # xmax_ind = xmax / p_dict['dt']
-
-    # f.f is the figure handle!
     f = ac.FigSpecWithHist()
-
-    # extent_xy = [xlim_new[0], xlim_new[-1], freqvec[-1], freqvec[0]]
-    # pc = f.ax['spec'].imshow(TFR, extent=extent_xy, aspect='auto', origin='upper')
-    # pc = f.ax['spec'].imshow(TFR[:,xmin_ind:xmax_ind], extent=[xmin, xmax+1, freqvec[-1], freqvec[0]], aspect='auto', origin='upper')
 
     # load spec data
     spec = specfn.Spec(f_spec)
@@ -175,14 +116,6 @@ def pspec_with_hist(f_spec, f_dpl, f_spk, dfig, f_param, key_types, xlim=None, y
     # plot routine
     dpl.plot(f.ax['dipole'], xlim_new, 'agg')
 
-    # data_dipole = np.loadtxt(open(f_dpl, 'r'))
-
-    # t_dpl = data_dipole[xmin_ind:xmax_ind+1, 0]
-    # dp_total = data_dipole[xmin_ind:xmax_ind+1, 1]
-
-    # f.ax['dipole'].plot(t_dpl, dp_total)
-    # x = (xmin, xmax)
-
     # grab alpha feed data. spikes_from_file() from spikefn.py
     s_dict = spikefn.spikes_from_file(f_param, f_spk)
 
@@ -199,9 +132,6 @@ def pspec_with_hist(f_spec, f_dpl, f_spk, dfig, f_param, key_types, xlim=None, y
 
     # Proximal feed
     hist['feed_prox'] = f.ax['feed_prox'].hist(s_dict['alpha_feed_prox'].spike_list, bins, range=[xlim_new[0], xlim_new[1]], color='red', label='Proximal feed', alpha=0.5)
-
-    # f.ax['testing'] = f.ax['feed_prox'].twinx()
-    # hist['feed_dist'] = f.ax['testing'].hist(s_dict['alpha_feed_dist'].spike_list, bins, range=[xmin, xmax], color='green', label='Distal feed', alpha=0.5)
 
     # Distal feed
     hist['feed_dist'] = f.ax['feed_dist'].hist(s_dict['alpha_feed_dist'].spike_list, bins, range=[xlim_new[0], xlim_new[1]], color='green', label='Distal feed')

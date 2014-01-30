@@ -1,8 +1,8 @@
 # specfn.py - Average time-frequency energy representation using Morlet wavelet method
 #
-# v 1.8.24sc
-# rev 2013-07-29 (MS: updated Spec().max() to allow for sorting over frequencies)
-# last major: (MS: Added backwards compatibility to Spec() file parsing. Updated saving routine in average())
+# v 1.8.26sc
+# rev 2014-01-30 (MS: fixed bug in analysis_typespecific() when running sim with multiple expmt groups. Redundant with Master 1.8.20)
+# last major: (MS: updated Spec().max() to allow for sorting over frequencies)
 
 import os
 import sys
@@ -512,6 +512,7 @@ class MorletSpec():
 # average spec data for a given set of files
 def average(fname, fspec_list):
     for fspec in fspec_list:
+        print fspec
         # load spec data
         spec = Spec(fspec)
 
@@ -536,7 +537,8 @@ def average(fname, fspec_list):
     # else, assume only aggregate data is present
     # Terrible way to save due to how np.savez_compressed works (i.e. must specify key=value) 
     if 'max_agg' in x.keys():
-        max_agg = (x['max_agg']['p_at_max'], x['max_agg']['t_at_max'], x['max_agg']['f_at_max'])
+        max_agg = (x['max_agg']['p'], x['max_agg']['t'], x['max_agg']['f'])
+        # max_agg = (x['max_agg']['p_at_max'], x['max_agg']['t_at_max'], x['max_agg']['f_at_max'])
 
         np.savez_compressed(fname, t_agg=x['agg']['t'], f_agg=x['agg']['f'], TFR_agg=x['agg']['TFR'], t_L2=x['L2']['t'], f_L2=x['L2']['f'], TFR_L2=x['L2']['TFR'], t_L5=x['L5']['t'], f_L5=x['L5']['f'], TFR_L5=x['L5']['TFR'], max_agg=max_agg, pgram_p=x['pgram']['p'], pgram_f=x['pgram']['f'])
 
@@ -771,20 +773,20 @@ def analysis_typespecific(ddata, opts=None):
         param_tmp = ddata.file_match(expmt_group, 'param')
         list_param.extend(param_tmp)
 
+        # Get exp prefix for each trial in this expmt goup
+        exp_prefix_list = [fio.strip_extprefix(fparam) for fparam in param_tmp]
+
         # get the list of dipoles
         if opts_run['type'] in ('dpl', 'dpl_laminar'):
             list_ts.extend(ddata.file_match(expmt_group, 'rawdpl'))
+            list_spec.extend([ddata.create_filename(expmt_group, 'rawspec', exp_prefix) for exp_prefix in exp_prefix_list])
 
         elif opts_run['type'] == 'current':
             list_ts.extend(ddata.file_match(expmt_group, 'rawcurrent'))
-
-        # create list of spec output names
-        # this is sorted because of file_match
-        exp_prefix_list = [fio.strip_extprefix(fparam) for fparam in param_tmp]
+            list_spec.extend([ddata.create_filename(expmt_group, 'rawspeccurrent', exp_prefix) for exp_prefix in exp_prefix_list])
 
     # perform analysis on all runs from all exmpts at same time
     if opts_run['type'] == 'current':
-        list_spec.extend([ddata.create_filename(expmt_group, 'rawspeccurrent', exp_prefix) for exp_prefix in exp_prefix_list])
 
         if opts_run['runtype'] == 'parallel':
             pl = mp.Pool()
@@ -801,7 +803,7 @@ def analysis_typespecific(ddata, opts=None):
 
     elif opts_run['type'] == 'dpl_laminar':
         # these should be OUTPUT filenames that are being generated
-        list_spec.extend([ddata.create_filename(expmt_group, 'rawspec', exp_prefix) for exp_prefix in exp_prefix_list])
+        print list_spec
 
         # also in this case, the original spec results will be overwritten
         # and replaced by laminar specific ones and aggregate ones
