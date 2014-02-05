@@ -1,8 +1,8 @@
 # clidefs.py - these are all of the function defs for the cli
 #
-# v 1.8.23
-# rev 2013-12-11 (SL: Added some pgamma plots)
-# last major: (SL: my concurrent changes may have broken MS's. We have to figure this one out.)
+# v 1.8.24
+# rev 2013-02-05 (MS: Merged SpecClass with master)
+# last major: (SL: Added some pgamma plots)
 
 # Standard modules
 import fnmatch, os, re, sys
@@ -388,9 +388,11 @@ def exec_specmax(ddata, opts):
         'expmt_group': '',
         'n_sim': 0,
         'n_trial': 0,
-        't_interval': [0., -1],
-        'f_interval': [0., -1],
-        'layer': 'agg',
+        't_interval': None,
+        'f_interval': None,
+        'f_sort': None,
+        # 't_interval': [0., -1],
+        # 'f_interval': [0., -1],
     }
 
     args_check(p, opts)
@@ -401,56 +403,64 @@ def exec_specmax(ddata, opts):
     if not p['expmt_group']:
         p['expmt_group'] = ddata.expmt_groups[0]
 
-    # load the associated dipole and spec file
+    # Get the associated dipole and spec file
     fspec = ddata.return_specific_filename(p['expmt_group'], 'rawspec', p['n_sim'], p['n_trial'])
 
+    # Load the spec data
+    spec = specfn.Spec(fspec)
+
     # get max data
-    # data_max = specfn.specmax(fspec, p)
-    data = specfn.read(fspec)
-    print data.keys()
+    data_max = spec.max('agg', p['t_interval'], p['f_interval'], p['f_sort'])
 
-    # grab the min and max f
-    f_min, f_max = p['f_interval']
+    if data_max:
+        print "Max power of %4.2e at f of %4.2f Hz at %4.3f ms" % (data_max['pwr'], data_max['f_at_max'], data_max['t_at_max'])
 
-    # set f_max
-    if f_max < 0:
-        f_max = data['freq'][-1]
+    # # data_max = specfn.specmax(fspec, p)
+    # data = specfn.read(fspec)
+    # print data.keys()
 
-    # create an f_mask for the bounds of f, inclusive
-    f_mask = (data['freq']>=f_min) & (data['freq']<=f_max)
+    # # grab the min and max f
+    # f_min, f_max = p['f_interval']
 
-    # do the same for t
-    t_min, t_max = p['t_interval']
-    if t_max < 0:
-        t_max = data['time'][-1]
+    # # set f_max
+    # if f_max < 0:
+    #     f_max = data['freq'][-1]
 
-    t_mask = (data['time']>=t_min) & (data['time']<=t_max)
+    # # create an f_mask for the bounds of f, inclusive
+    # f_mask = (data['freq']>=f_min) & (data['freq']<=f_max)
 
-    # use the masks truncate these appropriately
-    TFR_key = 'TFR'
+    # # do the same for t
+    # t_min, t_max = p['t_interval']
+    # if t_max < 0:
+    #     t_max = data['time'][-1]
 
-    if p['layer'] in ('L2', 'L5'):
-        TFR_key += '_%s' % p['layer']
+    # t_mask = (data['time']>=t_min) & (data['time']<=t_max)
 
-    TFR_fcut = data[TFR_key][f_mask, :]
-    # TFR_fcut = data['TFR'][f_mask, :]
-    TFR_tfcut = TFR_fcut[:, t_mask]
+    # # use the masks truncate these appropriately
+    # TFR_key = 'TFR'
 
-    f_fcut = data['freq'][f_mask]
-    t_tcut = data['time'][t_mask]
+    # if p['layer'] in ('L2', 'L5'):
+    #     TFR_key += '_%s' % p['layer']
 
-    # find the max power over this new range
-    # the max_mask is for the entire TFR
-    pwr_max = TFR_tfcut.max()
-    max_mask = (TFR_tfcut==pwr_max)
+    # TFR_fcut = data[TFR_key][f_mask, :]
+    # # TFR_fcut = data['TFR'][f_mask, :]
+    # TFR_tfcut = TFR_fcut[:, t_mask]
 
-    # find the t and f at max
-    # these are slightly crude and do not allow for the possibility of multiple maxes (rare?)
-    t_at_max = t_tcut[max_mask.sum(axis=0)==1]
-    f_at_max = f_fcut[max_mask.sum(axis=1)==1]
+    # f_fcut = data['freq'][f_mask]
+    # t_tcut = data['time'][t_mask]
 
-    # friendly printout
-    print "Max power of %4.2e at f of %4.2f Hz at %4.3f ms" % (pwr_max, f_at_max, t_at_max)
+    # # find the max power over this new range
+    # # the max_mask is for the entire TFR
+    # pwr_max = TFR_tfcut.max()
+    # max_mask = (TFR_tfcut==pwr_max)
+
+    # # find the t and f at max
+    # # these are slightly crude and do not allow for the possibility of multiple maxes (rare?)
+    # t_at_max = t_tcut[max_mask.sum(axis=0)==1]
+    # f_at_max = f_fcut[max_mask.sum(axis=1)==1]
+
+    # # friendly printout
+    # print "Max power of %4.2e at f of %4.2f Hz at %4.3f ms" % (pwr_max, f_at_max, t_at_max)
 
     # pd_at_max = 1000./f_at_max
     # t_start = t_at_max - pd_at_max/2.
@@ -465,7 +475,145 @@ def exec_specmax(ddata, opts):
     #     'f': f_at_max,
     # }
 
-    print "Max power of %4.2e at f of %4.2f Hz at %4.3f ms" % (data_max['pwr'], data_max['f_at_max'], data_max['t_at_max'])
+def exec_specmax_dpl_match(ddata, opts):
+    p = {
+        'expmt_group': '',
+        'n_sim': 0,
+        'trials': [0, -1],
+        't_interval': None,
+        'f_interval': None,
+        'f_sort': None,
+    }
+
+    args_check(p, opts)
+
+    # set expmt group
+    if not p['expmt_group']:
+        p['expmt_group'] = ddata.expmt_groups[0]
+
+    # set directory to save fig in and check that it exists
+    dir_fig = os.path.join(ddata.dsim, p['expmt_group'], 'figint')
+    fio.dir_create(dir_fig)
+
+    # if p['trials'][1] is -1, assume all trials are wanted
+    # 1 is subtracted from N_trials to be consistent with manual entry of trial range
+    if p['trials'][1] == -1:
+        p_exp = paramrw.ExpParams(ddata.fparam)
+        p['trials'][1] = p_exp.N_trials - 1
+
+    # Get spec, dpl, and param files
+    # Sorry for lack of readability
+    spec_list = [ddata.return_specific_filename(p['expmt_group'], 'rawspec', p['n_sim'], i) for i in range(p['trials'][0], p['trials'][1]+1)]
+    dpl_list = [ddata.return_specific_filename(p['expmt_group'], 'rawdpl', p['n_sim'], i) for i in range(p['trials'][0], p['trials'][1]+1)]
+    param_list = [ddata.return_specific_filename(p['expmt_group'], 'param', p['n_sim'], i) for i in range(p['trials'][0], p['trials'][1]+1)]
+
+    # Get max spectral data
+    data_max_list = []
+
+    for fspec in spec_list:
+        spec = specfn.Spec(fspec) 
+        data_max_list.append(spec.max('agg', p['t_interval'], p['f_interval'], p['f_sort']))
+
+    # create fig name
+    if p['f_sort']:
+        fname_short = "sim-%03i-T%03i-T%03d-sort-%i-%i" %(p['n_sim'], p['trials'][0], p['trials'][1], p['f_sort'][0], p['f_sort'][1])
+
+    else:
+        fname_short = "sim-%03i-T%03i-T%03i" %(p['n_sim'], p['trials'][0], p['trials'][1])
+
+    fname = os.path.join(dir_fig, fname_short)
+
+    # plot time-series over proper intervals
+    dipolefn.plot_specmax_interval(fname, dpl_list, param_list, data_max_list)
+
+def exec_specmax_dpl_tmpl(ddata, opts):
+    p = {
+        'expmt_group': '',
+        'n_sim': 0,
+        'trials': [0, -1],
+        't_interval': None,
+        'f_interval': None,
+        'f_sort': None,
+    }
+
+    args_check(p, opts)
+
+    # set expmt group
+    if not p['expmt_group']:
+        p['expmt_group'] = ddata.expmt_groups[0]
+
+    # set directory to save template in and check that it exists
+    dir_out = os.path.join(ddata.dsim, p['expmt_group'], 'tmpldpl')
+    fio.dir_create(dir_out)
+
+    # if p['trials'][1] is -1, assume all trials are wanted
+    # 1 is subtracted from N_trials to be consistent with manual entry of trial range
+    if p['trials'][1] == -1:
+        p_exp = paramrw.ExpParams(ddata.fparam)
+        p['trials'][1] = p_exp.N_trials - 1
+
+    # Get spec, dpl, and param files
+    # Sorry for lack of readability
+    spec_list = [ddata.return_specific_filename(p['expmt_group'], 'rawspec', p['n_sim'], i) for i in range(p['trials'][0], p['trials'][1]+1)]
+    dpl_list = [ddata.return_specific_filename(p['expmt_group'], 'rawdpl', p['n_sim'], i) for i in range(p['trials'][0], p['trials'][1]+1)]
+    param_list = [ddata.return_specific_filename(p['expmt_group'], 'param', p['n_sim'], i) for i in range(p['trials'][0], p['trials'][1]+1)]
+
+    # Get max spectral data
+    data_max_list = []
+
+    for fspec in spec_list:
+        spec = specfn.Spec(fspec) 
+        data_max_list.append(spec.max('agg', p['t_interval'], p['f_interval'], p['f_sort']))
+
+    # Get time intervals of max spectral pwr
+    t_interval_list = [dmax['t_int'] for dmax in data_max_list if dmax is not None]
+
+    # truncate dpl_list to include only sorted trials
+    # kind of crazy that this works. Just sayin'...
+    dpl_list = [fdpl for fdpl, dmax in it.izip(dpl_list, data_max_list) if dmax is not None]
+
+    # create file name
+    if p['f_sort']:
+        fname_short = "sim-%03i-T%03i-T%03d-sort-%i-%i-tmpldpl.txt" %(p['n_sim'], p['trials'][0], p['trials'][1], p['f_sort'][0], p['f_sort'][1])
+
+    else:
+        fname_short = "sim-%03i-T%03i-T%03i-tmpldpl.txt" %(p['n_sim'], p['trials'][0], p['trials'][1])
+
+    fname = os.path.join(dir_out, fname_short)
+
+    # Create dpl template
+    dipolefn.create_template(fname, dpl_list, param_list, t_interval_list)
+
+def exec_plot_dpl_tmpl(ddata, opts):
+    p = {
+        'expmt_group': '',
+    }
+
+    args_check(p, opts)
+
+    # set expmt group
+    if not p['expmt_group']:
+        p['expmt_group'] = ddata.expmt_groups[0]
+
+    # set directory to save template in and check that it exists
+    dir_out = os.path.join(ddata.dsim, p['expmt_group'], 'figtmpldpl')
+    fio.dir_create(dir_out)
+
+    # get template dpl data
+    dpl_list = fio.file_match(os.path.join(ddata.dsim, p['expmt_group']), '-tmpldpl.txt')
+
+    # create file name list
+    # prefix_list = [fdpl.split('/')[-1].split('-tmpldpl')[0] for fdpl in dpl_list] 
+    # fname_list = [os.path.join(dir_out, prefix+'-tmpldpl.png') for prefix in prefix_list]
+
+    plot_dict = {
+        'xlim': None,
+        'ylim': None,
+    }
+
+    for fdpl in dpl_list:
+        print fdpl
+        dipolefn.pdipole(fdpl, dir_out, plot_dict)
 
 # search for the min in a dipole over specified interval
 def exec_dipolemin(ddata, expmt_group, n_sim, n_trial, t_interval):
@@ -584,16 +732,17 @@ def exec_avgtrials(ddata, datatype):
 
             # average spec data
             elif datakey == 'rawspec':
-                # load TFR data into np array and avg by summing and dividing by n_trials 
-                data_for_avg = np.array([np.load(file)['TFR'] for file in unique_list])
-                spec_avg = data_for_avg.sum(axis=0)/data_for_avg.shape[0]
+                specfn.average(fname_unique, unique_list)
+                # # load TFR data into np array and avg by summing and dividing by n_trials 
+                # data_for_avg = np.array([np.load(file)['TFR'] for file in unique_list])
+                # spec_avg = data_for_avg.sum(axis=0)/data_for_avg.shape[0]
 
-                # load time and freq vectors from the first item on the list, assume all same
-                timevec = np.load(unique_list[0])['time']
-                freqvec = np.load(unique_list[0])['freq']
+                # # load time and freq vectors from the first item on the list, assume all same
+                # timevec = np.load(unique_list[0])['time']
+                # freqvec = np.load(unique_list[0])['freq']
 
-                # save the aggregate info
-                np.savez_compressed(fname_unique, time=timevec, freq=freqvec, TFR=spec_avg)
+                # # save the aggregate info
+                # np.savez_compressed(fname_unique, time=timevec, freq=freqvec, TFR=spec_avg)
 
 # run the spectral analyses on the somatic current time series
 def exec_spec_current(ddata, opts_in=None):
@@ -651,7 +800,12 @@ def exec_spec_stationary_avg(ddata, dsim, maxpwr):
         print "now doing spec freq-pwr analysis"
 
     # perform time-averaged stationary analysis
-    specpwr_results = [specfn.specpwr_stationary_avg(fspec) for fspec in fspec_list]
+    # specpwr_results = [specfn.specpwr_stationary_avg(fspec) for fspec in fspec_list]
+    specpwr_results = []
+
+    for fspec in fspec_list:
+        spec = specfn.Spec(fspec)
+        specpwr_results.append(spec.stationary_avg())
 
     # plot for whole simulation
     if analysis_type == 'sim':
@@ -697,9 +851,15 @@ def exec_spec_avg_stationary_avg(ddata, dsim, opts):
     # If no avg spec data found, generate it.
     if not spec_results_avged:
         exec_avgtrials(ddata, 'spec')  
+        spec_results_avged = fio.file_match(ddata.dsim, '-specavg.npz')
 
     # perform time-averaged stationarity analysis
-    specpwr_results = [specfn.specpwr_stationary_avg(dspec) for dspec in spec_results_avged]
+    # specpwr_results = [specfn.specpwr_stationary_avg(dspec) for dspec in spec_results_avged]
+    specpwr_results = []
+
+    for fspec in spec_results_avged:
+        spec = specfn.Spec(fspec)
+        specpwr_results.append(spec.stationary_avg())
 
     # create fparam list to match avg'ed data
     N_trials = p_exp.N_trials
@@ -715,7 +875,12 @@ def exec_spec_avg_stationary_avg(ddata, dsim, opts):
             raw_spec_data = fio.file_match(ddata.dsim, '-spec.npz')
 
             # perform freqpwr analysis on raw data
-            raw_specpwr = [specfn.specpwr_stationary_avg(dspec)['p_avg'] for dspec in raw_spec_data]
+            # raw_specpwr = [specfn.specpwr_stationary_avg(dspec)['p_avg'] for dspec in raw_spec_data]
+            raw_specpwr = []
+
+            for fspec in raw_spec_data:
+                spec = specfn.Spec(fspec)
+                raw_specpwr.append(spec.stationary_avg()['p_avg'])
 
             # calculate standard error
             error_vec = specfn.calc_stderror(raw_specpwr)
@@ -793,9 +958,14 @@ def freqpwr_with_hist(ddata, dsim):
         specfn.pfreqpwr_with_hist(file_name, freqpwr_result, f_spk, gid_dict, p_dict, key_types)
 
 # runs plotfn.pall *but* checks to make sure there are spec data
-def exec_replot(ddata, xlim=[0, 'tstop']):
-    # need p_exp, spec_results, gid_dict, and tstop.
-    # fparam = fio.file_match(ddata.dsim, '.param')[0]
+def exec_replot(ddata, opts):
+# def regenerate_plots(ddata, xlim=[0, 'tstop']):
+    p = {
+        'xlim': None,
+        'ylim': None,
+    }
+
+    args_check(p, opts)
 
     # recreate p_exp ... don't like this
     # ** should be guaranteed to be identical **
@@ -813,19 +983,26 @@ def exec_replot(ddata, xlim=[0, 'tstop']):
         # spec_results = exec_spec_regenerate(ddata)
 
     # run our core pall plot
-    plotfn.pall(ddata, p_exp, xlim)
+    plotfn.pall(ddata, p_exp, p['xlim'], p['ylim'])
 
 # function to add alpha feed hists
-def exec_addalphahist(ddata, xlim=[0, 'tstop']):
+def exec_addalphahist(ddata, opts):
+# def exec_addalphahist(ddata, xlim=[0, 'tstop']):
+    p = {
+        'xlim': None,
+        'ylim': None,
+    }
+
+    args_check(p, opts)
+
     p_exp = paramrw.ExpParams(ddata.fparam)
-    # fspec_list = fio.file_match(ddata.dsim, '-spec.npz')
 
     # generate data if no spec exists here
     if not fio.file_match(ddata.dsim, '-spec.npz'):
         print "No saved spec data found. Performing spec anaylsis ... "
         exec_spec_regenerate(ddata)
 
-    plotfn.pdpl_pspec_with_hist(ddata, p_exp, xlim)
+    plotfn.pdpl_pspec_with_hist(ddata, p_exp, p['xlim'], p['ylim'])
     # plotfn.pdpl_pspec_with_hist(ddata, p_exp, spec_list, xlim)
 
 def exec_aggregatespec(ddata, labels):
@@ -960,10 +1137,12 @@ def exec_plotaverages(ddata, ylim=[]):
     if dpl_list:
         # new input to dipolefn
         pdipole_dict = {
-            'xmin': 0.,
-            'xmax': None,
-            'ymin': None,
-            'ymax': None,
+            'xlim': None,
+            'ylim': None,
+            # 'xmin': 0.,
+            # 'xmax': None,
+            # 'ymin': None,
+            # 'ymax': None,
         }
 
         # if there is a length, assume it's 2 (it should be!)
@@ -973,7 +1152,7 @@ def exec_plotaverages(ddata, ylim=[]):
 
         if runtype == 'debug':
             for f_dpl, f_param, dfig_dpl in it.izip(dpl_list, fparam_list, dfig_dpl_list):
-                dipolefn.pdipole(f_dpl, f_param, dfig_dpl, key_types, pdipole_dict)
+                dipolefn.pdipole(f_dpl, dfig_dpl, pdipole_dict, f_param, key_types)
 
         elif runtype == 'parallel':
             pl = Pool()
@@ -990,8 +1169,8 @@ def exec_plotaverages(ddata, ylim=[]):
     # if avg spec data exists
     if spec_list:
         if runtype == 'debug':
-            for f_spec, f_dpl, dfig_spec, pdict in it.izip(spec_list, dpl_list, dfig_spec_list, pdict_list):
-                pspec.pspec_dpl(f_spec, f_dpl, dfig_spec, pdict, key_types)
+            for f_spec, f_dpl, f_param, dfig_spec, pdict in it.izip(spec_list, dpl_list, fparam_list, dfig_spec_list, pdict_list):
+                pspec.pspec_dpl(f_spec, f_dpl, dfig_spec, pdict, key_types, f_param=f_param)
 
         elif runtype == 'parallel':
             pl = Pool()

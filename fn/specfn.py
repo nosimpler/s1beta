@@ -1,8 +1,8 @@
 # specfn.py - Average time-frequency energy representation using Morlet wavelet method
 #
-# v 1.8.22
-# rev 2013-11-19 (SL: some minor reorganization?)
-# last major: (MS: Fixed bug in analysis_typespecific for sims with multiple expmt groups)
+# v 1.8.24
+# rev 2014-02-05 (MS: Merged SpecClass with master)
+# last major: (SL: some minor reorganization?)
 
 import os
 import sys
@@ -49,6 +49,248 @@ def read(fdata_spec, type='dpl'):
         }
 
         return spec_L2, spec_L5
+
+class Spec():
+    def __init__(self, fspec, dtype='dpl'):
+        # save dtype
+        self.dtype = dtype
+
+        # save details of file
+        # may be better ways of doing this...
+        self.fspec = fspec
+        self.expmt = fspec.split('/')[6].split('.')[0]
+        self.fname = fspec.split('/')[-1].split('-spec')[0]
+
+        # parse data
+        self.__parse_f(fspec)
+
+    def __parse_f(self, fspec):
+        data_spec = np.load(fspec)
+
+        if self.dtype == 'dpl':
+            self.spec = {}
+
+            # Try to load aggregate spec data
+            try:
+                self.spec['agg'] = {
+                    't': data_spec['t_agg'],
+                    'f': data_spec['f_agg'],
+                    'TFR': data_spec['TFR_agg'],
+                }
+
+            except KeyError:
+                # Try loading aggregate spec data using old keys
+                try:
+                    self.spec['agg'] = {
+                        't': data_spec['time'],
+                        'f': data_spec['freq'],
+                        'TFR': data_spec['TFR'],
+                    }
+                except KeyError:
+                    print "No aggregate spec data found. Don't use fns that require it..."
+
+            # Try loading Layer specific data
+            try:
+                self.spec['L2'] = {
+                    't': data_spec['t_L2'],
+                    'f': data_spec['f_L2'],
+                    'TFR': data_spec['TFR_L2'],
+                }
+
+                self.spec['L5'] = {
+                    't': data_spec['t_L5'],
+                    'f': data_spec['f_L5'],
+                    'TFR': data_spec['TFR_L5'],
+                }
+
+            except KeyError:
+                print "All or some layer data is missing. Don't use fns that require it..."
+
+            # Try loading periodigram data
+            try:
+                self.spec['pgram'] = {
+                    'p': data_spec['p_pgram'],
+                    'f': data_spec['f_pgram'],
+                }
+
+            except KeyError:
+                try:
+                    self.spec['pgram'] = {
+                        'p': data_spec['pgram_p'],
+                        'f': data_spec['pgram_f'],
+                    }
+                except KeyError:
+                    print "No periodigram data found. Don't use fns that require it..."
+
+            # Try loading aggregate max spectral data
+            try:
+                self.spec['max_agg'] = {
+                    'p': data_spec['max_agg'][0],
+                    't': data_spec['max_agg'][1],
+                    'f': data_spec['max_agg'][2],
+                }
+
+            except KeyError:
+                print "No aggregate max spectral data found. Don't use fns that require it..."
+
+        elif self.dtype == 'current':
+            self.spec = {
+                'L2': {
+                    't': data_spec['t_L2'],
+                    'f': data_spec['f_L2'],
+                    'TFR': data_spec['TFR_L2'],
+                },
+
+                'L5': {
+                    't': data_spec['t_L5'],
+                    'f': data_spec['f_L5'],
+                    'TFR': data_spec['TFR_L5'],
+                }
+            }
+
+    # Truncate t, f, and TFR for a specific layer over specified t and f intervals
+    # Be warned: MODIFIES THE CLASS INTERNALLY
+    def truncate(self, layer, t_interval, f_interval):
+        self.spec[layer] = self.truncate_ext(layer, t_interval, f_interval)
+
+    # Truncate t, f, and TFR for a specific layer over specified t and f intervals
+    # Only returns truncated values. DOES NOT MODIFY THE CLASS INTERNALLY
+    def truncate_ext(self, layer, t_interval, f_interval):
+        # set f_max and f_min
+        if f_interval is None:
+            f_min = self.spec[layer]['f'][0]
+            f_max = self.spec[layer]['f'][-1]
+
+        else:
+            f_min, f_max = f_interval
+
+        # create an f_mask for the bounds of f, inclusive
+        f_mask = (self.spec[layer]['f']>=f_min) & (self.spec[layer]['f']<=f_max)
+
+        # do the same for t
+        if t_interval is None:
+            t_min = self.spec[layer]['t'][0]
+            t_max = self.spec[layer]['t'][-1]
+
+        else:
+            t_min, t_max = t_interval
+
+        t_mask = (self.spec[layer]['t']>=t_min) & (self.spec[layer]['t']<=t_max)
+
+        # use the masks truncate these appropriately
+        TFR_fcut = self.spec[layer]['TFR'][f_mask, :]
+        TFR_tfcut = TFR_fcut[:, t_mask]
+
+        f_fcut = self.spec[layer]['f'][f_mask]
+        t_tcut = self.spec[layer]['t'][t_mask]
+         
+        return {
+            't': t_tcut, 
+            'f': f_fcut, 
+            'TFR': TFR_tfcut,
+        }
+
+    # find the max spectral power over specified time and frequency intervals
+    def max(self, layer, t_interval=None, f_interval=None, f_sort=None):
+        # If f_sort not provided, sort over all frequencies
+        if not f_sort:
+            f_sort = (self.spec['agg']['f'][0], self.spec['agg']['f'][-1])
+
+        # If f_sort is -1, assume upper abound is highest frequency
+        elif f_sort[1] < 0:
+            f_sort[1] = self.spec['agg']['f'][-1]
+
+        # Only continue if absolute max of spectral power occurs at f in range of f_sorted
+        # Add +1 to f_sort[0] so range is inclusive
+        if self.spec['max_agg']['f'] not in np.arange(f_sort[0], f_sort[1]+1):
+            print "%s's absolute max spectral pwr does not occur between %i-%i Hz." %(self.fname, f_sort[0], f_sort[1])
+
+        else:
+            # truncate data based on specified intervals
+            dcut = self.truncate_ext(layer, t_interval, f_interval)
+
+            # find the max power over this new range
+            pwr_max = dcut['TFR'].max()
+            max_mask = (dcut['TFR']==pwr_max)
+
+            # find the t and f at max
+            # these are slightly crude and do not allow for the possibility of multiple maxes (rare?)
+            t_at_max = dcut['t'][max_mask.sum(axis=0)==1][0]
+            f_at_max = dcut['f'][max_mask.sum(axis=1)==1][0]
+
+            # if f_interval provided and lower bound is not zero, set pd_at_max with lower bound:
+            # otherwise set it based on f_at_max
+            if f_interval and f_interval[0] > 0:
+                pd_at_max = 1000./f_interval[0]
+            else:
+                pd_at_max = 1000./f_at_max
+
+            t_start = t_at_max - pd_at_max
+            t_end = t_at_max + pd_at_max
+
+            # output structure
+            data_max = {
+                'fname': self.fname,
+                'pwr': pwr_max,
+                't_int': [t_start, t_end],
+                't_at_max': t_at_max,
+                'f_at_max': f_at_max,
+            }
+
+            return data_max
+
+    # Averages spectral power over specified time interval for specified frequencies 
+    def stationary_avg(self, layer='agg', t_interval=None, f_interval=None):
+        # truncate data based on specified intervals
+        dcut = self.truncate_ext(layer, t_interval, f_interval)  
+
+        # avg TFR pwr over time
+        # axis = 1 sums over columns
+        pwr_avg = dcut['TFR'].sum(axis=1) / len(dcut['t'])
+
+        # Get max pwr and freq at which max pwr occurs
+        pwr_max = pwr_avg.max()
+        f_at_max = dcut['f'][pwr_avg==pwr_max]
+
+        return {
+            'p_avg': pwr_avg,
+            'p_max': pwr_max,
+            'f_max': f_at_max,
+            'freq': dcut['f'],
+            'expmt': self.expmt,
+        }
+
+    def plot_TFR(self, ax, layer='agg', xlim=None, ylim=None):
+        # truncate data based on specifed xlim and ylim
+        # xlim is a time interval
+        # ylim is a frequency interval
+        dcut = self.truncate_ext(layer, xlim, ylim)
+
+        # Update xlim to have values guaranteed to exist
+        xlim_new = (dcut['t'][0], dcut['t'][-1])
+        xmin, xmax = xlim_new
+
+        # Update ylim to have values guaranteed to exist
+        ylim_new = (dcut['f'][0], dcut['f'][-1])
+        ymin, ymax = ylim_new
+
+        # set extent of plot
+        # order is ymax, ymin so y-axis is inverted
+        extent_xy = [xmin, xmax, ymax, ymin]
+
+        # plot
+        im = ax.imshow(dcut['TFR'], extent=extent_xy, aspect='auto', origin='upper')
+
+        return im
+
+    def plot_pgram(self, ax, f_max=None):
+        # If f_max is not supplied, set it to highest freq of aggregate analysis
+        if f_max is None:
+            f_max = self.spec['agg']['f'][-1] 
+
+        # plot
+        ax.plot(self.spec['pgram']['f'], self.spec['pgram']['p'])
+        ax.set_xlim((0., f_max))
 
 # core class for frequency analysis assuming stationary time series
 class Welch():
@@ -257,6 +499,42 @@ class MorletSpec():
 
         return S
 
+# average spec data for a given set of files
+def average(fname, fspec_list):
+    for fspec in fspec_list:
+        print fspec
+        # load spec data
+        spec = Spec(fspec)
+
+        # if this is first file, copy spec data structure wholesale to x
+        if fspec is fspec_list[0]:
+            x = spec.spec
+
+        # else, iterate through spec data and add to x_agg
+        # there might be a more 'pythonic' way of doing this...
+        else:
+            for subdict in x.iterkeys():
+                for key in x[subdict].iterkeys(): 
+                    x[subdict][key] += spec.spec[subdict][key]
+
+    # poor man's mean
+    for subdict in x.iterkeys():
+        for key in x[subdict].iterkeys(): 
+            x[subdict][key] /= len(fspec_list)
+
+    # save data
+    # if max_agg is a key in x, assume all keys are present
+    # else, assume only aggregate data is present
+    # Terrible way to save due to how np.savez_compressed works (i.e. must specify key=value) 
+    if 'max_agg' in x.keys():
+        max_agg = (x['max_agg']['p'], x['max_agg']['t'], x['max_agg']['f'])
+        # max_agg = (x['max_agg']['p_at_max'], x['max_agg']['t_at_max'], x['max_agg']['f_at_max'])
+
+        np.savez_compressed(fname, t_agg=x['agg']['t'], f_agg=x['agg']['f'], TFR_agg=x['agg']['TFR'], t_L2=x['L2']['t'], f_L2=x['L2']['f'], TFR_L2=x['L2']['TFR'], t_L5=x['L5']['t'], f_L5=x['L5']['f'], TFR_L5=x['L5']['TFR'], max_agg=max_agg, pgram_p=x['pgram']['p'], pgram_f=x['pgram']['f'])
+
+    else:
+        np.savez_compressed(fname, t_agg=x['agg']['t'], f_agg=x['agg']['f'], TFR_agg=x['agg']['TFR'])
+
 # spectral plotting kernel should be simpler and take just a file name and an axis handle
 # Spectral plotting kernel for ONE simulation run
 # ax_spec is the axis handle. fspec is the file name
@@ -451,7 +729,7 @@ def spec_dpl_kernel(fparam, fts, fspec, f_max):
     pgram = Welch(dpl.t, dpl.dpl['agg'], p_dict['dt'])
 
     # Save spec results
-    np.savez_compressed(fspec, time=spec_agg.t, freq=spec_agg.f, TFR=spec_agg.TFR, max_agg=max_agg, t_L2=spec_L2.t, f_L2=spec_L2.f, TFR_L2=spec_L2.TFR, t_L5=spec_L5.t, f_L5=spec_L5.f, TFR_L5=spec_L5.TFR, pgram=pgram.P)
+    np.savez_compressed(fspec, time=spec_agg.t, freq=spec_agg.f, TFR=spec_agg.TFR, max_agg=max_agg, t_L2=spec_L2.t, f_L2=spec_L2.f, TFR_L2=spec_L2.TFR, t_L5=spec_L5.t, f_L5=spec_L5.f, TFR_L5=spec_L5.TFR, pgram_p=pgram.P, pgram_f=pgram.f)
 
 # Does spec analysis for all files in simulation directory
 # ddata comes from fileio
@@ -526,6 +804,7 @@ def analysis_typespecific(ddata, opts=None):
     elif opts_run['type'] == 'dpl_laminar':
         # these should be OUTPUT filenames that are being generated
         # list_spec.extend([ddata.create_filename(expmt_group, 'rawspec', exp_prefix) for exp_prefix in exp_prefix_list])
+        print list_spec
 
         # also in this case, the original spec results will be overwritten
         # and replaced by laminar specific ones and aggregate ones

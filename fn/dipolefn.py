@@ -1,8 +1,8 @@
 # dipolefn.py - dipole-based analysis functions
 #
-# v 1.8.22
-# rev 2013-11-19 (SL: minor change to getting lims)
-# last major: (MS: Updated pdipole_with_hist() to use new class spikefn.Extinputs())
+# v 1.8.24
+# rev 2014-02-05 (MS: Merged SpecClass with Master)
+# last major: (SL: minor change to getting lims)
 
 import fileio as fio
 import numpy as np
@@ -106,21 +106,34 @@ class Dipole():
         elif layer in self.dpl.keys():
             dpl_tmp = self.dpl[layer]
 
-        # setting xmin
-        if xlim[0] < 0.:
-            xmin = 0.
-        else:
-            xmin = xlim[0]
-
-        # set xmax
-        if xlim[1] > self.t[-1]:
-            xmax = self.t[-1]
-
-        elif xlim[1] == -1:
+        # set xmin and xmax
+        if xlim is None:
+            xmin = self.t[0]
             xmax = self.t[-1]
 
         else:
-            xmax = xlim[1]
+            xmin, xmax = xlim
+
+            if xmin < 0.:
+                xmin = 0.
+
+            if xmax < 0.:
+                xmax = self.f[-1]
+
+        # if xlim[0] < 0.:
+        #     xmin = 0.
+        # else:
+        #     xmin = xlim[0]
+
+        # # set xmax
+        # if xlim[1] > self.t[-1]:
+        #     xmax = self.t[-1]
+
+        # elif xlim[1] == -1:
+        #     xmax = self.t[-1]
+
+        # else:
+        #     xmax = xlim[1]
 
         # output t_tmp
         # t_tmp = self.t[(self.t > xmin) & (self.t < xmax)]
@@ -346,6 +359,47 @@ def calc_avgdpl_stimevoked(ddata):
             for t, x in it.izip(t_dpl, dpl_mean):
                 f.write("%03.3f\t%5.4f\n" % (t, x))
 
+# Creates a template of dpl activity by averaging dpl data over specified time intervals
+# Assumes t_intervals are all the same length
+def create_template(fname, dpl_list, param_list, t_interval_list):
+    # iterate over lists, load dpl data and average
+    for fdpl, fparam, t_int in it.izip(dpl_list, param_list, t_interval_list):
+        # load ts data
+        dpl = Dipole(fdpl)
+        dpl.baseline_renormalize(fparam)
+        # dpl.convert_fAm_to_nAm()
+
+        # truncate data based on time ranges specified in dmax
+        t_cut, dpl_tcut = dpl.truncate_ext(t_int[0], t_int[1])
+
+        if fdpl is dpl_list[0]:
+            x_dpl_agg = dpl_tcut['agg']
+            x_dpl_L2 = dpl_tcut['L2']
+            x_dpl_L5 = dpl_tcut['L5']
+
+        else:
+            x_dpl_agg += dpl_tcut['agg']
+            x_dpl_L2 += dpl_tcut['L2']
+            x_dpl_L5 += dpl_tcut['L5']
+
+    # poor man's mean
+    x_dpl_agg /= len(dpl_list)
+    x_dpl_L2 /= len(dpl_list)
+    x_dpl_L5 /= len(dpl_list)
+    
+    # create a tvec that is symmetric about zero and of proper length
+    # assume time intervals are identical length for all data
+    t_range = t_interval_list[0][1] - t_interval_list[0][0]
+    t_start = - t_range/2.
+    t_end = t_range / 2.
+    tvec = np.linspace(t_start, t_end, x_dpl_agg.shape[0])
+    # tvec = np.linspace(0, t_range, x_dpl_agg.shape[0])
+
+    # save to file
+    with open(fname, 'w') as f:
+        for t, x_agg, x_L2, x_L5 in it.izip(tvec, x_dpl_agg, x_dpl_L2, x_dpl_L5):
+            f.write("%03.3f\t%5.4f\t%5.4f\t%5.4f\n" % (t, x_agg, x_L2, x_L5))
+
 # one off function to plot linear regression
 def plinear_regression(ffig_dpl, fdpl):
     dpl = Dipole(fdpl)
@@ -397,27 +451,44 @@ def pdipole_ax(a, f_dpl, f_param):
 # single dipole file combination (incl. param file)
 # this should be done with an axis input too
 # two separate functions, a pdipole kernel function and a specific function for this simple plot
-def pdipole(f_dpl, f_param, dfig, key_types, plot_dict):
+def pdipole(f_dpl, dfig, plot_dict, f_param=None, key_types={}):
+# def pdipole(f_dpl, f_param, dfig, key_types, plot_dict):
     # dpl is an obj of Dipole() class
     dpl = Dipole(f_dpl)
-    dpl.baseline_renormalize(f_param)
+
+    if f_param:
+        dpl.baseline_renormalize(f_param)
+
+    dpl.convert_fAm_to_nAm()
 
     # split to find file prefix
     file_prefix = f_dpl.split('/')[-1].split('.')[0]
 
-    # grabbing the p_dict from the f_param
-    _, p_dict = paramrw.read(f_param)
 
-    # get xmin and xmax from the plot_dict
-    if plot_dict['xmin'] is None:
-        xmin = 0.
-    else:
-        xmin = plot_dict['xmin']
+    # parse xlim from plot_dict
+    if plot_dict['xlim'] is None:
+        xmin = dpl.t[0]
+        xmax = dpl.t[-1]
 
-    if plot_dict['xmax'] is None:
-        xmax = p_dict['tstop']
     else:
-        xmax = plot_dict['xmax']
+        xmin, xmax = plot_dict['xlim']
+
+        if xmin < 0.:
+            xmin = 0.
+
+        if xmax < 0.:
+            xmax = self.f[-1]
+
+    # # get xmin and xmax from the plot_dict
+    # if plot_dict['xmin'] is None:
+    #     xmin = 0.
+    # else:
+    #     xmin = plot_dict['xmin']
+
+    # if plot_dict['xmax'] is None:
+    #     xmax = p_dict['tstop']
+    # else:
+    #     xmax = plot_dict['xmax']
 
     # truncate them using logical indexing
     t_range = dpl.t[(dpl.t >= xmin) & (dpl.t <= xmax)]
@@ -427,14 +498,21 @@ def pdipole(f_dpl, f_param, dfig, key_types, plot_dict):
     f.ax0.plot(t_range, dpl_range)
 
     # sorry about the parity between vars here and above with xmin/xmax
-    if plot_dict['ymin'] is None or plot_dict['ymax'] is None:
+    if plot_dict['ylim'] is None:
+    # if plot_dict['ymin'] is None or plot_dict['ymax'] is None:
         pass
     else:
-        f.ax0.set_ylim(plot_dict['ymin'], plot_dict['ymax'])
+        f.ax0.set_ylim(plot_dict['ylim'][0], plot_dict['ylim'][1])
+        # f.ax0.set_ylim(plot_dict['ymin'], plot_dict['ymax'])
 
-    # useful for title strings
-    title_str = ac.create_title(p_dict, key_types)
-    f.f.suptitle(title_str)
+    # Title creation
+    if f_param and key_types:
+        # grabbing the p_dict from the f_param
+        _, p_dict = paramrw.read(f_param)
+
+        # useful for title strings
+        title_str = ac.create_title(p_dict, key_types)
+        f.f.suptitle(title_str)
 
     # create new fig name
     fig_name = os.path.join(dfig, file_prefix+'.png')
@@ -513,6 +591,7 @@ def pdipole_evoked(dfig, f_dpl, f_spk, f_param, ylim=[]):
 # Plots dipole with histogram of alpha feed inputs
 # this function has not been converted to use the Dipole() class yet
 def pdipole_with_hist(f_dpl, f_spk, dfig, f_param, key_types, plot_dict):
+# def pdipole_with_hist(f_dpl, f_spk, dfig, f_param, key_types, xlim=None):
 # def pdipole_with_hist(f_dpl, f_spk, dfig, f_param, key_types, xlim=[0., 'tstop']):
     # ddipole is dipole data
     # ddipole = np.loadtxt(f_dpl)
@@ -535,15 +614,6 @@ def pdipole_with_hist(f_dpl, f_spk, dfig, f_param, key_types, plot_dict):
     # # these are the vectors for now, but this is going to change
     # t_vec = ddipole[xmin:xmax+1, 0]
     # dp_total = ddipole[xmin:xmax+1, 1]
-
-    # # get feed input times.
-    # s_dict = spikefn.spikes_from_file(f_param, f_spk)
-
-    # # check for existance of alpha feed keys in s_dict.
-    # s_dict = spikefn.alpha_feed_verify(s_dict, p_dict)
-
-    # # Account for possible delays
-    # s_dict = spikefn.add_delay_times(s_dict, p_dict)
 
     # dpl is an obj of Dipole() class
     dpl = Dipole(f_dpl)
@@ -614,6 +684,10 @@ def pdipole_with_hist(f_dpl, f_spk, dfig, f_param, key_types, plot_dict):
     for key in f.ax.keys():
         if 'feed' in key:
             f.ax[key].legend()
+
+    # force xlim on histograms
+    f.ax['feed_prox'].set_xlim((xmin, xmax))
+    f.ax['feed_dist'].set_xlim((xmin, xmax))
 
     title_str = ac.create_title(p_dict, key_types)
     f.f.suptitle(title_str)
@@ -1064,3 +1138,53 @@ def pdipole_grid(ddata):
 
         f.savepng(fname)
         f.close()
+
+def plot_specmax_interval(fname, dpl_list, param_list, specmax_list):
+    N_trials = len([d for d in specmax_list if d is not None])
+
+    # instantiate figure
+    f = ac.FigInterval(N_trials+1)
+
+    # set spacing between plots
+    spacers = np.arange(0.5e-4, N_trials*1e-4, 1e-4) 
+
+    # invert order of spacers so first trial is at top of plot
+    spacers =  spacers[::-1]
+
+    # iterate over various lists and plot to axis
+    i = 0
+
+    for fdpl, fparam, dmax in it.izip(dpl_list, param_list, specmax_list):
+    # for fdpl, dmax, space in it.izip(dpl_list, specmax_list, spacers):
+        if dmax is not None:
+            # load ts data
+            dpl = Dipole(fdpl)
+            dpl.baseline_renormalize(fparam)
+            dpl.convert_fAm_to_nAm()
+
+            # truncate data based on time ranges specified in dmax
+            t_cut, dpl_tcut = dpl.truncate_ext(dmax['t_int'][0], dmax['t_int'][1])
+
+            # create a tvec that is symmetric about zero and of proper length
+            t_range = dmax['t_int'][1] - dmax['t_int'][0]
+            t_start = 0 - t_range / 2.
+            t_end = 0 + t_range / 2. 
+            tvec = np.linspace(t_start, t_end, dpl_tcut['agg'].shape[0])
+
+            # plot to proper height
+            f.ax['ts'].plot(tvec, dpl_tcut['agg']+spacers[i])
+
+            # add text with pertinent information
+            x_offset = f.ax['ts'].get_xlim()[1] + 25
+            f.ax['ts'].text(x_offset, spacers[i], 'freq: %s Hz\ntime: %s ms\n%s' %(dmax['f_at_max'],dmax['t_at_max'], dmax['fname']), fontsize=12, verticalalignment='center')
+
+            i += 1
+
+    # force xlim for now
+    # f.ax['ts'].set_xlim(-100, 100)
+
+    # save fig
+    f.savepng(fname+'.png')
+
+    # close fig
+    f.close()

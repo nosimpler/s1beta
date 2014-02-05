@@ -1,11 +1,11 @@
 # ac_manu_gamma.py - axes for gamma manuscript paper figs
 #
-# v 1.8.23
-# rev 2013-12-11 (SL: added FigSimpleSpec)
-# last major: (SL: fig changes)
+# v 1.8.24
+# rev 2014-02-05 (MS: commented out mpl.use('agg') to prevent conflict with __init__.py)
+# last major: (SL: added FigSimpleSpec)
 
 import matplotlib as mpl
-mpl.use('agg')
+# mpl.use('agg')
 import axes_create as ac
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
