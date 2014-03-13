@@ -1,8 +1,8 @@
 # specfn.py - Average time-frequency energy representation using Morlet wavelet method
 #
-# v 1.8.24
-# rev 2014-02-05 (MS: Merged SpecClass with master)
-# last major: (SL: some minor reorganization?)
+# v 1.8.25
+# rev 2014-03-13 (MS: Created PhaseLock() to calculate phaselocking values between two time-series)
+# last major: (MS: Merged SpecClass with master)
 
 import os
 import sys
@@ -535,6 +535,130 @@ def average(fname, fspec_list):
     else:
         np.savez_compressed(fname, t_agg=x['agg']['t'], f_agg=x['agg']['f'], TFR_agg=x['agg']['TFR'])
 
+class PhaseLock():
+    # def __init__(self, tsarray1, tsarray2, dt, f_max=1.):
+    def __init__(self, tsarray1, tsarray2, fparam, f_max=60.):
+        # Save time-series arrays as self variables
+        self.ts = {
+            1: tsarray1,
+            2: tsarray2,
+        }
+
+        # Get param dict
+        self.p = paramrw.read(fparam)[1]
+
+        # Set frequecies over which to sory
+        self.f = np.arange(1., f_max+1)
+
+        # Set width of Morlet wavelet (>= 5 suggested)
+        self.width = 7.
+
+        # Calculate sampling frequency
+        # self.fs = 1. / dt
+        self.fs = 1000. / self.p['dt']
+
+        self.data = self.__traces2PLS()
+
+    def __traces2PLS(self):
+        # Not sure what's going on here...
+        # nshuffle = 200;
+        nshuffle = 1;
+
+        # Construct timevec
+        tvec = np.arange(1, self.ts[1].shape[1]) / self.fs
+
+        # Prellocated arrays
+        # Check sizes
+        B = np.zeros((self.f.size, self.ts[1].shape[1]))
+        Bstat = np.zeros((self.f.size, self.ts[1].shape[1]))
+        Bplf = np.zeros((self.f.size, self.ts[1].shape[1]))
+
+        # Do the analysis
+        for i, freq in enumerate(self.f):
+            print('%i Hz' %freq)
+
+            # Get phase of signals for given freq
+            # Check sizes
+            B1 = self.__phasevec(freq, num_ts=1)
+            B2 = self.__phasevec(freq, num_ts=2)
+
+            # Potential conflict here
+            # Check size
+            B[i, :] = np.mean(B1/B2, axis=0)
+            B[i, :] = abs(B[i, :])
+            # B[i, :] = abs(np.mean(B1/B2, axis=0))
+
+            # Randomly shuffle B2
+            for j in range(0, nshuffle):
+                # Check size
+                idxShuffle = np.random.permutation(B2.shape[0])
+                B2shuffle = B2[idxShuffle, :]
+
+                Bshuffle = np.mean(B1/B2shuffle, axis=0)
+                Bplf[i, :] += Bshuffle
+
+                idxSign = (abs(B[i, :]) > abs(Bshuffle))
+                Bstat[i, idxSign] += 1
+
+        # Final calculation of Bstat, Bplf
+        Bstat = 1. - Bstat / nshuffle
+        Bplf /= nshuffle
+
+        # Store data
+        return {
+            't': tvec,
+            'f': self.f,
+            'B': B,
+            'Bstat': Bstat,
+            'Bplf': Bplf,
+        }
+
+    def __phasevec(self, f, num_ts=1):
+        dt = 1. / self.fs
+        sf = f / self.width
+        st = 1. / (2. * np.pi * sf)
+
+        t = np.arange(-3.5*st, 3.5*st+dt, dt)
+        m = self.__morlet(f, t)
+
+        y = np.array([])
+        # y = np.zeros((self.ts[num_ts].shape[0], self.ts[num_ts].shape[1]))
+
+        for k in range(0, self.ts[num_ts].shape[0]):
+            if k == 0:
+                s = sps.detrend(self.ts[num_ts][k, :])
+                y = np.array([sps.fftconvolve(s, m)])
+                # y = np.array([sps.fftconvolve(self.ts[num_ts][k, :], m)])
+
+            else:
+                y_tmp = sps.fftconvolve(self.ts[num_ts][k, :], m)
+                y = np.vstack((y, y_tmp))
+                # y[k, :] = sps.fftconvolve(self.ts[num_ts][k, :], m)
+
+        # Change 0s to 1s to avoid division by 0
+        l = (abs(y) == 0)
+        y[l] = 1.
+
+        # ize phase values and return 1s to zeros
+        y = y / abs(y)
+        y[l] = 0
+        # print y.shape
+        # print np.ceil(len(m)/2.)
+        # print y.shape[1] - np.floor(len(m)/2.)
+        # print np.floor(len(m)/2.)
+        y = y[:, np.ceil(len(m)/2.)-1:y.shape[1]-np.floor(len(m)/2.)]
+
+        return y
+
+    def __morlet(self, f, t):
+        sf = f / self.width
+        st = 1. / (2. * np.pi * sf)
+        A = 1. / np.sqrt(st*np.sqrt(np.pi))
+
+        y = A * np.exp(-t**2./(2.*st**2.)) * np.exp(1.j*2.*np.pi*f*t)
+
+        return y
+
 # spectral plotting kernel should be simpler and take just a file name and an axis handle
 # Spectral plotting kernel for ONE simulation run
 # ax_spec is the axis handle. fspec is the file name
@@ -974,3 +1098,11 @@ def pmaxpwr(file_name, results_list, fparam_list):
     f.ax0.set_ylabel('Freq at which max avg power occurs (Hz)')
 
     f.save(file_name)
+
+if __name__ == '__main__':
+    x = np.arange(0, 10.1, 0.1)
+    s1 = np.array([np.sin(x)])
+    s2 = np.array([np.sin(2*x)])
+    dt = 0.1
+
+    p = PhaseLock(s1, s2, dt)

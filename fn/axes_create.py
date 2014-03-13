@@ -1,8 +1,8 @@
 # axes_create.py - simple axis creation
 #
-# v 1.8.24
-# rev 2014-02-05 (MS: Merged SpecClass with master)
-# last major: (SL: changes related to platform-specific rendering)
+# v 1.8.25
+# rev 2014-03-13 (MS: FigPhase() for plotting phase data)
+# last major: (MS: Merged SpecClass with master)
 
 # usage:
 # testfig = FigStd()
@@ -331,6 +331,27 @@ class FigSpecWithHist(FigBase):
 
             if 'feed_dist' in key:
                 self.ax[key].set_xticklabels('')
+
+# spec plus dipole plus alpha feed histograms
+class FigPhase(FigBase):
+    def __init__(self):
+        self.f = plt.figure(figsize=(8, 12))
+        font_prop = {'size': 8}
+        mpl.rc('font', **font_prop)
+
+        # the right margin is a hack and NOT guaranteed!
+        # it's making space for the stupid colorbar that creates a new grid to replace gs1
+        # when called, and it doesn't update the params of gs1
+        self.gs0 = gridspec.GridSpec(1, 4, wspace=0.05, hspace=0., bottom=0.05, top=0.3, left=0.1, right=1.)
+        self.gs1 = gridspec.GridSpec(1, 4, wspace=0.05, hspace=0., bottom=0.35, top=0.6, left=0.1, right=1.)
+        self.gs2 = gridspec.GridSpec(2, 1, height_ratios=[1, 3], bottom=0.65, top=0.775, left=0.1, right=0.82)
+        self.gs3 = gridspec.GridSpec(2, 1, hspace=0.14, bottom=0.825, top=0.95, left = 0.1, right = 0.82)
+
+        self.ax = {}
+        self.ax['phase'] = self.f.add_subplot(self.gs0[:, :])
+        self.ax['spec'] = self.f.add_subplot(self.gs1[:, :])
+        self.ax['dipole'] = self.f.add_subplot(self.gs2[:, :])
+        self.ax['input'] = self.f.add_subplot(self.gs3[:, :])
 
 # spec plus dipole 
 class FigSpec(FigBase):
@@ -801,8 +822,8 @@ def testfn():
     # testfig = FigPSTH(100)
     # testfig.ax['L5_extpois'].plot(x)
 
-    testfig = FigSpec()
-    testfig.ax['dipole'].plot(x)
+    testfig = FigPhase()
+    # testfig.ax['dipole'].plot(x)
 
     plt.savefig('testing.png', dpi=250)
     testfig.close()

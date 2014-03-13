@@ -1,8 +1,8 @@
 # plotfn.py - pall and possibly other plot routines
 #
-# v 1.8.24
-# rev 2014-02-05 (MS: Merged SpecClass with master)
-# last major: (MS: updated pkernel_with_hist() to mirror pkernel())
+# v 1.8.25
+# rev 2014-03-13 (MS: Updated call to dipolefn.pdipole())
+# last major: (MS: Merged SpecClass with master)
 
 from praster import praster
 import axes_create as ac
@@ -58,14 +58,14 @@ def pkernel_with_hist(dfig, f_param, f_spk, f_dpl, f_spec, key_types, xlim=None,
     dfig_spk = dfig['figspk']
 
     pdipole_dict = {
-        'xmin': xlim[0],
-        'xmax': xlim[1],
+        'xmin': None,
+        'xmax': None,
         'ymin': None,
         'ymax': None,
     }
 
     # plot kernels
-    dipolefn.pdipole_with_hist(f_dpl, f_spk, dfig_dpl, f_param, key_types, xlim)
+    dipolefn.pdipole_with_hist(f_dpl, f_spk, dfig_dpl, f_param, key_types, pdipole_dict)
     pspec.pspec_with_hist(f_spec, f_dpl, f_spk, dfig_spec, f_param, key_types, xlim, ylim)
 
     return 0

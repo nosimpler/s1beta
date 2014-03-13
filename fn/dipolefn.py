@@ -1,8 +1,8 @@
 # dipolefn.py - dipole-based analysis functions
 #
-# v 1.8.24
-# rev 2014-02-05 (MS: Merged SpecClass with Master)
-# last major: (SL: minor change to getting lims)
+# v 1.8.25
+# rev 2014-03-13 (MS: Changed Dipole.truncate_ext() to truncate inclusively)
+# last major: (MS: Merged SpecClass with Master)
 
 import fileio as fio
 import numpy as np
@@ -45,14 +45,14 @@ class Dipole():
     # just return the values, do not modify the class internally
     def truncate_ext(self, t0, T):
         # only do this if the limits make sense
-        if (t0 >= self.t[0]) & (T < self.t[-1]):
+        if (t0 >= self.t[0]) & (T <= self.t[-1]):
             dpl_truncated = dict.fromkeys(self.dpl)
 
             # do this for each dpl
             for key in self.dpl.keys():
-                dpl_truncated[key] = self.dpl[key][(self.t > t0) & (self.t < T)]
+                dpl_truncated[key] = self.dpl[key][(self.t >= t0) & (self.t <= T)]
 
-            t_truncated = self.t[(self.t > t0) & (self.t < T)]
+            t_truncated = self.t[(self.t >= t0) & (self.t <= T)]
 
         return t_truncated, dpl_truncated
 
@@ -659,9 +659,9 @@ def pdipole_with_hist(f_dpl, f_spk, dfig, f_param, key_types, plot_dict):
     # plot histograms
     hist = {}
 
-    hist['feed_prox'] = extinputs.plot_hist(f.ax['feed_prox'], 'prox', bins, xlim_new, color='red')
+    hist['feed_prox'] = extinputs.plot_hist(f.ax['feed_prox'], 'prox', dpl.t, bins, xlim_new, color='red')
 
-    hist['feed_dist'] = extinputs.plot_hist(f.ax['feed_dist'], 'dist', bins, xlim_new, color='green')
+    hist['feed_dist'] = extinputs.plot_hist(f.ax['feed_dist'], 'dist', dpl.t, bins, xlim_new, color='green')
 
     # # Proximal feed
     # hist['feed_prox'] = f.ax['feed_prox'].hist(s_dict['alpha_feed_prox'].spike_list, bins, range=[t_vec[0], t_vec[-1]], color='red', label='Proximal feed')

@@ -1,11 +1,13 @@
 # spikefn.py - dealing with spikes
 #
-# v 1.8.22
-# rev 2013-11-19 (SL: minor)
+# v 1.8.25
+# rev 2014-03-13 (MS: fn to calculate envelope of input histogram. Truncate fn added to ExtInputs())
 # last major: (MS: Created class ExtInputs() for easy post-hoc analysis of extinput event times)
 
 import fileio as fio
 import numpy as np
+import scipy.signal as sps
+import matplotlib.pyplot as plt
 import itertools as it
 import os
 import paramrw
@@ -118,6 +120,15 @@ class ExtInputs(Spikes):
 
         return inputs
 
+    def truncate_ext(self, dtype, t_int):
+        if dtype == 'prox' or dtype == 'dist':
+            tmask = (self.inputs[dtype] >= t_int[0]) & (self.inputs[dtype] <= t_int[1]) 
+            return self.inputs[dtype][tmask]
+
+        if dtype == 'env':
+            tmask = (self.inputs['t'] >= t_int[0]) & (self.inputs['t'] <= t_int[1]) 
+            return [self.inputs[dtype][tmask], self.inputs['t'][tmask]] 
+
     def add_delay_times(self):
         # if prox delay to both layers is the same, add it to the prox input times
         if self.p_dict['input_prox_A_delay_L2'] == self.p_dict['input_prox_A_delay_L5']:
@@ -127,11 +138,30 @@ class ExtInputs(Spikes):
         if self.p_dict['input_dist_A_delay_L2'] == self.p_dict['input_dist_A_delay_L5']:
             self.inputs['dist'] += self.p_dict['input_dist_A_delay_L2']
 
-    def plot_hist(self, ax, extinput, bins=150, xlim=None, color='green'):
+    def get_envelope(self, tvec, feed='dist', bins=150):
+        h_range = (tvec[0], tvec[-1])
+        hist, edges = np.histogram(self.inputs[feed], bins=bins, range=h_range)
+        centers = edges[0:bins] + np.diff(edges) / 2.
+
+        num = len(tvec)
+        env, t = sps.resample(hist, num, t=centers)
+
+        self.inputs['env'] = env
+        self.inputs['t'] = t
+
+    def plot_hist(self, ax, extinput, tvec, bins=150, xlim=None, color='green'):
+        print xlim
         if not xlim:
             xlim = (0., p_dict['tstop'])
 
-        return ax.hist(self.inputs[extinput], bins, range=xlim, color=color, label=extinput)
+        hist= ax.hist(self.inputs[extinput], bins, range=xlim, color=color, label=extinput)
+
+        # ax.hold(True)
+        # self.get_envelope(tvec)
+        # ax.plot(tvec, self.inputs['env'])
+        # ax.plot(self.inputs['t'], self.inputs['env'])
+
+        return hist
 
 # filters spike dict s_dict for keys that start with str_startswith
 # easy enough to modify for future conditions

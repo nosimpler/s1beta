@@ -1,8 +1,8 @@
 # cli.py - routines for the command line interface console s1sh.py
 #
-# v 1.8.24
-# rev 2014-02-05 (MS: Merged SpecClass with master)
-# last major: (SL: added spec_fig from pgamma)
+# v 1.8.25
+# rev 2014-03-13 (MS: do_phaselock() for phaselocking of dipole to inputs)
+# last major: (MS: Merged SpecClass with master)
 
 from cmd import Cmd
 from datetime import datetime
@@ -861,6 +861,12 @@ class Console(Cmd):
         """
 
         clidefs.exec_plotaverages(self.ddata)
+
+    def do_phaselock(self, args):
+        """Calculates phaselock values between dipole and inputs
+        """
+        args_dict = self.__create_dict_from_args(args)
+        clidefs.exec_phaselock(self.ddata, args_dict)
 
     def do_epscompress(self, args):
         """Runs the eps compress utils on the specified fig type (currently either spk or spec)

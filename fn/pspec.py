@@ -1,8 +1,8 @@
 # pspec.py - Very long plotting methods having to do with spec.
 #
-# v 1.8.24
-# rev 2014-02-05 (MS: Merged SpecClass with master)
-# last major: (SL: added saveeps, commented out)
+# v 1.8.25
+# rev 2014-03-13 (MS: Updated calls to extinput.plot_hist())
+# last major: (MS: Merged SpecClass with master)
 
 import os
 import sys
@@ -137,6 +137,7 @@ def pspec_with_hist(f_spec, f_dpl, f_spk, dfig, f_param, key_types, xlim=None, y
     # Get extinput data and account for delays
     extinputs = spikefn.ExtInputs(f_spk, f_param)
     extinputs.add_delay_times()
+    extinputs.get_envelope(dpl.t, feed='dist')
 
     # set number of bins (150 bins per 1000ms)
     bins = 150. * (xlim_new[1] - xlim_new[0]) / 1000.
@@ -144,8 +145,8 @@ def pspec_with_hist(f_spec, f_dpl, f_spk, dfig, f_param, key_types, xlim=None, y
     # plot histograms
     hist = {}
 
-    hist['feed_prox'] = extinputs.plot_hist(f.ax['feed_prox'], 'prox', bins, xlim_new, color='red')
-    hist['feed_dist'] = extinputs.plot_hist(f.ax['feed_dist'], 'dist', bins, xlim_new, color='green')
+    hist['feed_prox'] = extinputs.plot_hist(f.ax['feed_prox'], 'prox', dpl.t, bins=bins, xlim=xlim_new, color='red')
+    hist['feed_dist'] = extinputs.plot_hist(f.ax['feed_dist'], 'dist', dpl.t, bins=bins, xlim=xlim_new, color='green')
 
     # # Proximal feed
     # hist['feed_prox'] = f.ax['feed_prox'].hist(s_dict['alpha_feed_prox'].spike_list, bins, range=[xlim_new[0], xlim_new[1]], color='red', label='Proximal feed', alpha=0.5)

@@ -14,6 +14,8 @@ from subprocess import call
 from glob import iglob
 from time import time
 import ast
+import matplotlib.pyplot as plt
+import matplotlib as mpl
 
 # local modules
 import spikefn
@@ -1032,6 +1034,115 @@ def exec_pgamma_sub_examples():
 
 def exec_pgamma_sub_example2():
     pgamma.sub_dist_example2()
+
+def exec_phaselock(ddata, opts):
+    p = {
+        't_interval': [50, 1000],
+        'f_max': 60.,
+    }
+    args_check(p, opts)
+
+    # Do this per expmt group
+    for expmt_group in ddata.expmt_groups:
+        # Get paths to relevant files
+        list_dpl = ddata.file_match(expmt_group, 'rawdpl')
+        list_spk = ddata.file_match(expmt_group, 'rawspk')
+        list_param = ddata.file_match(expmt_group, 'param') 
+
+        avg_spec = ddata.file_match(expmt_group, 'avgspec')[0]
+
+        tmp_array_dpl = []
+        tmp_array_spk = []
+
+        for f_dpl, f_spk, f_param in it.izip(list_dpl, list_spk, list_param):
+            # load Dpl data, do stuff, and store it
+            print f_dpl
+            dpl = dipolefn.Dipole(f_dpl)
+            dpl.baseline_renormalize(f_param)
+            dpl.convert_fAm_to_nAm()
+            t, dp = dpl.truncate_ext(p['t_interval'][0], p['t_interval'][1])
+            dp = dp['agg']
+            tmp_array_dpl.append(dp)
+
+            # Load extinput data, do stuff, and store it
+            extinput = spikefn.ExtInputs(f_spk, f_param)
+            extinput.add_delay_times()
+            extinput.get_envelope(dpl.t, feed='dist', bins=150)
+            inputs, t = extinput.truncate_ext('env', p['t_interval'])
+            tmp_array_spk.append(inputs)
+
+        # Convert tmp arrays (actually lists) to numpy nd arrays
+        array_dpl = np.array(tmp_array_dpl)
+        array_spk = np.array(tmp_array_spk)
+
+        # Phase-locking analysis
+        phase = specfn.PhaseLock(array_dpl, array_spk, list_param[0], p['f_max'])
+
+        fname_d = os.path.join(ddata.dsim, expmt_group, 'phaselock-%iHz.npz' %p['f_max'])
+        np.savez_compressed(fname_d, t=phase.data['t'], f=phase.data['f'], B=phase.data['B'])
+
+        # Plotting
+        # Should be moved elsewhere
+        avg_dpl = np.mean(array_dpl, axis=0)
+        avg_spk = np.mean(array_spk, axis=0)
+
+        f = ac.FigPhase()
+
+        extent_xy = [t[0], t[-1], phase.data['f'][-1], 0]
+        pc1 = f.ax['phase'].imshow(phase.data['B'], extent=extent_xy, aspect='auto', origin='upper')
+        pc1.set_clim([0, 1])
+        cb1 = f.f.colorbar(pc1, ax=f.ax['phase'])
+        # cb1.set_clim([0, 1])
+
+        spec = specfn.Spec(avg_spec)
+        pc2 = spec.plot_TFR(f.ax['spec'], xlim=[t[0], t[-1]])
+        pc2.set_clim([0, 3.8e-7])
+        cb2 = f.f.colorbar(pc2, ax=f.ax['spec'])
+        # cb2.set_clim([0, 3.6e-7])
+
+        f.ax['dipole'].plot(t, avg_dpl)
+        f.ax['dipole'].set_xlim([t[0], t[-1]])
+        f.ax['dipole'].set_ylim([-0.0015, 0.0015])
+
+        f.ax['input'].plot(t, avg_spk)
+        f.ax['input'].set_xlim([t[0], t[-1]])
+        f.ax['input'].set_ylim([-1, 5])
+        f.ax['input'].invert_yaxis()
+
+        f.ax['phase'].set_xlabel('Time (ms)')
+        f.ax['phase'].set_ylabel('Frequency (Hz)')
+
+        fname = os.path.join(ddata.dsim, expmt_group, 'phaselock-%iHz.png' %p['f_max'])
+        print fname
+
+        f.savepng(fname)
+
+        # f = plt.figure()
+
+        # font_prop = {
+        #     'size': 12,
+        # }
+
+        # mpl.rc('font', **font_prop)
+
+        # ax0 = f.add_axes((0.1, 0.05, 0.90, 0.40))
+        # ax1 = f.add_axes((0.1, 0.50, 0.72, 0.20))
+        # ax2 = f.add_axes((0.1, 0.75, 0.72, 0.20))
+         
+        # print t[0], t[-1]
+        # extent_xy = [t[0], t[-1], phase.data['f'][-1], 0]
+        # pc = ax0.imshow(phase.data['B'], extent=extent_xy, aspect='auto', origin='upper')
+        # f.colorbar(pc, ax=ax0)
+
+        # ax0.set_xlabel('Time (ms)')
+        # ax0.set_ylabel('Freq (Hz)')
+
+        # ax1.plot(t, dp)
+        # ax1.set_xlim([t[0], t[-1]])
+
+        # ax2.plot(t, inputs)
+        # ax2.set_xlim([t[0], t[-1]])
+        # ax2.invert_yaxis()
 
 # runs the gamma plot for a comparison of the high frequency
 def exec_pgamma_hf(ddata, opts):
