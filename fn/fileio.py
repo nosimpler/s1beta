@@ -1,121 +1,14 @@
 # fileio.py - general file input/output functions
 #
-# v 1.8.17
-# rev 2013-07-19 (SL: return_specific_filename() added)
-# last rev: (SL: added prettyprint() here, but it might be now in multiple places)
+# v 1.8.26
+# rev 2014-05-22 (SL: minor, just a function move, really)
+# last rev: (SL: return_specific_filename() added)
 
 import datetime, fnmatch, os, shutil, sys
 import itertools as it
 import subprocess, multiprocessing
 import numpy as np
 import paramrw
-
-# Cleans input files
-def clean_lines(file):
-    with open(file) as f_in:
-        lines = (line.rstrip() for line in f_in)
-        lines = [line for line in lines if line]
-
-    return lines
-
-# this make a little more sense in fileio
-def prettyprint(iterable_items):
-    for item in iterable_items:
-        print item
-
-# create gid dict from a file
-def gid_dict_from_file(fparam):
-    l = ['L2_pyramidal', 'L5_pyramidal', 'L2_basket', 'L5_basket', 'extinput']
-    d = dict.fromkeys(l)
-
-    plist = clean_lines(fparam)
-    for param in plist:
-        print param
-
-# create file name for temporary spike file
-# that every processor is aware of
-def file_spike_tmp(dproj):
-    filename_spikes = 'spikes_tmp.spk'
-    file_spikes = os.path.join(dproj, filename_spikes)
-    return file_spikes
-
-# this is ugly, potentially. sorry, future
-# i.e will change when the file name format changes
-def strip_extprefix(filename):
-    f_raw = filename.split("/")[-1]
-    f = f_raw.split(".")[0].split("-")[:-1]
-    ext_prefix = f.pop(0)
-
-    for part in f:
-        ext_prefix += "-%s" % part
-
-    return ext_prefix
-
-# Get the data files matching file_ext in this directory
-# this function traverses ALL directories
-# local=1 makes the search local and not recursive
-def file_match(dsearch, file_ext, local=0):
-    file_list = []
-
-    if not local:
-        if os.path.exists(dsearch):
-            for root, dirnames, filenames in os.walk(dsearch):
-                for fname in fnmatch.filter(filenames, '*'+file_ext):
-                    file_list.append(os.path.join(root, fname))
-    else:
-        file_list = [os.path.join(dsearch, file) for file in os.listdir(dsearch) if file.endswith(file_ext)]
-
-    # sort file list? untested
-    file_list.sort()
-
-    return file_list
-
-# Get minimum list of param dicts (i.e. excludes duplicates due to N_trials > 1)
-def fparam_match_minimal(dsim, p_exp):
-    # Complete list of all param dicts used in simulation
-    fparam_list_complete = file_match(dsim, '-param.txt')
-
-    # List of indices from which to pull param dicts from fparam_list_complete
-    N_trials = p_exp.N_trials
-    if not N_trials:
-        N_trials = 1
-    indexes = np.arange(0, len(fparam_list_complete), N_trials)
-
-    # Pull unique param dicts from fparam_list_complete
-    fparam_list_minimal = [fparam_list_complete[ind] for ind in indexes]
-
-    return fparam_list_minimal
-
-# check any directory
-def dir_check(d):
-    if not os.path.isdir(d):
-        return 0
-
-    else:
-        return os.path.isdir(d)
-
-# only create if check comes back 0
-def dir_create(d):
-    if not dir_check(d):
-        os.makedirs(d)
-
-# non-destructive copy routine
-def dir_copy(din, dout):
-    # this command should work on most posix systems
-    cmd_cp = 'cp -R %s %s' % (din, dout)
-
-    # if the dir doesn't already exist, copy it over
-    if not dir_check(dout):
-        # print the actual command when successful
-        print cmd_cp
-
-        # use call to run the command
-        subprocess.call(cmd_cp, shell=True)
-
-        return 0
-
-    else:
-        print "Directory already exists."
 
 # creates data dirs and a dictionary of useful types
 # self.dfig is a dictionary of experiments, which is each a dictionary of data type
@@ -140,6 +33,8 @@ class SimulationPaths():
             'figspk': '-spk.png',
             'param': '-param.txt',
         }
+
+        self.expmt_groups = []
 
     # reads sim information based on sim directory and param files
     def read_sim(self, dproj, dsim):
@@ -319,6 +214,113 @@ class SimulationPaths():
             d[key] = [file for file in self.filelists[datatype] if key in file.split("/")[-1]]
 
         return d
+
+# Cleans input files
+def clean_lines(file):
+    with open(file) as f_in:
+        lines = (line.rstrip() for line in f_in)
+        lines = [line for line in lines if line]
+
+    return lines
+
+# this make a little more sense in fileio
+def prettyprint(iterable_items):
+    for item in iterable_items:
+        print item
+
+# create gid dict from a file
+def gid_dict_from_file(fparam):
+    l = ['L2_pyramidal', 'L5_pyramidal', 'L2_basket', 'L5_basket', 'extinput']
+    d = dict.fromkeys(l)
+
+    plist = clean_lines(fparam)
+    for param in plist:
+        print param
+
+# create file name for temporary spike file
+# that every processor is aware of
+def file_spike_tmp(dproj):
+    filename_spikes = 'spikes_tmp.spk'
+    file_spikes = os.path.join(dproj, filename_spikes)
+    return file_spikes
+
+# this is ugly, potentially. sorry, future
+# i.e will change when the file name format changes
+def strip_extprefix(filename):
+    f_raw = filename.split("/")[-1]
+    f = f_raw.split(".")[0].split("-")[:-1]
+    ext_prefix = f.pop(0)
+
+    for part in f:
+        ext_prefix += "-%s" % part
+
+    return ext_prefix
+
+# Get the data files matching file_ext in this directory
+# this function traverses ALL directories
+# local=1 makes the search local and not recursive
+def file_match(dsearch, file_ext, local=0):
+    file_list = []
+
+    if not local:
+        if os.path.exists(dsearch):
+            for root, dirnames, filenames in os.walk(dsearch):
+                for fname in fnmatch.filter(filenames, '*'+file_ext):
+                    file_list.append(os.path.join(root, fname))
+    else:
+        file_list = [os.path.join(dsearch, file) for file in os.listdir(dsearch) if file.endswith(file_ext)]
+
+    # sort file list? untested
+    file_list.sort()
+
+    return file_list
+
+# Get minimum list of param dicts (i.e. excludes duplicates due to N_trials > 1)
+def fparam_match_minimal(dsim, p_exp):
+    # Complete list of all param dicts used in simulation
+    fparam_list_complete = file_match(dsim, '-param.txt')
+
+    # List of indices from which to pull param dicts from fparam_list_complete
+    N_trials = p_exp.N_trials
+    if not N_trials:
+        N_trials = 1
+    indexes = np.arange(0, len(fparam_list_complete), N_trials)
+
+    # Pull unique param dicts from fparam_list_complete
+    fparam_list_minimal = [fparam_list_complete[ind] for ind in indexes]
+
+    return fparam_list_minimal
+
+# check any directory
+def dir_check(d):
+    if not os.path.isdir(d):
+        return 0
+
+    else:
+        return os.path.isdir(d)
+
+# only create if check comes back 0
+def dir_create(d):
+    if not dir_check(d):
+        os.makedirs(d)
+
+# non-destructive copy routine
+def dir_copy(din, dout):
+    # this command should work on most posix systems
+    cmd_cp = 'cp -R %s %s' % (din, dout)
+
+    # if the dir doesn't already exist, copy it over
+    if not dir_check(dout):
+        # print the actual command when successful
+        print cmd_cp
+
+        # use call to run the command
+        subprocess.call(cmd_cp, shell=True)
+
+        return 0
+
+    else:
+        print "Directory already exists."
 
 # Finds and moves files to created subdirectories. 
 def subdir_move(dir_out, name_dir, file_pattern):

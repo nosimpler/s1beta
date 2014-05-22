@@ -1,8 +1,8 @@
 # specfn.py - Average time-frequency energy representation using Morlet wavelet method
 #
-# v 1.8.25
-# rev 2014-03-13 (MS: Created PhaseLock() to calculate phaselocking values between two time-series)
-# last major: (MS: Merged SpecClass with master)
+# v 1.8.26
+# rev 2014-05-22 (SL: minor)
+# last major: (MS: Created PhaseLock() to calculate phaselocking values between two time-series)
 
 import os
 import sys
@@ -536,7 +536,6 @@ def average(fname, fspec_list):
         np.savez_compressed(fname, t_agg=x['agg']['t'], f_agg=x['agg']['f'], TFR_agg=x['agg']['TFR'])
 
 class PhaseLock():
-    # def __init__(self, tsarray1, tsarray2, dt, f_max=1.):
     def __init__(self, tsarray1, tsarray2, fparam, f_max=60.):
         # Save time-series arrays as self variables
         self.ts = {
@@ -586,7 +585,6 @@ class PhaseLock():
             # Check size
             B[i, :] = np.mean(B1/B2, axis=0)
             B[i, :] = abs(B[i, :])
-            # B[i, :] = abs(np.mean(B1/B2, axis=0))
 
             # Randomly shuffle B2
             for j in range(0, nshuffle):
@@ -622,18 +620,15 @@ class PhaseLock():
         m = self.__morlet(f, t)
 
         y = np.array([])
-        # y = np.zeros((self.ts[num_ts].shape[0], self.ts[num_ts].shape[1]))
 
         for k in range(0, self.ts[num_ts].shape[0]):
             if k == 0:
                 s = sps.detrend(self.ts[num_ts][k, :])
                 y = np.array([sps.fftconvolve(s, m)])
-                # y = np.array([sps.fftconvolve(self.ts[num_ts][k, :], m)])
 
             else:
                 y_tmp = sps.fftconvolve(self.ts[num_ts][k, :], m)
                 y = np.vstack((y, y_tmp))
-                # y[k, :] = sps.fftconvolve(self.ts[num_ts][k, :], m)
 
         # Change 0s to 1s to avoid division by 0
         l = (abs(y) == 0)
@@ -1002,28 +997,6 @@ def calc_stderror(data_list):
     error_vec = np.std(data_list, axis=0)
 
     return error_vec
-
-# Moved to pspec.py
-# def pfreqpwr(file_name, results_list, fparam_list, key_types):
-#     f = ac.FigStd()
-#     f.ax0.hold(True)
-# 
-#     legend_list = []
-# 
-#     for result, fparam in it.izip(results_list, fparam_list):
-#         f.ax0.plot(result['freq'], result['avg_pwr'])
-# 
-#         p = paramrw.read(fparam)[1]
-#         lgd_temp = [key + ': %2.1f' %p[key] for key in key_types['dynamic_keys']]
-#         legend_list.append(reduce(lambda x, y: x+', '+y, lgd_temp[:]))
-# 
-#     f.ax0.legend(legend_list, loc = 'upper right')
-# 
-#     f.ax0.set_xlabel('Freq (Hz)')
-#     f.ax0.set_ylabel('Avg_pwr')
-# 
-#     f.save(file_name)
-#     f.close()
 
 def pfreqpwr_with_hist(file_name, freqpwr_result, f_spk, gid_dict, p_dict, key_types):
     f = ac.FigFreqpwrWithHist()

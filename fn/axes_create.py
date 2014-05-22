@@ -1,8 +1,8 @@
 # axes_create.py - simple axis creation
 #
-# v 1.8.25
-# rev 2014-03-13 (MS: FigPhase() for plotting phase data)
-# last major: (MS: Merged SpecClass with master)
+# v 1.8.26
+# rev 2014-05-22 (fixed axis labels for FigRaster())
+# last major: (MS: FigPhase() for plotting phase data)
 
 # usage:
 # testfig = FigStd()
@@ -424,7 +424,7 @@ class FigRaster(FigBase):
         self.__panel_create(grid0, 'L5')
 
         for key in self.ax.keys():
-            if key is 'ax_L5_extpois':
+            if key == 'L5_extinput':
                 self.__bottom_panel_prop(self.ax[key])
 
             else:

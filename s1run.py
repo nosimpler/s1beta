@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # s1run.py - primary run function for s1 project
 #
-# v 1.8.22
-# rev 2013-11-19 (SL: updated pall)
-# last major: (MS: removed reference to specfn.analysis())
+# v 1.8.26
+# rev 2014-05-22 (SL: minor)
+# last major: (SL: updated pall)
 
 import os
 import sys
@@ -19,6 +19,7 @@ nrn.load_file("stdrun.hoc")
 
 # Cells are defined in './cells'
 from class_net import Network
+# import network
 import fn.fileio as fio
 import fn.paramrw as paramrw
 import fn.plotfn as plotfn
@@ -90,7 +91,7 @@ def exec_runsim(f_psim):
 
         # purely for vanity
         if N_expmt_groups > 1:
-            s+='s'
+            s += 's'
 
         print s % N_expmt_groups
 
@@ -186,6 +187,7 @@ def exec_runsim(f_psim):
 
                 # Create network from class_net's Network class
                 net = Network(p)
+                # net = network.NetworkOnNode()
 
                 # debug: off (0), on (1)
                 debug = 0
@@ -209,28 +211,30 @@ def exec_runsim(f_psim):
                 t_vec = nrn.Vector()
                 t_vec.record(nrn._ref_t)
 
-                # initialize cells to -65 mV and compile code
-                # after all the NetCon delays have been specified
+                # set dipoles to record
                 dp_rec_L2 = nrn.Vector()
                 dp_rec_L2.record(nrn._ref_dp_total_L2)
 
-                # testing just the L5 dipole
+                # L5 dipole
                 dp_rec_L5 = nrn.Vector()
                 dp_rec_L5.record(nrn._ref_dp_total_L5)
 
                 # sets the default max solver step in ms (purposefully large)
                 pc.set_maxstep(10)
 
+                # initialize cells to -65 mV and compile code
+                # after all the NetCon delays have been specified
                 # set state variables if they have been changed since nrn.finitialize
                 # and run the solver
                 nrn.finitialize()
                 nrn.fcurrent()
                 nrn.frecord_init()
 
-                ## actual simulation ##
+                # actual simulation
                 pc.psolve(nrn.tstop)
 
                 # combine dp_rec, this combines on every proc
+                # 1 refers to adding the contributions together
                 pc.allreduce(dp_rec_L2, 1)
                 pc.allreduce(dp_rec_L5, 1)
 
@@ -247,6 +251,7 @@ def exec_runsim(f_psim):
                     # write the dipole
                     with open(file_dpl, 'a') as f:
                         for k in range(int(t_vec.size())):
+                        # for i, t in enumerate(t_vec):
                             # write t, total dipole, L2 dipole, L5 dipole
                             f.write("%03.3f\t" % t_vec.x[k])
                             f.write("%5.4f\t" % (dp_rec_L2.x[k] + dp_rec_L5.x[k]))
@@ -262,7 +267,7 @@ def exec_runsim(f_psim):
                             fc.write("%5.4f\t" % i_L2)
                             fc.write("%5.4f\n" % i_L5)
 
-                    # write the params, but add a trial number
+                    # write the params, but add some more information
                     p['Sim_No'] = i
                     p['Trial'] = j
                     p['exp_prefix'] = exp_prefix
@@ -279,7 +284,6 @@ def exec_runsim(f_psim):
                         pdipole(filename_debug, os.getcwd())
 
                 # write output spikes
-                # spikes_write(net, file_spikes)
                 spikes_write(net, file_spikes_tmp)
 
                 # move the spike file to the spike dir

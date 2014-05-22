@@ -1,8 +1,8 @@
 # class_net.py - establishes the Network class and related methods
 #
-# v 1.8.15cell
-# rev 2013-07-03 (MS: self.p now passed to L5Pyr())
-# last major: (MS: self.p now passed to L2Pyr())
+# v 1.8.26
+# rev 2014-05-22 (SL: adds IClamp to L2Basket())
+# last major: (MS: self.p now passed to L5Pyr())
 
 import itertools as it
 import numpy as np
@@ -10,8 +10,8 @@ import sys
 
 from neuron import h as nrn
 from fn.class_feed import ParFeedAll
-from fn.cells.L5_pyramidal import L5Pyr
 from fn.cells.L2_pyramidal import L2Pyr
+from fn.cells.L5_pyramidal import L5Pyr
 from fn.cells.L2_basket import L2Basket
 from fn.cells.L5_basket import L5Basket
 import fn.paramrw as paramrw
@@ -36,7 +36,10 @@ class Network():
         }
 
         # int variables for grid of pyramidal cells (for now in both L2 and L5)
-        self.gridpyr = {'x': self.p['N_pyr_x'], 'y': self.p['N_pyr_y']}
+        self.gridpyr = {
+            'x': self.p['N_pyr_x'],
+            'y': self.p['N_pyr_y'],
+        }
 
         # Parallel stuff
         self.pc = nrn.ParallelContext()
@@ -51,6 +54,9 @@ class Network():
 
         # numbers of sources
         self.N = {}
+
+        # init self.N_cells
+        self.N_cells = 0
 
         # zdiff is expressed as a positive DEPTH of L5 relative to L2
         # this is a deviation from the original, where L5 was defined at 0
@@ -85,6 +91,7 @@ class Network():
 
         # create dictionary of GIDs according to cell type
         # global dictionary of gid and cell type
+        self.gid_dict = {}
         self.__create_gid_dict()
 
         # assign gid to hosts, creates list of gids for this node in __gid_list
@@ -191,9 +198,6 @@ class Network():
 
     # cell counting routine
     def __count_cells(self):
-        # init self.N_cells
-        self.N_cells = 0
-
         # cellname list is used *only* for this purpose for now
         for src in self.cellname_list:
             # if it's a cell, then add the number to total number of cells
@@ -227,8 +231,12 @@ class Network():
             # accumulate total source count
             self.N_src += self.N[src]
 
+        # for i, src in enumerate(self.src_list_new):
+        #     gid_ind.append(gid_ind[i]+self.N[src])
+        #     self.N_src += self.N[src]
+
         # dictionary of gids for each source
-        self.gid_dict = {}
+        # self.gid_dict = {}
 
         # now actually assign the ranges
         for i in range(len(self.src_list_new)):
@@ -306,6 +314,9 @@ class Network():
                 elif type == 'L2_basket':
                     self.cells_list.append(L2Basket(pos))
                     self.pc.cell(gid, self.cells_list[-1].connect_to_target(None))
+
+                    # also run the IClamp for L2_basket
+                    self.cells_list[-1].create_all_IClamp(self.p)
                     
                 elif type == 'L5_basket':
                     self.cells_list.append(L5Basket(pos))
@@ -353,10 +364,13 @@ class Network():
 
                 # for each gid, find all the other cells connected to it, based on gid
                 # this MUST be defined in EACH class of cell in self.cells_list
+                # parconnect receives connections from other cells
+                # parreceive receives connections from external inputs
                 cell.parconnect(gid, self.gid_dict, self.pos_dict, self.p)
                 cell.parreceive(gid, self.gid_dict, self.pos_dict, self.p_ext)
 
                 # now do the unique inputs specific to these cells
+                # parreceive_ext receives connections from UNIQUE external inputs
                 for type in self.p_unique.keys():
                     p_type = self.p_unique[type]
                     cell.parreceive_ext(type, gid, self.gid_dict, self.pos_dict, p_type)
@@ -370,7 +384,7 @@ class Network():
             if self.pc.gid_exists(gid):
                 self.pc.spike_record(gid, self.spiketimes, self.spikegids)
 
-    # aggregate recording all the somatic voltages for L5 pyr
+    # aggregate recording all the somatic voltages for pyr
     # this method must be run post-integration
     def aggregate_currents(self):
         # this is quite ugly
@@ -408,7 +422,7 @@ class Network():
         for cell in self.cells_list:
             seclist = nrn.SectionList()
             seclist.wholetree(sec=cell.soma)
-           
+
             for sect in seclist:
                 for seg in sect:
                     if cell.celltype == 'L2_pyramidal':

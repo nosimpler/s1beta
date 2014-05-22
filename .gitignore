@@ -1,4 +1,5 @@
 *.pyc
+*.param
 *.png
 *.eps
 *.dat

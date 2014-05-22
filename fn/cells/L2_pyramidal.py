@@ -1,8 +1,8 @@
 # L2_pyramidal.py - est class def for layer 2 pyramidal cells
 #
-# v 1.8.15cell
-# rev 2013-07-03 (MS: redundancy in synapse_create() introduced in 1.8.14cell fixed)
-# last rev: (MS: L2Pyr() can not take in a param dict and set its properties accordingly)
+# v 1.8.26
+# rev 2014-05-22 (SL: minor)
+# last rev: (MS: redundancy in synapse_create() introduced in 1.8.14cell fixed)
 
 import sys
 import numpy as np
@@ -222,13 +222,6 @@ class L2Pyr(Pyr):
         # Units: pS/um^2
         self.soma.insert('km')
         self.soma.gbar_km = self.p_all['L2Pyr_soma_gbar_km']
-
-        # self.soma.gkbar_hh = 0.01
-        # self.soma.gl_hh = 4.26e-5
-        # self.soma.el_hh = -65
-        # self.soma.gnabar_hh = 0.18
-        #         
-        # self.soma.gbar_km = 250
 
     # Defining biophysics for dendrites
     def __biophys_dends(self):

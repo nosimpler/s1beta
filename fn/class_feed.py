@@ -1,8 +1,8 @@
 # class_feed.py - establishes FeedExt(), ParFeedAll()
 #
-# v 1.8.24
-# rev 2014-02-05 (MS: Merged SpecClass with master)
-# last major: (MS: start time of extinput is randomized if t0 is -1)
+# v 1.8.26
+# rev 2014-05-22 (SL: minor)
+# last major: (MS: Merged SpecClass with master)
 
 import numpy as np
 import itertools as it
@@ -174,6 +174,7 @@ class ParFeedAll():
                 # Array with ALL stimulus times for input
                 # np.append concatenates two np arrays
                 t_input = np.append(t_array_low, t_array_high)
+
             elif events_per_cycle == 1:
                 t_input = t_array
 

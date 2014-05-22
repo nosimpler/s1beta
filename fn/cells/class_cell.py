@@ -1,8 +1,8 @@
 # class_cell.py - establish class def for general cell features
 #
-# v 1.8.14cells
-# rev 2013-06-23 (MS: syn_create() is a general method for creating any Exp2syn type)
-# last rev: (MS: create_dends_new() creates dends based on dictionary of dend props)
+# v 1.8.26
+# rev 2014-05-22 (SL: apparently removed references to old create_dends() method)
+# last rev: (MS: syn_create() is a general method for creating any Exp2syn type)
 
 import numpy as np
 import itertools as it
@@ -161,7 +161,7 @@ class Cell():
             print "Warning in Cell(): record_current_soma() was called, but no self.synapses dict was found"
             pass
 
-    # General fn that creates any Exp2syn synapse type
+    # General fn that creates any Exp2Syn synapse type
     # requires dictionary of synapse properties
     def syn_create(self, secloc, p):
         syn = nrn.Exp2Syn(secloc)
@@ -193,6 +193,7 @@ class Cell():
         return syn_gabab
 
     # creates a RECEIVING excitatory synapse at secloc
+    # def syn_ampa_create(self, secloc, tau_decay, prng_obj):
     def syn_ampa_create(self, secloc):
         syn_ampa = nrn.Exp2Syn(secloc)
         syn_ampa.e = 0.
@@ -259,7 +260,6 @@ class BasketSingle(Cell):
 
         # Cell.__init__(self, properties)
         Cell.__init__(self, self.props)
-        # Cell.__init__(self, pos, 39, 20, 0.85, cell_name)
 
         # store cell name for later
         self.name = cell_name
@@ -293,7 +293,6 @@ class BasketSingle(Cell):
 # General Pyramidal cell class
 class Pyr(Cell):
     def __init__(self, soma_props):
-    # def __init__(self, pos, L, diam, cm, cell_name='Pyr'):
         Cell.__init__(self, soma_props)
 
         # store cell_name as self variable for later use
@@ -350,23 +349,3 @@ class Pyr(Cell):
                 # make dend.nseg odd for all sections
                 if not self.dends[key].nseg % 2:
                     self.dends[key].nseg += 1
-
-    #Ccreates dendritic sections based on dend props, soma props, and list of dend names
-    # Legacy function for use by L5Pyr(). Will be deprecated in future commit.
-    def create_dends(self, list_names, dend_props, soma_props):
-        for sect_name in list_names:
-            self.list_dend.append(nrn.Section(name=self.name+'_'+sect_name))
-            self.list_dend[-1].L = dend_props[sect_name]['L']
-            self.list_dend[-1].diam = dend_props[sect_name]['diam']
-
-            # same values for soma
-            self.list_dend[-1].Ra = soma_props['Ra']
-            self.list_dend[-1].cm = soma_props['cm']
-
-            # set nseg for dend
-            if dend_props[sect_name]['L'] > 100:
-                self.list_dend[-1].nseg = int(dend_props[sect_name]['L'] / 50)
-
-                # make dend.nseg odd for all sections
-                if not self.list_dend[-1].nseg % 2:
-                    self.list_dend[-1].nseg += 1

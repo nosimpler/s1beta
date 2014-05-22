@@ -1,8 +1,8 @@
 # cli.py - routines for the command line interface console s1sh.py
 #
-# v 1.8.25
-# rev 2014-03-13 (MS: do_phaselock() for phaselocking of dipole to inputs)
-# last major: (MS: Merged SpecClass with master)
+# v 1.8.26
+# rev 2014-05-22 (SL: reorganized show and pngv)
+# last major: (MS: do_phaselock() for phaselocking of dipole to inputs)
 
 from cmd import Cmd
 from datetime import datetime
@@ -920,68 +920,8 @@ class Console(Cmd):
         clidefs.prettyprint(self.param_list)
 
     def do_show(self, args):
-        """show: shows a list of params that starts with 'param' for simulation n
-           Usage: show <expmt> in (<N>, <N_T>)
-           where <expmt> is one of the experimental groups,
-                 <N> is the sim number, and <N_T> is the trial number
-        """
-        key_dict = self.p_exp.get_key_types()
-
-        vars = args.split(' in ')
-        expmt_group = vars[0]
-
-        # check to see if the expmt_group is valid
-        if expmt_group not in self.ddata.expmt_groups:
-            print "Perhaps not a valid experiment? Try:"
-            print self.ddata.expmt_groups
-            return 0
-
-        # now get the tuple representing the N and N_T
-        try:
-            N, N_T = ast.literal_eval(vars[-1])
-        except:
-            print "Confused?"
-            return 0
-
-        # will we always be making up for this
-        if not self.p_exp.N_trials:
-            N_trials = 1
-        else:
-            N_trials = self.p_exp.N_trials
-
-        # check to make sure both sim and trial exist
-        if (N < self.p_exp.N_sims) and (N_T < N_trials):
-            # create the filename
-            fname_short = self.p_exp.trial_prefix_str % (N, N_T) + '-param.txt'
-            fname = os.path.join(self.ddata.dfig[expmt_group]['param'], fname_short)
-
-            if os.path.isfile(fname):
-                print "\nFile: %s" % fname
-
-            gid_dict, p = paramrw.read(fname)
-            print "Changed vars and some standard vars:"
-
-            # self.var_list contains stuff from p_exp AND individual p
-            # so just select out what is in p
-            for var in self.var_list:
-                if var[0] in p.keys():
-                    print "  %s:" % var[0], p[var[0]]
-
-            # print some additional info
-            list_meta = [
-                'Trial',
-                'N_pyr_x',
-                'N_pyr_y',
-            ]
-            for key in list_meta:
-                if key in p.keys():
-                    print "  %s:" % key, p[key]
-
-            print ""
-        else:
-            print "Either N or N_T might be incorrect"
-
-            return 0
+        dict_opts = self.__create_dict_from_args(args)
+        clidefs.exec_show(self.ddata, dict_opts)
 
     def complete_show(self, text, line, j0, J):
         """Completion function for show
@@ -1025,37 +965,8 @@ class Console(Cmd):
         print self.N_sims
 
     def do_pngv(self, args):
-        """Attempt to find the PNGs and open them
-        """
-        # assume args is an experiment
-        if not args:
-            # try the first of them
-            expmt_group = self.ddata.expmt_groups[0]
-        else:
-            expmt_group = args
-
-        if expmt_group not in self.ddata.expmt_groups:
-            print "Try one of these:"
-            print self.ddata.expmt_groups
-            return 0
-
-        else:
-            # for now do just figdpl
-            dimg = os.path.join(self.ddata.dsim, expmt_group, 'figdpl')
-            clidefs.png_viewer_simple(dimg)
-
-        # if args == 'all':
-        #     clidefs.file_viewer(self.dsim, 'all')
-        # else:
-        #     # pretest to see if the experimental directory exists
-        #     if not os.path.isdir(os.path.join(self.dsim, args, 'spec')):
-        #         print "Defaulting to first. Try one of: "
-        #         clidefs.prettyprint(self.expmts)
-        #         expmt = os.path.join(self.dsim, self.expmts[0])
-        #     else:
-        #         expmt = args
-
-        #     file_viewer(self.dsim, expmt)
+        dict_opts = self.__create_dict_from_args(args)
+        clidefs.exec_pngv(self.ddata, dict_opts)
 
     def complete_pngv(self, text, line, j0, J):
         if text:

@@ -1,8 +1,8 @@
 # L2_basket.py - establish class def for layer 2 basket cells
 #
-# v 1.8.10
-# rev 2013-06-20 (MS: Merge feedsynapes_new with master)
-# last rev: (MS: Added NMDA synapse for external feed. Conductance set in external param files)
+# v 1.8.26
+# rev 2014-05-22 (SL: added IClamp to L2Basket())
+# last rev: (MS: Merge feedsynapes_new with master)
 
 import itertools as it
 from neuron import h as nrn
@@ -22,13 +22,42 @@ class L2Basket(BasketSingle):
         self.__biophysics()
 
     def __synapse_create(self):
-        # ceates synapses onto this cell 
+        # creates synapses onto this cell
         self.soma_ampa = self.syn_ampa_create(self.soma(0.5))
         self.soma_gabaa = self.syn_gabaa_create(self.soma(0.5))
         self.soma_nmda = self.syn_nmda_create(self.soma(0.5))
 
     def __biophysics(self):
         self.soma.insert('hh')
+
+    # insert IClamps in all situations
+    # temporarily an external function taking the p dict
+    def create_all_IClamp(self, p):
+        # list of sections for this celltype
+        sect_list_IClamp = [
+            'soma',
+        ]
+
+        # some parameters
+        t_delay = 0.
+        t_dur = nrn.tstop - t_delay
+
+        # t_dur must be nonnegative, I imagine
+        if t_dur < 0.:
+            t_dur = 0.
+
+        # properties of the IClamp
+        props_IClamp = {
+            'loc': 0.5,
+            'delay': t_delay,
+            'dur': t_dur,
+            'amp': p['Itonic_A_L2Basket']
+        }
+
+        # iterate through list of sect_list_IClamp to create a persistent IClamp object
+        # the insert_IClamp procedure is in Cell() and checks on names
+        # so names must be actual section names, or else it will fail silently
+        self.list_IClamp = [self.insert_IClamp(sect_name, props_IClamp) for sect_name in sect_list_IClamp]
 
     # par connect between all presynaptic cells
     # no connections from L5Pyr or L5Basket to L2Baskets
@@ -47,15 +76,15 @@ class L2Basket(BasketSingle):
         # FROM other L2Basket cells
         for gid_src, pos in it.izip(gid_dict['L2_basket'], pos_dict['L2_basket']):
             # no autapses
-            if gid_src != gid:
-                nc_dict = {
-                    'pos_src': pos,
-                    'A_weight': p['gbar_L2Basket_L2Basket'],
-                    'A_delay': 1.,
-                    'lamtha': 20.,
-                }
+            # if gid_src != gid:
+            nc_dict = {
+                'pos_src': pos,
+                'A_weight': p['gbar_L2Basket_L2Basket'],
+                'A_delay': 1.,
+                'lamtha': 20.,
+            }
 
-                self.ncfrom_L2Basket.append(self.parconnect_from_src(gid_src, nc_dict, self.soma_gabaa))
+            self.ncfrom_L2Basket.append(self.parconnect_from_src(gid_src, nc_dict, self.soma_gabaa))
 
     # this function might make more sense as a method of net?
     # par: receive from external inputs

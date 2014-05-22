@@ -1,8 +1,8 @@
 # clidefs.py - these are all of the function defs for the cli
 #
-# v 1.8.24
-# rev 2013-02-05 (MS: Merged SpecClass with master)
-# last major: (SL: Added some pgamma plots)
+# v 1.8.26
+# rev 2013-05-22 (SL: fixed show and pngv)
+# last major: (MS: Merged SpecClass with master)
 
 # Standard modules
 import fnmatch, os, re, sys
@@ -27,6 +27,7 @@ import pspec
 import dipolefn
 import axes_create as ac
 import pmanu_gamma as pgamma
+import subprocess
 
 # Returns length of any list
 def number_of_sims(some_list):
@@ -70,6 +71,12 @@ def args_check(dict_default, dict_check):
         if keys_missing:
             print "Options were not recognized: "
             fio.prettyprint(keys_missing)
+
+def exec_pngv(ddata, dict_opts={}):
+    """Attempt to find the PNGs and open them
+       [aushnew] pngv {--run=0 --expmt_group='testing' --type='fig_spec'}
+    """
+    file_viewer(ddata, dict_opts)
 
 # returns average spike data
 def exec_spike_rates(ddata, opts):
@@ -225,6 +232,71 @@ def exec_throwaway(ddata, opts):
     # print "converted to nAm"
 
     # dpl.write(f_name)
+
+def exec_show(ddata, dict_opts):
+    dict_opts_default = {
+        'run': 0,
+        'trial': 0,
+        'expmt_group': '',
+        'key': 'changed',
+        'var_list': [],
+    }
+
+    # hack for now to get backward compatibility with this original function
+    var_list = dict_opts_default['var_list']
+
+    exclude_list = [
+        'sim_prefix',
+        'N_trials',
+        'Run_Date',
+    ]
+
+    args_check(dict_opts_default, dict_opts)
+    if dict_opts_default['expmt_group'] not in ddata.expmt_groups:
+        # print "Warning: expmt_group %s not found" % dict_opts_default['expmt_group']
+        dict_opts_default['expmt_group'] = ddata.expmt_groups[0]
+
+    # output the expmt group used
+    print "expmt_group: %s" % dict_opts_default['expmt_group']
+
+    # find the params
+    p_exp = paramrw.ExpParams(ddata.fparam)
+
+    if dict_opts_default['key'] == 'changed':
+        print "Showing changed ... \n"
+        # create a list
+        var_list = [val[0] for val in paramrw.changed_vars(ddata.fparam)]
+
+    elif dict_opts_default['key'] in p_exp.keys():
+        # create a list with just this element
+        var_list = [dict_opts_default['key']]
+
+    else:
+        key_part = dict_opts_default['key']
+        var_list = [key for key in p_exp.keys() if key_part in key]
+
+    if not var_list:
+        print "Keys were not found by exec_show()"
+        return 0
+
+    # files
+    fprefix = ddata.trial_prefix_str % (dict_opts_default['run'], dict_opts_default['trial'])
+    fparam = ddata.create_filename(dict_opts_default['expmt_group'], 'param', fprefix)
+
+    list_param = ddata.file_match(dict_opts_default['expmt_group'], 'param')
+
+    if fparam in list_param:
+        # this version of read returns the gid dict as well ...
+        _, p = paramrw.read(fparam)
+
+        # use var_list to print values
+        for key in var_list:
+            if key not in exclude_list:
+                try:
+                    print '%s: %s' % (key, p[key])
+
+                except KeyError:
+                    print "Value %s not found in file %s!" % (key, fparam)
 
 def exec_show_dpl_max(ddata, opts={}):
     p = {
@@ -1399,26 +1471,35 @@ def view_img(dir_data, ext):
 
     call([app_img + os.path.join(dir_data, 'spec') + ext_img], shell=True)
 
-# Cross platform file viewing over all expmts
-def file_viewer(ddata, expmt):
-    if expmt == 'all':
-        # Find all of the png files in this directory
-        files_png = fio.file_match(ddata, '*.png')
+# Cross platform file viewing over all exmpts
+def file_viewer(ddata, dict_opts):
+    opts_default = {
+        'expmt_group': ddata.expmt_groups[0],
+        'type': 'figspec',
+        'run': 'all',
+    }
+    args_check(opts_default, dict_opts)
 
-        # Create an empty file argument
-        files_arg = ''
-        for file in files_png:
-            files_arg += file + ' '
-        
-        if sys.platform.startswith('darwin'):
-            app_img = 'open -a xee '
-            call([app_img + files_arg], shell=True)
-        elif sys.platform.startswith('linux'):
-            app_img = 'eog '
-            call([app_img + files_arg + '&'], shell=True)
+    # return a list of files by run
+    if opts_default['run'] == 'all':
+        flist = ddata.file_match(opts_default['expmt_group'], opts_default['type'])
+
     else:
-        dexpmt = os.path.join(ddata, expmt)
-        view_img(dexpmt, 'png')
+        flist = ddata.file_match_by_run(**opts_default)
+
+    # sort the list in place
+    flist.sort()
+
+    # create a list of files for the argument to the program
+    files_arg = ' '.join(flist)
+
+    if sys.platform.startswith('darwin'):
+        app_img = 'open -a preview '
+        subprocess.call([app_img + files_arg], shell=True)
+
+    elif sys.platform.startswith('linux'):
+        app_img = 'eog '
+        subprocess.call([app_img + files_arg + '&'], shell=True)
 
 # a really simple image viewer, views images in dimg
 def png_viewer_simple(dimg):

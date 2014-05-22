@@ -1,8 +1,8 @@
 # params_default.py - master list of changeable params. most set to default val of inactive
 #
-# v 1.8.15cell
-# rev 2013-07-03 (MS: get_L5Pyr()_params_defaults returns default params of L5Pyr() class)
-# last major: (MS: get_L2Pyr_params_default() returns default params of L2Pyr() class)
+# v 1.8.26
+# rev 2014-05-22 (SL: moved the default times back ... really should implement the -1)
+# last major: (MS: get_L5Pyr()_params_defaults returns default params of L5Pyr() class)
 
 # Note that nearly all start times are set BEYOND tstop for this file
 # Most values here are set to whatever default value inactivates them, such as 0 for conductance
@@ -25,28 +25,28 @@ def get_params_default():
         # amplitudes of individual Gaussian random inputs to L2Pyr and L5Pyr
         # L2 Basket params
         'L2Basket_Gauss_A_weight': 0.,
-        'L2Basket_Gauss_mu': 1000.,
+        'L2Basket_Gauss_mu': 2000.,
         'L2Basket_Gauss_sigma': 3.6,
         'L2Basket_Pois_A_weight': 0.,
         'L2Basket_Pois_lamtha': 0.,
 
         # L2 Pyr params
         'L2Pyr_Gauss_A_weight': 0.,
-        'L2Pyr_Gauss_mu': 1000.,
+        'L2Pyr_Gauss_mu': 2000.,
         'L2Pyr_Gauss_sigma': 3.6,
         'L2Pyr_Pois_A_weight': 0.,
         'L2Pyr_Pois_lamtha': 0.,
 
         # L5 Pyr params
         'L5Pyr_Gauss_A_weight': 0.,
-        'L5Pyr_Gauss_mu': 1000.,
+        'L5Pyr_Gauss_mu': 2000.,
         'L5Pyr_Gauss_sigma': 4.8,
         'L5Pyr_Pois_A_weight': 0.,
         'L5Pyr_Pois_lamtha': 0.,
 
         # L5 Basket params
         'L5Basket_Gauss_A_weight': 0.,
-        'L5Basket_Gauss_mu': 1000.,
+        'L5Basket_Gauss_mu': 2000.,
         'L5Basket_Gauss_sigma': 2.,
         'L5Basket_Pois_A_weight': 0.,
         'L5Basket_Pois_lamtha': 0.,
@@ -129,15 +129,15 @@ def get_params_default():
         'gbar_evdist_L2Basket': 0.,
 
         # times and stdevs for evoked responses
-        't_evprox_early': 1000.,
+        't_evprox_early': 2000.,
         'sigma_t_evprox_early': 2.5,
 
         'dt_evprox0_evdist': -1,
-        't_evdist': 1000.,
+        't_evdist': 2000.,
         'sigma_t_evdist': 6.,
 
         'dt_evprox0_evprox1': -1,
-        't_evprox_late': 1000.,
+        't_evprox_late': 2000.,
         'sigma_t_evprox_late': 7.,
 
         # analysis
@@ -148,6 +148,9 @@ def get_params_default():
         'Itonic_A_L2Pyr_soma': 0.,
         'Itonic_t0_L2Pyr_soma': 0.,
         'Itonic_T_L2Pyr_soma': -1.,
+
+        # IClamp param for L2Basket (just amplitude for now)
+        'Itonic_A_L2Basket': 0.,
 
         # IClamp params for L5Pyr
         'Itonic_A_L5Pyr_soma': 0.,
