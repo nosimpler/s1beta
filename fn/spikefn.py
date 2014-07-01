@@ -1,8 +1,8 @@
 # spikefn.py - dealing with spikes
 #
-# v 1.8.25
-# rev 2014-03-13 (MS: fn to calculate envelope of input histogram. Truncate fn added to ExtInputs())
-# last major: (MS: Created class ExtInputs() for easy post-hoc analysis of extinput event times)
+# v 1.8.27
+# rev 2014-07-01 (minor)
+# last major: (MS: fn to calculate envelope of input histogram. Truncate fn added to ExtInputs())
 
 import fileio as fio
 import numpy as np
@@ -154,12 +154,7 @@ class ExtInputs(Spikes):
         if not xlim:
             xlim = (0., p_dict['tstop'])
 
-        hist= ax.hist(self.inputs[extinput], bins, range=xlim, color=color, label=extinput)
-
-        # ax.hold(True)
-        # self.get_envelope(tvec)
-        # ax.plot(tvec, self.inputs['env'])
-        # ax.plot(self.inputs['t'], self.inputs['env'])
+        hist = ax.hist(self.inputs[extinput], bins, range=xlim, color=color, label=extinput)
 
         return hist
 

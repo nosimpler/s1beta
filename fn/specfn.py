@@ -1,8 +1,8 @@
 # specfn.py - Average time-frequency energy representation using Morlet wavelet method
 #
-# v 1.8.26
-# rev 2014-05-22 (SL: minor)
-# last major: (MS: Created PhaseLock() to calculate phaselocking values between two time-series)
+# v 1.8.27
+# rev 2014-07-01 (reorganization)
+# last major: (SL: minor)
 
 import os
 import sys
@@ -20,35 +20,6 @@ import currentfn
 import dipolefn
 import spikefn 
 import axes_create as ac
-
-# general spec write function
-def write(fdata_spec, t_vec, f_vec, TFR):
-    np.savez_compressed(fdata_spec, time=t_vec, freq=f_vec, TFR=TFR)
-
-    # np.savetxt(file_write, self.TFR, fmt = "%5.4f")
-
-# general spec read function
-def read(fdata_spec, type='dpl'):
-    if type == 'dpl':
-        data_spec = np.load(fdata_spec)
-        return data_spec
-
-    elif type == 'current':
-        # split this up into 2 spec types
-        data_spec = np.load(fdata_spec)
-        spec_L2 = {
-            't': data_spec['t_L2'],
-            'f': data_spec['f_L2'],
-            'TFR': data_spec['TFR_L2'],
-        }
-
-        spec_L5 = {
-            't': data_spec['t_L5'],
-            'f': data_spec['f_L5'],
-            'TFR': data_spec['TFR_L5'],
-        }
-
-        return spec_L2, spec_L5
 
 class Spec():
     def __init__(self, fspec, dtype='dpl'):
@@ -292,52 +263,6 @@ class Spec():
         ax.plot(self.spec['pgram']['f'], self.spec['pgram']['p'])
         ax.set_xlim((0., f_max))
 
-# core class for frequency analysis assuming stationary time series
-class Welch():
-    def __init__(self, t_vec, ts_vec, dt):
-        # assign data internally
-        self.t_vec = t_vec
-        self.ts_vec = ts_vec
-        self.dt = dt
-        self.units = 'tsunits^2'
-
-        # only assign length if same
-        if len(self.t_vec) == len(self.ts_vec):
-            self.N = len(ts_vec)
-
-        else:
-            # raise an exception for real sometime in the future, for now just say something
-            print "in specfn.Welch(), your lengths don't match! Something will fail!"
-
-        # in fact, this will fail (see above)
-        self.N_fft = self.__nextpow2(self.N)
-
-        # grab the dt (in ms) and calc sampling frequency
-        self.fs = 1000. / self.dt
-
-        # calculate the actual Welch
-        self.f, self.P = sps.welch(self.ts_vec, self.fs, window='hanning', nperseg=self.N, noverlap=0, nfft=self.N_fft, return_onesided=True, scaling='spectrum')
-
-    # simple plot to an axis
-    def plot_to_ax(self, ax, f_max=80.):
-        ax.plot(self.f, self.P)
-        ax.set_xlim((0., f_max))
-
-    def scale(self, scalefactor):
-        self.P *= scalefactor
-        self.units += ' x%3.4e' % scalefactor
-
-    # return the next power of 2 generally for a given L
-    def __nextpow2(self, L):
-        n = 2
-        # j = 1
-        while n < L:
-            # j += 1
-            n *= 2
-
-        return n
-        # return n, j
-
 # MorletSpec class based on a time vec tvec and a time series vec tsvec
 class MorletSpec():
     def __init__(self, tvec, tsvec, fparam, f_max=None):
@@ -498,6 +423,81 @@ class MorletSpec():
         S = 2 * sum(s * tmp) / len(s)
 
         return S
+
+# core class for frequency analysis assuming stationary time series
+class Welch():
+    def __init__(self, t_vec, ts_vec, dt):
+        # assign data internally
+        self.t_vec = t_vec
+        self.ts_vec = ts_vec
+        self.dt = dt
+        self.units = 'tsunits^2'
+
+        # only assign length if same
+        if len(self.t_vec) == len(self.ts_vec):
+            self.N = len(ts_vec)
+
+        else:
+            # raise an exception for real sometime in the future, for now just say something
+            print "in specfn.Welch(), your lengths don't match! Something will fail!"
+
+        # in fact, this will fail (see above)
+        # self.N_fft = self.__nextpow2(self.N)
+
+        # grab the dt (in ms) and calc sampling frequency
+        self.fs = 1000. / self.dt
+
+        # calculate the actual Welch
+        self.f, self.P = sps.welch(self.ts_vec, self.fs, window='hanning', nperseg=self.N, noverlap=0, nfft=self.N, return_onesided=True, scaling='spectrum')
+
+    # simple plot to an axis
+    def plot_to_ax(self, ax, f_max=80.):
+        ax.plot(self.f, self.P)
+        ax.set_xlim((0., f_max))
+
+    def scale(self, scalefactor):
+        self.P *= scalefactor
+        self.units += ' x%3.4e' % scalefactor
+
+    # return the next power of 2 generally for a given L
+    def __nextpow2(self, L):
+        n = 2
+        # j = 1
+        while n < L:
+            # j += 1
+            n *= 2
+
+        return n
+        # return n, j
+
+# general spec write function
+def write(fdata_spec, t_vec, f_vec, TFR):
+    np.savez_compressed(fdata_spec, time=t_vec, freq=f_vec, TFR=TFR)
+
+    # np.savetxt(file_write, self.TFR, fmt = "%5.4f")
+
+# general spec read function
+def read(fdata_spec, type='dpl'):
+    if type == 'dpl':
+        data_spec = np.load(fdata_spec)
+        return data_spec
+
+    elif type == 'current':
+        # split this up into 2 spec types
+        data_spec = np.load(fdata_spec)
+        spec_L2 = {
+            't': data_spec['t_L2'],
+            'f': data_spec['f_L2'],
+            'TFR': data_spec['TFR_L2'],
+        }
+
+        spec_L5 = {
+            't': data_spec['t_L5'],
+            'f': data_spec['f_L5'],
+            'TFR': data_spec['TFR_L5'],
+        }
+
+        return spec_L2, spec_L5
 
 # average spec data for a given set of files
 def average(fname, fspec_list):
