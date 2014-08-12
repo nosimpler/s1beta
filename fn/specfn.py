@@ -1,8 +1,8 @@
 # specfn.py - Average time-frequency energy representation using Morlet wavelet method
 #
-# v 1.8.27
-# rev 2014-07-01 (reorganization)
-# last major: (SL: minor)
+# v 1.8.28
+# rev 2014-08-12 (SL: reorganization, some non-major comments on PhaseLock())
+# last major: (reorganization)
 
 import os
 import sys
@@ -20,6 +20,296 @@ import currentfn
 import dipolefn
 import spikefn 
 import axes_create as ac
+
+# MorletSpec class based on a time vec tvec and a time series vec tsvec
+class MorletSpec():
+    def __init__(self, tvec, tsvec, fparam, f_max=None):
+        # Save variable portion of fdata_spec as identifying attribute
+        # self.name = fdata_spec
+
+        # Import dipole data and remove extra dimensions from signal array.
+        self.tvec = tvec
+        self.tsvec = tsvec
+
+        # function is called this way because paramrw.read() returns 2 outputs
+        self.p_dict = paramrw.read(fparam)[1]
+
+        # maximum frequency of analysis
+        # Add 1 to ensure analysis is inclusive of maximum frequency
+        if not f_max:
+            self.f_max = self.p_dict['f_max_spec'] + 1
+        else:
+            self.f_max = f_max + 1
+
+        # cutoff time in ms
+        self.tmin = 50.
+
+        # truncate these vectors appropriately based on tmin
+        if self.p_dict['tstop'] > self.tmin:
+            # must be done in this order! timeseries first!
+            self.tsvec = self.tsvec[self.tvec >= self.tmin]
+            self.tvec = self.tvec[self.tvec >= self.tmin]
+
+        # Check that tstop is greater than tmin
+        if self.p_dict['tstop'] > self.tmin:
+            # Array of frequencies over which to sort
+            self.f = np.arange(1., self.f_max)
+
+            # Number of cycles in wavelet (>5 advisable)
+            self.width = 7.
+
+            # Calculate sampling frequency
+            self.fs = 1000. / self.p_dict['dt']
+
+            # Generate Spec data
+            self.TFR = self.__traces2TFR()
+
+            # Add time vector as first row of TFR data
+            # self.TFR = np.vstack([self.timevec, self.TFR])
+
+        else:
+            print "tstop not greater than %4.2f ms. Skipping wavelet analysis." % self.tmin
+
+    # externally callable save function
+    def save(self, fdata_spec):
+        write(fdata_spec, self.timevec, self.freqvec, self.TFR)
+
+    def plot_to_ax(self, ax_spec, dt):
+        # pc = ax.imshow(self.TFR, extent=[xmin, xmax, self.freqvec[-1], self.freqvec[0]], aspect='auto', origin='upper')
+        pc = ax_spec.imshow(self.TFR, aspect='auto', origin='upper')
+
+        return pc
+
+    # get time and freq of max spectral power
+    def max(self):
+        max_spec = self.TFR.max()
+
+        t_mask = (self.TFR==max_spec).sum(axis=0)
+        t_at_max = self.tvec[t_mask == 1]
+
+        f_mask = (self.TFR==max_spec).sum(axis=1)
+        f_at_max = self.f[f_mask == 1]
+
+        return np.array((max_spec, t_at_max, f_at_max))
+
+    # also creates self.timevec
+    def __traces2TFR(self):
+        self.S_trans = self.tsvec.transpose()
+        # self.S_trans = self.S.transpose()
+
+        # range should probably be 0 to len(self.S_trans)
+        # shift tvec to reflect change
+        self.t = 1000. * np.arange(1, len(self.S_trans)+1)/self.fs + self.tmin - self.p_dict['dt']
+
+        # preallocation
+        B = np.zeros((len(self.f), len(self.S_trans)))
+
+        if self.S_trans.ndim == 1:
+            for j in range(0, len(self.f)):
+                s = sps.detrend(self.S_trans[:])
+                B[j, :] += self.__energyvec(self.f[j], s)
+                # B[j,:] = B[j,:] + self.__energyvec(self.freqvec[j], self.__lnr50(s))
+
+            return B
+
+        else:
+            for i in range(0, self.S_trans.shape[0]):
+                for j in range(0, len(self.f)):
+                    s = sps.detrend(self.S_trans[i,:])
+                    B[j,:] += self.__energyvec(self.f[j], s)
+                    # B[j,:] = B[j,:] + self.__energyvec(self.freqvec[j], self.__lnr50(s))
+
+    def __energyvec(self, f, s):
+        # Return an array containing the energy as function of time for freq f
+        # The energy is calculated using Morlet's wavelets
+        # f: frequency 
+        # s: signal
+        dt = 1. / self.fs
+        sf = f / self.width
+        st = 1. / (2. * np.pi * sf)
+
+        t = np.arange(-3.5*st, 3.5*st, dt)
+        m = self.__morlet(f, t)
+        y = sps.fftconvolve(s, m)
+        y = (2. * abs(y) / self.fs)**2
+        y = y[np.ceil(len(m)/2.):len(y)-np.floor(len(m)/2.)+1]
+
+        return y
+
+    def __morlet(self, f, t):
+        # Morlet's wavelet for frequency f and time t
+        # Wavelet normalized so total energy is 1
+        # f: specific frequency
+        # t: not entirely sure...
+
+        sf = f / self.width
+        st = 1. / (2. * np.pi * sf)
+        A = 1. / (st * np.sqrt(2.*np.pi))
+
+        y = A * np.exp(-t**2. / (2. * st**2.)) * np.exp(1.j * 2. * np.pi * f * t)
+
+        return y
+
+    def __lnr50(self, s):
+        # Line noise reduction (50 Hz) the amplitude and phase of the line notch is estimate.
+        # A sinusoid with these characterisitics is then subtracted from the signal.
+        # s: signal
+
+        fNoise = 50.
+        tv = np.arange(0,len(s))/self.fs
+
+        if np.ndim(s) == 1:
+            Sc = np.zeros(s.shape)
+            Sft = self.__ft(s[:], fNoise)
+            Sc[:] = s[:] - abs(Sft) * np.cos(2. * np.pi * fNoise * tv - np.angle(Sft))
+
+            return Sc
+
+        else:
+            s = s.transpose()
+            Sc = np.zeros(s.shape)
+
+            for k in range(0, len(s)):
+                Sft = ft(s[k,:], fNoise)
+                Sc[k,:] = s[k,:] - abs(Sft) * np.cos(2. * np.pi * fNoise * tv - np.angle(Sft))
+
+            return Sc.tranpose()
+
+    def __ft(self, s, f):
+        tv = np.arange(0,len(s)) / self.fs
+        tmp = np.exp(1.j*2. * np.pi * f * tv)
+        S = 2 * sum(s * tmp) / len(s)
+
+        return S
+
+# calculates a phase locking value between 2 time series via morlet wavelets
+class PhaseLock():
+    """ Based on 4Dtools (deprecated) MATLAB code
+        Might be a newer version in fieldtrip
+    """
+    def __init__(self, tsarray1, tsarray2, fparam, f_max=60.):
+        # Save time-series arrays as self variables
+        # ohhhh. Do not use 1-indexed keys of a dict!
+        self.ts = {
+            1: tsarray1,
+            2: tsarray2,
+        }
+
+        # Get param dict
+        self.p = paramrw.read(fparam)[1]
+
+        # Set frequecies over which to sory
+        self.f = np.arange(1., f_max+1)
+
+        # Set width of Morlet wavelet (>= 5 suggested)
+        self.width = 7.
+
+        # Calculate sampling frequency
+        # self.fs = 1. / dt
+        self.fs = 1000. / self.p['dt']
+
+        self.data = self.__traces2PLS()
+
+    def __traces2PLS(self):
+        # Not sure what's going on here...
+        # nshuffle = 200;
+        nshuffle = 1;
+
+        # Construct timevec
+        tvec = np.arange(1, self.ts[1].shape[1]) / self.fs
+
+        # Prellocated arrays
+        # Check sizes
+        B = np.zeros((self.f.size, self.ts[1].shape[1]))
+        Bstat = np.zeros((self.f.size, self.ts[1].shape[1]))
+        Bplf = np.zeros((self.f.size, self.ts[1].shape[1]))
+
+        # Do the analysis
+        for i, freq in enumerate(self.f):
+            print('%i Hz' % freq)
+
+            # Get phase of signals for given freq
+            # Check sizes
+            B1 = self.__phasevec(freq, num_ts=1)
+            B2 = self.__phasevec(freq, num_ts=2)
+
+            # Potential conflict here
+            # Check size
+            B[i, :] = np.mean(B1/B2, axis=0)
+            B[i, :] = abs(B[i, :])
+
+            # Randomly shuffle B2
+            for j in range(0, nshuffle):
+                # Check size
+                idxShuffle = np.random.permutation(B2.shape[0])
+                B2shuffle = B2[idxShuffle, :]
+
+                Bshuffle = np.mean(B1/B2shuffle, axis=0)
+                Bplf[i, :] += Bshuffle
+
+                idxSign = (abs(B[i, :]) > abs(Bshuffle))
+                Bstat[i, idxSign] += 1
+
+        # Final calculation of Bstat, Bplf
+        Bstat = 1. - Bstat / nshuffle
+        Bplf /= nshuffle
+
+        # Store data
+        return {
+            't': tvec,
+            'f': self.f,
+            'B': B,
+            'Bstat': Bstat,
+            'Bplf': Bplf,
+        }
+
+    def __phasevec(self, f, num_ts=1):
+        """ should num_ts here be 0, as an index?
+        """
+        dt = 1. / self.fs
+        sf = f / self.width
+        st = 1. / (2. * np.pi * sf)
+
+        # create a time vector for the morlet wavelet
+        t = np.arange(-3.5*st, 3.5*st+dt, dt)
+        m = self.__morlet(f, t)
+
+        y = np.array([])
+
+        for k in range(0, self.ts[num_ts].shape[0]):
+            if k == 0:
+                s = sps.detrend(self.ts[num_ts][k, :])
+                y = np.array([sps.fftconvolve(s, m)])
+
+            else:
+                # convolve kth time series with morlet wavelet
+                # might as well let return valid length (not implemented)
+                y_tmp = sps.fftconvolve(self.ts[num_ts][k, :], m)
+                y = np.vstack((y, y_tmp))
+
+        # Change 0s to 1s to avoid division by 0
+        # l is an index
+        # y is now complex, so abs(y) is the complex absolute value
+        l = (abs(y) == 0)
+        y[l] = 1.
+
+        # normalize phase values and return 1s to zeros
+        y = y / abs(y)
+        y[l] = 0
+        y = y[:, np.ceil(len(m)/2.)-1:y.shape[1]-np.floor(len(m)/2.)]
+
+        return y
+
+    def __morlet(self, f, t):
+        """ Calculate the morlet wavelet
+        """
+        sf = f / self.width
+        st = 1. / (2. * np.pi * sf)
+        A = 1. / np.sqrt(st*np.sqrt(np.pi))
+
+        y = A * np.exp(-t**2./(2.*st**2.)) * np.exp(1.j*2.*np.pi*f*t)
+
+        return y
 
 class Spec():
     def __init__(self, fspec, dtype='dpl'):
@@ -263,167 +553,6 @@ class Spec():
         ax.plot(self.spec['pgram']['f'], self.spec['pgram']['p'])
         ax.set_xlim((0., f_max))
 
-# MorletSpec class based on a time vec tvec and a time series vec tsvec
-class MorletSpec():
-    def __init__(self, tvec, tsvec, fparam, f_max=None):
-        # Save variable portion of fdata_spec as identifying attribute
-        # self.name = fdata_spec
-
-        # Import dipole data and remove extra dimensions from signal array.
-        self.tvec = tvec
-        self.tsvec = tsvec
-
-        # function is called this way because paramrw.read() returns 2 outputs
-        self.p_dict = paramrw.read(fparam)[1]
-
-        # maximum frequency of analysis
-        # Add 1 to ensure analysis is inclusive of maximum frequency
-        if not f_max:
-            self.f_max = self.p_dict['f_max_spec'] + 1
-        else:
-            self.f_max = f_max + 1
-
-        # cutoff time in ms
-        self.tmin = 50.
-
-        # truncate these vectors appropriately based on tmin
-        if self.p_dict['tstop'] > self.tmin:
-            # must be done in this order! timeseries first!
-            self.tsvec = self.tsvec[self.tvec >= self.tmin]
-            self.tvec = self.tvec[self.tvec >= self.tmin]
-
-        # Check that tstop is greater than tmin
-        if self.p_dict['tstop'] > self.tmin:
-            # Array of frequencies over which to sort
-            self.f = np.arange(1., self.f_max)
-
-            # Number of cycles in wavelet (>5 advisable)
-            self.width = 7.
-
-            # Calculate sampling frequency
-            self.fs = 1000. / self.p_dict['dt']
-
-            # Generate Spec data
-            self.TFR = self.__traces2TFR()
-
-            # Add time vector as first row of TFR data
-            # self.TFR = np.vstack([self.timevec, self.TFR])
-
-        else:
-            print "tstop not greater than %4.2f ms. Skipping wavelet analysis." % self.tmin
-
-    # externally callable save function
-    def save(self, fdata_spec):
-        write(fdata_spec, self.timevec, self.freqvec, self.TFR)
-
-    def plot_to_ax(self, ax_spec, dt):
-        # pc = ax.imshow(self.TFR, extent=[xmin, xmax, self.freqvec[-1], self.freqvec[0]], aspect='auto', origin='upper')
-        pc = ax_spec.imshow(self.TFR, aspect='auto', origin='upper')
-
-        return pc
-
-    # get time and freq of max spectral power
-    def max(self):
-        max_spec = self.TFR.max()
-
-        t_mask = (self.TFR==max_spec).sum(axis=0)
-        t_at_max = self.tvec[t_mask == 1]
-
-        f_mask = (self.TFR==max_spec).sum(axis=1)
-        f_at_max = self.f[f_mask == 1]
-
-        return np.array((max_spec, t_at_max, f_at_max))
-
-    # also creates self.timevec
-    def __traces2TFR(self):
-        self.S_trans = self.tsvec.transpose()
-        # self.S_trans = self.S.transpose()
-
-        # range should probably be 0 to len(self.S_trans)
-        # shift tvec to reflect change
-        self.t = 1000. * np.arange(1, len(self.S_trans)+1)/self.fs + self.tmin - self.p_dict['dt']
-
-        # preallocation
-        B = np.zeros((len(self.f), len(self.S_trans)))
-
-        if self.S_trans.ndim == 1:
-            for j in range(0, len(self.f)):
-                s = sps.detrend(self.S_trans[:])
-                B[j, :] += self.__energyvec(self.f[j], s)
-                # B[j,:] = B[j,:] + self.__energyvec(self.freqvec[j], self.__lnr50(s))
-
-            return B
-
-        else:
-            for i in range(0, self.S_trans.shape[0]):
-                for j in range(0, len(self.f)):
-                    s = sps.detrend(self.S_trans[i,:])
-                    B[j,:] += self.__energyvec(self.f[j], s)
-                    # B[j,:] = B[j,:] + self.__energyvec(self.freqvec[j], self.__lnr50(s))
-
-    def __energyvec(self, f, s):
-        # Return an array containing the energy as function of time for freq f
-        # The energy is calculated using Morlet's wavelets
-        # f: frequency 
-        # s: signal
-        dt = 1. / self.fs
-        sf = f / self.width
-        st = 1. / (2. * np.pi * sf)
-
-        t = np.arange(-3.5*st, 3.5*st, dt)
-        m = self.__morlet(f, t)
-        y = sps.fftconvolve(s, m)
-        y = (2. * abs(y) / self.fs)**2
-        y = y[np.ceil(len(m)/2.):len(y)-np.floor(len(m)/2.)+1]
-
-        return y
-
-    def __morlet(self, f, t):
-        # Morlet's wavelet for frequency f and time t
-        # Wavelet normalized so total energy is 1
-        # f: specific frequency
-        # t: not entirely sure...
-
-        sf = f / self.width
-        st = 1. / (2. * np.pi * sf)
-        A = 1. / (st * np.sqrt(2.*np.pi))
-
-        y = A * np.exp(-t**2. / (2. * st**2.)) * np.exp(1.j * 2. * np.pi * f * t)
-
-        return y
-
-    def __lnr50(self, s):
-        # Line noise reduction (50 Hz) the amplitude and phase of the line notch is estimate.
-        # A sinusoid with these characterisitics is then subtracted from the signal.
-        # s: signal
-
-        fNoise = 50.
-        tv = np.arange(0,len(s))/self.fs
-
-        if np.ndim(s) == 1:
-            Sc = np.zeros(s.shape)
-            Sft = self.__ft(s[:], fNoise)
-            Sc[:] = s[:] - abs(Sft) * np.cos(2. * np.pi * fNoise * tv - np.angle(Sft))
-
-            return Sc
-
-        else:
-            s = s.transpose()
-            Sc = np.zeros(s.shape)
-
-            for k in range(0, len(s)):
-                Sft = ft(s[k,:], fNoise)
-                Sc[k,:] = s[k,:] - abs(Sft) * np.cos(2. * np.pi * fNoise * tv - np.angle(Sft))
-
-            return Sc.tranpose()
-
-    def __ft(self, s, f):
-        tv = np.arange(0,len(s)) / self.fs
-        tmp = np.exp(1.j*2. * np.pi * f * tv)
-        S = 2 * sum(s * tmp) / len(s)
-
-        return S
-
 # core class for frequency analysis assuming stationary time series
 class Welch():
     def __init__(self, t_vec, ts_vec, dt):
@@ -473,8 +602,6 @@ class Welch():
 # general spec write function
 def write(fdata_spec, t_vec, f_vec, TFR):
     np.savez_compressed(fdata_spec, time=t_vec, freq=f_vec, TFR=TFR)
-
-    # np.savetxt(file_write, self.TFR, fmt = "%5.4f")
 
 # general spec read function
 def read(fdata_spec, type='dpl'):
@@ -534,125 +661,6 @@ def average(fname, fspec_list):
 
     else:
         np.savez_compressed(fname, t_agg=x['agg']['t'], f_agg=x['agg']['f'], TFR_agg=x['agg']['TFR'])
-
-class PhaseLock():
-    def __init__(self, tsarray1, tsarray2, fparam, f_max=60.):
-        # Save time-series arrays as self variables
-        self.ts = {
-            1: tsarray1,
-            2: tsarray2,
-        }
-
-        # Get param dict
-        self.p = paramrw.read(fparam)[1]
-
-        # Set frequecies over which to sory
-        self.f = np.arange(1., f_max+1)
-
-        # Set width of Morlet wavelet (>= 5 suggested)
-        self.width = 7.
-
-        # Calculate sampling frequency
-        # self.fs = 1. / dt
-        self.fs = 1000. / self.p['dt']
-
-        self.data = self.__traces2PLS()
-
-    def __traces2PLS(self):
-        # Not sure what's going on here...
-        # nshuffle = 200;
-        nshuffle = 1;
-
-        # Construct timevec
-        tvec = np.arange(1, self.ts[1].shape[1]) / self.fs
-
-        # Prellocated arrays
-        # Check sizes
-        B = np.zeros((self.f.size, self.ts[1].shape[1]))
-        Bstat = np.zeros((self.f.size, self.ts[1].shape[1]))
-        Bplf = np.zeros((self.f.size, self.ts[1].shape[1]))
-
-        # Do the analysis
-        for i, freq in enumerate(self.f):
-            print('%i Hz' %freq)
-
-            # Get phase of signals for given freq
-            # Check sizes
-            B1 = self.__phasevec(freq, num_ts=1)
-            B2 = self.__phasevec(freq, num_ts=2)
-
-            # Potential conflict here
-            # Check size
-            B[i, :] = np.mean(B1/B2, axis=0)
-            B[i, :] = abs(B[i, :])
-
-            # Randomly shuffle B2
-            for j in range(0, nshuffle):
-                # Check size
-                idxShuffle = np.random.permutation(B2.shape[0])
-                B2shuffle = B2[idxShuffle, :]
-
-                Bshuffle = np.mean(B1/B2shuffle, axis=0)
-                Bplf[i, :] += Bshuffle
-
-                idxSign = (abs(B[i, :]) > abs(Bshuffle))
-                Bstat[i, idxSign] += 1
-
-        # Final calculation of Bstat, Bplf
-        Bstat = 1. - Bstat / nshuffle
-        Bplf /= nshuffle
-
-        # Store data
-        return {
-            't': tvec,
-            'f': self.f,
-            'B': B,
-            'Bstat': Bstat,
-            'Bplf': Bplf,
-        }
-
-    def __phasevec(self, f, num_ts=1):
-        dt = 1. / self.fs
-        sf = f / self.width
-        st = 1. / (2. * np.pi * sf)
-
-        t = np.arange(-3.5*st, 3.5*st+dt, dt)
-        m = self.__morlet(f, t)
-
-        y = np.array([])
-
-        for k in range(0, self.ts[num_ts].shape[0]):
-            if k == 0:
-                s = sps.detrend(self.ts[num_ts][k, :])
-                y = np.array([sps.fftconvolve(s, m)])
-
-            else:
-                y_tmp = sps.fftconvolve(self.ts[num_ts][k, :], m)
-                y = np.vstack((y, y_tmp))
-
-        # Change 0s to 1s to avoid division by 0
-        l = (abs(y) == 0)
-        y[l] = 1.
-
-        # ize phase values and return 1s to zeros
-        y = y / abs(y)
-        y[l] = 0
-        # print y.shape
-        # print np.ceil(len(m)/2.)
-        # print y.shape[1] - np.floor(len(m)/2.)
-        # print np.floor(len(m)/2.)
-        y = y[:, np.ceil(len(m)/2.)-1:y.shape[1]-np.floor(len(m)/2.)]
-
-        return y
-
-    def __morlet(self, f, t):
-        sf = f / self.width
-        st = 1. / (2. * np.pi * sf)
-        A = 1. / np.sqrt(st*np.sqrt(np.pi))
-
-        y = A * np.exp(-t**2./(2.*st**2.)) * np.exp(1.j*2.*np.pi*f*t)
-
-        return y
 
 # spectral plotting kernel should be simpler and take just a file name and an axis handle
 # Spectral plotting kernel for ONE simulation run
