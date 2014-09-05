@@ -1,8 +1,8 @@
 # params_default.py - master list of changeable params. most set to default val of inactive
 #
-# v 1.8.26
-# rev 2014-05-22 (SL: moved the default times back ... really should implement the -1)
-# last major: (MS: get_L5Pyr()_params_defaults returns default params of L5Pyr() class)
+# v 1.8.29
+# rev 2014-09-05 (SL: fixed a mistakenly named variable)
+# last major: (SL: moved the default times back ... really should implement the -1)
 
 # Note that nearly all start times are set BEYOND tstop for this file
 # Most values here are set to whatever default value inactivates them, such as 0 for conductance
@@ -269,8 +269,8 @@ def get_L5Pyr_params_default():
         'L5Pyr_apical1_L': 680.,
         'L5Pyr_apical1_diam': 7.48,
 
-        'L5Pyr_apicaL5_L': 680.,
-        'L5Pyr_apicaL5_diam': 4.93,
+        'L5Pyr_apical2_L': 680.,
+        'L5Pyr_apical2_diam': 4.93,
         
         'L5Pyr_apicaltuft_L': 425.,
         'L5Pyr_apicaltuft_diam': 3.4,
@@ -281,8 +281,8 @@ def get_L5Pyr_params_default():
         'L5Pyr_basal1_L': 85., 
         'L5Pyr_basal1_diam': 6.8,
         
-        'L5Pyr_basaL5_L': 255., 
-        'L5Pyr_basaL5_diam': 8.5,
+        'L5Pyr_basal2_L': 255.,
+        'L5Pyr_basal2_diam': 8.5,
         
         'L5Pyr_basal3_L': 255., 
         'L5Pyr_basal3_diam': 8.5,

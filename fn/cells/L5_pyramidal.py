@@ -1,8 +1,8 @@
 # L5_pyramidal.py - establish class def for layer 5 pyramidal cells
 #
-# v 1.8.15cell
-# rev 2013-07-03 (MS: L5Pyr() can now take an external param dict and set properties accordingly)
-# last rev: (MS: Dend fns now use dictionary of dends instead of list of dends) 
+# v 1.8.29
+# rev 2013-09-05 (SL: fixed a mistakenly named variable)
+# last rev: (MS: L5Pyr() can now take an external param dict and set properties accordingly)
 
 import sys 
 import numpy as np
@@ -65,7 +65,7 @@ class L5Pyr(Pyr):
     # insert IClamps in all situations
     # temporarily an external function taking the p dict
     def create_all_IClamp(self, p):
-    # def __create_all_IClamp(self):
+        # def __create_all_IClamp(self):
         # list of sections for this celltype
         sect_list_IClamp = [
             'soma',
@@ -111,7 +111,7 @@ class L5Pyr(Pyr):
 
     # Returns dictionary of dendritic properties and list of dendrite names
     def __get_dend_props(self):
-    # def __set_dend_props(self):
+        # def __set_dend_props(self):
         # Hard coded dend properties
         # dend_props =  {
         return {
@@ -128,8 +128,8 @@ class L5Pyr(Pyr):
                 'Ra': self.p_all['L5Pyr_dend_Ra'],
             },
             'apical_2': {
-                'L': self.p_all['L5Pyr_apicaL5_L'],
-                'diam': self.p_all['L5Pyr_apicaL5_diam'],
+                'L': self.p_all['L5Pyr_apical2_L'],
+                'diam': self.p_all['L5Pyr_apical2_diam'],
                 'cm': self.p_all['L5Pyr_dend_cm'],
                 'Ra': self.p_all['L5Pyr_dend_Ra'],
             },
@@ -152,8 +152,8 @@ class L5Pyr(Pyr):
                 'Ra': self.p_all['L5Pyr_dend_Ra'],
             },
             'basal_2': {
-                'L': self.p_all['L5Pyr_basaL5_L'],
-                'diam': self.p_all['L5Pyr_basaL5_diam'],
+                'L': self.p_all['L5Pyr_basal2_L'],
+                'diam': self.p_all['L5Pyr_basal2_diam'],
                 'cm': self.p_all['L5Pyr_dend_cm'],
                 'Ra': self.p_all['L5Pyr_dend_Ra'],
             },
