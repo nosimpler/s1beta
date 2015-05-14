@@ -1,8 +1,8 @@
 # L2_pyramidal.py - est class def for layer 2 pyramidal cells
 #
-# v 1.8.26
-# rev 2014-05-22 (SL: minor)
-# last rev: (MS: redundancy in synapse_create() introduced in 1.8.14cell fixed)
+# v 1.8.30
+# rev 2015-05-14 (SL: minor)
+# last rev: (SL: minor)
 
 import sys
 import numpy as np
@@ -191,20 +191,6 @@ class L2Pyr(Pyr):
         self.dends['basal_1'].connect(self.soma, 0, 0)
         self.dends['basal_2'].connect(self.dends['basal_1'], 1, 0)
         self.dends['basal_3'].connect(self.dends['basal_1'], 1, 0)
-
-        # # Distal (Apical)
-        # self.list_dend[0].connect(self.soma, 1, 0)
-        # self.list_dend[1].connect(self.list_dend[0], 1, 0)
-
-        # self.list_dend[2].connect(self.list_dend[1], 1, 0)
-
-        # # dend[4] comes off of dend[0](1)
-        # self.list_dend[3].connect(self.list_dend[0], 1, 0)
-
-        # # Proximal (Basal)
-        # self.list_dend[4].connect(self.soma, 0, 0)
-        # self.list_dend[5].connect(self.list_dend[4], 1, 0)
-        # self.list_dend[6].connect(self.list_dend[4], 1, 0)
 
     # Adds biophysics to soma
     def __biophys_soma(self):
@@ -537,7 +523,7 @@ class L2Pyr(Pyr):
         nrn.pt3dadd(x_prox, y_prox, 0, self.dend_diam[i], sec=self.list_dend[4])
         y_prox += -self.dend_L[4]
 
-        nrn.pt3dadd(x_prox, y_prox, 0, self.dend_diam[4],sec=self.list_dend[4])
+        nrn.pt3dadd(x_prox, y_prox, 0, self.dend_diam[4], sec=self.list_dend[4])
 
         # x_prox, y_prox are now the starting points for BOTH last 2 sections
 

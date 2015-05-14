@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # s1run.py - primary run function for s1 project
 #
-# v 1.8.26
-# rev 2014-05-22 (SL: minor)
-# last major: (SL: updated pall)
+# v 1.8.30
+# rev 2015-05-14 (SL: Minor)
+# last major: (SL: minor)
 
 import os
 import sys
@@ -224,10 +224,11 @@ def exec_runsim(f_psim):
 
                 # initialize cells to -65 mV and compile code
                 # after all the NetCon delays have been specified
-                # set state variables if they have been changed since nrn.finitialize
                 # and run the solver
                 nrn.finitialize()
                 nrn.fcurrent()
+
+                # set state variables if they have been changed since nrn.finitialize
                 nrn.frecord_init()
 
                 # actual simulation

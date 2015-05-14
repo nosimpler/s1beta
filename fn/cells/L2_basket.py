@@ -1,8 +1,8 @@
 # L2_basket.py - establish class def for layer 2 basket cells
 #
-# v 1.8.26
-# rev 2014-05-22 (SL: added IClamp to L2Basket())
-# last rev: (MS: Merge feedsynapes_new with master)
+# v 1.8.30
+# rev 2015-05-14 (SL: minor)
+# last rev: (SL: added IClamp to L2Basket())
 
 import itertools as it
 from neuron import h as nrn
@@ -21,6 +21,7 @@ class L2Basket(BasketSingle):
         self.__synapse_create()
         self.__biophysics()
 
+    # creation of synapses
     def __synapse_create(self):
         # creates synapses onto this cell
         self.soma_ampa = self.syn_ampa_create(self.soma(0.5))

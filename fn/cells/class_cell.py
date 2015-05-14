@@ -1,8 +1,8 @@
 # class_cell.py - establish class def for general cell features
 #
-# v 1.8.26
-# rev 2014-05-22 (SL: apparently removed references to old create_dends() method)
-# last rev: (MS: syn_create() is a general method for creating any Exp2syn type)
+# v 1.8.30
+# rev 2015-05-14 (SL: Minor)
+# last rev: (SL: apparently removed references to old create_dends() method)
 
 import numpy as np
 import itertools as it
@@ -121,7 +121,7 @@ class Cell():
 
     # Add IClamp to a segment
     def insert_IClamp(self, sect_name, props_IClamp):
-    # def insert_iclamp(self, sect_name, seg_loc, tstart, tstop, weight):
+        # def insert_iclamp(self, sect_name, seg_loc, tstart, tstop, weight):
         # gather list of all sections
         seclist = nrn.SectionList()
         seclist.wholetree(sec=self.soma)
@@ -308,7 +308,7 @@ class Pyr(Cell):
     def get_sectnames(self):
         seclist = nrn.SectionList()
         seclist.wholetree(sec=self.soma)
-     
+
         d = dict((sect.name(), 1.) for sect in seclist)
 
         for key in d.keys():

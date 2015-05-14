@@ -1,8 +1,8 @@
 # paramrw.py - routines for reading the param files
 #
-# v 1.8.15cell
-# rev 2013-07-03 (MS: minor)
-# last major: (MS: compare_dictionaries() updates keys in one dict with corresponding key values from another)
+# v 1.8.30
+# rev 2015-05-14 (SL: minor)
+# last major: (MS: minor)
 
 import re
 import fileio as fio
@@ -306,6 +306,7 @@ class ExpParams():
 
         return coupled_params
 
+    # pop known values & strings off of the params list
     def __pop_known_values(self):
         self.sim_prefix = self.p_all.pop('sim_prefix')
 
@@ -327,9 +328,6 @@ class ExpParams():
         # create a copy of params_default through which to iterate
         self.p_all = get_params_default()
 
-        # debug code
-        # n_keys_from_default = 0
-
         # now find ONLY the values that are present in the supplied p_all_input
         # based on the default dict
         for key in self.p_all.keys():
@@ -338,13 +336,6 @@ class ExpParams():
             if key in p_all_input:
                 # pop val off so the remaining items in p_all_input are extraneous
                 self.p_all[key] = p_all_input.pop(key)
-
-            # else:
-            #     if key not in self.expmt_group_params:
-            #         # add to count of keys that came from default only
-            #         n_keys_from_default += 1
-
-        # print "Keys taken from default: %i" % n_keys_from_default
 
         # now display extraneous keys, if there were any
         if len(p_all_input):
@@ -528,6 +519,7 @@ def create_pext(p, tstop):
     # not defined by distal time
     if p['dt_evprox0_evprox1'] == -1:
         t0_evprox1 = p['t_evprox_late']
+
     else:
         t0_evprox1 = p_unique['evprox0']['t0'] + p['dt_evprox0_evprox1']
 

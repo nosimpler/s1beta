@@ -1,8 +1,8 @@
 # class_net.py - establishes the Network class and related methods
 #
-# v 1.8.26
-# rev 2014-05-22 (SL: adds IClamp to L2Basket())
-# last major: (MS: self.p now passed to L5Pyr())
+# v 1.8.30
+# rev 2015-05-14 (SL: minor)
+# last major: (SL: adds IClamp to L2Basket())
 
 import itertools as it
 import numpy as np
@@ -146,8 +146,9 @@ class Network():
         return src_list
 
     # Creates cells and grid
-    # pyr grid is the immutable grid, origin now calculated in relation to feed
     def __create_coords_pyr(self):
+        """ pyr grid is the immutable grid, origin now calculated in relation to feed
+        """
         xrange = np.arange(self.gridpyr['x'])
         yrange = np.arange(self.gridpyr['y'])
 
@@ -155,6 +156,7 @@ class Network():
         self.pos_dict['L2_pyramidal'] = [pos for pos in it.product(xrange, yrange, [0])]
         self.pos_dict['L5_pyramidal'] = [pos for pos in it.product(xrange, yrange, [self.zdiff])]
 
+    # create basket cell coords based on pyr grid
     def __create_coords_basket(self):
         # define relevant x spacings for basket cells
         xzero = np.arange(0, self.gridpyr['x'], 3)
@@ -174,8 +176,9 @@ class Network():
         self.pos_dict['L5_basket'] = [pos_xy + (self.zdiff,) for pos_xy in coords_sorted]
 
     # creates origin AND creates external input coords 
-    # (same thing for now but won't fix because could change)
     def __create_coords_extinput(self):
+        """ (same thing for now but won't fix because could change)
+        """
         xrange = np.arange(self.gridpyr['x'])
         yrange = np.arange(self.gridpyr['y'])
 
@@ -185,9 +188,6 @@ class Network():
         origin_y = yrange[(len(yrange)-1)/2]
         origin_z = np.floor(self.zdiff/2)
         self.origin = (origin_x, origin_y, origin_z)
-
-        # debugging override
-        # self.origin = (0.5, 0.5, 653.)
 
         self.pos_dict['extinput'] = [self.origin for i in range(self.N_extinput)]
 

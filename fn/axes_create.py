@@ -1,8 +1,8 @@
 # axes_create.py - simple axis creation
 #
-# v 1.8.26
-# rev 2014-05-22 (fixed axis labels for FigRaster())
-# last major: (MS: FigPhase() for plotting phase data)
+# v 1.8.30
+# rev 2015-05-14 (SL: minor)
+# last major: (fixed axis labels for FigRaster())
 
 # usage:
 # testfig = FigStd()
@@ -196,7 +196,6 @@ class FigBase():
         font_prop = {
             'size': s,
         }
-
         mpl.rc('font', **font_prop)
 
     # sets the FIRST line found to black for a given axis or list of axes

@@ -1,8 +1,8 @@
 # clidefs.py - these are all of the function defs for the cli
 #
-# v 1.8.26
-# rev 2013-05-22 (SL: fixed show and pngv)
-# last major: (MS: Merged SpecClass with master)
+# v 1.8.30
+# rev 2015-05-14 (SL: minor)
+# last major: (SL: fixed show and pngv)
 
 # Standard modules
 import fnmatch, os, re, sys
@@ -1188,33 +1188,6 @@ def exec_phaselock(ddata, opts):
         print fname
 
         f.savepng(fname)
-
-        # f = plt.figure()
-
-        # font_prop = {
-        #     'size': 12,
-        # }
-
-        # mpl.rc('font', **font_prop)
-
-        # ax0 = f.add_axes((0.1, 0.05, 0.90, 0.40))
-        # ax1 = f.add_axes((0.1, 0.50, 0.72, 0.20))
-        # ax2 = f.add_axes((0.1, 0.75, 0.72, 0.20))
-         
-        # print t[0], t[-1]
-        # extent_xy = [t[0], t[-1], phase.data['f'][-1], 0]
-        # pc = ax0.imshow(phase.data['B'], extent=extent_xy, aspect='auto', origin='upper')
-        # f.colorbar(pc, ax=ax0)
-
-        # ax0.set_xlabel('Time (ms)')
-        # ax0.set_ylabel('Freq (Hz)')
-
-        # ax1.plot(t, dp)
-        # ax1.set_xlim([t[0], t[-1]])
-
-        # ax2.plot(t, inputs)
-        # ax2.set_xlim([t[0], t[-1]])
-        # ax2.invert_yaxis()
 
 # runs the gamma plot for a comparison of the high frequency
 def exec_pgamma_hf(ddata, opts):

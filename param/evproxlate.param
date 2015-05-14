@@ -1,7 +1,7 @@
 # defines the large param structure of combinations
 # flat file of value ranges
 # { } for different "experiments"
-# L() defines a linspace range
+# L[] defines a linspace range
 # [ ] list comma separated values
 
 sim_prefix: evproxlate
