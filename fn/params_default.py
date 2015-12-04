@@ -1,8 +1,8 @@
 # params_default.py - master list of changeable params. most set to default val of inactive
 #
-# v 1.8.29
-# rev 2014-09-05 (SL: fixed a mistakenly named variable)
-# last major: (SL: moved the default times back ... really should implement the -1)
+# v 1.8.31
+# rev 2015-12-04 (SL: Minor, mostly whitespace)
+# last major: (SL: fixed a mistakenly named variable)
 
 # Note that nearly all start times are set BEYOND tstop for this file
 # Most values here are set to whatever default value inactivates them, such as 0 for conductance
@@ -10,7 +10,6 @@
 # flat file of default values
 # will most often be overwritten
 def get_params_default():
-    # return {
     # set default params
     p = {
         'sim_prefix': 'default',
@@ -193,32 +192,32 @@ def get_L2Pyr_params_default():
         'L2Pyr_soma_diam': 23.4,
         'L2Pyr_soma_cm': 0.6195,
         'L2Pyr_soma_Ra': 200.,
-        
+
         # Dendrites
         'L2Pyr_dend_cm': 0.6195,
         'L2Pyr_dend_Ra': 200.,
 
         'L2Pyr_apicaltrunk_L': 59.5,
         'L2Pyr_apicaltrunk_diam': 4.25,
-    
-        'L2Pyr_apical1_L': 306., 
+
+        'L2Pyr_apical1_L': 306.,
         'L2Pyr_apical1_diam': 4.08,
-        
-        'L2Pyr_apicaltuft_L': 238., 
+
+        'L2Pyr_apicaltuft_L': 238.,
         'L2Pyr_apicaltuft_diam': 3.4,
-    
-        'L2Pyr_apicaloblique_L': 340., 
+
+        'L2Pyr_apicaloblique_L': 340.,
         'L2Pyr_apicaloblique_diam': 3.91,
-         
-        'L2Pyr_basal1_L': 85., 
+
+        'L2Pyr_basal1_L': 85.,
         'L2Pyr_basal1_diam': 4.25,
-        
-        'L2Pyr_basal2_L': 255., 
+
+        'L2Pyr_basal2_L': 255.,
         'L2Pyr_basal2_diam': 2.72,
-        
-        'L2Pyr_basal3_L': 255., 
+
+        'L2Pyr_basal3_L': 255.,
         'L2Pyr_basal3_diam': 2.72,
-        
+
         # Synapses
         'L2Pyr_ampa_e': 0.,
         'L2Pyr_ampa_tau1': 0.5,
@@ -258,35 +257,35 @@ def get_L5Pyr_params_default():
         'L5Pyr_soma_diam': 28.9,
         'L5Pyr_soma_cm': 0.85,
         'L5Pyr_soma_Ra': 200.,
-        
+
         # Dendrites
         'L5Pyr_dend_cm': 0.85,
         'L5Pyr_dend_Ra': 200.,
 
         'L5Pyr_apicaltrunk_L': 102.,
         'L5Pyr_apicaltrunk_diam': 10.2,
-    
+
         'L5Pyr_apical1_L': 680.,
         'L5Pyr_apical1_diam': 7.48,
 
         'L5Pyr_apical2_L': 680.,
         'L5Pyr_apical2_diam': 4.93,
-        
+
         'L5Pyr_apicaltuft_L': 425.,
         'L5Pyr_apicaltuft_diam': 3.4,
-    
+
         'L5Pyr_apicaloblique_L': 255.,
         'L5Pyr_apicaloblique_diam': 5.1,
-         
-        'L5Pyr_basal1_L': 85., 
+
+        'L5Pyr_basal1_L': 85.,
         'L5Pyr_basal1_diam': 6.8,
-        
+
         'L5Pyr_basal2_L': 255.,
         'L5Pyr_basal2_diam': 8.5,
-        
-        'L5Pyr_basal3_L': 255., 
+
+        'L5Pyr_basal3_L': 255.,
         'L5Pyr_basal3_diam': 8.5,
-        
+
         # Synapses
         'L5Pyr_ampa_e': 0.,
         'L5Pyr_ampa_tau1': 0.5,

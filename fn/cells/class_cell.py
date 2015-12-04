@@ -1,8 +1,8 @@
 # class_cell.py - establish class def for general cell features
 #
-# v 1.8.30
-# rev 2015-05-14 (SL: Minor)
-# last rev: (SL: apparently removed references to old create_dends() method)
+# v 1.8.31
+# rev 2015-12-04 (SL: Minor)
+# last rev: (SL: Minor)
 
 import numpy as np
 import itertools as it
@@ -18,7 +18,7 @@ class Cell():
         self.pc = nrn.ParallelContext()
 
         # make L_soma and diam_soma elements of self
-        # Used in shape_change() b/c func clobbers self.soma.L, self.soma.diam 
+        # Used in shape_change() b/c func clobbers self.soma.L, self.soma.diam
         self.L = soma_props['L']
         self.diam = soma_props['diam']
         self.pos = soma_props['pos']
@@ -33,6 +33,7 @@ class Cell():
         # par: create arbitrary lists of connections FROM other cells
         # TO this cell instantiation
         # these lists are allowed to be empty
+        # this should be a dict
         self.ncfrom_L2Pyr = []
         self.ncfrom_L2Basket = []
         self.ncfrom_L5Pyr = []
@@ -171,7 +172,7 @@ class Cell():
 
         return syn
 
-    # For all synapses, section location 'secloc' is being explicitly supplied 
+    # For all synapses, section location 'secloc' is being explicitly supplied
     # for clarity, even though they are (right now) always 0.5. Might change in future
     # creates a RECEIVING inhibitory synapse at secloc
     def syn_gabaa_create(self, secloc):
@@ -248,7 +249,7 @@ class Cell():
     def shape_soma(self):
         nrn.pt3dclear(sec=self.soma)
 
-        # nrn.ptdadd(x, y, z, diam) -- if this function is run, clobbers 
+        # nrn.ptdadd(x, y, z, diam) -- if this function is run, clobbers
         # self.soma.diam set above
         nrn.pt3dadd(0, 0, 0, self.diam, sec=self.soma)
         nrn.pt3dadd(0, self.L, 0, self.diam, sec=self.soma)
@@ -265,7 +266,7 @@ class BasketSingle(Cell):
         self.name = cell_name
 
         # set 3D shape - unused for now but a prototype
-        # self.__shape_change()        
+        # self.__shape_change()
 
     def __set_props(self, cell_name, pos):
         return {
@@ -279,13 +280,13 @@ class BasketSingle(Cell):
 
     # Define 3D shape and position of cell. By default neuron uses xy plane for
     # height and xz plane for depth. This is opposite for model as a whole, but
-    # convention is followed in this function ease use of gui. 
+    # convention is followed in this function ease use of gui.
     def __shape_change(self):
         self.shape_soma()
-        
+
         self.soma.push()
         for i in range(0, int(nrn.n3d())):
-            nrn.pt3dchange(i, self.pos[0]*100 + nrn.x3d(i), -self.pos[2] + nrn.y3d(i), 
+            nrn.pt3dchange(i, self.pos[0]*100 + nrn.x3d(i), -self.pos[2] + nrn.y3d(i),
                 self.pos[1] * 100 + nrn.z3d(i), nrn.diam3d(i))
 
         nrn.pop_section()
@@ -297,7 +298,7 @@ class Pyr(Cell):
 
         # store cell_name as self variable for later use
         self.name = soma_props['name']
-        
+
         # preallocate dict to store dends
         self.dends = {}
 
@@ -314,10 +315,10 @@ class Pyr(Cell):
         for key in d.keys():
             # basal_2 and basal_3 at 45 degree angle to z-axis.
             if 'basal_2' in key:
-                d[key] = np.sqrt(2) / 2 
- 
+                d[key] = np.sqrt(2) / 2
+
             elif 'basal_3' in key:
-                d[key] = np.sqrt(2) / 2 
+                d[key] = np.sqrt(2) / 2
 
             # apical_oblique at 90 perpendicular to z-axis
             elif 'apical_oblique' in key:

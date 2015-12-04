@@ -1,8 +1,8 @@
 COMMENT
-    26 Ago 2002 Modification of original channel to allow variable time step 
+    26 Ago 2002 Modification of original channel to allow variable time step
             and to correct an initialization error.
 
-    Done by Michael Hines(michael.hines@yale.edu) and Ruggero Scorcioni (rscorcio@gmu.edu) 
+    Done by Michael Hines(michael.hines@yale.edu) and Ruggero Scorcioni (rscorcio@gmu.edu)
             at EU Advance Course in Computational Neuroscience. Obidos, Portugal
 
     ca.mod
@@ -30,8 +30,8 @@ PARAMETER {
 
     cao  = 2.5   (mM)     : external ca concentration
     cai          (mM)
-                     
-    temp = 23    (degC)   : original temp 
+
+    temp = 23    (degC)   : original temp
     q10  = 2.3            : temperature sensitivity
 
     v            (mV)
@@ -49,7 +49,7 @@ UNITS {
     FARADAY = (faraday) (coulomb)
     R = (k-mole) (joule/degC)
     PI  = (pi) (1)
-} 
+}
 
 ASSIGNED {
     ica         (mA/cm2)
@@ -59,10 +59,10 @@ ASSIGNED {
     mtau (ms)   htau (ms)
     tadj
 }
- 
+
 STATE { m h }
 
-INITIAL { 
+INITIAL {
     trates(v+vshift)
     m = minf
     h = hinf
@@ -72,12 +72,12 @@ BREAKPOINT {
     SOLVE states METHOD cnexp
     gca = tadj * gbar * m * m * h
     ica = (1e-4) * gca * (v - eca)
-} 
+}
 
 LOCAL mexp, hexp
 
 : PROCEDURE states() {
-:         trates(v+vshift)      
+:         trates(v+vshift)
 :         m = m + mexp*(minf-m)
 :         h = h + hexp*(hinf-h)
 :    VERBATIM
@@ -86,15 +86,15 @@ LOCAL mexp, hexp
 : }
 
 DERIVATIVE states {
-    trates(v + vshift)      
+    trates(v + vshift)
     m' =  (minf - m) / mtau
     h' =  (hinf - h) / htau
 }
 
-PROCEDURE trates(v) {  
-    TABLE minf, hinf, mtau, htau 
+PROCEDURE trates(v) {
+    TABLE minf, hinf, mtau, htau
     DEPEND  celsius, temp
-    
+
     FROM vmin TO vmax WITH 199
 
     : not consistently executed from here if usetable == 1
@@ -106,18 +106,18 @@ PROCEDURE trates(v) {
     : hexp = 1 - exp(tinc/htau)
 }
 
-PROCEDURE rates(vm) {  
+PROCEDURE rates(vm) {
     LOCAL a, b
 
     tadj = q10^((celsius - temp)/10)
 
     a = 0.055 * (-27 - vm) / (exp((-27 - vm) / 3.8) - 1)
     b = 0.94 * exp((-75 - vm) / 17)
-    
+
     mtau = 1 / tadj / (a+b)
     minf = a / (a + b)
 
-    : "h" inactivation 
+    : "h" inactivation
     a = 0.000457 * exp((-13 - vm) / 50)
     b = 0.0065 / (exp((-vm - 15) / 28) + 1)
 

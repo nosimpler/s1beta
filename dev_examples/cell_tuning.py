@@ -1,12 +1,11 @@
 # cell_tuning.py - tune individual cell types
 #
-# v 1.7.11a
-# rev 2012-11-26 (MS: Updated to work with present version of code)
-# last major: (SL: some minor changes, untested)
+# v 1.8.31
+# rev 2015-12-04 (SL: minor)
+# last major: (MS: Updated to work with present version of code)
 
 # change the backend for matplotlib
 import matplotlib as mpl 
-# mpl.use('Agg')
 
 # import plt and FigStd
 import matplotlib.pyplot as plt 

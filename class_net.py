@@ -1,8 +1,8 @@
 # class_net.py - establishes the Network class and related methods
 #
-# v 1.8.30
-# rev 2015-05-14 (SL: minor)
-# last major: (SL: adds IClamp to L2Basket())
+# v 1.8.31
+# rev 2015-12-04 (Changed NetworkOnNode())
+# last major: (SL: minor)
 
 import itertools as it
 import numpy as np
@@ -17,7 +17,7 @@ from fn.cells.L5_basket import L5Basket
 import fn.paramrw as paramrw
 
 # create Network class
-class Network():
+class NetworkOnNode():
     def __init__(self, p):
         # set the params internally for this net
         # better than passing it around like ...
@@ -61,7 +61,7 @@ class Network():
         # zdiff is expressed as a positive DEPTH of L5 relative to L2
         # this is a deviation from the original, where L5 was defined at 0
         # this should not change interlaminar weight/delay calculations
-        self.zdiff = 1307.4 
+        self.zdiff = 1307.4
 
         # params of external inputs in p_ext
         # Global number of external inputs ... automatic counting makes more sense
@@ -175,7 +175,7 @@ class Network():
         self.pos_dict['L2_basket'] = [pos_xy + (0,) for pos_xy in coords_sorted]
         self.pos_dict['L5_basket'] = [pos_xy + (self.zdiff,) for pos_xy in coords_sorted]
 
-    # creates origin AND creates external input coords 
+    # creates origin AND creates external input coords
     def __create_coords_extinput(self):
         """ (same thing for now but won't fix because could change)
         """
@@ -224,7 +224,7 @@ class Network():
             # N = self.src_list_new[i][1]
             # grab the src name in ordered list src_list_new
             src = self.src_list_new[i]
-            
+
             # query the N dict for that number and append here to gid_ind, based on previous entry
             gid_ind.append(gid_ind[i]+self.N[src])
 
@@ -310,14 +310,14 @@ class Network():
 
                     # run the IClamp function here
                     self.cells_list[-1].create_all_IClamp(self.p)
-                    
+
                 elif type == 'L2_basket':
                     self.cells_list.append(L2Basket(pos))
                     self.pc.cell(gid, self.cells_list[-1].connect_to_target(None))
 
                     # also run the IClamp for L2_basket
                     self.cells_list[-1].create_all_IClamp(self.p)
-                    
+
                 elif type == 'L5_basket':
                     self.cells_list.append(L5Basket(pos))
                     self.pc.cell(gid, self.cells_list[-1].connect_to_target(None))
@@ -385,8 +385,9 @@ class Network():
                 self.pc.spike_record(gid, self.spiketimes, self.spikegids)
 
     # aggregate recording all the somatic voltages for pyr
-    # this method must be run post-integration
     def aggregate_currents(self):
+        """ this method must be run post-integration
+        """
         # this is quite ugly
         for cell in self.cells_list:
             # check for celltype

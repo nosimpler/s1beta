@@ -1,8 +1,8 @@
 # paramrw.py - routines for reading the param files
 #
-# v 1.8.30
-# rev 2015-05-14 (SL: minor)
-# last major: (MS: minor)
+# v 1.8.31
+# rev 2015-12-04 (SL: reorganization, cleanup)
+# last major: (SL: minor)
 
 import re
 import fileio as fio
@@ -10,104 +10,6 @@ import numpy as np
 import itertools as it
 from cartesian import cartesian
 from params_default import get_params_default
-
-# reads params from a generated file and returns gid dict and p dict
-def read(fparam):
-    lines = fio.clean_lines(fparam)
-    p = {}
-    gid_dict = {}
-
-    for line in lines:
-        keystring, val = line.split(": ")
-        key = keystring.strip()
-
-        if val[0] is '[':
-            val_range = val[1:-1].split(', ')
-
-            if len(val_range) is 2:
-                ind_start = int(val_range[0])
-                ind_end = int(val_range[1]) + 1
-                gid_dict[key] = np.arange(ind_start, ind_end)
-
-            else:
-                gid_dict[key] = np.array([])
-
-        else:
-            try:
-                p[key] = float(val)
-            except ValueError:
-                p[key] = str(val)
-
-    return gid_dict, p
-
-# write the params to a filename
-# now sorting
-def write(fparam, p, gid_list):
-    # sort the items in the dict by key
-    p_sorted = [key for key in p.iteritems()]
-    p_sorted.sort(key=lambda x: x[0])
-
-    # open the file for appending
-    with open(fparam, 'a') as f:
-        pstring = '%26s: '
-
-        # write the gid info first
-        for key in gid_list.keys():
-            f.write(pstring % key)
-
-            if len(gid_list[key]):
-                f.write('[%4i, %4i] ' % (gid_list[key][0], gid_list[key][-1]))
-
-            else:
-                f.write('[]')
-
-            f.write('\n')
-
-        # do the params in p_sorted
-        for param in p_sorted:
-            key, val = param
-
-            f.write(pstring % key)
-
-            if key.startswith('N_'):
-                f.write('%i\n' % val)
-            else:
-                f.write(str(val)+'\n')
-
-# Searches f_param for any match of p
-def find_param(fparam, param_key):
-    _, p = read(fparam)
-
-    try:
-        return p[param_key]
-
-    except KeyError:
-        return "There is no key by the name %s" % param_key
-
-# reads the simgroup name from fparam
-def read_sim_prefix(fparam):
-    lines = fio.clean_lines(fparam)
-    param_list = [line for line in lines if line.split(': ')[0].startswith('sim_prefix')]
-
-    # Assume we found something ...
-    if param_list:
-        return param_list[0].split(" ")[1]
-
-    else:
-        print "No sim_prefix found"
-        return 0
-
-# Finds the experiments list from the simulation param file (.param)
-def read_expmt_groups(fparam):
-    lines = fio.clean_lines(fparam)
-    lines = [line for line in lines if line.split(': ')[0] == 'expmt_groups']
-
-    try:
-        return lines[0].split(': ')[1][1:-1].split(', ')
-
-    except:
-        print "Couldn't get a handle on expmts"
-        return 0
 
 # class controlling multiple simulation files (.param)
 class ExpParams():
@@ -292,7 +194,7 @@ class ExpParams():
         coupled_params = {}
 
         # iterates over all key/value pairs to find vals that are strings
-        for key, val in self.p_all.iteritems():  
+        for key, val in self.p_all.iteritems():
             if isinstance(val, str):
                 # check that string is another param in p_all
                 if val in self.p_all.keys():
@@ -401,10 +303,117 @@ class ExpParams():
 
         return key_dict
 
+# reads params from a generated file and returns gid dict and p dict
+def read(fparam):
+    lines = fio.clean_lines(fparam)
+    p = {}
+    gid_dict = {}
+
+    for line in lines:
+        keystring, val = line.split(": ")
+        key = keystring.strip()
+
+        if val[0] is '[':
+            val_range = val[1:-1].split(', ')
+
+            if len(val_range) is 2:
+                ind_start = int(val_range[0])
+                ind_end = int(val_range[1]) + 1
+                gid_dict[key] = np.arange(ind_start, ind_end)
+
+            else:
+                gid_dict[key] = np.array([])
+
+        else:
+            try:
+                p[key] = float(val)
+            except ValueError:
+                p[key] = str(val)
+
+    return gid_dict, p
+
+# write the params to a filename
+def write(fparam, p, gid_list):
+    """ now sorting
+    """
+    # sort the items in the dict by key
+    # p_sorted = [item for item in p.iteritems()]
+    p_keys = [key for key, val in p.iteritems()]
+    p_sorted = [(key, p[key]) for key in p_keys]
+
+    # for some reason this is now crashing in python/mpi
+    # specifically, lambda sorting in place?
+    # p_sorted = [item for item in p.iteritems()]
+    # p_sorted.sort(key=lambda x: x[0])
+
+    # open the file for appending
+    with open(fparam, 'a') as f:
+        pstring = '%26s: '
+
+        # write the gid info first
+        for key in gid_list.keys():
+            f.write(pstring % key)
+
+            if len(gid_list[key]):
+                f.write('[%4i, %4i] ' % (gid_list[key][0], gid_list[key][-1]))
+
+            else:
+                f.write('[]')
+
+            f.write('\n')
+
+        # do the params in p_sorted
+        for param in p_sorted:
+            key, val = param
+
+            f.write(pstring % key)
+
+            if key.startswith('N_'):
+                f.write('%i\n' % val)
+
+            else:
+                f.write(str(val)+'\n')
+
+# Searches f_param for any match of p
+def find_param(fparam, param_key):
+    _, p = read(fparam)
+
+    try:
+        return p[param_key]
+
+    except KeyError:
+        return "There is no key by the name %s" % param_key
+
+# reads the simgroup name from fparam
+def read_sim_prefix(fparam):
+    lines = fio.clean_lines(fparam)
+    param_list = [line for line in lines if line.split(': ')[0].startswith('sim_prefix')]
+
+    # Assume we found something ...
+    if param_list:
+        return param_list[0].split(" ")[1]
+
+    else:
+        print "No sim_prefix found"
+        return 0
+
+# Finds the experiments list from the simulation param file (.param)
+def read_expmt_groups(fparam):
+    lines = fio.clean_lines(fparam)
+    lines = [line for line in lines if line.split(': ')[0] == 'expmt_groups']
+
+    try:
+        return lines[0].split(': ')[1][1:-1].split(', ')
+
+    except:
+        print "Couldn't get a handle on expmts"
+        return 0
+
 # qnd function to add feeds if they are sensible
-# whips into shape ones that are not
-# could be properly made into a meaningful class.
 def feed_validate(p_ext, d, tstop):
+    """ whips into shape ones that are not
+        could be properly made into a meaningful class.
+    """
     # only append if t0 is less than simulation tstop
     if tstop > d['t0']:
         # # reset tstop if the specified tstop exceeds the
@@ -494,7 +503,7 @@ def create_pext(p, tstop):
 
     # Create evoked response parameters
     # f_input needs to be defined as 0
-    # these vals correspond to non-perceived max 
+    # these vals correspond to non-perceived max
     # conductance threshold in uS (Jones et al. 2007)
     p_unique['evprox0'] = {
         't0': p['t_evprox_early'],
@@ -609,13 +618,13 @@ def changed_vars(fparam):
     return var_list
 
 # Takes two dictionaries (d1 and d2) and compares the keys in d1 to those in d2
-# if any match, updates the (key, value) pair of d1 to match that of d2 
+# if any match, updates the (key, value) pair of d1 to match that of d2
 # not real happy with variable names, but will have to do for now
 def compare_dictionaries(d1, d2):
     # iterate over intersection of key sets (i.e. any common keys)
     for key in d1.viewkeys() & d2.viewkeys():
         # update d1 to have same (key, value) pair as d2
-        d1[key] = d2[key] 
+        d1[key] = d2[key]
 
     return d1
 

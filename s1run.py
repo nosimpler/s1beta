@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # s1run.py - primary run function for s1 project
 #
-# v 1.8.30
-# rev 2015-05-14 (SL: Minor)
-# last major: (SL: minor)
+# v 1.8.31
+# rev 2015-12-04 (SL: changed to NetworkOnNode())
+# last major: (SL: Minor)
 
 import os
 import sys
@@ -18,8 +18,7 @@ from neuron import h as nrn
 nrn.load_file("stdrun.hoc")
 
 # Cells are defined in './cells'
-from class_net import Network
-# import network
+import class_net
 import fn.fileio as fio
 import fn.paramrw as paramrw
 import fn.plotfn as plotfn
@@ -186,8 +185,7 @@ def exec_runsim(f_psim):
                 file_spikes_tmp = fio.file_spike_tmp(dproj)
 
                 # Create network from class_net's Network class
-                net = Network(p)
-                # net = network.NetworkOnNode()
+                net = class_net.NetworkOnNode(p)
 
                 # debug: off (0), on (1)
                 debug = 0
@@ -338,7 +336,7 @@ def exec_runsim(f_psim):
             # do the relevant png optimization
             # fio.pngoptimize(ddir.dsim)
 
-            print "time: %4.4f s" % (time.time() - plot_start) 
+            print "time: %4.4f s" % (time.time() - plot_start)
 
         nrn.quit()
 

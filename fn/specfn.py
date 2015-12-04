@@ -1,8 +1,8 @@
 # specfn.py - Average time-frequency energy representation using Morlet wavelet method
 #
-# v 1.8.28
-# rev 2014-08-12 (SL: reorganization, some non-major comments on PhaseLock())
-# last major: (reorganization)
+# v 1.8.31
+# rev 2015-12-04 (SL: Minor, mostly)
+# last major: (SL: reorganization, some non-major comments on PhaseLock())
 
 import os
 import sys
@@ -198,14 +198,13 @@ class PhaseLock():
         # Get param dict
         self.p = paramrw.read(fparam)[1]
 
-        # Set frequecies over which to sory
-        self.f = np.arange(1., f_max+1)
+        # Set frequecies over which to sort
+        self.f = 1. + np.arange(0., f_max, 1.)
 
         # Set width of Morlet wavelet (>= 5 suggested)
         self.width = 7.
 
         # Calculate sampling frequency
-        # self.fs = 1. / dt
         self.fs = 1000. / self.p['dt']
 
         self.data = self.__traces2PLS()
@@ -663,9 +662,10 @@ def average(fname, fspec_list):
         np.savez_compressed(fname, t_agg=x['agg']['t'], f_agg=x['agg']['f'], TFR_agg=x['agg']['TFR'])
 
 # spectral plotting kernel should be simpler and take just a file name and an axis handle
-# Spectral plotting kernel for ONE simulation run
-# ax_spec is the axis handle. fspec is the file name
 def pspec_ax(ax_spec, fspec, xlim, layer=None):
+    """ Spectral plotting kernel for ONE simulation run
+        ax_spec is the axis handle. fspec is the file name
+    """
     # read is a function in this file to read the fspec
     data_spec = read(fspec)
 
@@ -885,7 +885,6 @@ def analysis_typespecific(ddata, opts=None):
     list_param = []
     list_ts = []
     list_spec = []
-    # list_exp_prefix = []
 
     # aggregrate all files from individual expmts into lists
     for expmt_group in ddata.expmt_groups:
@@ -931,7 +930,6 @@ def analysis_typespecific(ddata, opts=None):
     elif opts_run['type'] == 'dpl_laminar':
         # these should be OUTPUT filenames that are being generated
         # list_spec.extend([ddata.create_filename(expmt_group, 'rawspec', exp_prefix) for exp_prefix in exp_prefix_list])
-        print list_spec
 
         # also in this case, the original spec results will be overwritten
         # and replaced by laminar specific ones and aggregate ones
@@ -950,8 +948,8 @@ def analysis_typespecific(ddata, opts=None):
             for fparam, fts, fspec in it.izip(list_param, list_ts, list_spec):
                 spec_dpl_kernel(fparam, fts, fspec, opts_run['f_max'])
 
-    else:
-        print 'Type %s not recognized. Try again later.' %(opts_run['type'])
+    # else:
+    #     print 'Type %s not recognized. Try again later.' %(opts_run['type'])
 
 # returns spec results *only* for a given experimental group
 def from_expmt(spec_result_list, expmt_group):

@@ -1,10 +1,10 @@
 # L5_pyramidal.py - establish class def for layer 5 pyramidal cells
 #
-# v 1.8.29
-# rev 2013-09-05 (SL: fixed a mistakenly named variable)
-# last rev: (MS: L5Pyr() can now take an external param dict and set properties accordingly)
+# v 1.8.31
+# rev 2015-12-04 (SL: minor)
+# last rev: (SL: fixed a mistakenly named variable)
 
-import sys 
+import sys
 import numpy as np
 import itertools as it
 
@@ -180,7 +180,7 @@ class L5Pyr(Pyr):
         # # check lengths for congruity
         # if len(self.dend_L) == len(self.dend_diam):
         #     # Zip above lists together
-        #     self.dend_props = it.izip(self.dend_names, self.dend_L, self.dend_diam) 
+        #     self.dend_props = it.izip(self.dend_names, self.dend_L, self.dend_diam)
         # else:
         #     print "self.dend_L and self.dend_diam are not the same length"
         #     print "please fix in L5_pyramidal.py"
@@ -241,7 +241,7 @@ class L5Pyr(Pyr):
         # self.list_dend[5].connect(self.soma, 0, 0)
         # self.list_dend[6].connect(self.list_dend[5], 1, 0)
         # self.list_dend[7].connect(self.list_dend[5], 1, 0)
-            
+
     # adds biophysics to soma
     def __biophys_soma(self):
         # set soma biophysics specified in Pyr
@@ -292,7 +292,7 @@ class L5Pyr(Pyr):
         # self.soma.gbar_km = 200.
         # self.soma.gbar_cat = 2e-4
         # self.soma.gbar_ar = 1e-6
-        
+
     def __biophys_dends(self):
         # set dend biophysics specified in Pyr()
         # self.pyr_biophys_dends()
@@ -332,9 +332,9 @@ class L5Pyr(Pyr):
             self.dends[key].insert('ar')
 
         # set gbar_ar
-        # Value depends on distance from the soma. Soma is set as 
+        # Value depends on distance from the soma. Soma is set as
         # origin by passing self.soma as a sec argument to nrn.distance()
-        # Then iterate over segment nodes of dendritic sections 
+        # Then iterate over segment nodes of dendritic sections
         # and set gbar_ar depending on nrn.distance(seg.x), which returns
         # distance from the soma to this point on the CURRENTLY ACCESSED
         # SECTION!!!
@@ -401,7 +401,7 @@ class L5Pyr(Pyr):
         #     nrn.pop_section()
 
     def __synapse_create(self, p_syn):
-        # creates synapses onto this cell 
+        # creates synapses onto this cell
         # Somatic synapses
         self.synapses = {
             'soma_gabaa': self.syn_create(self.soma(0.5), p_syn['gabaa']),
@@ -615,7 +615,7 @@ class L5Pyr(Pyr):
 
     # Define 3D shape and position of cell. By default neuron uses xy plane for
     # height and xz plane for depth. This is opposite for model as a whole, but
-    # convention is followed in this function for ease use of gui. 
+    # convention is followed in this function for ease use of gui.
     def __set_3Dshape(self):
         # set 3D shape of soma by calling shape_soma from class Cell
         # print "WARNING: You are setting 3d shape geom. You better be doing"
@@ -656,7 +656,7 @@ class L5Pyr(Pyr):
         y_start = nrn.y3d(1, sec=self.list_dend[0])
 
         nrn.pt3dadd(x_start, y_start, 0, self.dend_diam[4], sec=self.list_dend[4])
-        # self.dend_L[4] is subtracted because lengths always positive, 
+        # self.dend_L[4] is subtracted because lengths always positive,
         # and this goes to negative x
         nrn.pt3dadd(x_start-self.dend_L[4], y_start, 0, self.dend_diam[4], sec=self.list_dend[4])
 
@@ -675,14 +675,14 @@ class L5Pyr(Pyr):
         # Calculate x-coordinate for end of dend
         dend6_x = -self.dend_L[6] * np.sqrt(2)/2
         nrn.pt3dadd(x_prox, y_prox, 0, self.dend_diam[6], sec=self.list_dend[6])
-        nrn.pt3dadd(dend6_x, y_prox-self.dend_L[6] * np.sqrt(2)/2, 
+        nrn.pt3dadd(dend6_x, y_prox-self.dend_L[6] * np.sqrt(2)/2,
                     0, self.dend_diam[6], sec=self.list_dend[6])
 
         # dend 7
         # Calculate x-coordinate for end of dend
         dend7_x = self.dend_L[7] * np.sqrt(2)/2
         nrn.pt3dadd(x_prox, y_prox, 0, self.dend_diam[7], sec=self.list_dend[7])
-        nrn.pt3dadd(dend7_x, y_prox-self.dend_L[7] * np.sqrt(2)/2, 
+        nrn.pt3dadd(dend7_x, y_prox-self.dend_L[7] * np.sqrt(2)/2,
                     0, self.dend_diam[7], sec=self.list_dend[7])
 
         # set 3D position
@@ -691,7 +691,7 @@ class L5Pyr(Pyr):
         # x and z components are scaled by 100 for visualization clarity
         self.soma.push()
         for i in range(0, int(nrn.n3d())):
-            nrn.pt3dchange(i, self.pos[0]*100 + nrn.x3d(i), -self.pos[2] + nrn.y3d(i), 
+            nrn.pt3dchange(i, self.pos[0]*100 + nrn.x3d(i), -self.pos[2] + nrn.y3d(i),
                            self.pos[1] * 100 + nrn.z3d(i), nrn.diam3d(i))
 
         nrn.pop_section()

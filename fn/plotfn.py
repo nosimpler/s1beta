@@ -1,8 +1,8 @@
 # plotfn.py - pall and possibly other plot routines
 #
-# v 1.8.25
-# rev 2014-03-13 (MS: Updated call to dipolefn.pdipole())
-# last major: (MS: Merged SpecClass with master)
+# v 1.8.31
+# rev 2015-12-04 (SL: Minor)
+# last major: (MS: Updated call to dipolefn.pdipole())
 
 from praster import praster
 import axes_create as ac
@@ -78,7 +78,7 @@ def cb(r):
 # plot function - this is sort of a stop-gap and shouldn't live here, really
 # reads all data except spec and gid_dict from files
 def pall(ddir, p_exp, xlim=None, ylim=None):
-# def pall(ddir, p_exp, spec_results, xlim=[0., 'tstop']):
+    # def pall(ddir, p_exp, spec_results, xlim=[0., 'tstop']):
     # runtype allows easy (hard coded switching between two modes)
     # either 'parallel' or 'debug'
     runtype = 'parallel'
@@ -127,7 +127,7 @@ def pall(ddir, p_exp, xlim=None, ylim=None):
 
 # Plots dipole and spec with alpha feed histograms
 def pdpl_pspec_with_hist(ddir, p_exp, xlim=None, ylim=None):
-# def pdpl_pspec_with_hist(ddir, p_exp, spec_results, xlim=[0., 'tstop']):
+    # def pdpl_pspec_with_hist(ddir, p_exp, spec_results, xlim=[0., 'tstop']):
     # runtype = 'debug'
     runtype = 'parallel'
 
