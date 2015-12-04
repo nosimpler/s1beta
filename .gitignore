@@ -1,8 +1,9 @@
+*.dat
+*.eps
+*.npz
 *.pyc
 *.param
 *.png
-*.eps
-*.dat
 .s1sh_hist_local
 .server_default
 .DS_Store
