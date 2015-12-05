@@ -9,7 +9,7 @@ expmt_groups: {default}
 
 # numbers of cells making up the pyramidal grids
 N_pyr_x: 10
-N_pyr_y: 10 
+N_pyr_y: 10
 
 # Poisson input
 T_pois: 1000.
@@ -69,7 +69,7 @@ input_dist_A_weight_L5Pyr_ampa: 4e-5
 input_dist_A_weight_inh_ampa: 8e-5
 input_dist_A_weight_L2Pyr_nmda: 0.
 input_dist_A_weight_L5Pyr_nmda: 0.
-input_dist_A_weight_inh_nmda: 0. 
+input_dist_A_weight_inh_nmda: 0.
 input_dist_A_delay_L2: 5.0
 input_dist_A_delay_L5: 5.0
 
@@ -127,14 +127,25 @@ L5Basket_Gauss_sigma: 2.
 L5Basket_Pois_A_weight: 0.
 L5Basket_Pois_lamtha: 0.
 
-# Tonic input to Pyrs
+# Tonic input to L2 Pyramidal cells
 Itonic_A_L2Pyr_soma: 0.
 Itonic_t0_L2Pyr_soma: 50.
 Itonic_T_L2Pyr_soma: -1
 
+# Tonic input to L5 Pyramidal cells
 Itonic_A_L5Pyr_soma: 0.
 Itonic_t0_L5Pyr_soma: 50.
 Itonic_T_L5Pyr_soma: -1
+
+# Tonic input to L2 Basket cells
+Itonic_A_L2Basket_soma: 0.
+Itonic_t0_L2Basket_soma: 50.
+Itonic_T_L2Basket_soma: -1
+
+# Tonic input to L5 basket cells
+Itonic_A_L5Basket_soma: 0.
+Itonic_t0_L5Basket_soma: 50.
+Itonic_T_L5Basket_soma: -1
 
 # analysis
 save_spec_data: 0

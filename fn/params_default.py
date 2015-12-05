@@ -1,15 +1,17 @@
 # params_default.py - master list of changeable params. most set to default val of inactive
 #
-# v 1.8.31
-# rev 2015-12-04 (SL: Minor, mostly whitespace)
-# last major: (SL: fixed a mistakenly named variable)
+# v 1.9.00
+# rev 2015-12-04 (SL: Added default params for L2Basket and L5Basket cells)
+# last major: (SL: Minor, mostly whitespace)
 
-# Note that nearly all start times are set BEYOND tstop for this file
-# Most values here are set to whatever default value inactivates them, such as 0 for conductance
-# prng seed values are also set to 0 (non-random)
-# flat file of default values
-# will most often be overwritten
+# returns default params - see note
 def get_params_default():
+    """ Note that nearly all start times are set BEYOND tstop for this file
+        Most values here are set to whatever default value inactivates them, such as 0 for conductance
+        prng seed values are also set to 0 (non-random)
+        flat file of default values
+        will most often be overwritten
+    """
     # set default params
     p = {
         'sim_prefix': 'default',
@@ -148,13 +150,20 @@ def get_params_default():
         'Itonic_t0_L2Pyr_soma': 0.,
         'Itonic_T_L2Pyr_soma': -1.,
 
-        # IClamp param for L2Basket (just amplitude for now)
+        # IClamp param for L2Basket
         'Itonic_A_L2Basket': 0.,
+        'Itonic_t0_L2Basket': 0.,
+        'Itonic_T_L2Basket': -1.,
 
         # IClamp params for L5Pyr
         'Itonic_A_L5Pyr_soma': 0.,
         'Itonic_t0_L5Pyr_soma': 0.,
         'Itonic_T_L5Pyr_soma': -1.,
+
+        # IClamp param for L5Basket
+        'Itonic_A_L5Basket': 0.,
+        'Itonic_t0_L5Basket': 0.,
+        'Itonic_T_L5Basket': -1.,
 
         # numerics
         # N_trials of 0 means that seed is set by rank, will still run 1 trial (obviously)
@@ -185,6 +194,7 @@ def get_params_default():
 
     return p
 
+# returns default params for L2 pyramidal cell
 def get_L2Pyr_params_default():
     return {
         # Soma
@@ -250,6 +260,7 @@ def get_L2Pyr_params_default():
         'L2Pyr_dend_gbar_km': 250.,
     }
 
+# returns default params for L5 pyramidal cell
 def get_L5Pyr_params_default():
     return {
         # Soma

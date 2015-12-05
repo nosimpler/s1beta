@@ -1,7 +1,7 @@
 # L2_pyramidal.py - est class def for layer 2 pyramidal cells
 #
-# v 1.8.30
-# rev 2015-05-14 (SL: minor)
+# v 1.9.00
+# rev 2015-12-04 (SL: minor)
 # last rev: (SL: minor)
 
 import sys
@@ -16,6 +16,7 @@ from .. import params_default as p_default
 # Units for e: mV
 # Units for gbar: S/cm^2 unless otherwise noted
 
+# Layer 2 pyramidal cell class
 class L2Pyr(Pyr):
     def __init__(self, pos, p={}):
         # Get default L2Pyr params and update them with any corresponding params in p
@@ -68,6 +69,7 @@ class L2Pyr(Pyr):
         if p['Itonic_T_L2Pyr_soma'] == -1:
             # t_delay = 50.
             t_dur = nrn.tstop - t_delay
+
         else:
             t_dur = p['Itonic_T_L2Pyr_soma'] - t_delay
 

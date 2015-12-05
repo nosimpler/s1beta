@@ -1,7 +1,7 @@
 # class_cell.py - establish class def for general cell features
 #
-# v 1.8.31
-# rev 2015-12-04 (SL: Minor)
+# v 1.9.0
+# rev 2015-12-04 (SL: added list_IClamp as a pre-defined variable)
 # last rev: (SL: Minor)
 
 import numpy as np
@@ -29,6 +29,9 @@ class Cell():
         self.soma.diam = soma_props['diam']
         self.soma.Ra = soma_props['Ra']
         self.soma.cm = soma_props['cm']
+
+        # variable for the list_IClamp
+        self.list_IClamp = None
 
         # par: create arbitrary lists of connections FROM other cells
         # TO this cell instantiation

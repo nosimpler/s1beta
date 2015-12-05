@@ -1,8 +1,8 @@
 # L2_basket.py - establish class def for layer 2 basket cells
 #
-# v 1.8.30
-# rev 2015-05-14 (SL: minor)
-# last rev: (SL: added IClamp to L2Basket())
+# v 1.9.0
+# rev 2015-12-04 (SL: added additional IClamp params)
+# last rev: (SL: minor)
 
 import itertools as it
 from neuron import h as nrn
@@ -11,6 +11,7 @@ from class_cell import BasketSingle
 # Units for e: mV
 # Units for gbar: S/cm^2 unless otherwise noted
 
+# Layer 2 basket cell class
 class L2Basket(BasketSingle):
     def __init__(self, pos):
         # BasketSingle.__init__(self, pos, L, diam, Ra, cm)
@@ -32,7 +33,6 @@ class L2Basket(BasketSingle):
         self.soma.insert('hh')
 
     # insert IClamps in all situations
-    # temporarily an external function taking the p dict
     def create_all_IClamp(self, p):
         # list of sections for this celltype
         sect_list_IClamp = [
@@ -40,8 +40,14 @@ class L2Basket(BasketSingle):
         ]
 
         # some parameters
-        t_delay = 0.
-        t_dur = nrn.tstop - t_delay
+        t_delay = p['Itonic_t0_L2Basket']
+
+        # T = -1 means use nrn.tstop
+        if p['Itonic_T_L2Basket'] == -1:
+            t_dur = nrn.tstop - t_delay
+
+        else:
+            t_dur = p['Itonic_T_L2Basket'] - t_delay
 
         # t_dur must be nonnegative, I imagine
         if t_dur < 0.:
@@ -58,6 +64,7 @@ class L2Basket(BasketSingle):
         # iterate through list of sect_list_IClamp to create a persistent IClamp object
         # the insert_IClamp procedure is in Cell() and checks on names
         # so names must be actual section names, or else it will fail silently
+        # self.list_IClamp as a variable is guaranteed in Cell()
         self.list_IClamp = [self.insert_IClamp(sect_name, props_IClamp) for sect_name in sect_list_IClamp]
 
     # par connect between all presynaptic cells

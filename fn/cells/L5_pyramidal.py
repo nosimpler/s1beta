@@ -1,8 +1,8 @@
 # L5_pyramidal.py - establish class def for layer 5 pyramidal cells
 #
-# v 1.8.31
+# v 1.9.00
 # rev 2015-12-04 (SL: minor)
-# last rev: (SL: fixed a mistakenly named variable)
+# last rev: (SL: minor)
 
 import sys
 import numpy as np
@@ -65,7 +65,6 @@ class L5Pyr(Pyr):
     # insert IClamps in all situations
     # temporarily an external function taking the p dict
     def create_all_IClamp(self, p):
-        # def __create_all_IClamp(self):
         # list of sections for this celltype
         sect_list_IClamp = [
             'soma',

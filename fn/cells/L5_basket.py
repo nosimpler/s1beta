@@ -1,8 +1,8 @@
 # L5_basket.py - establish class def for layer 5 basket cells
 #
-# v 1.8.10
-# rev 2013-06-20 (MS: Merge feedsynapses_new with master)
-# last rev: (MS: added NMDA synapses for alpha feeds)
+# v 1.9.00
+# rev 2015-12-04 (SL: added IClamp parameters)
+# last rev: (MS: Merge feedsynapses_new with master)
 
 import itertools as it
 from neuron import h as nrn
@@ -11,6 +11,7 @@ from class_cell import BasketSingle
 # Units for e: mV
 # Units for gbar: S/cm^2 unless otherwise noted
 
+# Layer 5 basket cell class
 class L5Basket(BasketSingle):
     def __init__(self, pos):
         # Note: Cell properties are set in BasketSingle()
@@ -20,17 +21,55 @@ class L5Basket(BasketSingle):
         self.__synapse_create()
         self.__biophysics()
 
+    # creates synapses
     def __synapse_create(self):
-        # ceates synapses onto this cell 
+        # creates synapses onto this cell
         self.soma_ampa = self.syn_ampa_create(self.soma(0.5))
         self.soma_nmda = self.syn_nmda_create(self.soma(0.5))
         self.soma_gabaa = self.syn_gabaa_create(self.soma(0.5))
 
+    # insert IClamps in all situations
+    def create_all_IClamp(self, p):
+        """ temporarily an external function taking the p dict
+        """
+        # list of sections for this celltype
+        sect_list_IClamp = [
+            'soma',
+        ]
+
+        # some parameters
+        t_delay = p['Itonic_t0_L5Basket']
+
+        # T = -1 means use nrn.tstop
+        if p['Itonic_T_L5Basket'] == -1:
+            t_dur = nrn.tstop - t_delay
+
+        else:
+            t_dur = p['Itonic_T_L5Basket'] - t_delay
+
+        # t_dur must be nonnegative, I imagine
+        if t_dur < 0.:
+            t_dur = 0.
+
+        # properties of the IClamp
+        props_IClamp = {
+            'loc': 0.5,
+            'delay': t_delay,
+            'dur': t_dur,
+            'amp': p['Itonic_A_L5Basket']
+        }
+
+        # iterate through list of sect_list_IClamp to create a persistent IClamp object
+        # the insert_IClamp procedure is in Cell() and checks on names
+        # so names must be actual section names, or else it will fail silently
+        self.list_IClamp = [self.insert_IClamp(sect_name, props_IClamp) for sect_name in sect_list_IClamp]
+
+    # defines biophysics
     def __biophysics(self):
         self.soma.insert('hh')
 
     # connections FROM other cells TO this cell
-    # there are no connections from the L2Basket cells. congrats! 
+    # there are no connections from the L2Basket cells. congrats!
     def parconnect(self, gid, gid_dict, pos_dict, p):
         # FROM other L5Basket cells TO this cell
         for gid_src, pos in it.izip(gid_dict['L5_basket'], pos_dict['L5_basket']):

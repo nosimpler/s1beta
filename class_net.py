@@ -1,8 +1,8 @@
 # class_net.py - establishes the Network class and related methods
 #
-# v 1.8.31
-# rev 2015-12-04 (Changed NetworkOnNode())
-# last major: (SL: minor)
+# v 1.9.00
+# rev 2015-12-04 (SL: Added IClamp parameters to the L5basket cells)
+# last major: (Changed NetworkOnNode())
 
 import itertools as it
 import numpy as np
@@ -321,6 +321,9 @@ class NetworkOnNode():
                 elif type == 'L5_basket':
                     self.cells_list.append(L5Basket(pos))
                     self.pc.cell(gid, self.cells_list[-1].connect_to_target(None))
+
+                    # run the IClamp function here
+                    self.cells_list[-1].create_all_IClamp(self.p)
 
                 elif type == 'extinput':
                     # to find param index, take difference between REAL gid
