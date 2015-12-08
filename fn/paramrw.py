@@ -1,8 +1,8 @@
 # paramrw.py - routines for reading the param files
 #
-# v 1.8.31
-# rev 2015-12-04 (SL: reorganization, cleanup)
-# last major: (SL: minor)
+# v 1.9.01
+# rev 2015-12-08 (RL: added t0_pois)
+# last major: (SL: reorganization, cleanup)
 
 import re
 import fileio as fio
@@ -581,7 +581,7 @@ def create_pext(p, tstop):
         'L5_pyramidal': (p['L5Pyr_Pois_A_weight'], 1., p['L5Pyr_Pois_lamtha']),
         'lamtha_space': 100.,
         'prng_seedcore': int(p['prng_seedcore_extpois']),
-        't_interval': (0., p['T_pois']),
+        't_interval': (p['t0_pois'], p['T_pois']),
         'loc': 'proximal'
     }
 

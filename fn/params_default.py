@@ -1,8 +1,8 @@
 # params_default.py - master list of changeable params. most set to default val of inactive
 #
-# v 1.9.00
-# rev 2015-12-04 (SL: Added default params for L2Basket and L5Basket cells)
-# last major: (SL: Minor, mostly whitespace)
+# v 1.9.01
+# rev 2015-12-08 (RL: added t0_pois)
+# last major: (SL: Added default params for L2Basket and L5Basket cells)
 
 # returns default params - see note
 def get_params_default():
@@ -182,6 +182,7 @@ def get_params_default():
         'prng_seedcore_evprox_late': 0,
 
         # default end time for pois inputs
+        't0_pois': 0.,
         'T_pois': -1,
         'dt': 0.025,
     }
