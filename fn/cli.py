@@ -1,6 +1,6 @@
 # cli.py - routines for the command line interface console s1sh.py
 #
-# v 1.8.26
+# v 1.9.2a
 # rev 2014-05-22 (SL: reorganized show and pngv)
 # last major: (MS: do_phaselock() for phaselocking of dipole to inputs)
 
@@ -658,7 +658,7 @@ class Console(Cmd):
            Sorry for the terrible name...
         """
         # parse args
-        l_opts = self.__split_args(args) 
+        l_opts = self.__split_args(args)
 
         # "default" opts
         opts = {
@@ -771,7 +771,7 @@ class Console(Cmd):
         #     for arg in arg_list:
         #         if arg.startswith('xmin'):
         #             xmin = float(arg.split('=')[-1])
- 
+
         #         elif arg.startswith('xmax'):
         #             xmax = float(arg.split('=')[-1])
 
@@ -809,7 +809,7 @@ class Console(Cmd):
         #     for arg in arg_list:
         #         if arg.startswith('xmin'):
         #             xmin = float(arg.split('=')[-1])
- 
+
         #         elif arg.startswith('xmax'):
         #             xmax = float(arg.split('=')[-1])
 
@@ -1030,11 +1030,11 @@ class Console(Cmd):
         """
         return stop
 
-    def emptyline(self):    
+    def emptyline(self):
         """Do nothing on empty input line"""
         pass
 
-    def default(self, line):       
+    def default(self, line):
         """Called on an input line when the command prefix is not recognized.
            In that case we execute the line as Python code.
         """

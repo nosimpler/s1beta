@@ -1,6 +1,6 @@
 # clidefs.py - these are all of the function defs for the cli
 #
-# v 1.8.30
+# v 1.9.2a
 # rev 2015-05-14 (SL: minor)
 # last major: (SL: fixed show and pngv)
 
@@ -585,7 +585,7 @@ def exec_specmax_dpl_match(ddata, opts):
     data_max_list = []
 
     for fspec in spec_list:
-        spec = specfn.Spec(fspec) 
+        spec = specfn.Spec(fspec)
         data_max_list.append(spec.max('agg', p['t_interval'], p['f_interval'], p['f_sort']))
 
     # create fig name
@@ -636,7 +636,7 @@ def exec_specmax_dpl_tmpl(ddata, opts):
     data_max_list = []
 
     for fspec in spec_list:
-        spec = specfn.Spec(fspec) 
+        spec = specfn.Spec(fspec)
         data_max_list.append(spec.max('agg', p['t_interval'], p['f_interval'], p['f_sort']))
 
     # Get time intervals of max spectral pwr
@@ -677,7 +677,7 @@ def exec_plot_dpl_tmpl(ddata, opts):
     dpl_list = fio.file_match(os.path.join(ddata.dsim, p['expmt_group']), '-tmpldpl.txt')
 
     # create file name list
-    # prefix_list = [fdpl.split('/')[-1].split('-tmpldpl')[0] for fdpl in dpl_list] 
+    # prefix_list = [fdpl.split('/')[-1].split('-tmpldpl')[0] for fdpl in dpl_list]
     # fname_list = [os.path.join(dir_out, prefix+'-tmpldpl.png') for prefix in prefix_list]
 
     plot_dict = {
@@ -807,7 +807,7 @@ def exec_avgtrials(ddata, datatype):
             # average spec data
             elif datakey == 'rawspec':
                 specfn.average(fname_unique, unique_list)
-                # # load TFR data into np array and avg by summing and dividing by n_trials 
+                # # load TFR data into np array and avg by summing and dividing by n_trials
                 # data_for_avg = np.array([np.load(file)['TFR'] for file in unique_list])
                 # spec_avg = data_for_avg.sum(axis=0)/data_for_avg.shape[0]
 
@@ -911,7 +911,7 @@ def exec_spec_stationary_avg(ddata, dsim, maxpwr):
                 specfn.pmaxpwr(f_name, partial_results_list, partial_fparam_list)
 
 # Time-averaged Spectral-power analysis/plotting of avg spec data
-def exec_spec_avg_stationary_avg(ddata, dsim, opts): 
+def exec_spec_avg_stationary_avg(ddata, dsim, opts):
 
     # Prompt user for type of analysis (per expmt or whole sim)
     analysis_type = raw_input('Would you like analysis per expmt or for whole sim? (expmt or sim): ')
@@ -924,7 +924,7 @@ def exec_spec_avg_stationary_avg(ddata, dsim, opts):
 
     # If no avg spec data found, generate it.
     if not spec_results_avged:
-        exec_avgtrials(ddata, 'spec')  
+        exec_avgtrials(ddata, 'spec')
         spec_results_avged = fio.file_match(ddata.dsim, '-specavg.npz')
 
     # perform time-averaged stationarity analysis
@@ -1119,7 +1119,7 @@ def exec_phaselock(ddata, opts):
         # Get paths to relevant files
         list_dpl = ddata.file_match(expmt_group, 'rawdpl')
         list_spk = ddata.file_match(expmt_group, 'rawspk')
-        list_param = ddata.file_match(expmt_group, 'param') 
+        list_param = ddata.file_match(expmt_group, 'param')
 
         avg_spec = ddata.file_match(expmt_group, 'avgspec')[0]
 
@@ -1287,7 +1287,7 @@ def exec_plotaverages(ddata, ylim=[]):
         dfig_spec_list += [dfig['figavgspec'] for dfig in dfig_list_expmt]
 
         # param list to match avg data lists
-        fparam_list = fio.fparam_match_minimal(ddata.dfig[expmt_group]['param'], p_exp) 
+        fparam_list = fio.fparam_match_minimal(ddata.dfig[expmt_group]['param'], p_exp)
         pdict_list += [paramrw.read(f_param)[1] for f_param in fparam_list]
 
     if dpl_list:

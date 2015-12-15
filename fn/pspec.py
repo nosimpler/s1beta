@@ -19,13 +19,13 @@ import fileio as fio
 import currentfn
 import dipolefn
 import specfn
-import spikefn 
+import spikefn
 import axes_create as ac
 
 # this is actually a plot kernel for one sim that does dipole, etc.
 # needs f_param not p_dict
 def pspec_dpl(f_spec, f_dpl, dfig, p_dict, key_types, xlim=None, ylim=None, f_param=None):
-    # Generate file prefix 
+    # Generate file prefix
     fprefix = f_spec.split('/')[-1].split('.')[0]
 
     # using png for now
@@ -39,7 +39,7 @@ def pspec_dpl(f_spec, f_dpl, dfig, p_dict, key_types, xlim=None, ylim=None, f_pa
     spec = specfn.Spec(f_spec)
 
     # Plot TFR data and add colorbar
-    pc = spec.plot_TFR(f.ax['spec'], 'agg', xlim, ylim) 
+    pc = spec.plot_TFR(f.ax['spec'], 'agg', xlim, ylim)
     f.f.colorbar(pc, ax=f.ax['spec'])
 
     # grab the dipole data
@@ -88,7 +88,7 @@ def pspec_dpl(f_spec, f_dpl, dfig, p_dict, key_types, xlim=None, ylim=None, f_pa
 
 # Spectral plotting kernel with alpha feed histogram for ONE simulation run
 def pspec_with_hist(f_spec, f_dpl, f_spk, dfig, f_param, key_types, xlim=None, ylim=None):
-    # Generate file prefix 
+    # Generate file prefix
     fprefix = f_spec.split('/')[-1].split('.')[0]
 
     # Create the fig name
@@ -103,7 +103,7 @@ def pspec_with_hist(f_spec, f_dpl, f_spk, dfig, f_param, key_types, xlim=None, y
     spec = specfn.Spec(f_spec)
 
     # Plot TFR data and add colorbar
-    pc = spec.plot_TFR(f.ax['spec'], 'agg', xlim, ylim) 
+    pc = spec.plot_TFR(f.ax['spec'], 'agg', xlim, ylim)
     f.f.colorbar(pc, ax=f.ax['spec'])
 
     # set xlim based on TFR plot

@@ -1,6 +1,6 @@
 # praster.py - plot dipole function
 #
-# v 1.7.39
+# v 1.9.2a
 # rev 2013-04-08 (SL: changed spikes_from_file)
 # last major: (SL: minor changes to FigRaster)
 
@@ -11,7 +11,7 @@ from neuron import h as nrn
 from axes_create import FigRaster
 import spikefn as spikefn
 
-# file_info is (rootdir, subdir, 
+# file_info is (rootdir, subdir,
 def praster(f_param, tstop, file_spk, dfig):
     # ddipole is dipole data
     s_dict = spikefn.spikes_from_file(f_param, file_spk)

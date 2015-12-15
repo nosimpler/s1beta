@@ -1,6 +1,6 @@
 # plotfn.py - pall and possibly other plot routines
 #
-# v 1.9.1m0
+# v 1.9.2a
 # rev 2015-12-15 (SL: reincorporated the histogram)
 # last major: (SL: Minor)
 
@@ -204,7 +204,7 @@ def aggregate_spec_with_hist(ddir, p_exp, labels):
 
         pl.close()
         pl.join()
-        
+
     elif runtype is 'debug':
         for f_param, f_spk, f_dpl, fspec, ax in it.izip(param_list, spk_list, dpl_list, spec_list, f.ax_list):
             # _, p_dict = paramrw.read(f_param)

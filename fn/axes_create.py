@@ -1,6 +1,6 @@
 # axes_create.py - simple axis creation
 #
-# v 1.9.1m0
+# v 1.9.2a
 # rev 2015-12-15 (SL: some limits for the histogram)
 # last major: (SL: minor)
 
@@ -355,7 +355,7 @@ class FigPhase(FigBase):
         self.ax['dipole'] = self.f.add_subplot(self.gs2[:, :])
         self.ax['input'] = self.f.add_subplot(self.gs3[:, :])
 
-# spec plus dipole 
+# spec plus dipole
 class FigSpec(FigBase):
     def __init__(self):
         self.f = plt.figure(figsize=(8, 6))
@@ -576,7 +576,7 @@ class FigAggregateSpecWithHist(FigBase):
         self.top_margin = 1. / (2 + 8 * N_rows)
         self.left_margin = 2. / (2 + 8 * N_cols)
 
-        # Height is measured from top of figure 
+        # Height is measured from top of figure
         # i.e. row at top of figure is considered row 0
         # This is the opposite of matplotlib conventions
         # White space accounting is kind of wierd. Sorry.
@@ -586,7 +586,7 @@ class FigAggregateSpecWithHist(FigBase):
         bottom = top - height
 
         # Width is measured from left of figure
-        # This is inline with matplotlib conventions 
+        # This is inline with matplotlib conventions
         # White space accounting it kind of wierd. Sorry
         self.gap_width = 0.15 / (N_cols + 1.)
         width = (0.85 - self.left_margin) / N_cols
@@ -602,7 +602,7 @@ class FigAggregateSpecWithHist(FigBase):
         # iterate over all rows/cols and create axes for each location
         for row, col in it.product(range(0, N_rows), range(0, N_cols)):
             # left and right margins for this set of axes
-            tmp_left = left + width * col + self.gap_width * col 
+            tmp_left = left + width * col + self.gap_width * col
             tmp_right = right + width * col + self.gap_width * col
 
             # top and bottom margins for this set of axes
@@ -644,11 +644,11 @@ class FigAggregateSpecWithHist(FigBase):
                 ax[key].set_xticklabels('')
 
     # def add_column_labels(self, param_list):
-    def add_column_labels(self, param_list, key): 
+    def add_column_labels(self, param_list, key):
         # override = {'fontsize': 8*self.N_cols}
 
-        gap = (0.85 - self.left_margin) / self.N_cols + self.gap_width 
-        
+        gap = (0.85 - self.left_margin) / self.N_cols + self.gap_width
+
         for i in range(0, self.N_cols):
             p_dict = paramrw.read(param_list[i])[1]
 

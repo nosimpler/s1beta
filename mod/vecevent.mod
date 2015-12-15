@@ -35,7 +35,7 @@ extern void* vector_arg();
 ENDVERBATIM
 
 PROCEDURE element() {
-VERBATIM    
+VERBATIM
   { void* vv; int i, size; double* px;
     i = (int)index;
     if (i >= 0) {

@@ -1,5 +1,5 @@
 COMMENT
-    26 Ago 2002 Modification of original channel to allow variable time step 
+    26 Ago 2002 Modification of original channel to allow variable time step
             and to correct an initialization error.
 
     Done by Michael Hines (michael.hines@yale.edu) and Ruggero Scorcioni (rscorcio@gmu.edu)
@@ -30,7 +30,7 @@ UNITS {
     (mV) = (millivolt)
     (pS) = (picosiemens)
     (um) = (micron)
-} 
+}
 
 PARAMETER {
     : 0.03 mho/cm2
@@ -40,9 +40,9 @@ PARAMETER {
     : v 1/2 for inf
     tha = -30   (mV)
 
-    : inf slope     
+    : inf slope
     qa = 9      (mV)
-    
+
     : max act rate  (slow)
     Ra = 0.001  (/ms)
 
@@ -52,7 +52,7 @@ PARAMETER {
     dt          (ms)
     celsius     (degC)
 
-    : original temp     
+    : original temp
     temp = 23   (degC)
 
     : temp sensitivity
@@ -60,7 +60,7 @@ PARAMETER {
 
     vmin = -120 (mV)
     vmax = 100  (mV)
-} 
+}
 
 
 ASSIGNED {
@@ -70,16 +70,16 @@ ASSIGNED {
     gk      (pS/um2)
     ek      (mV)
     ninf
-    ntau    (ms)   
+    ntau    (ms)
     tadj
 }
- 
 
-STATE { 
-    n 
+
+STATE {
+    n
 }
 
-INITIAL { 
+INITIAL {
     trates(v)
     n = ninf
 }
@@ -88,7 +88,7 @@ BREAKPOINT {
     SOLVE states METHOD cnexp
     gk = tadj * gbar * n
     ik = (1e-4) * gk * (v - ek)
-} 
+}
 
 LOCAL nexp
 
@@ -103,7 +103,7 @@ DERIVATIVE states {
 PROCEDURE trates(v) {
     TABLE ninf, ntau
     DEPEND  celsius, temp, Ra, Rb, tha, qa
-    
+
     FROM vmin TO vmax WITH 199
 
     : not consistently executed from here if usetable_hh == 1

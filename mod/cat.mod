@@ -6,52 +6,52 @@ ENDCOMMENT
 
 INDEPENDENT { t FROM 0 TO 1 WITH 1 (ms) }
 
-UNITS { 
-    (mV) = (millivolt) 
-    (mA) = (milliamp) 
+UNITS {
+    (mV) = (millivolt)
+    (mA) = (milliamp)
 }
- 
-NEURON { 
+
+NEURON {
     SUFFIX cat
     NONSPECIFIC_CURRENT i   : not causing [Ca2+] influx
     RANGE gbar, i
 }
 
-PARAMETER { 
+PARAMETER {
     gbar = 0.0  (mho/cm2)
-    v eca       (mV)  
+    v eca       (mV)
 }
- 
-ASSIGNED { 
-    i           (mA/cm2) 
+
+ASSIGNED {
+    i           (mA/cm2)
     minf hinf   (1)
-    mtau htau   (ms) 
+    mtau htau   (ms)
 }
- 
+
 STATE {
     m h
 }
 
-BREAKPOINT { 
+BREAKPOINT {
     SOLVE states METHOD cnexp
-    i = gbar * m * m * h * ( v - 125 ) 
+    i = gbar * m * m * h * ( v - 125 )
 }
- 
-INITIAL { 
-    settables(v) 
+
+INITIAL {
+    settables(v)
     m  = minf
     h  = hinf
     m  = 0
-} 
+}
 
-DERIVATIVE states { 
-    settables(v) 
-    m' = ( minf - m ) / mtau 
+DERIVATIVE states {
+    settables(v)
+    m' = ( minf - m ) / mtau
     h' = ( hinf - h ) / htau
 }
 
-UNITSOFF 
-PROCEDURE settables(v) { 
+UNITSOFF
+PROCEDURE settables(v) {
     TABLE minf, mtau, hinf, htau FROM -120 TO 40 WITH 641
 
     minf  = 1 / (1 + exp(( -v - 56 ) / 6.2))

@@ -1,8 +1,8 @@
 COMMENT
-    26 Ago 2002 Modification of original channel to allow variable time step 
+    26 Ago 2002 Modification of original channel to allow variable time step
             and to correct an initialization error.
 
-    Done by Michael Hines (michael.hines@yale.edu) and Ruggero Scorcioni (rscorcio@gmu.edu) 
+    Done by Michael Hines (michael.hines@yale.edu) and Ruggero Scorcioni (rscorcio@gmu.edu)
             at EU Advance Course in Computational Neuroscience. Obidos, Portugal
 
     kca.mod
@@ -12,7 +12,7 @@ COMMENT
             taken from Reuveni et al (1993) -- neocortical cells
 
     Author: Zach Mainen, Salk Institute, 1995, zach@salk.edu
-    
+
 ENDCOMMENT
 
 INDEPENDENT {t FROM 0 TO 1 WITH 1 (ms)}
@@ -32,19 +32,19 @@ UNITS {
     (mV) = (millivolt)
     (pS) = (picosiemens)
     (um) = (micron)
-} 
+}
 
 PARAMETER {
-    : 0.03 mho/cm2 
+    : 0.03 mho/cm2
     gbar = 10   (pS/um2)
     v           (mV)
     cai         (mM)
     caix = 1
 
-    : max act rate  
+    : max act rate
     Ra   = 0.01 (/ms)
 
-    : max deact rate                                     
+    : max deact rate
     Rb   = 0.02 (/ms)
 
     dt          (ms)
@@ -65,16 +65,16 @@ ASSIGNED {
     gk      (pS/um2)
     ek      (mV)
     ninf
-    ntau    (ms)    
+    ntau    (ms)
     tadj
 }
- 
 
-STATE { 
-    n 
+
+STATE {
+    n
 }
 
-INITIAL { 
+INITIAL {
     rates(cai)
     n = ninf
 }
@@ -83,7 +83,7 @@ BREAKPOINT {
     SOLVE states METHOD cnexp
     gk = tadj * gbar * n
     ik = (1e-4) * gk * (v - ek)
-} 
+}
 
 LOCAL nexp
 
@@ -93,7 +93,7 @@ DERIVATIVE states {
     n' =  (ninf - n) / ntau
 }
 
-PROCEDURE rates(cai(mM)) {  
+PROCEDURE rates(cai(mM)) {
     a = Ra * cai^caix
     b = Rb
 

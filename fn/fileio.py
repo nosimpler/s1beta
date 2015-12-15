@@ -1,6 +1,6 @@
 # fileio.py - general file input/output functions
 #
-# v 1.8.26
+# v 1.9.2a
 # rev 2014-05-22 (SL: minor, just a function move, really)
 # last rev: (SL: return_specific_filename() added)
 
@@ -322,7 +322,7 @@ def dir_copy(din, dout):
     else:
         print "Directory already exists."
 
-# Finds and moves files to created subdirectories. 
+# Finds and moves files to created subdirectories.
 def subdir_move(dir_out, name_dir, file_pattern):
     dir_name = os.path.join(dir_out, name_dir)
 
@@ -354,7 +354,7 @@ def pngoptimize(dfig):
     cmds_opti = [('optipng', pngfile) for pngfile in pnglist]
     cmds_runmulti(cmds_opti)
 
-# list spike raster eps files and then rasterize them to HQ png files, lossless compress, 
+# list spike raster eps files and then rasterize them to HQ png files, lossless compress,
 # reencapsulate as eps, and remove backups when successful
 def epscompress(dfig_spk, fext_figspk, local=0):
     cmds_gs = []

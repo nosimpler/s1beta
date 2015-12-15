@@ -1,6 +1,6 @@
 # L2_pyramidal.py - est class def for layer 2 pyramidal cells
 #
-# v 1.9.00
+# v 1.9.2a
 # rev 2015-12-04 (SL: minor)
 # last rev: (SL: minor)
 
@@ -21,8 +21,8 @@ class L2Pyr(Pyr):
     def __init__(self, pos, p={}):
         # Get default L2Pyr params and update them with any corresponding params in p
         p_all_default = p_default.get_L2Pyr_params_default()
-        self.p_all = paramrw.compare_dictionaries(p_all_default, p) 
-        
+        self.p_all = paramrw.compare_dictionaries(p_all_default, p)
+
         # Get somatic, dendritic, and synapse properties
         p_soma = self.__get_soma_props(pos)
         p_dend = self.__get_dend_props()
@@ -202,10 +202,10 @@ class L2Pyr(Pyr):
         # Insert 'hh' mechanism
         self.soma.insert('hh')
         self.soma.gkbar_hh = self.p_all['L2Pyr_soma_gkbar_hh']
-        self.soma.gl_hh = self.p_all['L2Pyr_soma_gl_hh'] 
-        self.soma.el_hh = self.p_all['L2Pyr_soma_el_hh'] 
-        self.soma.gnabar_hh = self.p_all['L2Pyr_soma_gnabar_hh'] 
-                
+        self.soma.gl_hh = self.p_all['L2Pyr_soma_gl_hh']
+        self.soma.el_hh = self.p_all['L2Pyr_soma_el_hh']
+        self.soma.gnabar_hh = self.p_all['L2Pyr_soma_gnabar_hh']
+
         # Insert 'km' mechanism
         # Units: pS/um^2
         self.soma.insert('km')
@@ -254,7 +254,7 @@ class L2Pyr(Pyr):
             # sec.gbar_km = 250
 
     def __synapse_create(self, p_syn):
-        # creates synapses onto this cell 
+        # creates synapses onto this cell
         # Somatic synapses
         self.synapses = {
             'soma_gabaa': self.syn_create(self.soma(0.5), p_syn['gabaa']),
@@ -470,13 +470,13 @@ class L2Pyr(Pyr):
 
     # Define 3D shape and position of cell. By default neuron uses xy plane for
     # height and xz plane for depth. This is opposite for model as a whole, but
-    # convention is followed in this function for ease use of gui. 
+    # convention is followed in this function for ease use of gui.
     def __set_3Dshape(self):
         # set 3d shape of soma by calling shape_soma from class Cell
         # print "Warning: You are setiing 3d shape geom. You better be doing"
         # print "gui analysis and not numerical analysis!!"
         self.shape_soma()
-        
+
         # soma proximal coords
         x_prox = 0
         y_prox = 0
@@ -513,7 +513,7 @@ class L2Pyr(Pyr):
         # nrn.pop_section()
 
         nrn.pt3dadd(x_start, y_start, 0, self.dend_diam[3], sec=self.list_dend[3])
-        # self.dend_L[3] is subtracted because lengths always positive, 
+        # self.dend_L[3] is subtracted because lengths always positive,
         # and this goes to negative x
         nrn.pt3dadd(x_start-self.dend_L[3], y_start, 0, self.dend_diam[3], sec=self.list_dend[3])
 
@@ -533,14 +533,14 @@ class L2Pyr(Pyr):
         # Calculate x-coordinate for end of dend
         dend5_x = -self.dend_L[5] * np.sqrt(2)/2
         nrn.pt3dadd(x_prox, y_prox, 0, self.dend_diam[5], sec=self.list_dend[5])
-        nrn.pt3dadd(dend5_x, y_prox-self.dend_L[5] * np.sqrt(2)/2, 
+        nrn.pt3dadd(dend5_x, y_prox-self.dend_L[5] * np.sqrt(2)/2,
                     0, self.dend_diam[5], sec=self.list_dend[5])
 
         # dend 6
         # Calculate x-coordinate for end of dend
         dend6_x = self.dend_L[6] * np.sqrt(2)/2
         nrn.pt3dadd(x_prox, y_prox, 0, self.dend_diam[6], sec=self.list_dend[6])
-        nrn.pt3dadd(dend6_x, y_prox-self.dend_L[6] * np.sqrt(2)/2, 
+        nrn.pt3dadd(dend6_x, y_prox-self.dend_L[6] * np.sqrt(2)/2,
                     0, self.dend_diam[6], sec=self.list_dend[6])
 
         # set 3D position
@@ -549,8 +549,8 @@ class L2Pyr(Pyr):
         # x and z components are scaled by 100 for visualization clarity
         self.soma.push()
         for i in range(0, int(nrn.n3d())):
-            nrn.pt3dchange(i, self.pos[0]*100 + nrn.x3d(i), self.pos[2] + 
-                           nrn.y3d(i), self.pos[1] * 100 + nrn.z3d(i), 
+            nrn.pt3dchange(i, self.pos[0]*100 + nrn.x3d(i), self.pos[2] +
+                           nrn.y3d(i), self.pos[1] * 100 + nrn.z3d(i),
                            nrn.diam3d(i))
 
         nrn.pop_section()

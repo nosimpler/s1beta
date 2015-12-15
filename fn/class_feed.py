@@ -1,6 +1,6 @@
 # class_feed.py - establishes FeedExt(), ParFeedAll()
 #
-# v 1.8.26
+# v 1.9.2a
 # rev 2014-05-22 (SL: minor)
 # last major: (MS: Merged SpecClass with master)
 
@@ -159,7 +159,7 @@ class ParFeedAll():
             # array of mean stimulus times, starts at t0
             isi_array = np.arange(t0, self.p_ext['tstop'], 1000./f_input)
 
-            # array of single stimulus times -- no doublets 
+            # array of single stimulus times -- no doublets
             if stdev:
                 t_array = self.prng.normal(np.repeat(isi_array, 10), stdev)
 
@@ -192,7 +192,7 @@ class ParFeedAll():
                 t_input_low = t_array - 5
                 t_input_high = t_array + 5
 
-                # Array with ALL stimulus times for input 
+                # Array with ALL stimulus times for input
                 # np.append concatenates two np arrays
                 t_input = np.append(t_input_low, t_input_high)
 
@@ -204,7 +204,7 @@ class ParFeedAll():
             t_input.sort()
 
         else:
-            print "Indicated distribution not recognized. Not making any alpha feeds." 
+            print "Indicated distribution not recognized. Not making any alpha feeds."
             t_input = []
 
         # Convert array into nrn vector

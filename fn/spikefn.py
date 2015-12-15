@@ -1,6 +1,6 @@
 # spikefn.py - dealing with spikes
 #
-# v 1.9.1m0
+# v 1.9.2a
 # rev 2015-12-15 (SL: only do a histogram if the external inputs existed)
 # last major: (minor)
 
@@ -78,7 +78,7 @@ class ExtInputs(Spikes):
     def __get_extinput_gids(self):
         # Determine if both feeds exist in this sim
         # If they do, self.gid_dict['extinput'] has length 2
-        # If so, first gid is guaraneteed to be prox feed, second to be dist feed 
+        # If so, first gid is guaraneteed to be prox feed, second to be dist feed
         if len(self.gid_dict['extinput']) == 2:
             return self.gid_dict['extinput']
 
@@ -101,7 +101,7 @@ class ExtInputs(Spikes):
 
         # If prox input exists, get spike times
         # self.filter() inherited from Spikes()
-        # self.r weirdness is necessary to use self.filter() 
+        # self.r weirdness is necessary to use self.filter()
         # i.e. self.r must exist and be a list to execute self.filter()
         if self.gid_prox:
             self.r = [self.gid_prox]
@@ -122,12 +122,12 @@ class ExtInputs(Spikes):
 
     def truncate_ext(self, dtype, t_int):
         if dtype == 'prox' or dtype == 'dist':
-            tmask = (self.inputs[dtype] >= t_int[0]) & (self.inputs[dtype] <= t_int[1]) 
+            tmask = (self.inputs[dtype] >= t_int[0]) & (self.inputs[dtype] <= t_int[1])
             return self.inputs[dtype][tmask]
 
         if dtype == 'env':
-            tmask = (self.inputs['t'] >= t_int[0]) & (self.inputs['t'] <= t_int[1]) 
-            return [self.inputs[dtype][tmask], self.inputs['t'][tmask]] 
+            tmask = (self.inputs['t'] >= t_int[0]) & (self.inputs['t'] <= t_int[1])
+            return [self.inputs[dtype][tmask], self.inputs['t'][tmask]]
 
     def add_delay_times(self):
         # if prox delay to both layers is the same, add it to the prox input times
@@ -162,9 +162,10 @@ class ExtInputs(Spikes):
         return hist
 
 # filters spike dict s_dict for keys that start with str_startswith
-# easy enough to modify for future conditions
-# just fix associated functions
 def filter_spike_dict(s_dict, str_startswith):
+    """ easy enough to modify for future conditions
+        just fix associated functions
+    """
     s_filt = {}
     for key, val in s_dict.iteritems():
         if key.startswith(str_startswith):
@@ -172,6 +173,7 @@ def filter_spike_dict(s_dict, str_startswith):
 
     return s_filt
 
+# weird bin counting function
 def bin_count(bins_per_second, tinterval):
     return bins_per_second * tinterval / 1000.
 
@@ -184,8 +186,9 @@ def split_extrand(s, gid_dict, celltype, exttype):
     return Spikes(s, gid_exttype_cell)
 
 # histogram bin optimization
-# Shimazaki and Shinomoto, Neural Comput, 2007
 def hist_bin_opt(x, N_trials):
+    """ Shimazaki and Shinomoto, Neural Comput, 2007
+    """
     bin_checks = np.arange(80, 300, 10)
     # bin_checks = np.linspace(150, 300, 16)
 
@@ -369,14 +372,15 @@ def add_delay_times(s_dict, p_dict):
 
     # else, check to see if delays are the same anyway
     # else:
-    if s_dict['alpha_feed_dist'].spike_list and p_dict['input_dist_A_delay_L2'] == p_dict['input_dist_A_delay_L5']: 
+    if s_dict['alpha_feed_dist'].spike_list and p_dict['input_dist_A_delay_L2'] == p_dict['input_dist_A_delay_L5']:
         s_dict['alpha_feed_dist'].spike_list = [num+p_dict['input_dist_A_delay_L2'] for num in s_dict['alpha_feed_dist'].spike_list]
 
     return s_dict
 
 # Checks for existance of alpha feed keys in s_dict.
-# If they do not exist, then simulation used one or no feeds. Creates keys accordingly
 def alpha_feed_verify(s_dict, p_dict):
+    """ If they do not exist, then simulation used one or no feeds. Creates keys accordingly
+    """
     # check for existance of keys. If exist, do nothing
     if 'alpha_feed_prox' and 'alpha_feed_dist' in s_dict.keys():
         pass
@@ -387,8 +391,8 @@ def alpha_feed_verify(s_dict, p_dict):
         # distal feed does not exist and gets empty list
         if p_dict['t0_input_prox'] < p_dict['tstop']:
             s_dict['alpha_feed_prox'] = s_dict['extinput']
-            
-            # make object on the fly with attribute 'spike_list' 
+
+            # make object on the fly with attribute 'spike_list'
             # A little hack-y
             s_dict['alpha_feed_dist'] = type('emptyspike', (object,), {'spike_list': np.array([])})
 
@@ -398,7 +402,7 @@ def alpha_feed_verify(s_dict, p_dict):
             s_dict['alpha_feed_prox'] = type('emptyspike', (object,), {'spike_list': np.array([])})
             s_dict['alpha_feed_dist'] = s_dict['extinput']
 
-        # if neither had t0 < tstop, neither exists and both get empty list 
+        # if neither had t0 < tstop, neither exists and both get empty list
         else:
             s_dict['alpha_feed_prox'] = type('emptyspike', (object,), {'spike_list': np.array([])})
             s_dict['alpha_feed_dist'] = type('emptyspike', (object,), {'spike_list': np.array([])})
@@ -434,4 +438,4 @@ def pinput_hist_onesided(a0, s_list, n_bins):
     return hists
 
 if __name__ == '__main__':
-    print 'main statement'
+    pass

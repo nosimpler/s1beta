@@ -1,6 +1,6 @@
 # pmanu_gamma.py - plot functions for gamma manuscript
 #
-# v 1.8.23
+# v 1.9.2a
 # rev 2013-12-11 (SL: plot updates)
 # last major: (SL: Many of the final figure scripts)
 
@@ -155,7 +155,7 @@ def hf_epochs(ddata):
             f.ax[ax_h].axvline(x=xlim_window[0], color='b')
             f.ax[ax_h].axvline(x=xlim_window[1], color='k')
 
-        # this is the highlight portion, one fixed 
+        # this is the highlight portion, one fixed
         dx_hl = 0.5 * (1000. / f_center)
         dx_hl_fixed = 10.
 
@@ -1074,11 +1074,11 @@ def spikephase():
     s0 = spikefn.spikes_from_file(f_param0, f_spk0)
     icell_spikes = s0['L5_basket'].spike_list
     ecell_spikes = s0['L5_pyramidal'].spike_list
-    
+
     ispike_counts = [len(slist) for slist in icell_spikes]
     espike_counts = [len(slist) for slist in ecell_spikes]
 
-    # let's try a sort ... 
+    # let's try a sort ...
     icell_spikes_agg = np.concatenate(icell_spikes)
     ecell_spikes_agg = np.concatenate(ecell_spikes)
 

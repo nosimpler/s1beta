@@ -1,6 +1,6 @@
 # praw.py - all of the raw data types on one fig
 #
-# v 1.8.12
+# v 1.9.2a
 # rev 2013-06-22 (SL: minor)
 # last major: (SL: fixed pspec_ax() call)
 
@@ -12,7 +12,7 @@ import ast
 import os
 import paramrw
 import dipolefn
-import spikefn 
+import spikefn
 import specfn
 import currentfn
 import matplotlib.pyplot as plt
