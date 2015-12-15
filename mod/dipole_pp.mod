@@ -1,8 +1,8 @@
 : dipole_pp.mod - creates point process mechanism Dipole
 :
-: v 1.0.0
-: rev 2012-09-11 (SL: added Qtotal back, used for par calc)
-: last rev: (SL: cleaned up and removed Qtotal)
+: v 1.9.1m0
+: rev 2015-12-15 (SL: minor)
+: last rev: (SL: added Qtotal back, used for par calc)
 
 NEURON {
     POINT_PROCESS Dipole
@@ -29,7 +29,7 @@ ASSIGNED {
     pv (mV)
     v (mV)
     ztan (um)
-    Q  (fAm)
+    Q (fAm)
     Qsum (fAm)
     Qtotal (fAm)
 }
@@ -41,7 +41,7 @@ AFTER SOLVE {
     Qsum = Qsum + Q
     Qtotal = Qtotal + Q
 }
-    
+
 AFTER INITIAL {
     ia = (pv - v) / ri
     Q = ia * ztan

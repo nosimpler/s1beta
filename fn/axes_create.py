@@ -1,8 +1,8 @@
 # axes_create.py - simple axis creation
 #
-# v 1.8.30
-# rev 2015-05-14 (SL: minor)
-# last major: (fixed axis labels for FigRaster())
+# v 1.9.1m0
+# rev 2015-12-15 (SL: some limits for the histogram)
+# last major: (SL: minor)
 
 # usage:
 # testfig = FigStd()
@@ -288,11 +288,13 @@ class FigDplWithHist(FigBase):
         self.ax['feed_prox'] = self.f.add_subplot(self.gs1[1, :])
         self.ax['feed_dist'] = self.f.add_subplot(self.gs1[0, :])
 
+    # setting the properties of a histogram
     def set_hist_props(self, hist_data):
         for key in self.ax.keys():
             if 'feed' in key:
-                max_n = max(hist_data[key][0])
-                self.ax[key].set_yticks(np.arange(0, max_n+2, np.ceil((max_n+2.)/4.)))
+                if hist_data[key] is not None:
+                    max_n = max(hist_data[key][0])
+                    self.ax[key].set_yticks(np.arange(0, max_n+2, np.ceil((max_n+2.)/4.)))
 
             if 'feed_dist' in key:
                 self.ax[key].set_xticklabels('')
@@ -325,8 +327,9 @@ class FigSpecWithHist(FigBase):
     def set_hist_props(self, hist_data):
         for key in self.ax.keys():
             if 'feed' in key:
-                max_n = max(hist_data[key][0])
-                self.ax[key].set_yticks(np.arange(0, max_n+2, np.ceil((max_n+2.)/4.)))
+                if hist_data[key] is not None:
+                    max_n = max(hist_data[key][0])
+                    self.ax[key].set_yticks(np.arange(0, max_n+2, np.ceil((max_n+2.)/4.)))
 
             if 'feed_dist' in key:
                 self.ax[key].set_xticklabels('')
