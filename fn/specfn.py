@@ -1,8 +1,8 @@
 # specfn.py - Average time-frequency energy representation using Morlet wavelet method
 #
-# v 1.8.31
-# rev 2015-12-04 (SL: Minor, mostly)
-# last major: (SL: reorganization, some non-major comments on PhaseLock())
+# v 1.9.2
+# rev 2015-12-15 (SL: put in warnings regarding ==)
+# last major: (SL: Minor, mostly)
 
 import os
 import sys
@@ -18,7 +18,7 @@ from neuron import h as nrn
 import fileio as fio
 import currentfn
 import dipolefn
-import spikefn 
+import spikefn
 import axes_create as ac
 
 # MorletSpec class based on a time vec tvec and a time series vec tsvec
@@ -82,6 +82,7 @@ class MorletSpec():
 
     # get time and freq of max spectral power
     def max(self):
+        print("Warning: you are using max() in MorletSpec(). It should be changed from == to np.isclose()")
         max_spec = self.TFR.max()
 
         t_mask = (self.TFR==max_spec).sum(axis=0)
@@ -122,7 +123,7 @@ class MorletSpec():
     def __energyvec(self, f, s):
         # Return an array containing the energy as function of time for freq f
         # The energy is calculated using Morlet's wavelets
-        # f: frequency 
+        # f: frequency
         # s: signal
         dt = 1. / self.fs
         sf = f / self.width
@@ -443,10 +444,10 @@ class Spec():
 
         f_fcut = self.spec[layer]['f'][f_mask]
         t_tcut = self.spec[layer]['t'][t_mask]
-         
+
         return {
-            't': t_tcut, 
-            'f': f_fcut, 
+            't': t_tcut,
+            'f': f_fcut,
             'TFR': TFR_tfcut,
         }
 
@@ -466,17 +467,18 @@ class Spec():
             print "%s's absolute max spectral pwr does not occur between %i-%i Hz." %(self.fname, f_sort[0], f_sort[1])
 
         else:
+            print("Warning: you are using max() in Spec(). It should be changed from == to np.isclose()")
             # truncate data based on specified intervals
             dcut = self.truncate_ext(layer, t_interval, f_interval)
 
             # find the max power over this new range
             pwr_max = dcut['TFR'].max()
-            max_mask = (dcut['TFR']==pwr_max)
+            max_mask = (dcut['TFR'] == pwr_max)
 
             # find the t and f at max
             # these are slightly crude and do not allow for the possibility of multiple maxes (rare?)
-            t_at_max = dcut['t'][max_mask.sum(axis=0)==1][0]
-            f_at_max = dcut['f'][max_mask.sum(axis=1)==1][0]
+            t_at_max = dcut['t'][max_mask.sum(axis=0) == 1][0]
+            f_at_max = dcut['f'][max_mask.sum(axis=1) == 1][0]
 
             # if f_interval provided and lower bound is not zero, set pd_at_max with lower bound:
             # otherwise set it based on f_at_max
@@ -499,10 +501,12 @@ class Spec():
 
             return data_max
 
-    # Averages spectral power over specified time interval for specified frequencies 
+    # Averages spectral power over specified time interval for specified frequencies
     def stationary_avg(self, layer='agg', t_interval=None, f_interval=None):
+        print("Warning: you are using stationary_avg() in Spec(). It should be changed from == to np.isclose()")
+
         # truncate data based on specified intervals
-        dcut = self.truncate_ext(layer, t_interval, f_interval)  
+        dcut = self.truncate_ext(layer, t_interval, f_interval)
 
         # avg TFR pwr over time
         # axis = 1 sums over columns
@@ -510,7 +514,7 @@ class Spec():
 
         # Get max pwr and freq at which max pwr occurs
         pwr_max = pwr_avg.max()
-        f_at_max = dcut['f'][pwr_avg==pwr_max]
+        f_at_max = dcut['f'][pwr_avg == pwr_max]
 
         return {
             'p_avg': pwr_avg,
@@ -546,7 +550,7 @@ class Spec():
     def plot_pgram(self, ax, f_max=None):
         # If f_max is not supplied, set it to highest freq of aggregate analysis
         if f_max is None:
-            f_max = self.spec['agg']['f'][-1] 
+            f_max = self.spec['agg']['f'][-1]
 
         # plot
         ax.plot(self.spec['pgram']['f'], self.spec['pgram']['p'])
@@ -640,18 +644,18 @@ def average(fname, fspec_list):
         # there might be a more 'pythonic' way of doing this...
         else:
             for subdict in x.iterkeys():
-                for key in x[subdict].iterkeys(): 
+                for key in x[subdict].iterkeys():
                     x[subdict][key] += spec.spec[subdict][key]
 
     # poor man's mean
     for subdict in x.iterkeys():
-        for key in x[subdict].iterkeys(): 
+        for key in x[subdict].iterkeys():
             x[subdict][key] /= len(fspec_list)
 
     # save data
     # if max_agg is a key in x, assume all keys are present
     # else, assume only aggregate data is present
-    # Terrible way to save due to how np.savez_compressed works (i.e. must specify key=value) 
+    # Terrible way to save due to how np.savez_compressed works (i.e. must specify key=value)
     if 'max_agg' in x.keys():
         max_agg = (x['max_agg']['p'], x['max_agg']['t'], x['max_agg']['f'])
         # max_agg = (x['max_agg']['p_at_max'], x['max_agg']['t_at_max'], x['max_agg']['f_at_max'])
@@ -700,6 +704,7 @@ def pspec_ax(ax_spec, fspec, xlim, layer=None):
 
 # find max spectral power and associated time/freq for individual file
 def specmax(fspec, opts):
+    print("Warning: you are using specmax(). It should be changed from == to np.isclose()")
     # opts is a dict that includes t_interval and f_interval
     # grab name of file
     fname = fspec.split('/')[-1].split('-spec')[0]
@@ -740,12 +745,12 @@ def specmax(fspec, opts):
     # find the max power over this new range
     # the max_mask is for the entire TFR
     pwr_max = TFR_tfcut.max()
-    max_mask = (TFR_tfcut==pwr_max)
+    max_mask = (TFR_tfcut == pwr_max)
 
     # find the t and f at max
     # these are slightly crude and do not allow for the possibility of multiple maxes (rare?)
-    t_at_max = t_tcut[max_mask.sum(axis=0)==1]
-    f_at_max = f_fcut[max_mask.sum(axis=1)==1]
+    t_at_max = t_tcut[max_mask.sum(axis=0) == 1]
+    f_at_max = f_fcut[max_mask.sum(axis=1) == 1]
 
     pd_at_max = 1000./f_at_max
     t_start = t_at_max - pd_at_max
@@ -836,7 +841,7 @@ def spec_current_kernel(fparam, fts, fspec, f_max):
 
 # Kernel for spec analysis of dipole data
 # necessary for parallelization
-def spec_dpl_kernel(fparam, fts, fspec, f_max): 
+def spec_dpl_kernel(fparam, fts, fspec, f_max):
     dpl = dipolefn.Dipole(fts)
 
     # Do the conversion prior to generating these spec
@@ -955,8 +960,10 @@ def analysis_typespecific(ddata, opts=None):
 def from_expmt(spec_result_list, expmt_group):
     return [spec_result for spec_result in spec_result_list if expmt_group in spec_result.name]
 
-# Averages spec power over time, returning an array of average pwr per frequency 
+# Averages spec power over time, returning an array of average pwr per frequency
 def specpwr_stationary_avg(fspec):
+    print("Warning: you are using specpwr_stationary_avg(). It should be changed from == to np.isclose()")
+
     # Load data from file
     data_spec = np.load(fspec)
 
@@ -970,7 +977,7 @@ def specpwr_stationary_avg(fspec):
     # axis = 1 sums over columns
     pwr_avg = TFR.sum(axis=1) / len(timevec)
     pwr_max = pwr_avg.max()
-    f_at_max = freqvec[pwr_avg==pwr_max]
+    f_at_max = freqvec[pwr_avg == pwr_max]
 
     return {
         'p_avg': pwr_avg,
@@ -981,6 +988,8 @@ def specpwr_stationary_avg(fspec):
     }
 
 def specpwr_stationary(t, f, TFR):
+    print("Warning: you are using specpwr_stationary(). It should be changed from == to np.isclose()")
+
     # aggregate sum of power of all calculated frequencies
     p = TFR.sum(axis=1)
 
@@ -988,7 +997,7 @@ def specpwr_stationary(t, f, TFR):
     p_max = p.max()
 
     # calculate max f
-    f_max = f[p==p_max]
+    f_max = f[p == p_max]
 
     return {
         'p': p,
