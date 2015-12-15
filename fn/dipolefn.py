@@ -1,8 +1,8 @@
 # dipolefn.py - dipole-based analysis functions
 #
-# v 1.8.25
-# rev 2014-03-13 (MS: Changed Dipole.truncate_ext() to truncate inclusively)
-# last major: (MS: Merged SpecClass with Master)
+# v 1.9.1m0
+# rev 2015-12-15 (SL: incorporated changes from CSM)
+# last major: (MS: Changed Dipole.truncate_ext() to truncate inclusively)
 
 import fileio as fio
 import numpy as np
@@ -10,7 +10,7 @@ import itertools as it
 import ast
 import os
 import paramrw
-import spikefn 
+import spikefn
 import specfn
 import matplotlib.pyplot as plt
 from neuron import h as nrn
@@ -21,10 +21,14 @@ import axes_create as ac
 # this gives dpl.t and dpl.dpl
 class Dipole():
     def __init__(self, f_dpl):
+        self.units = None
+        self.N = None
         self.__parse_f(f_dpl)
 
+    # opens the file and sets units
     def __parse_f(self, f_dpl):
         x = np.loadtxt(open(f_dpl, 'r'))
+
         # better implemented as a dict
         self.t = x[:, 0]
         self.dpl = {
@@ -32,6 +36,8 @@ class Dipole():
             'L2': x[:, 2],
             'L5': x[:, 3],
         }
+
+        self.N = self.dpl['agg'].shape[-1]
 
         # string that holds the units
         self.units = 'fAm'
@@ -58,6 +64,8 @@ class Dipole():
 
     # conversion from fAm to nAm
     def convert_fAm_to_nAm(self):
+        """ must be run after baseline_renormalization()
+        """
         for key in self.dpl.keys():
             self.dpl[key] *= 1e-6
 
@@ -154,7 +162,7 @@ class Dipole():
             ylim = self.lim(layer, xlim)
 
             # force ymax to be something sane
-            # commenting this out for now, but 
+            # commenting this out for now, but
             # we can change if absolutely necessary.
             # ax.set_ylim(top=ymax*1.2)
 
@@ -170,50 +178,55 @@ class Dipole():
     # ext function to renormalize
     # this function changes in place but does NOT write the new values to the file
     def baseline_renormalize(self, f_param):
-        N_pyr_x = paramrw.find_param(f_param, 'N_pyr_x')
-        N_pyr_y = paramrw.find_param(f_param, 'N_pyr_y')
+        # only baseline renormalize if the units are fAm
+        if self.units == 'fAm':
+            N_pyr_x = paramrw.find_param(f_param, 'N_pyr_x')
+            N_pyr_y = paramrw.find_param(f_param, 'N_pyr_y')
 
-        # N_pyr cells in grid. This is PER LAYER
-        N_pyr = N_pyr_x * N_pyr_y
+            # N_pyr cells in grid. This is PER LAYER
+            N_pyr = N_pyr_x * N_pyr_y
 
-        # dipole offset calculation: increasing number of pyr cells (L2 and L5, simultaneously)
-        # with no inputs resulted in an aggregate dipole over the interval [50., 1000.] ms that
-        # eventually plateaus at -48 fAm. The range over this interval is something like 3 fAm
-        # so the resultant correction is here, per dipole
-        # dpl_offset = N_pyr * 50.207
+            # dipole offset calculation: increasing number of pyr cells (L2 and L5, simultaneously)
+            # with no inputs resulted in an aggregate dipole over the interval [50., 1000.] ms that
+            # eventually plateaus at -48 fAm. The range over this interval is something like 3 fAm
+            # so the resultant correction is here, per dipole
+            # dpl_offset = N_pyr * 50.207
 
-        dpl_offset = {
-            # these values will be subtracted
-            'L2': N_pyr * 0.0443,
-            'L5': N_pyr * -49.0502
-            # 'L5': N_pyr * -48.3642,
+            dpl_offset = {
+                # these values will be subtracted
+                'L2': N_pyr * 0.0443,
+                'L5': N_pyr * -49.0502
+                # 'L5': N_pyr * -48.3642,
 
-            # will be calculated next, this is a placeholder
-            # 'agg': None,
-        }
+                # will be calculated next, this is a placeholder
+                # 'agg': None,
+            }
 
-        # L2 dipole offset can be roughly baseline shifted over the entire range of t
-        self.dpl['L2'] -= dpl_offset['L2']
+            # L2 dipole offset can be roughly baseline shifted over the entire range of t
+            self.dpl['L2'] -= dpl_offset['L2']
 
-        # L5 dipole offset should be different for interval [50., 500.] and then it can be offset
-        # slope (m) and intercept (b) params for L5 dipole offset
-        # uncorrected for N_cells
-        # these values were fit over the range [37., 750.)
-        m = 3.4770508e-3
-        b = -51.231085
+            # L5 dipole offset should be different for interval [50., 500.] and then it can be offset
+            # slope (m) and intercept (b) params for L5 dipole offset
+            # uncorrected for N_cells
+            # these values were fit over the range [37., 750.)
+            m = 3.4770508e-3
+            b = -51.231085
 
-        # these values were fit over the range [750., 5000]
-        t1 = 750.
-        m1 = 1.01e-4
-        b1 = -48.412078
+            # these values were fit over the range [750., 5000]
+            t1 = 750.
+            m1 = 1.01e-4
+            b1 = -48.412078
 
-        # piecewise normalization
-        self.dpl['L5'][self.t <= 37.] -= dpl_offset['L5']
-        self.dpl['L5'][(self.t > 37.) & (self.t < t1)] -= N_pyr * (m * self.t[(self.t > 37.) & (self.t < t1)] + b)
-        self.dpl['L5'][self.t >= t1] -= N_pyr * (m1 * self.t[self.t >= t1] + b1)
+            # piecewise normalization
+            self.dpl['L5'][self.t <= 37.] -= dpl_offset['L5']
+            self.dpl['L5'][(self.t > 37.) & (self.t < t1)] -= N_pyr * (m * self.t[(self.t > 37.) & (self.t < t1)] + b)
+            self.dpl['L5'][self.t >= t1] -= N_pyr * (m1 * self.t[self.t >= t1] + b1)
 
-        # recalculate the aggregate dipole based on the baseline normalized ones
-        self.dpl['agg'] = self.dpl['L2'] + self.dpl['L5']
+            # recalculate the aggregate dipole based on the baseline normalized ones
+            self.dpl['agg'] = self.dpl['L2'] + self.dpl['L5']
+
+        else:
+            print "Warning, no dipole renormalization done because units were in %s" % (self.units)
 
     # function to write to a file!
     # f_dpl must be fully specified
@@ -386,7 +399,7 @@ def create_template(fname, dpl_list, param_list, t_interval_list):
     x_dpl_agg /= len(dpl_list)
     x_dpl_L2 /= len(dpl_list)
     x_dpl_L5 /= len(dpl_list)
-    
+
     # create a tvec that is symmetric about zero and of proper length
     # assume time intervals are identical length for all data
     t_range = t_interval_list[0][1] - t_interval_list[0][0]
@@ -447,12 +460,11 @@ def pdipole_ax(a, f_dpl, f_param):
     # return the actual time in form of xlim. ain't pretty but works
     return a.get_xlim()
 
-# pdipole is for a single dipole file, should be for a 
+# pdipole is for a single dipole file, should be for a
 # single dipole file combination (incl. param file)
 # this should be done with an axis input too
 # two separate functions, a pdipole kernel function and a specific function for this simple plot
 def pdipole(f_dpl, dfig, plot_dict, f_param=None, key_types={}):
-# def pdipole(f_dpl, f_param, dfig, key_types, plot_dict):
     # dpl is an obj of Dipole() class
     dpl = Dipole(f_dpl)
 
@@ -591,33 +603,10 @@ def pdipole_evoked(dfig, f_dpl, f_spk, f_param, ylim=[]):
 # Plots dipole with histogram of alpha feed inputs
 # this function has not been converted to use the Dipole() class yet
 def pdipole_with_hist(f_dpl, f_spk, dfig, f_param, key_types, plot_dict):
-# def pdipole_with_hist(f_dpl, f_spk, dfig, f_param, key_types, xlim=None):
-# def pdipole_with_hist(f_dpl, f_spk, dfig, f_param, key_types, xlim=[0., 'tstop']):
-    # ddipole is dipole data
-    # ddipole = np.loadtxt(f_dpl)
-
-    # # split to find file prefix
-    # file_prefix = f_dpl.split('/')[-1].split('.')[0]
-
-    # # load param file
-    # _, p_dict = paramrw.read(f_param)
-
-    # # set xmin value
-    # xmin = xlim[0] / p_dict['dt']
-
-    # # set xmax value
-    # if xlim[1] == 'tstop':
-    #     xmax = p_dict['tstop'] / p_dict['dt']
-    # else:
-    #     xmax = xlim[1] / p_dict['dt']
-
-    # # these are the vectors for now, but this is going to change
-    # t_vec = ddipole[xmin:xmax+1, 0]
-    # dp_total = ddipole[xmin:xmax+1, 1]
-
     # dpl is an obj of Dipole() class
     dpl = Dipole(f_dpl)
     dpl.baseline_renormalize(f_param)
+    dpl.convert_fAm_to_nAm()
 
     # split to find file prefix
     file_prefix = f_dpl.split('/')[-1].split('.')[0]
@@ -1146,7 +1135,7 @@ def plot_specmax_interval(fname, dpl_list, param_list, specmax_list):
     f = ac.FigInterval(N_trials+1)
 
     # set spacing between plots
-    spacers = np.arange(0.5e-4, N_trials*1e-4, 1e-4) 
+    spacers = np.arange(0.5e-4, N_trials*1e-4, 1e-4)
 
     # invert order of spacers so first trial is at top of plot
     spacers =  spacers[::-1]
@@ -1168,7 +1157,7 @@ def plot_specmax_interval(fname, dpl_list, param_list, specmax_list):
             # create a tvec that is symmetric about zero and of proper length
             t_range = dmax['t_int'][1] - dmax['t_int'][0]
             t_start = 0 - t_range / 2.
-            t_end = 0 + t_range / 2. 
+            t_end = 0 + t_range / 2.
             tvec = np.linspace(t_start, t_end, dpl_tcut['agg'].shape[0])
 
             # plot to proper height

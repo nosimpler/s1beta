@@ -1,8 +1,8 @@
 # plotfn.py - pall and possibly other plot routines
 #
-# v 1.8.31
-# rev 2015-12-04 (SL: Minor)
-# last major: (MS: Updated call to dipolefn.pdipole())
+# v 1.9.1m0
+# rev 2015-12-15 (SL: reincorporated the histogram)
+# last major: (SL: Minor)
 
 from praster import praster
 import axes_create as ac
@@ -81,8 +81,8 @@ def pall(ddir, p_exp, xlim=None, ylim=None):
     # def pall(ddir, p_exp, spec_results, xlim=[0., 'tstop']):
     # runtype allows easy (hard coded switching between two modes)
     # either 'parallel' or 'debug'
-    runtype = 'parallel'
-    # runtype = 'debug'
+    # runtype = 'parallel'
+    runtype = 'debug'
 
     dsim = ddir.dsim
 
@@ -123,7 +123,8 @@ def pall(ddir, p_exp, xlim=None, ylim=None):
     elif runtype is 'debug':
         # run serially
         for dfig, f_param, f_spk, f_dpl, f_spec in it.izip(dfig_list, param_list, spk_list, dpl_list, spec_list):
-           pkernel(dfig, f_param, f_spk, f_dpl, f_spec, key_types, xlim, ylim)
+           pkernel_with_hist(dfig, f_param, f_spk, f_dpl, f_spec, key_types, xlim, ylim)
+           # pkernel(dfig, f_param, f_spk, f_dpl, f_spec, key_types, xlim, ylim)
 
 # Plots dipole and spec with alpha feed histograms
 def pdpl_pspec_with_hist(ddir, p_exp, xlim=None, ylim=None):
@@ -169,8 +170,7 @@ def pdpl_pspec_with_hist(ddir, p_exp, xlim=None, ylim=None):
             pkernel_with_hist(dfig, f_param, f_spk, f_dpl, f_spec, key_types, xlim, ylim)
 
 def aggregate_spec_with_hist(ddir, p_exp, labels):
-# def aggregate_spec_with_hist(ddir, p_exp, spec_results, labels):
-    runtype = 'debug'
+    untype = 'debug'
 
     # preallocate lists for use below
     param_list = []

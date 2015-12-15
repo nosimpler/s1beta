@@ -1,8 +1,8 @@
 : dipole.mod - mod file for range variable dipole
 :
-: v 1.0.0
-: rev 2012-09-11 (SL: Added back Qtotal, which WAS used in par version)
-: last rev: (SL: cleaned up and removed Qtotal, which was not used in earlier vers & redundant)
+: v 1.9.1m0
+: rev 2015-12-15 (SL: minor)
+: last rev: (SL: Added back Qtotal, which WAS used in par version)
 
 NEURON {
     SUFFIX dipole
@@ -29,9 +29,9 @@ ASSIGNED {
     pv (mV)
     v (mV)
     ztan (um)
-    Q  (fAm)
+    Q (fAm)
 
-    : human dipole order of 10nAm
+    : human dipole order of 10 nAm
     Qsum (fAm)
     Qtotal (fAm)
 }
