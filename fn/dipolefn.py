@@ -1,8 +1,8 @@
 # dipolefn.py - dipole-based analysis functions
 #
-# v 1.9.1m0
-# rev 2015-12-15 (SL: incorporated changes from CSM)
-# last major: (MS: Changed Dipole.truncate_ext() to truncate inclusively)
+# v 1.9.3
+# rev 2016-01-18 (SL: fix in twin ax creation in pdipole_evoked_aligned())
+# last major: (SL: incorporated changes from CSM)
 
 import fileio as fio
 import numpy as np
@@ -1002,13 +1002,12 @@ def pdipole_evoked_aligned(ddata):
     f_exp.ax['dpl_mu'].plot(dpl_mu_high.t, dpl_mu_high.dpl)
 
     # function creates an f_exp.ax_twinx list and returns the index of the new feed
-    n_dist = f_exp.create_axis_twinx(1)
+    f_exp.create_axis_twinx('input')
 
     # input hist information: predicated on the fact that the input histograms
     # should be identical for *all* of the inputs represented in this figure
     # places 2 histograms on two axes (meant to be one axis flipped)
     hists = spikefn.pinput_hist(f_exp.ax['input'], f_exp.ax_twinx['input'], s['alpha_feed_prox'].spike_list, s['alpha_feed_dist'].spike_list, n_bins)
-    # hists = spikefn.pinput_hist(f_exp.ax[1], f_exp.ax_twinx[n_dist], s['alpha_feed_prox'].spike_list, s['alpha_feed_dist'].spike_list, n_bins)
 
     # grab the max counts for both hists
     # the [0] item of hist are the counts
@@ -1021,7 +1020,6 @@ def pdipole_evoked_aligned(ddata):
     # deal with the axes here
     f_exp.ax['input'].set_ylim((0, ymax))
     f_exp.ax_twinx['input'].set_ylim((ymax, 0))
-    # f_exp.ax_twinx[n_dist].set_ylim((ymax, 0))
     # f_exp.ax[1].set_ylim((0, ymax))
 
     # f_exp.ax[1].set_xlim((50., tstop))
