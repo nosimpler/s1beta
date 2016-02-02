@@ -1,8 +1,8 @@
 # paramrw.py - routines for reading the param files
 #
-# v 1.9.01
-# rev 2015-12-08 (RL: added t0_pois)
-# last major: (SL: reorganization, cleanup)
+# v 1.9.4
+# rev 2016-02-02 (SL: cleanup of self.p_all)
+# last major: (RL: added t0_pois)
 
 import re
 import fileio as fio
@@ -25,7 +25,7 @@ class ExpParams():
         self.p_template = dict.fromkeys(self.expmt_group_params)
 
         # create non-exp params dict from default dict
-        self.__create_dict_from_default(p_all_input)
+        self.p_all = self.__create_dict_from_default(p_all_input)
 
         # pop off fixed known vals and create experimental prefix templates
         self.__pop_known_values()
@@ -228,20 +228,22 @@ class ExpParams():
     # create the dict based on the default param dict
     def __create_dict_from_default(self, p_all_input):
         # create a copy of params_default through which to iterate
-        self.p_all = get_params_default()
+        p_all = get_params_default()
 
         # now find ONLY the values that are present in the supplied p_all_input
         # based on the default dict
-        for key in self.p_all.keys():
+        for key in p_all.keys():
             # automatically expects that keys are either in p_all_input OR will resort
             # to default value
             if key in p_all_input:
                 # pop val off so the remaining items in p_all_input are extraneous
-                self.p_all[key] = p_all_input.pop(key)
+                p_all[key] = p_all_input.pop(key)
 
         # now display extraneous keys, if there were any
         if len(p_all_input):
             print "Invalid keys from param file not found in default params: %s" % str(p_all_input.keys())
+
+        return p_all
 
     # creates all combination of non-exp params
     def __create_paramlist(self):

@@ -1,8 +1,8 @@
 # fileio.py - general file input/output functions
 #
-# v 1.9.2a
-# rev 2014-05-22 (SL: minor, just a function move, really)
-# last rev: (SL: return_specific_filename() added)
+# v 1.9.4
+# rev 2016-02-02 (SL: Added example function for filenames and specified standard data in init)
+# last rev: (SL: minor, just a function move, really)
 
 import datetime, fnmatch, os, shutil, sys
 import itertools as it
@@ -34,7 +34,16 @@ class SimulationPaths():
             'param': '-param.txt',
         }
 
+        # empty until a sim is created or read
+        self.fparam = None
+        self.sim_prefix = None
+        self.trial_prefix_str = None
         self.expmt_groups = []
+        self.dproj = None
+        self.ddate = None
+        self.dsim = None
+        self.dexpmt_dict = {}
+        self.dfig = {}
 
     # reads sim information based on sim directory and param files
     def read_sim(self, dproj, dsim):
@@ -85,6 +94,23 @@ class SimulationPaths():
         flist = file_match(self.dexpmt_dict[expmt_group], fname, local)
 
         return flist
+
+    # returns a filename for an example type of data
+    def return_filename_example(self, datatype, expmt_group, sim_no=None, tr=None, ext='png'):
+        fname_short = "%s-%s" % (self.sim_prefix, expmt_group)
+
+        if sim_no is not None:
+            fname_short += "-%03i" % (sim_no)
+
+        if tr is not None:
+            fname_short += "-T%03i" % (tr)
+
+        # add the extension
+        fname_short += ".%s" % (ext)
+
+        fname = os.path.join(self.dfig[expmt_group][datatype], fname_short)
+
+        return fname
 
     # creates a dict of dicts for each experiment and all the datatype directories
     # this is the empty template that gets filled in later.
