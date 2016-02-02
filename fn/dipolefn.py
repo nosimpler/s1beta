@@ -1,8 +1,8 @@
 # dipolefn.py - dipole-based analysis functions
 #
-# v 1.9.3
-# rev 2016-01-18 (SL: fix in twin ax creation in pdipole_evoked_aligned())
-# last major: (SL: incorporated changes from CSM)
+# v 1.9.3a
+# rev 2016-02-02 (SL: minor)
+# last major: (SL: fix in twin ax creation in pdipole_evoked_aligned())
 
 import fileio as fio
 import numpy as np
@@ -17,10 +17,11 @@ from neuron import h as nrn
 import axes_create as ac
 
 # class Dipole() is for a single set of f_dpl and f_param
-# some usage: dpl = Dipole(file_dipole, file_param)
-# this gives dpl.t and dpl.dpl
 class Dipole():
     def __init__(self, f_dpl):
+        """ some usage: dpl = Dipole(file_dipole, file_param)
+            this gives dpl.t and dpl.dpl
+        """
         self.units = None
         self.N = None
         self.__parse_f(f_dpl)
@@ -43,9 +44,10 @@ class Dipole():
         self.units = 'fAm'
 
     # truncate to a length and save here
-    # this is independent of the other stuff
-    # moved to an external function so as to not disturb the delicate genius of this object
     def truncate(self, t0, T):
+        """ this is independent of the other stuff
+            moved to an external function so as to not disturb the delicate genius of this object
+        """
         self.t, self.dpl = self.truncate_ext(t0, T)
 
     # just return the values, do not modify the class internally
@@ -238,10 +240,11 @@ class Dipole():
                 f.write("%.4e\t" % x_L2)
                 f.write("%.4e\n" % x_L5)
 
-# throwaway save method for now
-# trial is currently undefined
-# function is broken for N_trials > 1
+# throwaway save method for now - see note
 def dpl_convert_and_save(ddata, i=0, j=0):
+    """ trial is currently undefined
+        function is broken for N_trials > 1
+    """
     # take the ith sim, jth trial, do some stuff to it, resave it
     # only uses first expmt_group
     expmt_group = ddata.expmt_groups[0]
@@ -461,10 +464,11 @@ def pdipole_ax(a, f_dpl, f_param):
     return a.get_xlim()
 
 # pdipole is for a single dipole file, should be for a
-# single dipole file combination (incl. param file)
-# this should be done with an axis input too
-# two separate functions, a pdipole kernel function and a specific function for this simple plot
 def pdipole(f_dpl, dfig, plot_dict, f_param=None, key_types={}):
+    """ single dipole file combination (incl. param file)
+        this should be done with an axis input too
+        two separate functions, a pdipole kernel function and a specific function for this simple plot
+    """
     # dpl is an obj of Dipole() class
     dpl = Dipole(f_dpl)
 
@@ -534,8 +538,9 @@ def pdipole(f_dpl, dfig, plot_dict, f_param=None, key_types={}):
     f.close()
 
 # plot vertical lines corresponding to the evoked input times
-# for each individual simulation/trial
 def pdipole_evoked(dfig, f_dpl, f_spk, f_param, ylim=[]):
+    """ for each individual simulation/trial
+    """
     gid_dict, p_dict = paramrw.read(f_param)
 
     # get the spike dict from the files
@@ -600,9 +605,10 @@ def pdipole_evoked(dfig, f_dpl, f_spk, f_param, ylim=[]):
     plt.savefig(fig_name, dpi=300)
     f.close()
 
-# Plots dipole with histogram of alpha feed inputs
-# this function has not been converted to use the Dipole() class yet
+# Plots dipole with histogram of alpha feed inputs - slightly deprecated, see note
 def pdipole_with_hist(f_dpl, f_spk, dfig, f_param, key_types, plot_dict):
+    """ this function has not been converted to use the Dipole() class yet
+    """
     # dpl is an obj of Dipole() class
     dpl = Dipole(f_dpl)
     dpl.baseline_renormalize(f_param)
@@ -687,8 +693,9 @@ def pdipole_with_hist(f_dpl, f_spk, dfig, f_param, key_types, plot_dict):
     f.close()
 
 # For a given ddata (SimulationPaths object), find the mean dipole
-# over ALL trials in ALL conditions in EACH experiment
 def pdipole_exp(ddata, ylim=[]):
+    """ over ALL trials in ALL conditions in EACH experiment
+    """
     # sim_prefix
     fprefix = ddata.sim_prefix
 
@@ -764,8 +771,10 @@ def pdipole_exp(ddata, ylim=[]):
     f_exp.close()
 
 # For a given ddata (SimulationPaths object), find the mean dipole
-# over ALL trials in ALL conditions in EACH experiment
 def pdipole_exp2(ddata):
+    """ over ALL trials in ALL conditions in EACH experiment
+        appears to be an iteration on pdipole_exp()
+    """
     # grab the original dipole from a specific dir
     dproj = '/repo/data/s1'
 
@@ -919,8 +928,10 @@ def pdipole_exp2(ddata):
     f_exp.close()
 
 # For a given ddata (SimulationPaths object), find the mean dipole
-# over ALL trials in ALL conditions in EACH experiment
 def pdipole_evoked_aligned(ddata):
+    """ over ALL trials in ALL conditions in EACH experiment
+        appears to be iteration over pdipole_exp2()
+    """
     # grab the original dipole from a specific dir
     dproj = '/repo/data/s1'
 
