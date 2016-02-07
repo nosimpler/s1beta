@@ -1,13 +1,14 @@
 #!/usr/bin/env python
 # example_analysis.py - Example for an analysis workflow
 #
-# v 1.9.4
-# rev 2016-02-02 (SL: created)
-# last major: ()
+# v 1.9.5
+# rev 2016-02-07 (RL: added dipole loading)
+# last major: (SL: created)
 
 import numpy as np
 import fileio as fio
 import paramrw
+import dipolefn
 import itertools as it
 import PT_example
 
@@ -15,7 +16,7 @@ import PT_example
 def example_analysis_for_simulation():
     # from these two directories
     droot = '/repo/data/s1beta'
-    dsim = '/Users/shane/repo/data/s1/2016-02-02/test-002'
+    dsim = '/repo/data/s1/2016-02-03/beta-sweep-000'
 
     # create the SimulationPaths() object ddata and read the simulation
     ddata = fio.SimulationPaths()
@@ -50,17 +51,22 @@ def example_analysis_for_simulation():
             # for key, val in p_tr.iteritems():
             #     print key, val
             # fio.prettyprint(p_tr.keys())
+            #create and load dipole data structure
+            d = dipolefn.Dipole(fdpl)
+
 
             # more or less analysis goes here.
-
-            # this filename already exists, use with caution ...
-            fname_png = ddata.return_filename_example('figspec', expmt_group, p_tr['Sim_No'], tr=p_tr['Trial'])
+            #generate a filename for a dipole plot
+            fname_png = ddata.return_filename_example('figdpl', expmt_group, p_tr['Sim_No'], tr=p_tr['Trial'])
             # print p_tr['Trial'], p_tr['Sim_No'], fname_png
 
             # example figure for this pair of files
             fig = PT_example.FigExample()
-            # fig.ax['dipole'].plot(np.random.rand(1000))
-            # fig.savepng(fname_png)
+            #plot dipole
+            fig.ax['dipole'].plot(d.t, d.dpl['agg'])
+            fig.ax['dipole'].plot(d.t, d.dpl['L2'])
+            fig.ax['dipole'].plot(d.t, d.dpl['L5'])
+            fig.savepng(fname_png)
             fig.close()
 
 if __name__ == '__main__':
