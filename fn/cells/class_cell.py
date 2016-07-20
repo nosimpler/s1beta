@@ -353,3 +353,5 @@ class Pyr(Cell):
                 # make dend.nseg odd for all sections
                 if not self.dends[key].nseg % 2:
                     self.dends[key].nseg += 1
+    def record_all(self):
+        

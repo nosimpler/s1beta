@@ -83,7 +83,7 @@ class NetworkOnNode():
         self.__create_coords_basket()
         self.__count_cells()
 
-        # create coords for all other sources
+        # create coords for all other sources (also writes to pos_dict)
         self.__create_coords_extinput()
 
         # count external sources

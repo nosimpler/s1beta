@@ -61,7 +61,7 @@ class L5Pyr(Pyr):
 
         # run record current soma, defined in Cell()
         self.record_current_soma()
-
+        self.record_all_pyr_currents()
     # insert IClamps in all situations
     # temporarily an external function taking the p dict
     def create_all_IClamp(self, p):
