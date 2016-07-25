@@ -13,7 +13,7 @@ import itertools as it
 import numpy as np
 from mpi4py import MPI
 from multiprocessing import Pool
-
+import pickle
 from neuron import h as nrn
 nrn.load_file("stdrun.hoc")
 
@@ -40,6 +40,22 @@ def spikes_write(net, filename_spikes):
 
     # let all nodes iterate through loop in which only one rank writes
     pc.barrier()
+def vars_write(net, filename_vars):
+    pc = nrn.ParallelContext()
+    count = 0
+    var_dict = {}
+    for rank in range(int(pc.nhost())):
+        pc.barrier()
+        if rank == int(pc.id()):
+            for cell in net.cells_list:
+                if cell.celltype == 'L5_pyramidal':
+                    var_dict[count] = cell.recorded_var_dict
+                    count = count + 1
+                    print count
+    pc.barrier
+    if int(pc.id()) == 0:
+        f = open(filename_vars, 'w')
+        pickle.dump(f, var_dict)
 
 # copies param file into root dsim directory
 def copy_paramfile(dsim, f_psim, str_date):
@@ -198,7 +214,7 @@ def exec_runsim(f_psim):
                     file_param = ddir.create_filename(expmt_group, 'param', exp_prefix)
                     file_spikes = ddir.create_filename(expmt_group, 'rawspk', exp_prefix)
                     file_spec = ddir.create_filename(expmt_group, 'rawspec', exp_prefix)
-
+                    #file_vars = ddir.create_filename(expmt_group,'vars',exp_prefix)
                     # if debug is set to 1, this debug block will run
                     if debug:
                         # net's method rec_debug(rank, gid)
@@ -284,7 +300,7 @@ def exec_runsim(f_psim):
 
                 # write output spikes
                 spikes_write(net, file_spikes_tmp)
-
+                vars_write(net, file_vars)
                 # move the spike file to the spike dir
                 if rank == 0:
                     shutil.move(file_spikes_tmp, file_spikes)

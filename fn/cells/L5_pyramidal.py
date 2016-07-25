@@ -61,7 +61,13 @@ class L5Pyr(Pyr):
 
         # run record current soma, defined in Cell()
         self.record_current_soma()
-        self.record_all_pyr_currents()
+        
+        var_dict = {
+               # 'g_na': '_ref_gna_hh',
+#              'v': '_ref_v',        
+                }
+        
+        self.record_pyr_vars(var_dict)
     # insert IClamps in all situations
     # temporarily an external function taking the p dict
     def create_all_IClamp(self, p):

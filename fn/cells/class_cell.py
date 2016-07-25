@@ -7,7 +7,7 @@
 import numpy as np
 import itertools as it
 from neuron import h as nrn
-
+from collections import defaultdict
 # Units for e: mV
 # Units for gbar: S/cm^2
 
@@ -164,7 +164,6 @@ class Cell():
         except:
             print "Warning in Cell(): record_current_soma() was called, but no self.synapses dict was found"
             pass
-
     # General fn that creates any Exp2Syn synapse type
     # requires dictionary of synapse properties
     def syn_create(self, secloc, p):
@@ -299,15 +298,47 @@ class Pyr(Cell):
     def __init__(self, soma_props):
         Cell.__init__(self, soma_props)
 
+        self.var_dict = defaultdict(dict)
         # store cell_name as self variable for later use
         self.name = soma_props['name']
-
+        self.recorded_var_dict = defaultdict(dict)
         # preallocate dict to store dends
         self.dends = {}
 
         # for legacy use with L5Pyr
         self.list_dend = []
-
+    
+    # var_dict maps a string representing a variable to a NEURON pointer, e.g. {'g_na' : '_ref_gna_hh'}
+    def record_pyr_vars(self, var_dict):
+        section_list = nrn.SectionList()
+        section_list.wholetree(sec = self.soma)
+        #section_list.printnames()
+        print dir(self)
+        print var_dict
+        print self.dends.keys()
+        for dend_seg in self.dends.iterkeys():
+            for var in var_dict.iterkeys():
+                ref_string = var_dict[var] 
+                self.recorded_var_dict[dend_seg][var] = nrn.Vector()
+                #print dir(self.dends[dend_seg](0.5).hh._ref_gna_hh
+                evalstr ='self.recorded_var_dict[dend_seg][var].record(self.dends[dend_seg](0.5).' + ref_string + ')'
+                print evalstr
+                eval(evalstr)
+        print self.recorded_var_dict
+        for var in var_dict.iterkeys():
+            ref_string = var_dict[var]
+            self.recorded_var_dict['soma'][var] = nrn.Vector()
+            #print var            
+            somastr = 'soma'
+            #print dir(self.soma(0.5))
+            evalstr = 'self.recorded_var_dict[somastr][var].record(self.soma(0.5).' + ref_string + ')'
+            print evalstr
+            eval(evalstr)
+           # current_list = 
+        #    for current in current_list:
+        #        self.rec_i_pyr[section][current] = nrn.Vector()
+        #try:
+        
     # Create dictionary of section names with entries to scale section lengths to length along z-axis
     def get_sectnames(self):
         seclist = nrn.SectionList()
@@ -353,5 +384,4 @@ class Pyr(Cell):
                 # make dend.nseg odd for all sections
                 if not self.dends[key].nseg % 2:
                     self.dends[key].nseg += 1
-    def record_all(self):
         

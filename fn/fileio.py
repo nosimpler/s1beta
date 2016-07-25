@@ -22,6 +22,7 @@ class SimulationPaths():
             'rawspk': '-spk.txt',
             'rawdpl': '-dpl.txt',
             'rawcurrent': '-i.txt',
+            'soma_ina': '-i.txt',
             'rawspec': '-spec.npz',
             'rawspeccurrent': '-speci.npz',
             'avgdpl': '-dplavg.txt',
@@ -32,7 +33,8 @@ class SimulationPaths():
             'figspec': '-spec.png',
             'figspk': '-spk.png',
             'param': '-param.txt',
-        }
+            'vars': '-vars.pkl',
+            }
 
         # empty until a sim is created or read
         self.fparam = None
