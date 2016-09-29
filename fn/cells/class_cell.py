@@ -164,6 +164,8 @@ class Cell():
         except:
             print "Warning in Cell(): record_current_soma() was called, but no self.synapses dict was found"
             pass
+
+    #TODO: try-except
     # General fn that creates any Exp2Syn synapse type
     # requires dictionary of synapse properties
     def syn_create(self, secloc, p):
@@ -302,6 +304,7 @@ class Pyr(Cell):
         # store cell_name as self variable for later use
         self.name = soma_props['name']
         self.recorded_var_dict = defaultdict(dict)
+        self.dict_syn_currents = {}
         # preallocate dict to store dends
         self.dends = {}
 
@@ -312,19 +315,27 @@ class Pyr(Cell):
     def record_pyr_vars(self, var_dict):
         section_list = nrn.SectionList()
         section_list.wholetree(sec = self.soma)
+        # To find mechanisms that can be recorded
+        #for section in section_list:
+        #    #print dir(section)
+        #    for mech in section(0.5):
+        #        #print dir(mech)
+        #        for n in dir(mech):
+        #                print mech, n
+        #        print mech.name()
         #section_list.printnames()
-        print dir(self)
-        print var_dict
-        print self.dends.keys()
+        #print dir(self)
+        #print var_dict
+        #print self.dends.keys()
         for dend_seg in self.dends.iterkeys():
             for var in var_dict.iterkeys():
                 ref_string = var_dict[var] 
                 self.recorded_var_dict[dend_seg][var] = nrn.Vector()
                 #print dir(self.dends[dend_seg](0.5).hh._ref_gna_hh
                 evalstr ='self.recorded_var_dict[dend_seg][var].record(self.dends[dend_seg](0.5).' + ref_string + ')'
-                print evalstr
+                #print evalstr
                 eval(evalstr)
-        print self.recorded_var_dict
+        #print self.recorded_var_dict
         for var in var_dict.iterkeys():
             ref_string = var_dict[var]
             self.recorded_var_dict['soma'][var] = nrn.Vector()

@@ -1,7 +1,7 @@
 # praster.py - plot dipole function
 #
-# v 1.9.2a
-# rev 2013-04-08 (SL: changed spikes_from_file)
+# v 1.9.2b
+# rev 2016-03-04 (RL: added t0)
 # last major: (SL: minor changes to FigRaster)
 
 import os
@@ -12,10 +12,14 @@ from axes_create import FigRaster
 import spikefn as spikefn
 
 # file_info is (rootdir, subdir,
-def praster(f_param, tstop, file_spk, dfig):
+def praster(f_param, t_interval, file_spk, dfig):
     # ddipole is dipole data
     s_dict = spikefn.spikes_from_file(f_param, file_spk)
-
+    # if t_interval is length 1, then assume it's tstop
+    if len(t_interval) == 1:
+        t_interval = [0, t_interval]
+    t0 = t_interval[0]
+    tstop = t_interval[1]
     s_dict_L2 = {}
     s_dict_L5 = {}
     s_dict_L2_extgauss = {}
@@ -52,7 +56,7 @@ def praster(f_param, tstop, file_spk, dfig):
     file_prefix = file_spk.split('/')[-1].split('.')[0]
 
     # create standard fig and axes
-    f = FigRaster(tstop)
+    f = FigRaster(t0, tstop)
     spikefn.spike_png(f.ax['L2'], s_dict_L2)
     spikefn.spike_png(f.ax['L5'], s_dict_L5)
     spikefn.spike_png(f.ax['L2_extpois'], s_dict_L2_extpois)

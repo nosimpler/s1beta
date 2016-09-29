@@ -8,6 +8,7 @@ import sys
 import numpy as np
 import itertools as it
 
+from collections import defaultdict
 from neuron import h as nrn
 from class_cell import Pyr
 from .. import paramrw
@@ -50,9 +51,52 @@ class L2Pyr(Pyr):
         # create synapses
         self.__synapse_create(p_syn)
         # self.__synapse_create()
-
+#        var_dict = {
+#                'i_na': '_ref_ina',
+#                'e_na': '_ref_ena',
+#                'e_k': '_ref_ek',
+#                'v': '_ref_v',
+#                'i_k': '_ref_ik',
+#                'i_ca': 'ref_ica'
+#                }
         # run record_current_soma(), defined in Cell()
         self.record_current_soma()
+#        self.record_synaptic_currents() 
+#        self.record_pyr_vars(var_dict)
+
+    def record_synaptic_currents(self):
+        self.dict_syn_currents = defaultdict(dict)
+        # takes care of somatic currents
+        for key in self.dict_currents.iterkeys():
+            #key[5::] cuts off 'soma_'
+            newkey = key[5::]
+            self.dict_syn_currents['soma'][newkey] = nrn.Vector()
+            self.dict_syn_currents['soma'][newkey].record(self.synapses[key]._ref_i)
+        
+        # dendritic currents are done one-by-one. this really should be reorganized (in L5_pyramidal.py)
+#        self.dict_syn_currents['apical_tuft']['gabaa'] = nrn.Vector()
+#        self.dict_syn_currents['apical_tuft']['gabaa'].record(self.apicaltuft_gabaa._ref_i)
+        
+        self.dict_syn_currents['apical_tuft']['ampa'] = nrn.Vector()
+        self.dict_syn_currents['apical_tuft']['ampa'].record(self.apicaltuft_ampa._ref_i) 
+        self.dict_syn_currents['apical_tuft']['nmda'] = nrn.Vector()
+        self.dict_syn_currents['apical_tuft']['nmda'].record(self.apicaltuft_nmda._ref_i)
+
+        self.dict_syn_currents['apical_oblique']['ampa'] = nrn.Vector()
+        self.dict_syn_currents['apical_oblique']['ampa'].record(self.apicaloblique_ampa._ref_i) 
+        self.dict_syn_currents['apical_oblique']['nmda'] = nrn.Vector()
+        self.dict_syn_currents['apical_oblique']['nmda'].record(self.apicaloblique_nmda._ref_i)
+
+        self.dict_syn_currents['basal_2']['ampa'] = nrn.Vector()
+        self.dict_syn_currents['basal_2']['nmda'] = nrn.Vector()
+        self.dict_syn_currents['basal_3']['ampa'] = nrn.Vector()
+        self.dict_syn_currents['basal_3']['nmda'] = nrn.Vector()
+        self.dict_syn_currents['basal_2']['ampa'].record(self.basal2_ampa._ref_i) 
+        self.dict_syn_currents['basal_2']['nmda'].record(self.basal2_nmda._ref_i) 
+        self.dict_syn_currents['basal_3']['ampa'].record(self.basal3_ampa._ref_i) 
+        self.dict_syn_currents['basal_3']['nmda'].record(self.basal3_nmda._ref_i) 
+        
+        
 
     # insert IClamps in all situations
     # temporarily an external function taking the p dict

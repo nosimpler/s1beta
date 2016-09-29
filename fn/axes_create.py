@@ -410,7 +410,8 @@ class FigFreqpwrWithHist(FigBase):
         self.f.savefig(file_name)
 
 class FigRaster(FigBase):
-    def __init__(self, tstop):
+    def __init__(self, t0, tstop):
+        self.t0 = t0
         self.tstop = tstop
         self.f = plt.figure(figsize=(6, 8))
 
@@ -445,7 +446,7 @@ class FigRaster(FigBase):
     def __raster_prop(self, ax):
         ax.set_yticklabels('')
         ax.set_xticklabels('')
-        ax.set_xlim(0, self.tstop)
+        ax.set_xlim(self.t0, self.tstop)
 
 class FigPSTH(FigBase):
     def __init__(self, tstop):

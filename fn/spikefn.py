@@ -343,14 +343,16 @@ def spike_png(a, s_dict):
 
         # There must be congruency between lines in spike_list and the number of ticks
         i = 0
+        print key
+        print s_dict[key].spike_list
         for spk_cell in s_dict[key].spike_list:
             # a.plot(np.array([451.6]), e_ticks[i] * np.ones(1), 'k.', markersize=2.5)
             # print len(s_dict[key].tick_marks), len(spk_cell)
-            a.plot(spk_cell, s_dict[key].tick_marks[i] * np.ones(len(spk_cell)), markerstyle, markeredgewidth=1, markersize=1.5)
+            a.plot(spk_cell, s_dict[key].tick_marks[i] * np.ones(len(spk_cell)), markerstyle, markeredgewidth=1, markersize=2.5)
             i += 1
 
     a.set_ylim([0, 1])
-    a.grid()
+    #a.grid()
 
 # Add synaptic delays to alpha input times if applicable:
 def add_delay_times(s_dict, p_dict):

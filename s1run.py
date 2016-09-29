@@ -16,7 +16,7 @@ from multiprocessing import Pool
 import pickle
 from neuron import h as nrn
 nrn.load_file("stdrun.hoc")
-
+from collections import defaultdict
 # Cells are defined in './cells'
 import class_net
 import fn.fileio as fio
@@ -40,22 +40,40 @@ def spikes_write(net, filename_spikes):
 
     # let all nodes iterate through loop in which only one rank writes
     pc.barrier()
-def vars_write(net, filename_vars):
+def vars_write(net, filename_vars, tvec):
     pc = nrn.ParallelContext()
     count = 0
+    currents_dict = {}
     var_dict = {}
+    syn_dict = {}
+    currents_dict['t'] = tvec
     for rank in range(int(pc.nhost())):
         pc.barrier()
         if rank == int(pc.id()):
             for cell in net.cells_list:
                 if cell.celltype == 'L5_pyramidal':
-                    var_dict[count] = cell.recorded_var_dict
+                    # need to convert to numpy array
+                    # x is temporary variable
+                    # separate dicts for internal and synaptic variables                   
+                    x = defaultdict(dict)
+                    syn = defaultdict(dict)
+                    for segment in cell.recorded_var_dict.iterkeys():
+                        for var in cell.recorded_var_dict[segment].iterkeys():
+                            x[segment][var] = cell.recorded_var_dict[segment][var].to_python()
+                    var_dict[count] = x
+                    for segment in cell.dict_syn_currents.iterkeys():
+                        for var in cell.dict_syn_currents[segment].iterkeys():
+                            syn[segment][var] = cell.dict_syn_currents[segment][var].to_python()
+                    syn_dict[count] = syn
                     count = count + 1
-                    print count
+                    #print var_dict[count-1]
     pc.barrier
     if int(pc.id()) == 0:
-        f = open(filename_vars, 'w')
-        pickle.dump(f, var_dict)
+        currents_dict['syn'] = syn_dict
+        currents_dict['cell'] = var_dict
+        f = open(filename_vars, 'wb')
+        pickle.dump(currents_dict, f)
+        f.close()
 
 # copies param file into root dsim directory
 def copy_paramfile(dsim, f_psim, str_date):
@@ -214,7 +232,7 @@ def exec_runsim(f_psim):
                     file_param = ddir.create_filename(expmt_group, 'param', exp_prefix)
                     file_spikes = ddir.create_filename(expmt_group, 'rawspk', exp_prefix)
                     file_spec = ddir.create_filename(expmt_group, 'rawspec', exp_prefix)
-                    #file_vars = ddir.create_filename(expmt_group,'vars',exp_prefix)
+                    file_vars = ddir.create_filename(expmt_group,'vars',exp_prefix)
                     # if debug is set to 1, this debug block will run
                     if debug:
                         # net's method rec_debug(rank, gid)
@@ -281,7 +299,8 @@ def exec_runsim(f_psim):
                             # fc.write("%5.4f\t" % (i_L2 + i_L5))
                             fc.write("%5.4f\t" % i_L2)
                             fc.write("%5.4f\n" % i_L5)
-
+                    # write recorded variables
+                    #vars_write(net, file_vars, t_vec.to_python())
                     # write the params, but add some more information
                     p['Sim_No'] = i
                     p['Trial'] = j
@@ -300,7 +319,7 @@ def exec_runsim(f_psim):
 
                 # write output spikes
                 spikes_write(net, file_spikes_tmp)
-                vars_write(net, file_vars)
+                
                 # move the spike file to the spike dir
                 if rank == 0:
                     shutil.move(file_spikes_tmp, file_spikes)
