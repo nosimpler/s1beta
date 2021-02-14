@@ -246,8 +246,7 @@ class FigBase():
         self.f.savefig(fname, dpi=dpi_set)
 
     # generic save, works for png but supposed to be for eps
-    def saveeps(self, deps, fprefix):
-        fname = os.path.join(deps, fprefix+'.eps')
+    def saveplot(self, fname):
         self.f.savefig(fname)
 
     # obligatory close function

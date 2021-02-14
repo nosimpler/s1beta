@@ -1,7 +1,7 @@
 # L5_pyramidal.py - establish class def for layer 5 pyramidal cells
 #
 # v 1.9.00
-# rev 2018-??-?? (RGL: added GABAB to mid-apical dendrite)
+# rev 2015-12-04 (SL: minor)
 # last rev: (SL: minor)
 
 import sys

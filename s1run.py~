@@ -60,7 +60,7 @@ def vars_write(net, filename_vars, tvec):
 ##############
 # (ran into memory problems recording both L2 and L5 at once)
 # CHANGE NEXT LINE TO L2_pyramidal TO RECORD L2 TO FILE 
-                if cell.celltype == 'L5_pyramidal':
+                if cell.celltype == 'L2_pyramidal':
                     # need to convert to numpy array
                     # x is temporary variable
                     # separate dicts for internal and synaptic variables                   
@@ -312,7 +312,7 @@ def exec_runsim(f_psim):
 ####################
                     # write compartmentwise variables
 # UNCOMMENT NEXT LINE TO WRITE COMPARTMENTWISE CURRENTS/VOLTAGES TO FILE
-                    vars_write(net, file_vars, t_vec.to_python())
+#                    vars_write(net, file_vars, t_vec.to_python())
                     # write the params, but add some more information
                     p['Sim_No'] = i
                     p['Trial'] = j

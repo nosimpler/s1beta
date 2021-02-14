@@ -39,7 +39,7 @@ class Spikes():
 
     # simple return of all spikes *or* each spike indexed i in every list
     def collapse_all(self, i=None):
-        if i == 'None':
+        if i == None:
             spk_all = []
             for spk_list in self.spike_list:
                 spk_all.extend(spk_list)

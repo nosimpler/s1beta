@@ -973,7 +973,7 @@ if __name__ == '__main__':
     #plot_M50_M70(dproj, dsim)
     #plot_spike_rates(dproj, dsim, dfig)
     #cell 44 gives small early spiking
-    #plot_cell_segs_v(dproj, dsim, dfig, [0], 'L2' , 44)
+    plot_cell_segs_v(dproj, dsim, dfig, [0], 'L5' , range(50))
     #plot_mean_over_expmt(dproj, dsim, dfig, 'beta_low', 'L5')  
     #plot_all_currents(dproj, dsim, dfig, [0,500], 'L5', 42)
     

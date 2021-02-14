@@ -92,7 +92,7 @@ def pspec_with_hist(f_spec, f_dpl, f_spk, dfig, f_param, key_types, xlim=None, y
     fprefix = f_spec.split('/')[-1].split('.')[0]
 
     # Create the fig name
-    fig_name = os.path.join(dfig, fprefix+'.png')
+    fig_name = os.path.join(dfig, fprefix+'.pdf')
 
     # load param dict
     _, p_dict = paramrw.read(f_param)
@@ -179,7 +179,7 @@ def pspec_with_hist(f_spec, f_dpl, f_spk, dfig, f_param, key_types, xlim=None, y
     title_str = ac.create_title(p_dict, key_types)
     f.f.suptitle(title_str)
 
-    f.savepng(fig_name)
+    f.saveplot(fig_name)
     f.close()
 
 def pspecpwr(file_name, results_list, fparam_list, key_types, error_vec=[]):

@@ -1,8 +1,8 @@
 # class_cell.py - establish class def for general cell features
 #
-# v 1.10.0
-# rev 2018-??-?? (RGL: enabled recordings of all currents, voltages and conductances)
-# last rev: (SL: added list_IClamp as a pre-defined variable)
+# v 1.9.0
+# rev 2015-12-04 (SL: added list_IClamp as a pre-defined variable)
+# last rev: (SL: Minor)
 
 import numpy as np
 import itertools as it
