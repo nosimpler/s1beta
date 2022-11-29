@@ -1,13 +1,7 @@
-# Jones et al., 2009 in Python+NEURON
+# s1beta
 
-Some useful guidelines to using version control:
-================================================
-0. BEFORE working on a clean copy, check to see if there is a new revision with 'git pull'
-1. BEFORE working on an unclean copy, stash changes before you check new revisions
-2. TEST code to ensure that it runs on your machine (at the very least)
-3. DO NOT commit binary files (such as pyc or png files) without a specific reason
-4. When replacing or removing code, there are two stages. First, COMMIT the changes with old code commented out. Once that commit has been stabilized, and you're certain the code won't be useful again, it can be removed in subsequent commits.
+s1beta contains NEURON/Python code for simulating the effects of 15--29Hz beta events on MEG evoked responses in primary somatosensory cortex (SI). This is essentially a fork of the original s1beta code written by Shane Lee and Max Sherman, based from Stephanie Jones's original SI model. 
 
-TEST: BRANCHING TEST cont.
+Note that this model has been reimplemented as part of the [Human Neocortical Neurosolver](https://hnn.brown.edu/) project, and it is likely much easier to play around with it using the tutorial [here](https://jonescompneurolab.github.io/hnn-core/stable/auto_examples/workflows/plot_simulate_beta.html#sphx-glr-auto-examples-workflows-plot-simulate-beta-py).
 
-Testing
+contact: Rob Law (nosimpler@gmail.com)
